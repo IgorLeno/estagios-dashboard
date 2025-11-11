@@ -141,3 +141,49 @@ Note: These settings are permissive for rapid development. Tighten for productio
 - Use client for Client Components
 - Always handle errors from Supabase queries
 - Use `.single()` for queries expecting one row (may throw PGRST116 error if not found)
+
+## Testing
+
+### Testing Setup
+- **Framework**: Vitest with jsdom environment
+- **Testing Libraries**: 
+  - `@testing-library/react` (v16+) - Component testing
+  - `@testing-library/dom` - DOM utilities
+  - `@testing-library/jest-dom` - DOM matchers
+  - `@testing-library/user-event` - User interaction simulation
+
+### Testing Patterns
+
+#### Testing Hooks
+- Use `renderHook` from `@testing-library/react` (v16+)
+- **Important**: `waitForNextUpdate` was removed in newer versions
+- Use `waitFor` from `@testing-library/react` instead for async assertions:
+```typescript
+import { renderHook, waitFor } from "@testing-library/react"
+
+const { result } = renderHook(() => useMyHook())
+
+await waitFor(() => {
+  expect(result.current.value).toBe(expectedValue)
+})
+```
+
+#### Async Server Components
+- **Vitest Limitation**: Vitest has limitations when testing async Server Components directly
+- Server Components that use `async/await` (e.g., `app/admin/dashboard/page.tsx`) require special handling
+- **Recommendation**: Prefer E2E tests for async Server Components using tools like Playwright or Cypress
+- For unit testing, extract logic to testable functions or test client components that consume server data
+- Example of async Server Component that should use E2E tests:
+  - `app/admin/dashboard/page.tsx` - Fetches data server-side and requires authentication
+
+### Running Tests
+```bash
+# Run tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
