@@ -24,7 +24,11 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterModalidade, setFilterModalidade] = useState<string>("todas")
   const [filterStatus, setFilterStatus] = useState<string>("todos")
+  const [filterEtapa, setFilterEtapa] = useState<string>("todas")
   const [showAddDialog, setShowAddDialog] = useState(false)
+
+  // Get unique etapas from vagas for filter
+  const etapas = Array.from(new Set(vagas.map((v) => v.etapa).filter(Boolean))) as string[]
 
   const filteredVagas = vagas.filter((vaga) => {
     const matchesSearch =
@@ -32,7 +36,8 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
       vaga.cargo.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesModalidade = filterModalidade === "todas" || vaga.modalidade === filterModalidade
     const matchesStatus = filterStatus === "todos" || vaga.status === filterStatus
-    return matchesSearch && matchesModalidade && matchesStatus
+    const matchesEtapa = filterEtapa === "todas" || vaga.etapa === filterEtapa
+    return matchesSearch && matchesModalidade && matchesStatus && matchesEtapa
   })
 
   function getFitBadgeColor(fit?: number) {
@@ -55,8 +60,8 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3 mt-4">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por empresa ou cargo..."
@@ -66,30 +71,59 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               />
             </div>
 
-            <Select value={filterModalidade} onValueChange={setFilterModalidade}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Modalidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                <SelectItem value="Presencial">Presencial</SelectItem>
-                <SelectItem value="Híbrido">Híbrido</SelectItem>
-                <SelectItem value="Remoto">Remoto</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Select value={filterModalidade} onValueChange={setFilterModalidade}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Modalidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="Presencial">Presencial</SelectItem>
+                  <SelectItem value="Híbrido">Híbrido</SelectItem>
+                  <SelectItem value="Remoto">Remoto</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Avançado">Avançado</SelectItem>
-                <SelectItem value="Melou">Melou</SelectItem>
-                <SelectItem value="Contratado">Contratado</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Avançado">Avançado</SelectItem>
+                  <SelectItem value="Melou">Melou</SelectItem>
+                  <SelectItem value="Contratado">Contratado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Etapa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {etapas.map((etapa) => (
+                    <SelectItem key={etapa} value={etapa}>
+                      {etapa}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("")
+                  setFilterModalidade("todas")
+                  setFilterStatus("todos")
+                  setFilterEtapa("todas")
+                }}
+                className="w-full"
+              >
+                Limpar Filtros
+              </Button>
+            </div>
           </div>
         </CardHeader>
 

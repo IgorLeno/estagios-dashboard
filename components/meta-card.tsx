@@ -36,10 +36,12 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
   }
 
   return (
-    <Card className={`bg-gradient-to-r ${getGradientColor(progress)} text-white border-0 shadow-lg`}>
+    <Card
+      className={`bg-gradient-to-r ${getGradientColor(progress)} text-white border-0 shadow-lg transition-all duration-700 ease-in-out hover:shadow-xl hover:scale-[1.01]`}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
-          <Target className="h-5 w-5" />
+          <Target className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
           Meta do Dia
         </CardTitle>
       </CardHeader>
@@ -48,21 +50,22 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
           <div>
             <p className="text-sm text-white/90">Meta:</p>
             {isEditing ? (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 animate-in fade-in slide-in-from-left-2 duration-200">
                 <Input
                   type="number"
                   value={tempMeta}
                   onChange={(e) => setTempMeta(e.target.value)}
-                  className="w-24 h-8 bg-white/20 border-white/40 text-white placeholder:text-white/60"
+                  className="w-24 h-8 bg-white/20 border-white/40 text-white placeholder:text-white/60 transition-all focus:bg-white/30"
                   min="0"
+                  autoFocus
                 />
-                <Button size="sm" variant="secondary" onClick={handleSave} className="h-8">
+                <Button size="sm" variant="secondary" onClick={handleSave} className="h-8 hover:scale-110 transition-transform">
                   <Check className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <p
-                className="text-2xl font-bold cursor-pointer hover:underline"
+                className="text-2xl font-bold cursor-pointer hover:underline transition-all hover:scale-105 active:scale-95"
                 onClick={() => {
                   setIsEditing(true)
                   setTempMeta(meta.toString())
@@ -75,17 +78,20 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
 
           <div className="text-right">
             <p className="text-sm text-white/90">Candidaturas de Hoje:</p>
-            <p className="text-4xl font-bold">{candidaturas}</p>
+            <p className="text-4xl font-bold tabular-nums transition-all duration-500 hover:scale-110">{candidaturas}</p>
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Progresso</span>
-            <span className="font-semibold">{progress.toFixed(0)}%</span>
+            <span className="font-semibold tabular-nums">{progress.toFixed(0)}%</span>
           </div>
           <div className="h-3 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full bg-white transition-all duration-700 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
       </CardContent>
