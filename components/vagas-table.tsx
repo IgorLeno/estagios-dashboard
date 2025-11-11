@@ -84,10 +84,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="Aguardando">Aguardando</SelectItem>
-                <SelectItem value="Em processo">Em processo</SelectItem>
-                <SelectItem value="Aprovado">Aprovado</SelectItem>
-                <SelectItem value="Reprovado">Reprovado</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Avançado">Avançado</SelectItem>
+                <SelectItem value="Melou">Melou</SelectItem>
+                <SelectItem value="Contratado">Contratado</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -124,10 +124,16 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                       <TableCell>
                         <Badge variant="outline">{vaga.modalidade}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">{vaga.requisitos || "-"}</TableCell>
                       <TableCell>
-                        {vaga.fit ? (
-                          <Badge className={`${getFitBadgeColor(vaga.fit)} text-white`}>{vaga.fit}%</Badge>
+                        {vaga.requisitos !== undefined && vaga.requisitos !== null ? (
+                          <Badge className={`${getFitBadgeColor(vaga.requisitos)} text-white`}>{vaga.requisitos}</Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {vaga.fit !== undefined && vaga.fit !== null ? (
+                          <Badge variant="outline">{vaga.fit}/10</Badge>
                         ) : (
                           "-"
                         )}
@@ -136,11 +142,13 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                       <TableCell>
                         <Badge
                           variant={
-                            vaga.status === "Aprovado"
+                            vaga.status === "Contratado"
                               ? "default"
-                              : vaga.status === "Reprovado"
+                              : vaga.status === "Melou"
                                 ? "destructive"
-                                : "secondary"
+                                : vaga.status === "Avançado"
+                                  ? "secondary"
+                                  : "outline"
                           }
                         >
                           {vaga.status}
