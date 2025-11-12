@@ -37,7 +37,7 @@ test.describe("Navegação do Dashboard", () => {
 
   test("deve navegar entre datas com setas", async ({ page }) => {
     // Aguardar data carregar
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState("domcontentloaded")
 
     // Procurar por elementos de navegação de data
     const prevButton = page.getByRole("button", { name: /anterior|prev|<|◀/i }).first()
@@ -69,9 +69,14 @@ test.describe("Navegação do Dashboard", () => {
     }
 
     // Procurar ícone de visualizar/detalhes
-    const viewButton = page.locator("table tbody tr").first().locator('button[aria-label*="detalhes"], button[aria-label*="visualizar"]').first()
+    const viewButton = page
+      .locator("table tbody tr")
+      .first()
+      .locator('button[aria-label*="detalhes"], button[aria-label*="visualizar"]')
+      .first()
     // Fallback to any button in the row if specific aria-label not found
-    const actionButton = (await viewButton.count()) > 0 ? viewButton : page.locator("table tbody tr").first().locator('button').first()
+    const actionButton =
+      (await viewButton.count()) > 0 ? viewButton : page.locator("table tbody tr").first().locator("button").first()
 
     if (await actionButton.isVisible()) {
       // Clicar no ícone de visualizar

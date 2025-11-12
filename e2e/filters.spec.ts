@@ -24,7 +24,7 @@ test.describe("Filtros do Dashboard", () => {
     const searchInput = page.getByPlaceholder(/buscar.*empresa.*cargo/i)
     const tableBody = page.locator("table tbody")
     const filteredRowsLocator = tableBody.locator("tr")
-    
+
     const initialCount = await getTableRowCount(page)
     await searchInput.fill("Google")
 
@@ -38,11 +38,11 @@ test.describe("Filtros do Dashboard", () => {
     const googleRowPromise = expect(rowsWithGoogle.first())
       .toBeVisible({ timeout: 5000 })
       .then(() => "google" as const)
-    
+
     const emptyMessagePromise = expect(emptyMessage)
       .toBeVisible({ timeout: 5000 })
       .then(() => "empty" as const)
-    
+
     // Aguardar a primeira promessa que resolver com sucesso
     try {
       await Promise.any([googleRowPromise, emptyMessagePromise])
@@ -55,10 +55,8 @@ test.describe("Filtros do Dashboard", () => {
             return `  - ${type}: ${err instanceof Error ? err.message : String(err)}`
           })
           .join("\n")
-        
-        throw new Error(
-          `Nenhuma das condições esperadas foi atendida dentro do timeout de 5000ms:\n${errorMessages}`
-        )
+
+        throw new Error(`Nenhuma das condições esperadas foi atendida dentro do timeout de 5000ms:\n${errorMessages}`)
       }
       // Re-lançar erro se não for AggregateError
       throw error
@@ -70,15 +68,13 @@ test.describe("Filtros do Dashboard", () => {
     if (filteredRowsCount > 0) {
       const rowCount = await filteredRowsLocator.count()
       expect(rowCount).toBeGreaterThan(0)
-      
+
       // Verificar que todas as linhas visíveis contêm "Google" na empresa ou cargo
       for (let i = 0; i < rowCount; i++) {
         const row = filteredRowsLocator.nth(i)
         const empresa = await row.locator("td").nth(0).textContent()
         const cargo = await row.locator("td").nth(1).textContent()
-        const hasGoogle = 
-          empresa?.toLowerCase().includes("google") || 
-          cargo?.toLowerCase().includes("google")
+        const hasGoogle = empresa?.toLowerCase().includes("google") || cargo?.toLowerCase().includes("google")
         expect(hasGoogle).toBe(true)
       }
     }
@@ -93,7 +89,10 @@ test.describe("Filtros do Dashboard", () => {
     }
 
     // Encontrar e clicar no select de modalidade
-    const modalidadeSelect = page.locator("button[role='combobox']").filter({ hasText: /modalidade|todas/i }).first()
+    const modalidadeSelect = page
+      .locator("button[role='combobox']")
+      .filter({ hasText: /modalidade|todas/i })
+      .first()
 
     await modalidadeSelect.click()
     // Aguardar dropdown abrir e opção estar visível
@@ -127,7 +126,10 @@ test.describe("Filtros do Dashboard", () => {
     }
 
     // Encontrar select de status
-    const statusSelect = page.locator("button[role='combobox']").filter({ hasText: /status|todos/i }).first()
+    const statusSelect = page
+      .locator("button[role='combobox']")
+      .filter({ hasText: /status|todos/i })
+      .first()
 
     await statusSelect.click()
     const pendenteOption = page.getByRole("option", { name: "Pendente" })
@@ -165,28 +167,37 @@ test.describe("Filtros do Dashboard", () => {
 
     // Aguardar que a busca seja aplicada (verificar que o input tem o valor)
     await expect(searchInput).toHaveValue("E2E")
-    
+
     // Aguardar que o filtro seja aplicado de forma determinística
     // Verificar que a tabela foi atualizada: ou aparece uma linha com "E2E" ou a contagem muda
     const tableBody = page.locator("table tbody")
     const rowsWithE2E = tableBody.locator("tr").filter({ hasText: /e2e/i })
-    
+
     // Aguardar que OU apareça uma linha com "E2E" OU a contagem de linhas mude
     await expect
-      .poll(async () => {
-        const hasE2ERow = await rowsWithE2E.first().isVisible().catch(() => false)
-        const currentCount = await getTableRowCount(page)
-        return hasE2ERow || currentCount !== initialCount
-      }, {
-        message: "Aguardando que o filtro seja aplicado: linha com 'E2E' visível ou contagem de linhas alterada",
-        timeout: 5000,
-      })
+      .poll(
+        async () => {
+          const hasE2ERow = await rowsWithE2E
+            .first()
+            .isVisible()
+            .catch(() => false)
+          const currentCount = await getTableRowCount(page)
+          return hasE2ERow || currentCount !== initialCount
+        },
+        {
+          message: "Aguardando que o filtro seja aplicado: linha com 'E2E' visível ou contagem de linhas alterada",
+          timeout: 5000,
+        }
+      )
       .toBe(true)
 
     const step1Rows = await getTableRowCount(page)
 
     // Adicionar filtro de status
-    const statusSelect = page.locator("button[role='combobox']").filter({ hasText: /status|todos/i }).first()
+    const statusSelect = page
+      .locator("button[role='combobox']")
+      .filter({ hasText: /status|todos/i })
+      .first()
     if (await statusSelect.isVisible()) {
       await statusSelect.click()
       const pendenteOption = page.getByRole("option", { name: "Pendente" })
@@ -268,23 +279,26 @@ test.describe("Filtros do Dashboard", () => {
 
     // Aguardar que a tabela seja atualizada ou mensagem de vazio apareça
     const emptyMessage = page.getByText(/nenhuma vaga encontrada|nenhum resultado/i)
-    
+
     // Poll até que a mensagem de vazio esteja visível OU a contagem de linhas seja 0
     await expect
-      .poll(async () => {
-        const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
-        const rowCount = await getTableRowCount(page)
-        return isMessageVisible || rowCount === 0
-      }, {
-        message: "Aguardando mensagem de vazio ou tabela vazia após busca sem resultados",
-        timeout: 5000,
-      })
+      .poll(
+        async () => {
+          const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
+          const rowCount = await getTableRowCount(page)
+          return isMessageVisible || rowCount === 0
+        },
+        {
+          message: "Aguardando mensagem de vazio ou tabela vazia após busca sem resultados",
+          timeout: 5000,
+        }
+      )
       .toBe(true)
 
     // Verificar estado final: tabela deve estar vazia e mensagem deve estar visível
     const finalRowCount = await getTableRowCount(page)
     expect(finalRowCount).toBe(0)
-    
+
     const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
     expect(isMessageVisible).toBe(true)
   })

@@ -27,8 +27,9 @@ export async function waitForEmpresaPopulated(page: Page) {
       for (const input of inputs) {
         const htmlInput = input as HTMLInputElement | HTMLTextAreaElement
         // Verifica se o input está associado a um label com "empresa"
-        const label = htmlInput.labels?.[0] || 
-                     (htmlInput.id ? document.querySelector(`label[for="${htmlInput.id}"]`) as HTMLLabelElement | null : null)
+        const label =
+          htmlInput.labels?.[0] ||
+          (htmlInput.id ? (document.querySelector(`label[for="${htmlInput.id}"]`) as HTMLLabelElement | null) : null)
         if (label && label.textContent && /empresa/i.test(label.textContent)) {
           return htmlInput.value.trim().length > 0
         }
@@ -89,7 +90,7 @@ export async function closeAllDialogs(page: Page) {
             { timeout: verificationTimeout }
           ),
           // Opção 2: Espera que o primeiro diálogo seja removido do DOM
-          dialogs.first().waitFor({ state: "detached", timeout: verificationTimeout })
+          dialogs.first().waitFor({ state: "detached", timeout: verificationTimeout }),
         ])
         dialogClosed = true
       } catch (error) {

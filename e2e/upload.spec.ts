@@ -83,7 +83,7 @@ test.describe("Upload de Arquivos", () => {
     const file1 = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(file1)
-    
+
     // Aguardar processamento completo
     await waitForFileProcessing(page)
 
@@ -100,10 +100,10 @@ test.describe("Upload de Arquivos", () => {
     // Fazer novo upload
     const file2 = path.join(__dirname, "fixtures/analise-exemplo-2.md")
     await fileInput.setInputFiles(file2)
-    
+
     // Aguardar processamento completo
     await waitForFileProcessing(page)
-    
+
     // Verificar que foi substituído
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Microsoft/i)
 
@@ -155,7 +155,7 @@ test.describe("Upload de Arquivos", () => {
       () => {
         const progressBar = document.querySelector('[role="progressbar"]') as HTMLElement | null
         if (!progressBar) return false
-        const value = progressBar.getAttribute('aria-valuenow')
+        const value = progressBar.getAttribute("aria-valuenow")
         return value !== null && parseInt(value) > 0
       },
       { timeout: 3000 }
@@ -186,7 +186,7 @@ test.describe("Upload de Arquivos", () => {
     await fileInput.setInputFiles(analiseFile)
 
     // Aguardar preview de campos detectados aparecer
-    await page.getByText(/campos detectados automaticamente/i).waitFor({ state: 'visible' })
+    await page.getByText(/campos detectados automaticamente/i).waitFor({ state: "visible" })
 
     // Verificar preview de campos detectados
     await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible()
