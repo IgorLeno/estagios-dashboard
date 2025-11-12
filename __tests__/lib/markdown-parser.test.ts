@@ -182,7 +182,7 @@ terceira linha final.
 
       // Test field name matching pattern [çc][ãa]o with ASCII variant
       expect(parseVagaFromMarkdown("**Localizacao**: Rio").local).toBeDefined()
-      
+
       // Test with accented variant
       expect(parseVagaFromMarkdown("**Localização**: Rio").local).toBeDefined()
     })
