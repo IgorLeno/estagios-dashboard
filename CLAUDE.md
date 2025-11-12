@@ -45,6 +45,7 @@ pnpm test -- <pattern> # Run specific test file (e.g., pnpm test -- markdown-par
 ## CI/CD
 
 GitHub Actions workflow runs on push/PR to main and develop branches:
+
 1. Linting (ESLint)
 2. Formatting check (Prettier)
 3. Unit tests with coverage
@@ -76,6 +77,7 @@ Requires GitHub secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_
 ### Data Model (lib/types.ts)
 
 Core interfaces:
+
 - `VagaEstagio` - Job application with empresa, cargo, local, modalidade, status, etapa, fit, etc.
 - `MetaDiaria` - Daily goal tracking (meta, data)
 - `Configuracao` - User settings (hora_inicio, hora_termino)
@@ -91,6 +93,7 @@ Core interfaces:
 - **Auth**: Supabase Auth for admin routes
 
 Required environment variables (not in repo):
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -99,6 +102,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Path Aliases
 
 Uses `@/*` for root-level imports:
+
 ```typescript
 import { createClient } from "@/lib/supabase/client"
 import { VagaEstagio } from "@/lib/types"
@@ -134,16 +138,19 @@ Note: These settings are permissive for rapid development. Tighten for productio
 ## Code Quality Configuration
 
 **ESLint** ([eslint.config.mjs](eslint.config.mjs))
+
 - Extends `next/core-web-vitals` and `next/typescript`
 - Warns on unused vars (allows `_` prefix for ignored params)
 - Warns on explicit `any` types
 - Warns on `let` when `const` could be used
 
 **Prettier** (package.json)
+
 - Configured for consistent formatting
 - Run via `pnpm format` or `pnpm format:check`
 
 **Vitest** ([vitest.config.ts](vitest.config.ts))
+
 - jsdom environment for React component testing
 - Global test utilities enabled
 - Path alias `@/*` configured
@@ -159,32 +166,39 @@ Note: These settings are permissive for rapid development. Tighten for productio
 ## Common Tasks
 
 ### Adding a new page
+
 1. Create file in `app/` directory following App Router conventions
 2. Use `@/` imports for internal modules
 3. Add to navigation if needed (typically in tabs component)
 
 ### Creating a new component
+
 1. Add to `components/` directory
 2. Follow existing patterns (Radix UI for primitives)
 3. Use TypeScript interfaces from `lib/types.ts`
 
 ### Modifying data model
+
 1. Update interfaces in `lib/types.ts`
 2. Update Supabase schema (not in this repo)
 3. Update affected components and queries
 
 ### Working with Supabase
+
 - Use server client for Server Components/API routes
 - Use client for Client Components
 - Always handle errors from Supabase queries
 - Use `.single()` for queries expecting one row (may throw PGRST116 error if not found)
 
 ### File Upload Architecture
+
 Files are uploaded to Supabase Storage in two buckets:
+
 - `analises` bucket - stores .md analysis files
 - `curriculos` bucket - stores PDF/DOCX resume files
 
 Upload flow:
+
 1. User selects file via drag-and-drop or file input
 2. File is uploaded to Supabase Storage with progress tracking
 3. Public URL is returned and stored in `vagas_estagio` table (`url_analise` or `url_cv`)
@@ -195,12 +209,14 @@ Both buckets are configured as public with RLS policies for insert/select/delete
 ### Key Utilities
 
 **Markdown Parser** ([lib/markdown-parser.ts](lib/markdown-parser.ts))
+
 - `parseVagaFromMarkdown()` - Extracts structured data from markdown analysis files
 - Supports flexible formats: `**Campo**: valor`, `Campo: valor`, or `# Campo\nvalor`
 - Maps fields: empresa, cargo, local, modalidade, requisitos (0-100), fit (0-10), etapa, status, observações
 - Tested with 11 test cases covering various markdown formats
 
 **Date Utils** ([lib/date-utils.ts](lib/date-utils.ts))
+
 - `getDataInscricao()` - Calculates inscription date based on custom day start time (default 06:00)
 - If current time < configured start time, returns previous calendar day
 - Example: 03:00 Tuesday with 06:00 start = Monday's date
@@ -210,8 +226,9 @@ Both buckets are configured as public with RLS policies for insert/select/delete
 ## Testing
 
 ### Testing Setup
+
 - **Framework**: Vitest with jsdom environment
-- **Testing Libraries**: 
+- **Testing Libraries**:
   - `@testing-library/react` (v16+) - Component testing
   - `@testing-library/dom` - DOM utilities
   - `@testing-library/jest-dom` - DOM matchers
@@ -220,9 +237,11 @@ Both buckets are configured as public with RLS policies for insert/select/delete
 ### Testing Patterns
 
 #### Testing Hooks
+
 - Use `renderHook` from `@testing-library/react` (v16+)
 - **Important**: `waitForNextUpdate` was removed in newer versions
 - Use `waitFor` from `@testing-library/react` instead for async assertions:
+
 ```typescript
 import { renderHook, waitFor } from "@testing-library/react"
 
@@ -234,6 +253,7 @@ await waitFor(() => {
 ```
 
 #### Async Server Components
+
 - **Vitest Limitation**: Vitest has limitations when testing async Server Components directly
 - Server Components that use `async/await` (e.g., `app/admin/dashboard/page.tsx`) require special handling
 - **Recommendation**: Prefer E2E tests for async Server Components using tools like Playwright or Cypress
@@ -242,6 +262,7 @@ await waitFor(() => {
   - `app/admin/dashboard/page.tsx` - Fetches data server-side and requires authentication
 
 ### Running Tests
+
 ```bash
 # Run tests
 pnpm test

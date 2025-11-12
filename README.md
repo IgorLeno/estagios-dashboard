@@ -10,24 +10,28 @@ Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vaga
 ## ✨ Funcionalidades Principais
 
 ### 🚀 Automação Inteligente
+
 - **Upload com Drag-and-Drop** para arquivos Markdown (.md) e currículos (PDF/DOCX)
 - **Parser Automático de Markdown** - extrai dados da análise e preenche campos automaticamente
 - **Horário Customizável** - define quando o "dia" começa (padrão: 6h-5:59)
 - **Barra de Progresso** visual durante uploads com feedback em tempo real
 
 ### 📈 Acompanhamento e Metas
+
 - **Metas Diárias** editáveis com gradiente dinâmico (vermelho → dourado)
 - **Filtros Avançados** por modalidade, status, etapa, empresa e cargo
 - **Histórico Completo** com relatórios por período, status e localização
 - **Animações Suaves** e microinterações para melhor UX
 
 ### 🎯 Gestão de Vagas
+
 - **4 Status Principais**: Pendente, Avançado, Melou, Contratado
 - **Score de Requisitos** (0-100) e **Fit** (0-10)
 - **Tracking de Etapas** do processo seletivo
 - **Anexos**: Análise em Markdown + Currículo
 
 ### 🎨 Interface Moderna
+
 - Design **mobile-first** totalmente responsivo
 - Tema claro com paleta profissional (cinza, azul, violeta)
 - Componentes **Radix UI** para acessibilidade
@@ -48,6 +52,7 @@ Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vaga
 ## 📦 Instalação
 
 ### Pré-requisitos
+
 - Node.js 20.x ou superior
 - pnpm
 

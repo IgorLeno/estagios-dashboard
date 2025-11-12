@@ -66,8 +66,7 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     const lower = modalidadeStr.toLowerCase()
     if (lower.includes("presencial") && !lower.includes("remoto") && !lower.includes("h") && !lower.includes("í"))
       parsed.modalidade = "Presencial"
-    else if (lower.includes("remoto") && !lower.includes("h") && !lower.includes("í"))
-      parsed.modalidade = "Remoto"
+    else if (lower.includes("remoto") && !lower.includes("h") && !lower.includes("í")) parsed.modalidade = "Remoto"
     else if (lower.includes("h") || lower.includes("í")) parsed.modalidade = "Híbrido"
   }
 
@@ -95,8 +94,7 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     if (lower.includes("contrat")) parsed.status = "Contratado"
     else if (lower.includes("avan") || lower.includes("progresso") || lower.includes("processo"))
       parsed.status = "Avançado"
-    else if (lower.includes("melou") || lower.includes("reprov") || lower.includes("recus"))
-      parsed.status = "Melou"
+    else if (lower.includes("melou") || lower.includes("reprov") || lower.includes("recus")) parsed.status = "Melou"
     else if (lower.includes("pendent") || lower.includes("aguard") || lower.includes("inscri"))
       parsed.status = "Pendente"
   }

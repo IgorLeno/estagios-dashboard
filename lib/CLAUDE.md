@@ -9,9 +9,11 @@ Core utilities, type definitions, and external service integrations (Supabase).
 ## Files Overview
 
 ### `types.ts` - TypeScript Definitions
+
 Central type definitions for the entire application. All components import types from here.
 
 **Key Interfaces:**
+
 - `VagaEstagio` - Job application with all fields (empresa, cargo, status, etc.)
 - `MetaDiaria` - Daily goal tracking
 - `Configuracao` - User settings (custom day start/end times)
@@ -19,6 +21,7 @@ Central type definitions for the entire application. All components import types
 - `StatusResumo` / `LocalResumo` - Aggregated statistics
 
 **Important Type Constraints:**
+
 ```typescript
 modalidade: "Presencial" | "Híbrido" | "Remoto"  // Fixed set
 status: "Pendente" | "Avançado" | "Melou" | "Contratado"  // Fixed set
@@ -31,11 +34,13 @@ fit?: number  // 0-10 score
 **Purpose:** Extract structured data from markdown analysis files to auto-fill vaga forms.
 
 **Main Function:**
+
 ```typescript
 parseVagaFromMarkdown(markdown: string): ParsedVagaData
 ```
 
 **Parsing Strategy:**
+
 - Flexible format recognition (handles `**Campo**: valor`, `Campo: valor`, `# Campo\nvalor`)
 - Case-insensitive field matching
 - Regex-based extraction with fallback patterns
@@ -43,6 +48,7 @@ parseVagaFromMarkdown(markdown: string): ParsedVagaData
 - Smart status/modalidade mapping from natural language
 
 **Supported Fields:**
+
 - empresa, cargo, local (string extraction)
 - modalidade (keyword matching: presencial/híbrido/remoto)
 - requisitos (0-100), fit (0-10) - number extraction with validation
@@ -50,14 +56,16 @@ parseVagaFromMarkdown(markdown: string): ParsedVagaData
 - observacoes (multi-line section extraction)
 
 **Testing:**
+
 - 11 test cases in `__tests__/lib/markdown-parser.test.ts`
 - Covers multiple markdown formats, edge cases, partial data
 
 **Usage Pattern:**
+
 ```typescript
 // In upload components
 const parsed = parseVagaFromMarkdown(markdownContent)
-setFormData(prev => ({ ...prev, ...parsed }))
+setFormData((prev) => ({ ...prev, ...parsed }))
 ```
 
 ### `date-utils.ts` - Date Utilities with Custom Day Logic
@@ -66,15 +74,18 @@ setFormData(prev => ({ ...prev, ...parsed }))
 
 **Core Concept:**
 The "day" for inscription tracking doesn't follow calendar days. By default:
+
 - Day starts at 06:00 and ends at 05:59 next calendar day
 - Example: 03:00 Tuesday = Monday's date (still before 06:00)
 
 **Main Function:**
+
 ```typescript
 getDataInscricao(now?: Date, config?: Configuracao): string
 ```
 
 **Logic:**
+
 1. Get configured start time (default: "06:00:00")
 2. Compare current time to start time
 3. If before start time → return previous calendar day
@@ -82,6 +93,7 @@ getDataInscricao(now?: Date, config?: Configuracao): string
 5. Format as YYYY-MM-DD
 
 **Other Utilities:**
+
 - `formatDateToYYYYMMDD()` - ISO date format
 - `formatDateToDDMMYYYY()` - Display format
 - `isValidTimeFormat()` - Validate HH:MM strings
@@ -89,11 +101,13 @@ getDataInscricao(now?: Date, config?: Configuracao): string
 
 **Critical Usage:**
 Used in ALL components that record `data_inscricao`:
+
 - `add-vaga-dialog.tsx` - When creating new vaga
 - `edit-vaga-dialog.tsx` - When updating vaga
 - Reports and filters - Ensure consistent date logic
 
 **Testing:**
+
 - Tests in `__tests__/lib/date-utils.test.ts`
 - Validates boundary conditions (before/after start time)
 - Tests with different configurations
@@ -101,11 +115,13 @@ Used in ALL components that record `data_inscricao`:
 ### `utils.ts` - General Utilities
 
 **Main Export:**
+
 ```typescript
 cn(...inputs: ClassValue[]): string
 ```
 
 Combines `clsx` and `tailwind-merge` for className handling:
+
 ```typescript
 // Merge classes, resolve conflicts
 cn("px-2 py-1", condition && "px-4") // → "px-4 py-1"
@@ -116,11 +132,13 @@ Used extensively in all components for conditional styling.
 ### `supabase/` - Supabase Client Setup
 
 **Files:**
+
 - `client.ts` - Client-side Supabase client
 - `server.ts` - Server-side Supabase client
 - `middleware.ts` - Middleware for session updates
 
 **Client-Side (`client.ts`):**
+
 ```typescript
 import { createClient } from "@/lib/supabase/client"
 
@@ -129,6 +147,7 @@ const supabase = createClient()
 ```
 
 **Server-Side (`server.ts`):**
+
 ```typescript
 import { createClient } from "@/lib/supabase/server"
 
@@ -137,18 +156,21 @@ const supabase = await createClient()
 ```
 
 **Key Difference:**
+
 - Client: Synchronous, uses browser cookies
 - Server: Async, uses Next.js `cookies()` from `next/headers`
 
 ## Adding New Utilities
 
 ### When to Add to This Directory
+
 - Reusable logic across multiple components
 - Business logic that needs testing
 - Type definitions shared across the app
 - Integration with external services
 
 ### When NOT to Add
+
 - Component-specific helper functions (keep in component file)
 - One-off utility used once (inline in component)
 
@@ -182,6 +204,7 @@ export function relatedUtility() {
 ### Testing New Utilities
 
 Create corresponding test file in `__tests__/lib/`:
+
 ```typescript
 // __tests__/lib/new-utility.test.ts
 
@@ -210,17 +233,20 @@ describe("utilityFunction", () => {
 5. **Document constraints:** Add comments for ranges, formats
 
 Example:
+
 ```typescript
 export interface NewType {
-  id: string  // UUID from Supabase
-  created_at: string  // ISO timestamp
-  status: "active" | "inactive"  // Fixed enum
-  score?: number  // Optional, 0-100 if present
+  id: string // UUID from Supabase
+  created_at: string // ISO timestamp
+  status: "active" | "inactive" // Fixed enum
+  score?: number // Optional, 0-100 if present
 }
 ```
 
 ### Import Pattern
+
 Always use `type` import for better tree-shaking:
+
 ```typescript
 import type { VagaEstagio, MetaDiaria } from "@/lib/types"
 ```

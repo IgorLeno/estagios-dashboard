@@ -59,7 +59,12 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
                   min="0"
                   autoFocus
                 />
-                <Button size="sm" variant="secondary" onClick={handleSave} className="h-8 hover:scale-110 transition-transform">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleSave}
+                  className="h-8 hover:scale-110 transition-transform"
+                >
                   <Check className="h-4 w-4" />
                 </Button>
               </div>
@@ -78,7 +83,9 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
 
           <div className="text-right">
             <p className="text-sm text-white/90">Candidaturas de Hoje:</p>
-            <p className="text-4xl font-bold tabular-nums transition-all duration-500 hover:scale-110">{candidaturas}</p>
+            <p className="text-4xl font-bold tabular-nums transition-all duration-500 hover:scale-110">
+              {candidaturas}
+            </p>
           </div>
         </div>
 
@@ -88,10 +95,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
             <span className="font-semibold tabular-nums">{progress.toFixed(0)}%</span>
           </div>
           <div className="h-3 bg-white/30 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white transition-all duration-700 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-white transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </CardContent>

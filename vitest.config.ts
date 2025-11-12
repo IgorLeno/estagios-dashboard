@@ -11,14 +11,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: [
-        "node_modules/",
-        "vitest.setup.ts",
-        "**/*.d.ts",
-        "**/*.config.*",
-        "**/mockData",
-        "**/__tests__",
-      ],
+      exclude: ["node_modules/", "vitest.setup.ts", "**/*.d.ts", "**/*.config.*", "**/mockData", "**/__tests__"],
     },
   },
   resolve: {

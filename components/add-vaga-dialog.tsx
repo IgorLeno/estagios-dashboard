@@ -178,7 +178,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
             </div>
           </div>
 
-
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="requisitos">Requisitos (Score)</Label>

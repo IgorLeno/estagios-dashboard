@@ -1,7 +1,7 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import typescriptParser from "@typescript-eslint/parser";
-import react from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
+import typescriptEslint from "@typescript-eslint/eslint-plugin"
+import typescriptParser from "@typescript-eslint/parser"
+import react from "eslint-plugin-react"
+import reactHooks from "eslint-plugin-react-hooks"
 
 export default [
   {
@@ -25,10 +25,7 @@ export default [
       "react-hooks": reactHooks,
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_" },
-      ],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
       "prefer-const": "warn",
       "react/react-in-jsx-scope": "off",
@@ -42,4 +39,4 @@ export default [
       },
     },
   },
-];
+]

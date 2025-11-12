@@ -137,10 +137,12 @@ Fit: 8
 ### 4.2. Horário Customizável
 
 Por padrão, o "dia" de inscrição vai de **06:00 às 05:59**. Isso significa que:
+
 - Inscrições feitas às 23:00 de segunda-feira = dia de segunda
 - Inscrições feitas às 02:00 de terça-feira = dia de segunda (ainda antes das 06:00)
 
 Para alterar esse horário:
+
 1. Acesse a aba **Configurações**
 2. Ajuste os horários de início e fim
 3. Salve
@@ -161,6 +163,7 @@ Para alterar esse horário:
 ### 4.5. Relatórios
 
 Na aba **Resumo**, você pode:
+
 - Filtrar por período de datas
 - Ver histórico de candidaturas por dia
 - Visualizar agregações por status
@@ -187,6 +190,7 @@ Na aba **Resumo**, você pode:
 ### 5.3. Backup
 
 Os dados estão no Supabase. Para backup:
+
 - Acesse **Database** → **Backups** no painel do Supabase
 - Configure backups automáticos
 - Ou exporte dados via SQL quando necessário

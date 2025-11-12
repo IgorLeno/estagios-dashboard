@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { getDataInscricao, formatDateToYYYYMMDD, formatDateToDDMMYYYY, isValidTimeFormat, daysBetween } from "@/lib/date-utils"
+import {
+  getDataInscricao,
+  formatDateToYYYYMMDD,
+  formatDateToDDMMYYYY,
+  isValidTimeFormat,
+  daysBetween,
+} from "@/lib/date-utils"
 import type { Configuracao } from "@/lib/types"
 
 describe("date-utils", () => {

@@ -27,7 +27,7 @@ export function MarkdownUpload({
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(
-    currentFile ? currentFile.split("/").pop() || null : null,
+    currentFile ? currentFile.split("/").pop() || null : null
   )
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)

@@ -22,12 +22,14 @@ __tests__/
 ## Test Philosophy
 
 ### What to Test
+
 1. **Utilities in `/lib`** - Pure functions, business logic
 2. **Parsers and data transformations** - Critical path functions
 3. **Date/time logic** - Custom day boundaries, edge cases
 4. **Type validation** - Number ranges, enum values
 
 ### What NOT to Test (Yet)
+
 1. **Server Components** - Vitest limitation with async Server Components
 2. **E2E flows** - Use Playwright/Cypress instead (not yet configured)
 3. **Supabase integration** - Would need mocking (not implemented)
@@ -36,9 +38,11 @@ __tests__/
 ## Current Test Coverage
 
 ### `markdown-parser.test.ts`
+
 **Coverage:** 11 test cases
 
 **Test Categories:**
+
 - Basic field extraction (`**Campo**: valor`)
 - Alternative formats (`Campo: valor`, `# Campo\nvalor`)
 - Case insensitivity
@@ -48,6 +52,7 @@ __tests__/
 - Edge cases (missing fields, partial data)
 
 **Pattern:**
+
 ```typescript
 describe("parseVagaFromMarkdown", () => {
   it("should parse basic markdown format", () => {
@@ -63,9 +68,11 @@ describe("parseVagaFromMarkdown", () => {
 ```
 
 ### `date-utils.test.ts`
+
 **Coverage:** Tests for date boundary logic
 
 **Test Categories:**
+
 - Before custom day start (should return previous day)
 - After custom day start (should return current day)
 - Default configuration (06:00 start)
@@ -74,6 +81,7 @@ describe("parseVagaFromMarkdown", () => {
 - Time validation
 
 **Pattern:**
+
 ```typescript
 describe("getDataInscricao", () => {
   it("should return previous day when before start time", () => {
@@ -88,6 +96,7 @@ describe("getDataInscricao", () => {
 ## Testing Patterns
 
 ### Testing Pure Functions
+
 ```typescript
 import { describe, it, expect } from "vitest"
 import { functionToTest } from "@/lib/utility"
@@ -106,6 +115,7 @@ describe("functionToTest", () => {
 ```
 
 ### Testing with Mock Data
+
 ```typescript
 const mockVaga: VagaEstagio = {
   id: "123",
@@ -116,6 +126,7 @@ const mockVaga: VagaEstagio = {
 ```
 
 ### Async Tests
+
 ```typescript
 it("should handle async operation", async () => {
   const result = await asyncFunction()
@@ -124,6 +135,7 @@ it("should handle async operation", async () => {
 ```
 
 ### Testing Hooks (React Testing Library v16+)
+
 **IMPORTANT:** Use `waitFor`, NOT `waitForNextUpdate` (removed in v16+)
 
 ```typescript
@@ -165,15 +177,18 @@ pnpm test -- markdown-parser -t "should parse basic"
 **Target:** Utilities in `/lib` should have >80% coverage
 
 **Check Coverage:**
+
 ```bash
 pnpm test:coverage
 ```
 
 Coverage reports generated in `./coverage/`:
+
 - `coverage/index.html` - Visual coverage report
 - `coverage/coverage-final.json` - JSON report (sent to Codecov)
 
 **Excluded from Coverage:**
+
 - `node_modules/`
 - Test files (`*.test.ts`)
 - Config files (`*.config.*`)
@@ -182,6 +197,7 @@ Coverage reports generated in `./coverage/`:
 ## Adding New Tests
 
 ### For New Utility Function
+
 1. Create test file: `__tests__/lib/utility-name.test.ts`
 2. Import function from `@/lib/utility-name`
 3. Write describe block with multiple test cases
@@ -189,6 +205,7 @@ Coverage reports generated in `./coverage/`:
 5. Run tests and verify coverage
 
 ### Test File Template
+
 ```typescript
 import { describe, it, expect } from "vitest"
 import { newUtility } from "@/lib/new-utility"
@@ -215,6 +232,7 @@ describe("newUtility", () => {
 ## CI Integration
 
 Tests run automatically in GitHub Actions on push/PR:
+
 1. Install dependencies
 2. Run linter
 3. Run tests with coverage
@@ -226,7 +244,9 @@ See [.github/workflows/ci.yml](../.github/workflows/ci.yml)
 ## Future Testing Enhancements
 
 ### Component Testing
+
 Add tests for React components:
+
 ```typescript
 import { render, screen } from "@testing-library/react"
 import { AddVagaDialog } from "@/components/add-vaga-dialog"
@@ -238,21 +258,25 @@ it("should render dialog", () => {
 ```
 
 ### Supabase Mocking
+
 Mock Supabase client for testing data fetching:
+
 ```typescript
 import { vi } from "vitest"
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     from: () => ({
-      select: vi.fn().mockResolvedValue({ data: mockData })
-    })
-  })
+      select: vi.fn().mockResolvedValue({ data: mockData }),
+    }),
+  }),
 }))
 ```
 
 ### E2E Testing
+
 Add Playwright or Cypress for full user flows:
+
 - Login → Create vaga → Upload file → Verify data
 - Navigate tabs → Apply filters → Verify results
 - Admin routes → Auth checks → Protected actions

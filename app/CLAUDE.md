@@ -26,13 +26,15 @@ app/
 ### Client vs Server Components
 
 **Main Dashboard (`page.tsx`):**
+
 - Client Component (`"use client"`)
 - Manages state for vagas, meta, currentDate
 - Uses Supabase client-side SDK
 - Tab-based interface (Estágios, Resumo, Configurações)
 - Real-time data loading with useEffect
 
-**Admin Routes (`admin/**`):**
+**Admin Routes (`admin/**`):\*\*
+
 - Server Components (no "use client" directive)
 - Use async/await for Supabase queries
 - Auth checks with redirect
@@ -64,12 +66,14 @@ export default async function ProtectedPage() {
 ### Data Flow Pattern
 
 **Main Dashboard Flow:**
+
 1. `page.tsx` (Client) - Manages state, loads data on mount/date change
 2. Passes data + callbacks to child components
 3. Child components trigger `onSuccess` callback after mutations
 4. Parent refetches data via `loadData()`
 
 **Admin Dashboard Flow:**
+
 1. `admin/dashboard/page.tsx` (Server) - Fetches data, checks auth
 2. Passes data to `<DashboardContent>` (Client Component)
 3. Client component handles interactions, mutations
@@ -78,13 +82,17 @@ export default async function ProtectedPage() {
 ## Routing Conventions
 
 ### Dynamic Routes
+
 `vaga/[id]/page.tsx` - Detail page for individual job application
+
 - Access route param via `params.id`
 - Fetch specific vaga data
 - Display full details, files, history
 
 ### Route Groups
+
 `admin/` - Grouped admin routes
+
 - Shares authentication logic
 - Can have shared layout (future enhancement)
 - Isolated from main app routes
@@ -92,6 +100,7 @@ export default async function ProtectedPage() {
 ## Layout and Metadata
 
 **Root Layout (`layout.tsx`):**
+
 - Sets up HTML structure
 - Includes global metadata (title, description)
 - Loads fonts (Inter, Geist)
@@ -99,6 +108,7 @@ export default async function ProtectedPage() {
 - Wraps with Toaster for toast notifications
 
 **Metadata Pattern:**
+
 ```typescript
 export const metadata: Metadata = {
   title: "Dashboard Title",
@@ -109,16 +119,19 @@ export const metadata: Metadata = {
 ## State Management Strategy
 
 ### No Global State
+
 - Each route manages its own state
 - Shared data fetched per-route (no caching across routes)
 - Supabase is the single source of truth
 
 ### State Lifting
+
 - Parent route component holds state
 - Children receive state + callbacks via props
 - Mutations trigger parent data refresh
 
 ### URL State
+
 - Date selection could use URL params (future enhancement)
 - Filters could be persisted in URL (future enhancement)
 - Currently: all state is local component state
@@ -126,6 +139,7 @@ export const metadata: Metadata = {
 ## Adding New Routes
 
 ### Public Route (Main App)
+
 1. Create `app/new-route/page.tsx`
 2. Decide: Client or Server Component?
    - Need state/interactivity → Client Component
@@ -134,6 +148,7 @@ export const metadata: Metadata = {
 4. Use appropriate Supabase client
 
 Example Client Component:
+
 ```typescript
 "use client"
 
@@ -157,6 +172,7 @@ export default function NewPage() {
 ```
 
 ### Protected Route (Admin)
+
 1. Create under `app/admin/`
 2. Use Server Component pattern
 3. Add auth check with redirect
@@ -166,27 +182,33 @@ export default function NewPage() {
 ## Common Modifications
 
 ### Changing Main Dashboard Layout
+
 Edit `app/page.tsx`:
+
 - Tab structure in `<Tabs>` component
 - Each tab has corresponding page component
 - Add new tab: Import component, add `<TabsTrigger>` + `<TabsContent>`
 
 ### Adding Auth to Main Dashboard
+
 Currently public. To add auth:
+
 1. Convert `page.tsx` to Server Component
 2. Add auth check (like admin routes)
 3. Extract interactive UI to separate Client Component
 4. Or use middleware for route protection
 
 ### Adding API Routes
+
 Create `app/api/route-name/route.ts`:
+
 ```typescript
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request) {
   const supabase = await createClient()
-  const { data } = await supabase.from('table').select('*')
+  const { data } = await supabase.from("table").select("*")
   return NextResponse.json(data)
 }
 ```
@@ -194,6 +216,7 @@ export async function GET(request: Request) {
 ## Testing Server Components
 
 See main CLAUDE.md Testing section:
+
 - Vitest has limitations with async Server Components
 - Prefer E2E tests for Server Components
 - Or extract logic to testable utilities in `/lib`
