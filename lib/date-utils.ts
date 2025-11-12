@@ -21,7 +21,7 @@ export function getDataInscricao(now: Date = new Date(), config?: Configuracao):
   dataReferencia.setHours(hora, minuto, 0, 0)
 
   // Se agora é antes da hora de início, o "dia" é de ontem
-  let dataInscricao = new Date(now)
+  const dataInscricao = new Date(now)
   if (now < dataReferencia) {
     dataInscricao.setDate(dataInscricao.getDate() - 1)
   }

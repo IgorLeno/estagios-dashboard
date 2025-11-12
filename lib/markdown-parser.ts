@@ -41,24 +41,27 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   }
 
   // Empresa (case insensitive, com/sem negrito, com/sem asteriscos)
-  parsed.empresa =
+  const empresa =
     extractField(/\*?\*?empresa\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/^#\s*empresa\s*\n+\s*(.+)/im) ||
     extractField(/^empresa\s*\n+\s*(.+)/im)
+  if (empresa) parsed.empresa = empresa
 
   // Cargo
-  parsed.cargo =
+  const cargo =
     extractField(/\*?\*?cargo\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/\*?\*?vaga\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/^#\s*cargo\s*\n+\s*(.+)/im) ||
     extractField(/^cargo\s*\n+\s*(.+)/im)
+  if (cargo) parsed.cargo = cargo
 
   // Local
-  parsed.local =
+  const local =
     extractField(/\*?\*?local\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/\*?\*?localiza[çc][ãa]o\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/\*?\*?cidade\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/^#\s*local\s*\n+\s*(.+)/im)
+  if (local) parsed.local = local
 
   // Modalidade
   const modalidadeStr = extractField(/\*?\*?modalidade\*?\*?\s*:?\s*(.+)/i)
@@ -71,21 +74,24 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   }
 
   // Requisitos (score 0-100)
-  parsed.requisitos =
-    extractNumber(/\*?\*?requisitos?\*?\*?\s*:?\s*(\d+)/i, 0, 100) ||
-    extractNumber(/\*?\*?score\*?\*?\s*:?\s*(\d+)/i, 0, 100) ||
+  const requisitos =
+    extractNumber(/\*?\*?requisitos?\*?\*?\s*:?\s*(\d+)/i, 0, 100) ??
+    extractNumber(/\*?\*?score\*?\*?\s*:?\s*(\d+)/i, 0, 100) ??
     extractNumber(/\*?\*?nota\*?\*?\s*:?\s*(\d+)/i, 0, 100)
+  if (requisitos !== undefined) parsed.requisitos = requisitos
 
   // Fit (0-10)
-  parsed.fit =
-    extractNumber(/\*?\*?fit\*?\*?\s*:?\s*(\d+)/i, 0, 10) ||
+  const fit =
+    extractNumber(/\*?\*?fit\*?\*?\s*:?\s*(\d+)/i, 0, 10) ??
     extractNumber(/\*?\*?adequa[çc][ãa]o\*?\*?\s*:?\s*(\d+)/i, 0, 10)
+  if (fit !== undefined) parsed.fit = fit
 
   // Etapa
-  parsed.etapa =
+  const etapa =
     extractField(/\*?\*?etapa\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/\*?\*?fase\*?\*?\s*:?\s*(.+)/i) ||
     extractField(/\*?\*?est[áa]gio\s+do\s+processo\*?\*?\s*:?\s*(.+)/i)
+  if (etapa) parsed.etapa = etapa
 
   // Status
   const statusStr = extractField(/\*?\*?status\*?\*?\s*:?\s*(.+)/i)
