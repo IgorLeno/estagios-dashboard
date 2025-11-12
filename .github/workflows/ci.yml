@@ -51,8 +51,8 @@ jobs:
         uses: codecov/codecov-action@v4
         if: success()
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}  # Adicione esta linha
+          token: ${{ secrets.CODECOV_TOKEN }} # Adicione esta linha
           files: ./coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true  # Opcional: falha o CI se upload falhar
+          fail_ci_if_error: true # Opcional: falha o CI se upload falhar
