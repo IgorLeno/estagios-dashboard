@@ -21,19 +21,37 @@ Next.js 16 dashboard application for tracking internship applications ("Estágio
 
 ```bash
 # Development server (default: http://localhost:3000)
-npm run dev
-# or
 pnpm dev
 
 # Production build
-npm run build
+pnpm build
 
 # Start production server
-npm start
+pnpm start
 
-# Lint
-npm run lint
+# Code Quality
+pnpm lint          # Run ESLint
+pnpm lint:fix      # Fix ESLint errors automatically
+pnpm format        # Format code with Prettier
+pnpm format:check  # Check formatting without changes
+
+# Testing
+pnpm test              # Run tests in watch mode
+pnpm test:ui           # Run tests with Vitest UI
+pnpm test:coverage     # Generate coverage report
+pnpm test -- <pattern> # Run specific test file (e.g., pnpm test -- markdown-parser)
 ```
+
+## CI/CD
+
+GitHub Actions workflow runs on push/PR to main and develop branches:
+1. Linting (ESLint)
+2. Formatting check (Prettier)
+3. Unit tests with coverage
+4. Build verification
+5. Coverage upload to Codecov
+
+Requires GitHub secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Architecture
 
@@ -113,6 +131,25 @@ import { VagaEstagio } from "@/lib/types"
 
 Note: These settings are permissive for rapid development. Tighten for production.
 
+## Code Quality Configuration
+
+**ESLint** ([eslint.config.mjs](eslint.config.mjs))
+- Extends `next/core-web-vitals` and `next/typescript`
+- Warns on unused vars (allows `_` prefix for ignored params)
+- Warns on explicit `any` types
+- Warns on `let` when `const` could be used
+
+**Prettier** (package.json)
+- Configured for consistent formatting
+- Run via `pnpm format` or `pnpm format:check`
+
+**Vitest** ([vitest.config.ts](vitest.config.ts))
+- jsdom environment for React component testing
+- Global test utilities enabled
+- Path alias `@/*` configured
+- Coverage via v8 provider (text, json, html reports)
+- Setup file: `vitest.setup.ts` for global test configuration
+
 ## Deployment
 
 - Auto-deployed to Vercel from v0.app
@@ -141,6 +178,34 @@ Note: These settings are permissive for rapid development. Tighten for productio
 - Use client for Client Components
 - Always handle errors from Supabase queries
 - Use `.single()` for queries expecting one row (may throw PGRST116 error if not found)
+
+### File Upload Architecture
+Files are uploaded to Supabase Storage in two buckets:
+- `analises` bucket - stores .md analysis files
+- `curriculos` bucket - stores PDF/DOCX resume files
+
+Upload flow:
+1. User selects file via drag-and-drop or file input
+2. File is uploaded to Supabase Storage with progress tracking
+3. Public URL is returned and stored in `vagas_estagio` table (`url_analise` or `url_cv`)
+4. For .md files, content is fetched and parsed via `parseVagaFromMarkdown()` to auto-fill form fields
+
+Both buckets are configured as public with RLS policies for insert/select/delete.
+
+### Key Utilities
+
+**Markdown Parser** ([lib/markdown-parser.ts](lib/markdown-parser.ts))
+- `parseVagaFromMarkdown()` - Extracts structured data from markdown analysis files
+- Supports flexible formats: `**Campo**: valor`, `Campo: valor`, or `# Campo\nvalor`
+- Maps fields: empresa, cargo, local, modalidade, requisitos (0-100), fit (0-10), etapa, status, observações
+- Tested with 11 test cases covering various markdown formats
+
+**Date Utils** ([lib/date-utils.ts](lib/date-utils.ts))
+- `getDataInscricao()` - Calculates inscription date based on custom day start time (default 06:00)
+- If current time < configured start time, returns previous calendar day
+- Example: 03:00 Tuesday with 06:00 start = Monday's date
+- Used throughout app for consistent date tracking
+- Configurable via `configuracoes` table (hora_inicio, hora_termino)
 
 ## Testing
 
