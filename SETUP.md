@@ -73,16 +73,12 @@ Substitua pelos valores reais do seu projeto Supabase.
 ### 3.1. Instalar dependências
 
 ```bash
-npm install
-# ou
 pnpm install
 ```
 
 ### 3.2. Executar em desenvolvimento
 
 ```bash
-npm run dev
-# ou
 pnpm dev
 ```
 
@@ -91,8 +87,8 @@ O dashboard estará disponível em `http://localhost:3000`
 ### 3.3. Build para produção
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 ## 4. Funcionalidades

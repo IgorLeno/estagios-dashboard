@@ -49,7 +49,7 @@ Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vaga
 
 ### Pré-requisitos
 - Node.js 20.x ou superior
-- pnpm (recomendado) ou npm
+- pnpm
 
 ### Passos
 

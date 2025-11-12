@@ -244,11 +244,11 @@ await waitFor(() => {
 ### Running Tests
 ```bash
 # Run tests
-npm run test
+pnpm test
 
 # Run tests with UI
-npm run test:ui
+pnpm test:ui
 
 # Run tests with coverage
-npm run test:coverage
+pnpm test:coverage
 ```
