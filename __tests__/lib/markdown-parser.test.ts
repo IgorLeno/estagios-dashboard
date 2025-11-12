@@ -180,8 +180,11 @@ terceira linha final.
       // Campo alternativo "Fase" para etapa
       expect(parseVagaFromMarkdown("**Fase**: Entrevista").etapa).toBe("Entrevista")
 
-      // Test with words that match the regex pattern  [çc][ãa]o
+      // Test field name matching pattern [çc][ãa]o with ASCII variant
       expect(parseVagaFromMarkdown("**Localizacao**: Rio").local).toBeDefined()
+      
+      // Test with accented variant
+      expect(parseVagaFromMarkdown("**Localização**: Rio").local).toBeDefined()
     })
 
     it("should handle case insensitivity", () => {
@@ -203,9 +206,10 @@ LOCAL: Cupertiba
 **Cargo**: Developer
       `
       const result = parseVagaFromMarkdown(markdown)
-      // Regex captures next line if no space after colon, so we test actual behavior
-      // In this case "**Cargo**: Developer" is captured as empresa value
-      // To truly test empty, we need a different format
+      // Comportamento atual: quando o campo está vazio (sem valor na mesma linha após os dois pontos),
+      // a regex /\*?\*?empresa\*?\*?\s*:?\s*(.+)/i captura tudo após os dois pontos, incluindo
+      // a próxima linha, então "**Cargo**: Developer" é capturado como valor de empresa
+      expect(result.empresa).toBe("**Cargo**: Developer")
       expect(result.cargo).toBe("Developer")
     })
 
