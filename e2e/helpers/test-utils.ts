@@ -124,10 +124,11 @@ export async function fillFieldByLabel(page: Page, label: string, value: string)
 }
 
 /**
- * Select option by label
+/**
+ * Wait for expected number of table rows
+ */
 export async function waitForTableRows(page: Page, expectedCount: number = 1) {
   await expect(page.locator("table tbody tr")).toHaveCount(expectedCount, { timeout: 10000 })
-}
 }
 
 /**

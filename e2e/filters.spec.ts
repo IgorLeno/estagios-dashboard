@@ -34,42 +34,34 @@ test.describe("Filtros do Dashboard", () => {
     const emptyMessage = page.getByText(/nenhuma vaga encontrada|nenhum resultado/i)
 
     // Aguardar que OU apareça uma linha com "Google" OU a mensagem de vazio apareça
-    // Usar Promise.race para aguardar a primeira condição que se tornar visível
+    // Usar Promise.any para aguardar a primeira condição que se tornar visível
     const googleRowPromise = expect(rowsWithGoogle.first())
       .toBeVisible({ timeout: 5000 })
-      .then(() => ({ type: "google" as const, success: true }))
-      .catch(() => ({ type: "google" as const, success: false }))
+      .then(() => "google" as const)
     
     const emptyMessagePromise = expect(emptyMessage)
       .toBeVisible({ timeout: 5000 })
-      .then(() => ({ type: "empty" as const, success: true }))
-      .catch(() => ({ type: "empty" as const, success: false }))
+      .then(() => "empty" as const)
     
-    // Aguardar a primeira promessa que resolver (com sucesso ou falha)
-    const firstResult = await Promise.race([
-      googleRowPromise,
-      emptyMessagePromise,
-    ])
-    
-    // Se a primeira que resolveu teve sucesso, usar esse resultado
-    // Caso contrário, aguardar a segunda para verificar se teve sucesso
-    let result: "google" | "empty" | null = null
-    if (firstResult.success) {
-      result = firstResult.type
-    } else {
-      // Aguardar a segunda promessa para verificar se teve sucesso
-      const secondResult = await (firstResult.type === "google" 
-        ? emptyMessagePromise 
-        : googleRowPromise)
-      
-      if (secondResult.success) {
-        result = secondResult.type
+    // Aguardar a primeira promessa que resolver com sucesso
+    try {
+      await Promise.any([googleRowPromise, emptyMessagePromise])
+    } catch (error) {
+      // Se Promise.any rejeitar, significa que todas as condições falharam
+      if (error instanceof AggregateError) {
+        const errorMessages = error.errors
+          .map((err, index) => {
+            const type = index === 0 ? "linha com 'Google'" : "mensagem de vazio"
+            return `  - ${type}: ${err instanceof Error ? err.message : String(err)}`
+          })
+          .join("\n")
+        
+        throw new Error(
+          `Nenhuma das condições esperadas foi atendida dentro do timeout de 5000ms:\n${errorMessages}`
+        )
       }
-    }
-    
-    // Falhar explicitamente se nenhuma condição foi atendida
-    if (result === null) {
-      throw new Error("Nenhuma das condições esperadas foi atendida: nem linha com 'Google' nem mensagem de vazio apareceram dentro do timeout de 5000ms")
+      // Re-lançar erro se não for AggregateError
+      throw error
     }
 
     const filteredRowsCount = await getTableRowCount(page)
@@ -173,8 +165,23 @@ test.describe("Filtros do Dashboard", () => {
 
     // Aguardar que a busca seja aplicada (verificar que o input tem o valor)
     await expect(searchInput).toHaveValue("E2E")
-    // Aguardar frame para aplicação do filtro client-side
-    await page.waitForTimeout(100)
+    
+    // Aguardar que o filtro seja aplicado de forma determinística
+    // Verificar que a tabela foi atualizada: ou aparece uma linha com "E2E" ou a contagem muda
+    const tableBody = page.locator("table tbody")
+    const rowsWithE2E = tableBody.locator("tr").filter({ hasText: /e2e/i })
+    
+    // Aguardar que OU apareça uma linha com "E2E" OU a contagem de linhas mude
+    await expect
+      .poll(async () => {
+        const hasE2ERow = await rowsWithE2E.first().isVisible().catch(() => false)
+        const currentCount = await getTableRowCount(page)
+        return hasE2ERow || currentCount !== initialCount
+      }, {
+        message: "Aguardando que o filtro seja aplicado: linha com 'E2E' visível ou contagem de linhas alterada",
+        timeout: 5000,
+      })
+      .toBe(true)
 
     const step1Rows = await getTableRowCount(page)
 
