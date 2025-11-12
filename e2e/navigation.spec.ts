@@ -12,8 +12,6 @@ test.describe("Navegação do Dashboard", () => {
 
     // Navegar para Resumo
     await page.getByRole("tab", { name: /resumo/i }).click()
-    await page.waitForTimeout(500)
-
     // Verificar que aba Resumo está ativa
     await expect(page.getByRole("tab", { name: /resumo/i, selected: true })).toBeVisible()
 
@@ -26,8 +24,6 @@ test.describe("Navegação do Dashboard", () => {
 
     // Navegar para Configurações
     await page.getByRole("tab", { name: /configurações/i }).click()
-    await page.waitForTimeout(500)
-
     await expect(page.getByRole("tab", { name: /configurações/i, selected: true })).toBeVisible()
 
     // Verificar que campos de configuração estão presentes
@@ -35,38 +31,36 @@ test.describe("Navegação do Dashboard", () => {
 
     // Voltar para Estágios
     await page.getByRole("tab", { name: /estágios/i }).click()
-    await page.waitForTimeout(500)
-
     await expect(page.getByRole("tab", { name: /estágios/i, selected: true })).toBeVisible()
     await expect(page.locator("table")).toBeVisible()
   })
 
   test("deve navegar entre datas com setas", async ({ page }) => {
     // Aguardar data carregar
-    await page.waitForTimeout(1000)
+    await page.waitForLoadState('domcontentloaded')
 
     // Procurar por elementos de navegação de data
     const prevButton = page.getByRole("button", { name: /anterior|prev|<|◀/i }).first()
     const nextButton = page.getByRole("button", { name: /próximo|next|>|▶/i }).first()
 
-    // Se houver navegação de data
-    if ((await prevButton.isVisible()) && (await nextButton.isVisible())) {
-      // Clicar em próximo dia
-      await nextButton.click()
-      await page.waitForTimeout(500)
-
-      // Clicar em dia anterior
-      await prevButton.click()
-      await page.waitForTimeout(500)
-
-      // Verificar que dados recarregaram (table deve estar presente)
-      await expect(page.locator("table")).toBeVisible()
-    } else {
-      // Se não houver navegação de data, pular teste
+    // Skip if navigation buttons don't exist
+    if ((await prevButton.count()) === 0 || (await nextButton.count()) === 0) {
       test.skip()
     }
+
+    // Clicar em próximo dia
+    await nextButton.click()
+    await expect(page.locator("table")).toBeVisible()
+
+    // Clicar em dia anterior
+    await prevButton.click()
+
+    // Verificar que dados recarregaram (table deve estar presente)
+    await expect(page.locator("table")).toBeVisible()
   })
 
+  test("deve abrir detalhes da vaga em nova página", async ({ page }) => {
+    // Verificar se há vagas na tabela
   test("deve abrir detalhes da vaga em nova página", async ({ page }) => {
     // Verificar se há vagas na tabela
     const rowCount = await page.locator("table tbody tr").count()
@@ -77,14 +71,16 @@ test.describe("Navegação do Dashboard", () => {
     }
 
     // Procurar ícone de visualizar/detalhes
-    const viewIcon = page.locator("table tbody tr").first().locator('button svg[class*="lucide"]').first()
+    const viewButton = page.locator("table tbody tr").first().locator('button[aria-label*="detalhes"], button[aria-label*="visualizar"]').first()
+    // Fallback to any button in the row if specific aria-label not found
+    const actionButton = (await viewButton.count()) > 0 ? viewButton : page.locator("table tbody tr").first().locator('button').first()
 
-    if (await viewIcon.isVisible()) {
+    if (await actionButton.isVisible()) {
       // Clicar no ícone de visualizar
-      await viewIcon.click()
+      await actionButton.click()
 
       // Aguardar navegação
-      await page.waitForTimeout(1000)
+      await page.waitForURL(/\/vaga\/.+/)
 
       // Verificar URL mudou para /vaga/[id]
       expect(page.url()).toMatch(/\/vaga\/.+/)
@@ -102,15 +98,13 @@ test.describe("Navegação do Dashboard", () => {
         await page.goBack()
       }
 
-      await page.waitForTimeout(500)
+      await page.waitForURL(/\/$/)
 
       // Verificar que voltou para dashboard
       await expect(page.locator("table")).toBeVisible()
       expect(page.url()).toMatch(/\/$/)
     }
   })
-
-  test("deve exibir meta diária", async ({ page }) => {
     // Procurar por card de meta
     const metaCard = page.getByText(/meta.*diária|meta.*hoje/i)
 
@@ -133,15 +127,14 @@ test.describe("Navegação do Dashboard", () => {
     // Aplicar um filtro
     const searchInput = page.getByPlaceholder(/buscar/i)
     await searchInput.fill("Test")
-    await page.waitForTimeout(500)
 
     // Ir para Resumo
     await page.getByRole("tab", { name: /resumo/i }).click()
-    await page.waitForTimeout(500)
+    await expect(page.getByRole("tab", { name: /resumo/i, selected: true })).toBeVisible()
 
     // Voltar para Estágios
     await page.getByRole("tab", { name: /estágios/i }).click()
-    await page.waitForTimeout(500)
+    await expect(page.getByRole("tab", { name: /estágios/i, selected: true })).toBeVisible()
 
     // Verificar que filtro foi mantido ou resetado (comportamento esperado)
     const searchValue = await searchInput.inputValue()
@@ -153,17 +146,37 @@ test.describe("Navegação do Dashboard", () => {
   })
 
   test("deve exibir indicadores de carregamento", async ({ page }) => {
-    // Recarregar página e procurar por loading states
+    // Delay artificial para requisições do Supabase (500ms)
+    const requestDelay = 500
+    let requestCount = 0
+    const loadingText = page.getByText(/carregando/i)
+
+    // Função auxiliar para delay
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    // Interceptar requisições do Supabase REST API e adicionar delay
+    await page.route("**/rest/v1/**", async (route) => {
+      requestCount++
+      // Adicionar delay antes de continuar com a requisição
+      await delay(requestDelay)
+      await route.continue()
+    })
+
+    // Recarregar página com delay nas requisições
     await page.reload()
 
-    // Procurar por loading spinners, skeletons ou texto de "Carregando"
-    const loadingIndicator = page.getByText(/carregando|loading/i)
+    // Verificar que o indicador de carregamento aparece
+    // Usar timeout maior que o delay para garantir captura
+    await expect(loadingText).toBeVisible({ timeout: requestDelay + 500 })
 
-    // Loading pode ser muito rápido, então tentamos capturar ou verificar estado final
-    const isLoading = await loadingIndicator.isVisible().catch(() => false)
-    const tableVisible = await page.locator("table").isVisible({ timeout: 5000 })
+    // Aguardar que a tabela se torne visível (indica que o carregamento terminou)
+    // O timeout deve ser maior que o delay para garantir que as requisições completem
+    await expect(page.locator("table")).toBeVisible({ timeout: requestDelay + 3000 })
 
-    // Pelo menos a tabela deve estar visível no final
-    expect(tableVisible).toBeTruthy()
+    // Verificar que o indicador de carregamento desapareceu após o carregamento
+    await expect(loadingText).not.toBeVisible({ timeout: 1000 })
+
+    // Verificar que pelo menos uma requisição foi interceptada
+    expect(requestCount).toBeGreaterThan(0)
   })
 })

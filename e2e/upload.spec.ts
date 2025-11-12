@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 import path from "path"
-import { waitForToast } from "./helpers/test-utils"
+import { waitForFileProcessing, waitForEmpresaPopulated } from "./helpers/test-utils"
 
 test.describe("Upload de Arquivos", () => {
   test.beforeEach(async ({ page }) => {
@@ -20,8 +20,8 @@ test.describe("Upload de Arquivos", () => {
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(analiseFile)
 
-    // Aguardar processamento (progress bar e parsing)
-    await page.waitForTimeout(2000)
+    // Aguardar processamento completo (toast de sucesso + preenchimento dos campos)
+    await waitForFileProcessing(page)
 
     // Verificar se campos foram preenchidos automaticamente
     const empresaInput = page.getByLabel(/empresa/i)
@@ -31,9 +31,6 @@ test.describe("Upload de Arquivos", () => {
     await expect(empresaInput).toHaveValue(/Google/i)
     await expect(cargoInput).toHaveValue(/Engenheiro de Software/i)
     await expect(localInput).toHaveValue(/São Paulo/i)
-
-    // Verificar toast de sucesso
-    await waitForToast(page, /campos.*automaticamente/i)
 
     // Fechar modal sem salvar
     await page.keyboard.press("Escape")
@@ -86,23 +83,27 @@ test.describe("Upload de Arquivos", () => {
     const file1 = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(file1)
-    await page.waitForTimeout(2000)
+    
+    // Aguardar processamento completo
+    await waitForFileProcessing(page)
 
     // Verificar primeiro arquivo
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
 
     // Remover arquivo
     const removeButton = page.getByRole("button", { name: /^X$/i }).first()
-    if (await removeButton.isVisible()) {
-      await removeButton.click()
-      await page.waitForTimeout(500)
-    }
+    await expect(removeButton).toBeVisible()
+    await removeButton.click()
+    // Aguardar remoção do arquivo
+    await expect(fileInput).toBeVisible()
 
     // Fazer novo upload
     const file2 = path.join(__dirname, "fixtures/analise-exemplo-2.md")
     await fileInput.setInputFiles(file2)
-    await page.waitForTimeout(2000)
-
+    
+    // Aguardar processamento completo
+    await waitForFileProcessing(page)
+    
     // Verificar que foi substituído
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Microsoft/i)
 
@@ -110,6 +111,25 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve mostrar indicador de progresso durante upload", async ({ page }) => {
+    // Configurar delay controlado para o upload do Supabase Storage
+    const uploadDelay = 1000 // 1 segundo de delay
+    let uploadIntercepted = false
+
+    // Interceptar requisições de upload do Supabase Storage e adicionar delay
+    await page.route("**", async (route) => {
+      const url = route.request().url()
+      const method = route.request().method()
+      // Interceptar requisições POST para endpoints de storage (uploads)
+      if (method === "POST" && url.includes("/storage/v1/object/")) {
+        uploadIntercepted = true
+        // Adicionar delay antes de continuar com a requisição
+        await page.waitForTimeout(uploadDelay)
+        await route.continue()
+      } else {
+        await route.continue()
+      }
+    })
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
@@ -118,12 +138,41 @@ test.describe("Upload de Arquivos", () => {
 
     await fileInput.setInputFiles(analiseFile)
 
-    // Verificar que loading aparece (pode ser rápido demais para capturar)
-    // Então vamos apenas aguardar o resultado
-    await page.waitForTimeout(1500)
+    // Verificar que o texto de upload aparece (indica que o upload iniciou)
+    const uploadingText = page.getByText(/enviando e processando/i)
+    await expect(uploadingText).toBeVisible({ timeout: 2000 })
+
+    // Localizar o componente de progresso
+    // Radix UI Progress usa role="progressbar"
+    const progressBar = page.locator('[role="progressbar"]').first()
+
+    // Verificar que o indicador de progresso aparece
+    await expect(progressBar).toBeVisible({ timeout: 2000 })
+
+    // Verificar que o progresso atualiza (valor > 0)
+    // Aguardar que o progresso seja maior que 0 usando waitForFunction
+    await page.waitForFunction(
+      () => {
+        const progressBar = document.querySelector('[role="progressbar"]') as HTMLElement | null
+        if (!progressBar) return false
+        const value = progressBar.getAttribute('aria-valuenow')
+        return value !== null && parseInt(value) > 0
+      },
+      { timeout: 3000 }
+    )
+
+    // Verificar que o progresso continua visível durante o upload
+    // Com o delay de 1s, o progresso deve estar visível por tempo suficiente
+    await expect(progressBar).toBeVisible({ timeout: uploadDelay + 500 })
+
+    // Aguardar que o campo empresa seja preenchido para garantir que o processamento foi concluído
+    await waitForEmpresaPopulated(page)
 
     // Verificar que upload completou
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
+
+    // Verificar que a requisição foi interceptada
+    expect(uploadIntercepted).toBe(true)
 
     await page.keyboard.press("Escape")
   })
@@ -136,7 +185,8 @@ test.describe("Upload de Arquivos", () => {
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(analiseFile)
 
-    await page.waitForTimeout(2000)
+    // Aguardar preview de campos detectados aparecer
+    await page.getByText(/campos detectados automaticamente/i).waitFor({ state: 'visible' })
 
     // Verificar preview de campos detectados
     await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible()

@@ -51,7 +51,6 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.getByRole("button", { name: /^salvar$/i }).click()
 
     // Modal não deve fechar devido à validação HTML5
-    await page.waitForTimeout(500)
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Fechar modal
@@ -76,7 +75,7 @@ test.describe("Gerenciamento de Vagas", () => {
 
     // Encontrar e clicar em editar (botão de ações)
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Edit Company" })
-    await vagaRow.getByRole("button").last().click() // Dropdown actions
+    await vagaRow.getByTestId("vaga-actions-button").click()
 
     // Clicar em "Editar" no dropdown
     await page.getByText(/editar/i).click()
@@ -118,7 +117,7 @@ test.describe("Gerenciamento de Vagas", () => {
 
     // Deletar vaga
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Delete Me" })
-    await vagaRow.getByRole("button").last().click() // Dropdown actions
+    await vagaRow.getByTestId("vaga-actions-button").click()
     await page.getByText(/excluir/i).click()
 
     // Confirmar deleção (se houver dialog de confirmação)

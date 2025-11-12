@@ -192,7 +192,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" data-testid="vaga-actions-button">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
