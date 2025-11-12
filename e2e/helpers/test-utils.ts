@@ -61,8 +61,11 @@ export async function closeAllDialogs(page: Page) {
   const dialogs = page.locator('[role="dialog"]')
   const maxRetriesPerDialog = 3
   const verificationTimeout = 2000
+  const maxTotalAttempts = 10
+  let totalAttempts = 0
 
-  while ((await dialogs.count()) > 0) {
+  while ((await dialogs.count()) > 0 && totalAttempts < maxTotalAttempts) {
+    totalAttempts++
     const countBefore = await dialogs.count()
     let dialogClosed = false
     let retries = 0
@@ -92,9 +95,6 @@ export async function closeAllDialogs(page: Page) {
       } catch (error) {
         // Se a verificação falhou, tenta novamente
         retries++
-        if (retries < maxRetriesPerDialog) {
-          await page.waitForTimeout(300) // Pequeno delay antes de tentar novamente
-        }
       }
     }
 
@@ -105,6 +105,14 @@ export async function closeAllDialogs(page: Page) {
         `Falha ao fechar diálogo. ${remainingCount} diálogo(s) ainda aberto(s) após ${maxRetriesPerDialog} tentativas.`
       )
     }
+  }
+
+  // Check if we exited due to max attempts
+  const remainingDialogs = await dialogs.count()
+  if (remainingDialogs > 0) {
+    throw new Error(
+      `Falha ao fechar todos os diálogos. ${remainingDialogs} diálogo(s) ainda aberto(s) após ${maxTotalAttempts} tentativas totais.`
+    )
   }
 }
 
@@ -117,12 +125,9 @@ export async function fillFieldByLabel(page: Page, label: string, value: string)
 
 /**
  * Select option by label
- */
-export async function selectOptionByLabel(page: Page, label: string, value: string) {
-  await page.getByLabel(label).click()
-  const option = page.getByRole("option", { name: value })
-  await expect(option).toBeVisible({ timeout: 5000 })
-  await option.click()
+export async function waitForTableRows(page: Page, expectedCount: number = 1) {
+  await expect(page.locator("table tbody tr")).toHaveCount(expectedCount, { timeout: 10000 })
+}
 }
 
 /**

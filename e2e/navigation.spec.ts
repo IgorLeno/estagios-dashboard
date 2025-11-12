@@ -61,8 +61,6 @@ test.describe("Navegação do Dashboard", () => {
 
   test("deve abrir detalhes da vaga em nova página", async ({ page }) => {
     // Verificar se há vagas na tabela
-  test("deve abrir detalhes da vaga em nova página", async ({ page }) => {
-    // Verificar se há vagas na tabela
     const rowCount = await page.locator("table tbody tr").count()
 
     if (rowCount === 0) {
@@ -103,23 +101,6 @@ test.describe("Navegação do Dashboard", () => {
       // Verificar que voltou para dashboard
       await expect(page.locator("table")).toBeVisible()
       expect(page.url()).toMatch(/\/$/)
-    }
-  })
-    // Procurar por card de meta
-    const metaCard = page.getByText(/meta.*diária|meta.*hoje/i)
-
-    if (await metaCard.isVisible()) {
-      await expect(metaCard).toBeVisible()
-
-      // Verificar que há um número de meta
-      const metaNumber = page.locator("text=/\\d+/").first()
-      await expect(metaNumber).toBeVisible()
-    } else {
-      // Meta pode estar em outro formato, verificar elementos relacionados
-      const hasMetaContent = await page.getByText(/vagas.*hoje|candidaturas/i).isVisible()
-      if (!hasMetaContent) {
-        test.skip()
-      }
     }
   })
 

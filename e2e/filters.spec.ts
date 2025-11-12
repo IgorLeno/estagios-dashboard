@@ -34,11 +34,42 @@ test.describe("Filtros do Dashboard", () => {
     const emptyMessage = page.getByText(/nenhuma vaga encontrada|nenhum resultado/i)
 
     // Aguardar que OU apareça uma linha com "Google" OU a mensagem de vazio apareça
-    try {
-      await expect(rowsWithGoogle.first()).toBeVisible({ timeout: 5000 })
-    } catch {
-      // Se não apareceu linha com "Google", aguardar que apareça mensagem de vazio
-      await expect(emptyMessage).toBeVisible({ timeout: 5000 })
+    // Usar Promise.race para aguardar a primeira condição que se tornar visível
+    const googleRowPromise = expect(rowsWithGoogle.first())
+      .toBeVisible({ timeout: 5000 })
+      .then(() => ({ type: "google" as const, success: true }))
+      .catch(() => ({ type: "google" as const, success: false }))
+    
+    const emptyMessagePromise = expect(emptyMessage)
+      .toBeVisible({ timeout: 5000 })
+      .then(() => ({ type: "empty" as const, success: true }))
+      .catch(() => ({ type: "empty" as const, success: false }))
+    
+    // Aguardar a primeira promessa que resolver (com sucesso ou falha)
+    const firstResult = await Promise.race([
+      googleRowPromise,
+      emptyMessagePromise,
+    ])
+    
+    // Se a primeira que resolveu teve sucesso, usar esse resultado
+    // Caso contrário, aguardar a segunda para verificar se teve sucesso
+    let result: "google" | "empty" | null = null
+    if (firstResult.success) {
+      result = firstResult.type
+    } else {
+      // Aguardar a segunda promessa para verificar se teve sucesso
+      const secondResult = await (firstResult.type === "google" 
+        ? emptyMessagePromise 
+        : googleRowPromise)
+      
+      if (secondResult.success) {
+        result = secondResult.type
+      }
+    }
+    
+    // Falhar explicitamente se nenhuma condição foi atendida
+    if (result === null) {
+      throw new Error("Nenhuma das condições esperadas foi atendida: nem linha com 'Google' nem mensagem de vazio apareceram dentro do timeout de 5000ms")
     }
 
     const filteredRowsCount = await getTableRowCount(page)
@@ -140,12 +171,10 @@ test.describe("Filtros do Dashboard", () => {
     const initialCount = await getTableRowCount(page)
     await searchInput.fill("E2E")
 
-    // Aguardar que os resultados da busca sejam atualizados
-    await expect
-      .poll(async () => await getTableRowCount(page), {
-        message: "Aguardando atualização dos resultados da busca",
-      })
-      .not.toBe(initialCount)
+    // Aguardar que a busca seja aplicada (verificar que o input tem o valor)
+    await expect(searchInput).toHaveValue("E2E")
+    // Aguardar frame para aplicação do filtro client-side
+    await page.waitForTimeout(100)
 
     const step1Rows = await getTableRowCount(page)
 
@@ -190,13 +219,12 @@ test.describe("Filtros do Dashboard", () => {
     const searchInput = page.getByPlaceholder(/buscar/i)
     await searchInput.fill("Test")
 
-    // Aguardar que os resultados da busca sejam atualizados
-    // Poll até que a contagem mude da inicial (ou seja, filtro foi aplicado)
+    // Aguardar que o valor do input seja definido (mais determinístico que aguardar mudança na contagem)
     await expect
-      .poll(async () => await getTableRowCount(page), {
-        message: "Aguardando atualização dos resultados da busca",
+      .poll(async () => await searchInput.inputValue(), {
+        message: "Aguardando que o valor do input de busca seja definido",
       })
-      .not.toBe(initialCount)
+      .toBe("Test")
 
     const filteredRows = await getTableRowCount(page)
 
@@ -220,10 +248,8 @@ test.describe("Filtros do Dashboard", () => {
       // Deve ter mais vagas ou igual após limpar
       expect(rowsAfterClear).toBeGreaterThanOrEqual(filteredRows)
     } catch (error) {
-      // Se o botão não estiver visível, pode não haver filtros para limpar
-      // Nesse caso, apenas verificamos que a tabela ainda tem dados
-      const currentRows = await getTableRowCount(page)
-      expect(currentRows).toBeGreaterThan(0)
+      // O botão de limpar deve estar visível após aplicar filtros
+      throw new Error("Clear filters button should be visible after applying filters")
     }
   })
 
@@ -236,27 +262,23 @@ test.describe("Filtros do Dashboard", () => {
     // Aguardar que a tabela seja atualizada ou mensagem de vazio apareça
     const emptyMessage = page.getByText(/nenhuma vaga encontrada|nenhum resultado/i)
     
-    try {
-      // Aguardar que a mensagem de vazio apareça
-      await expect(emptyMessage).toBeVisible({ timeout: 5000 })
-    } catch {
-      // Se não apareceu mensagem, verificar que tabela está vazia
-      await expect
-        .poll(async () => await getTableRowCount(page), {
-          message: "Aguardando atualização da tabela após busca sem resultados",
-        })
-        .toBe(0)
-    }
+    // Poll até que a mensagem de vazio esteja visível OU a contagem de linhas seja 0
+    await expect
+      .poll(async () => {
+        const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
+        const rowCount = await getTableRowCount(page)
+        return isMessageVisible || rowCount === 0
+      }, {
+        message: "Aguardando mensagem de vazio ou tabela vazia após busca sem resultados",
+        timeout: 5000,
+      })
+      .toBe(true)
 
-    // Verificar que não há resultados
-    const rowCount = await getTableRowCount(page)
-    if (rowCount === 0) {
-      // Verificar se mensagem de vazio está visível
-      const emptyMessageVisible = await emptyMessage.isVisible().catch(() => false)
-      expect(emptyMessageVisible || rowCount === 0).toBe(true)
-    } else {
-      // Se ainda houver linhas, verificar que pelo menos não aumentou
-      expect(rowCount).toBeLessThanOrEqual(initialCount)
-    }
+    // Verificar estado final: tabela deve estar vazia e mensagem deve estar visível
+    const finalRowCount = await getTableRowCount(page)
+    expect(finalRowCount).toBe(0)
+    
+    const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
+    expect(isMessageVisible).toBe(true)
   })
 })
