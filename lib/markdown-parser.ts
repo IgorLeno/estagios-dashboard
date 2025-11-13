@@ -156,10 +156,10 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     }
 
     // Caso único
-    if (lower.includes("presencial") && !lower.includes("remoto") && !lower.includes("híbrido") && !lower.includes("hibrido"))
-      return "Presencial"
-    if (lower.includes("remoto") && !lower.includes("híbrido") && !lower.includes("hibrido")) return "Remoto"
+    // Caso único - aplicar prioridade
+    if (lower.includes("remoto")) return "Remoto"
     if (lower.includes("híbrido") || lower.includes("hibrido")) return "Híbrido"
+    if (lower.includes("presencial")) return "Presencial"
 
     return undefined
   }
