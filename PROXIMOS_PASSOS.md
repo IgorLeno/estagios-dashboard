@@ -3,6 +3,7 @@
 ## 📋 Resumo da Situação Atual
 
 ### ✅ O que está funcionando:
+
 - ✅ Testes unitários (54/54 - 100%)
 - ✅ Lógica de data customizada
 - ✅ Parser de markdown
@@ -11,6 +12,7 @@
 - ✅ Callbacks e recarregamento de dados
 
 ### ⚠️ O que precisa de atenção:
+
 - ❌ **Buckets do Supabase Storage não criados** (problema crítico)
 - ⚠️ Testes E2E falhando (3/11 passando - 27%)
 
@@ -21,6 +23,7 @@
 ### **PASSO 1: Criar Buckets do Supabase Storage**
 
 **Por que é crítico:**
+
 - Upload de arquivos .md falha
 - Upload de currículos falha
 - Parsing automático não funciona
@@ -62,6 +65,7 @@ supabase.storage.listBuckets().then(({ data }) => {
 ```
 
 Saída esperada:
+
 ```
 Buckets: [ 'analises', 'curriculos' ]
 ```
@@ -85,6 +89,7 @@ pnpm test:e2e e2e/upload.spec.ts
 ```
 
 **Resultado esperado após criar buckets:**
+
 - ✅ Upload de análise .md e preencher campos automaticamente
 - ✅ Upload de currículo PDF
 - ✅ Mostrar erro para arquivo com extensão inválida
@@ -101,6 +106,7 @@ pnpm test:e2e e2e/vagas.spec.ts
 ```
 
 **Resultado esperado após melhorias:**
+
 - ✅ Criar nova vaga manualmente
 - ✅ Validar campos obrigatórios
 - ✅ Editar vaga existente
@@ -215,6 +221,7 @@ Acesse: http://localhost:3000
 ### Se Testes Falharem
 
 1. **Verificar logs no console:**
+
    ```
    [AddVagaDialog] Criando vaga com data_inscricao: ...
    [Page] Buscando vagas para data: ...
@@ -222,11 +229,13 @@ Acesse: http://localhost:3000
    ```
 
 2. **Verificar erro no screenshot:**
+
    ```
    test-results/*/test-failed-1.png
    ```
 
 3. **Verificar vídeo do teste:**
+
    ```
    test-results/*/video.webm
    ```
@@ -241,20 +250,24 @@ Acesse: http://localhost:3000
 ## 🎓 Lições Aprendidas
 
 ### 1. Buckets do Supabase Storage são essenciais
+
 - Sem buckets, todo upload falha silenciosamente ou com erro "Bucket not found"
 - Criar buckets é um passo crítico do setup inicial
 
 ### 2. Timing em testes E2E é complexo
+
 - Não usar delays fixos (e.g., `waitForTimeout(1000)`)
 - Sempre aguardar indicadores específicos (loading, toasts, elementos)
 - Criar helpers reutilizáveis para padrões comuns
 
 ### 3. Lógica de data customizada funciona
+
 - `getDataInscricao()` está correta
 - Configuração com `hora_inicio: 09:00` funciona como esperado
 - Problema não estava na lógica de data, mas no timing dos testes
 
 ### 4. Debugging estruturado é crucial
+
 - Logs estratégicos ajudam muito
 - Screenshots e vídeos dos testes são valiosos
 - Error contexts fornecem snapshot do DOM
@@ -270,11 +283,13 @@ Acesse: http://localhost:3000
 **Tempo estimado para resolver:** 2-5 minutos
 
 **Ação imediata:**
+
 1. Executar `supabase/storage-setup.sql` no Supabase Dashboard
 2. Executar `pnpm test:e2e`
 3. Verificar que 22/22 testes passam ✅
 
 **Após resolver:**
+
 - ✅ Todos os testes unitários funcionando
 - ✅ Todos os testes E2E funcionando
 - ✅ Upload de arquivos funcionando

@@ -10,7 +10,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve fazer upload de análise .md e preencher campos automaticamente", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     // Abrir modal de adicionar vaga
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
@@ -42,7 +42,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve fazer upload de currículo PDF", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -67,7 +67,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve mostrar erro para arquivo com extensão inválida", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -85,7 +85,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve permitir substituir arquivo já enviado", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -124,7 +124,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve mostrar indicador de progresso durante upload", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     // Configurar delay controlado para o upload do Supabase Storage
     const uploadDelay = 1000 // 1 segundo de delay
@@ -193,7 +193,7 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve exibir preview dos campos detectados após upload", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()

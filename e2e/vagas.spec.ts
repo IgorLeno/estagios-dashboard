@@ -9,11 +9,11 @@ test.describe("Gerenciamento de Vagas", () => {
 
   test("deve criar nova vaga manualmente", async ({ page }) => {
     // Garantir que página carregou completamente
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     // Abrir modal
     const addButton = page.getByRole("button", { name: /adicionar vaga/i })
-    await addButton.waitFor({ state: 'visible' })
+    await addButton.waitFor({ state: "visible" })
     await addButton.click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
@@ -50,7 +50,7 @@ test.describe("Gerenciamento de Vagas", () => {
   })
 
   test("deve validar campos obrigatórios", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -66,7 +66,7 @@ test.describe("Gerenciamento de Vagas", () => {
   })
 
   test("deve editar vaga existente", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     // Primeiro criar uma vaga para editar
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
@@ -87,12 +87,12 @@ test.describe("Gerenciamento de Vagas", () => {
     // Encontrar e clicar em editar (botão de ações)
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Edit Company" })
     const actionsButton = vagaRow.getByTestId("vaga-actions-button")
-    await actionsButton.waitFor({ state: 'visible' })
+    await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
     // Clicar em "Editar" no dropdown
     const editButton = page.getByText(/editar/i)
-    await editButton.waitFor({ state: 'visible' })
+    await editButton.waitFor({ state: "visible" })
     await editButton.click()
     await expect(page.getByRole("dialog")).toBeVisible()
     await expect(page.getByText(/editar vaga/i)).toBeVisible()
@@ -112,7 +112,7 @@ test.describe("Gerenciamento de Vagas", () => {
   })
 
   test("deve deletar vaga", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     // Criar vaga para deletar
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
@@ -134,11 +134,11 @@ test.describe("Gerenciamento de Vagas", () => {
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Delete Me" })
     await vagaRow.hover()
     const actionsButton = vagaRow.getByTestId("vaga-actions-button")
-    await actionsButton.waitFor({ state: 'visible' })
+    await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
     const deleteButton = page.getByText(/excluir/i)
-    await deleteButton.waitFor({ state: 'visible' })
+    await deleteButton.waitFor({ state: "visible" })
     await deleteButton.click()
 
     // Confirmar deleção (se houver dialog de confirmação)
@@ -152,7 +152,7 @@ test.describe("Gerenciamento de Vagas", () => {
   })
 
   test("deve preencher todos os campos do formulário", async ({ page }) => {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()

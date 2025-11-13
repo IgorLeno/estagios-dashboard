@@ -35,12 +35,14 @@ O banco de dados possui as seguintes tabelas:
 ### 1. Consultas e Execução SQL
 
 #### `mcp_supabase_execute_sql`
+
 Executa queries SQL no banco de dados.
 
 **Como usar no Cursor:**
-Peça à IA: "Execute esta query no banco: SELECT * FROM vagas_estagio WHERE status = 'Pendente' ORDER BY created_at DESC"
+Peça à IA: "Execute esta query no banco: SELECT \* FROM vagas_estagio WHERE status = 'Pendente' ORDER BY created_at DESC"
 
 **Exemplo de query:**
+
 ```sql
 -- Buscar todas as vagas pendentes
 SELECT * FROM vagas_estagio
@@ -49,24 +51,28 @@ ORDER BY created_at DESC;
 ```
 
 #### `mcp_supabase_list_tables`
+
 Lista todas as tabelas do banco de dados.
 
 **Como usar no Cursor:**
 Peça à IA: "Liste todas as tabelas do banco de dados" ou "Mostre a estrutura da tabela vagas_estagio"
 
 **O que retorna:**
+
 - Tabelas do schema `public`
 - Estrutura, colunas, tipos de dados e constraints
 
 ### 2. Migrações
 
 #### `mcp_supabase_apply_migration`
+
 Aplica migrações DDL (Data Definition Language) ao banco.
 
 **Como usar no Cursor:**
 Peça à IA: "Aplique uma migração para adicionar a coluna 'prioridade' na tabela vagas_estagio"
 
 **Exemplo de migração:**
+
 ```sql
 -- Criar nova tabela
 CREATE TABLE IF NOT EXISTS public.logs (
@@ -77,6 +83,7 @@ CREATE TABLE IF NOT EXISTS public.logs (
 ```
 
 **Quando usar:**
+
 - Criar/modificar tabelas
 - Adicionar colunas
 - Criar índices
@@ -87,12 +94,14 @@ CREATE TABLE IF NOT EXISTS public.logs (
 ### 3. Geração de Tipos TypeScript
 
 #### `mcp_supabase_generate_typescript_types`
+
 Gera tipos TypeScript baseados no schema do banco.
 
 **Como usar no Cursor:**
 Peça à IA: "Gere os tipos TypeScript atualizados do banco de dados"
 
 **Uso recomendado:**
+
 - Atualizar `lib/types.ts` quando o schema mudar
 - Garantir type-safety entre banco e aplicação
 - Executar após aplicar migrações
@@ -100,25 +109,30 @@ Peça à IA: "Gere os tipos TypeScript atualizados do banco de dados"
 ### 4. Verificação de Segurança e Performance
 
 #### `mcp_supabase_get_advisors`
+
 Verifica problemas de segurança e performance.
 
 **Como usar no Cursor:**
+
 - Para segurança: "Verifique se há problemas de segurança no banco de dados"
 - Para performance: "Verifique otimizações de performance no banco"
 
 **Tipos de verificação:**
+
 - `security` - Verifica RLS policies, vulnerabilidades, exposição de dados
 - `performance` - Sugere otimizações de índices, queries lentas
 
 ### 5. Logs
 
 #### `mcp_supabase_get_logs`
+
 Obtém logs dos serviços do Supabase (últimas 24h).
 
 **Como usar no Cursor:**
 Peça à IA: "Mostre os logs da API" ou "Verifique os logs de autenticação"
 
 **Serviços disponíveis:**
+
 - `api` - Logs da API REST
 - `auth` - Logs de autenticação e autorização
 - `storage` - Logs de upload/download de arquivos
@@ -129,18 +143,21 @@ Peça à IA: "Mostre os logs da API" ou "Verifique os logs de autenticação"
 ### 6. Edge Functions
 
 #### `mcp_supabase_list_edge_functions`
+
 Lista todas as Edge Functions do projeto.
 
 **Como usar no Cursor:**
 Peça à IA: "Liste as Edge Functions do projeto"
 
 #### `mcp_supabase_get_edge_function`
+
 Obtém o código de uma Edge Function específica.
 
 **Como usar no Cursor:**
 Peça à IA: "Mostre o código da Edge Function chamada 'processamento'"
 
 #### `mcp_supabase_deploy_edge_function`
+
 Faz deploy de uma nova Edge Function.
 
 **Como usar no Cursor:**
@@ -151,38 +168,45 @@ Peça à IA: "Faça deploy da Edge Function 'nova-funcao' com este código: [có
 > **Útil para**: Testar mudanças de schema antes de aplicar em produção
 
 #### `mcp_supabase_create_branch`
+
 Cria um branch de desenvolvimento para testar mudanças.
 
 **Como usar no Cursor:**
 Peça à IA: "Crie um branch chamado 'feature/nova-coluna' para testar mudanças"
 
 #### `mcp_supabase_list_branches`
+
 Lista todos os branches criados.
 
 **Como usar no Cursor:**
 Peça à IA: "Liste os branches de desenvolvimento"
 
 #### `mcp_supabase_merge_branch`
+
 Mescla mudanças de um branch para produção.
 
 **Como usar no Cursor:**
 Peça à IA: "Mescle o branch 'feature/nova-coluna' para produção"
 
 #### `mcp_supabase_rebase_branch`
+
 Rebaseia um branch com as mudanças mais recentes de produção.
 
 #### `mcp_supabase_reset_branch`
+
 Reseta um branch para um estado anterior.
 
 ### 8. Documentação
 
 #### `mcp_supabase_search_docs`
+
 Busca na documentação oficial do Supabase.
 
 **Como usar no Cursor:**
 Peça à IA: "Busque na documentação do Supabase sobre row level security"
 
 **Útil para:**
+
 - Encontrar informações sobre recursos do Supabase
 - Ver exemplos de implementação
 - Consultar best practices
@@ -197,6 +221,7 @@ Peça à IA: "Busque na documentação do Supabase sobre row level security"
 Ou simplesmente: "Mostre as 10 vagas pendentes mais recentes"
 
 **Query SQL:**
+
 ```sql
 SELECT
   id,
@@ -216,6 +241,7 @@ LIMIT 10;
 "Aplique uma migração para adicionar a coluna 'prioridade' do tipo INTEGER com valor padrão 0 na tabela vagas_estagio"
 
 **SQL da migração:**
+
 ```sql
 -- Adicionar coluna de prioridade
 ALTER TABLE vagas_estagio
@@ -239,6 +265,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ## Quando Usar MCP vs Cliente Supabase
 
 ### Use MCP (via IA no Cursor) quando:
+
 - ✅ Aplicar mudanças no schema do banco (criar tabelas, adicionar colunas)
 - ✅ Debugar queries ou investigar problemas no banco
 - ✅ Verificar segurança (RLS policies) ou performance (índices)
@@ -248,6 +275,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 - ✅ Deploy de Edge Functions
 
 ### Use Cliente Supabase (no código) quando:
+
 - ✅ Implementar funcionalidades da aplicação
 - ✅ Queries que dependem de autenticação do usuário
 - ✅ Operações que devem respeitar RLS policies
@@ -258,6 +286,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ## Diferenças: Cliente Supabase vs MCP
 
 ### Cliente Supabase (Código da Aplicação)
+
 - **Uso**: No código da aplicação (Next.js)
 - **Localização**: `lib/supabase/client.ts` e `lib/supabase/server.ts`
 - **Propósito**: Interação do usuário com o banco
@@ -266,16 +295,18 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 - **Exemplo**: `supabase.from('vagas_estagio').select('*')`
 
 ### MCP do Supabase (Assistente de IA)
+
 - **Uso**: Pela IA durante desenvolvimento
 - **Localização**: Configurado no Cursor/Claude Code
 - **Propósito**: Desenvolvimento, migrações, análise
 - **Acesso**: Direto ao banco (com permissões do projeto)
 - **RLS**: Pode contornar RLS para operações administrativas
-- **Exemplo**: "Execute esta query: SELECT * FROM vagas_estagio"
+- **Exemplo**: "Execute esta query: SELECT \* FROM vagas_estagio"
 
 ## Boas Práticas
 
 ### ✅ Fazer
+
 - Use `apply_migration` para mudanças de schema
 - Use `execute_sql` apenas para queries de leitura/teste
 - Verifique advisors regularmente
@@ -283,6 +314,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 - Use branches para testar mudanças grandes
 
 ### ❌ Evitar
+
 - Não execute `execute_sql` para DDL (use `apply_migration`)
 - Não ignore warnings dos advisors
 - Não faça mudanças diretas em produção sem testar
@@ -293,6 +325,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ### 1. Desenvolvimento de Nova Funcionalidade
 
 **Comandos para a IA:**
+
 1. "Crie um branch chamado 'feature/nova-funcionalidade'"
 2. "Aplique uma migração para adicionar a coluna X na tabela Y"
 3. "Verifique se há problemas de segurança no banco"
@@ -303,6 +336,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ### 2. Debugging e Investigação
 
 **Para investigar erros:**
+
 - "Mostre os logs da API das últimas 24h"
 - "Mostre os logs do PostgreSQL"
 - "Liste todas as tabelas do banco"
@@ -312,6 +346,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ### 3. Manutenção e Otimização
 
 **Verificações periódicas:**
+
 - "Verifique otimizações de performance no banco"
 - "Verifique se há problemas de segurança"
 - "Mostre as queries mais lentas"
@@ -320,25 +355,30 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 ## Comandos Úteis para a IA
 
 ### Ver estrutura do banco
+
 **Comando:** "Liste todas as tabelas do schema public"
 
 ### Contar registros por tabela
+
 **Comando:** "Execute esta query:"
+
 ```sql
-SELECT 
+SELECT
   'vagas_estagio' as tabela, COUNT(*) as total FROM vagas_estagio
 UNION ALL
-SELECT 
+SELECT
   'metas_diarias', COUNT(*) FROM metas_diarias
 UNION ALL
-SELECT 
+SELECT
   'configuracoes', COUNT(*) FROM configuracoes;
 ```
 
 ### Ver estrutura de uma tabela específica
+
 **Comando:** "Mostre a estrutura da tabela vagas_estagio"
 
 Ou execute esta query:
+
 ```sql
 SELECT
   column_name,
@@ -354,18 +394,24 @@ ORDER BY ordinal_position;
 ## Troubleshooting
 
 ### Problema: "Permission denied"
+
 **Solução:**
+
 - Verifique se o MCP está configurado corretamente no Cursor
 - Confirme que as credenciais do projeto estão corretas
 - Peça à IA: "Verifique a conexão com o Supabase"
 
 ### Problema: "Table does not exist"
+
 **Solução:**
+
 - Peça à IA: "Liste todas as tabelas do banco"
 - Verifique se está usando o schema correto (geralmente `public`)
 
 ### Problema: "RLS policy violation"
+
 **Solução:**
+
 - Peça à IA: "Verifique se há problemas de segurança no banco"
 - Considere ajustar as políticas RLS via migração
 
@@ -382,6 +428,7 @@ ORDER BY ordinal_position;
 **O MCP funciona com linguagem natural!** Você não precisa memorizar sintaxe - simplesmente peça à IA o que você quer:
 
 ### Exemplos de comandos que funcionam:
+
 - ✅ "Liste todas as tabelas do banco"
 - ✅ "Execute uma query para ver as vagas pendentes"
 - ✅ "Verifique se há problemas de segurança no banco"
@@ -391,4 +438,3 @@ ORDER BY ordinal_position;
 - ✅ "Quantas vagas estão com status 'Pendente'?"
 
 **Dica**: Seja específico no que você quer, mas use linguagem natural. A IA entenderá e usará as ferramentas MCP apropriadas automaticamente.
-

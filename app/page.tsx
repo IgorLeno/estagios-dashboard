@@ -27,13 +27,13 @@ export default function Page() {
     try {
       // Carregar vagas do dia selecionado
       const dateStr = currentDate.toISOString().split("T")[0]
-      console.log('[Page] Buscando vagas para data:', dateStr, 'currentDate:', currentDate)
+      console.log("[Page] Buscando vagas para data:", dateStr, "currentDate:", currentDate)
       const { data: vagasData, error: vagasError } = await supabase
         .from("vagas_estagio")
         .select("*")
         .eq("data_inscricao", dateStr)
         .order("created_at", { ascending: false })
-      console.log('[Page] Vagas encontradas:', vagasData?.length || 0)
+      console.log("[Page] Vagas encontradas:", vagasData?.length || 0)
 
       if (vagasError) throw vagasError
       setVagas(vagasData || [])

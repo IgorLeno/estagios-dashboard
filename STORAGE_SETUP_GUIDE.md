@@ -5,6 +5,7 @@ Este guia explica como configurar os buckets de storage necessários para upload
 ## 🎯 Objetivo
 
 Criar dois buckets públicos no Supabase Storage:
+
 1. **`analises`** - Para arquivos de análise de vagas (.md)
 2. **`curriculos`** - Para currículos (PDF/DOCX)
 
@@ -25,6 +26,7 @@ Criar dois buckets públicos no Supabase Storage:
 ### Passo 3: Verificar Resultados
 
 O script deve retornar:
+
 ```
 ✅ Buckets criados: analises, curriculos
 ✅ Policies configuradas: 8 policies (4 por bucket)
@@ -67,6 +69,7 @@ Para cada bucket criado:
 4. Crie as seguintes policies:
 
 #### Policy: SELECT (Leitura)
+
 ```sql
 CREATE POLICY "Public read access"
 ON storage.objects FOR SELECT
@@ -75,6 +78,7 @@ USING (bucket_id = 'analises'); -- ou 'curriculos'
 ```
 
 #### Policy: INSERT (Upload)
+
 ```sql
 CREATE POLICY "Public upload access"
 ON storage.objects FOR INSERT
@@ -83,6 +87,7 @@ WITH CHECK (bucket_id = 'analises'); -- ou 'curriculos'
 ```
 
 #### Policy: UPDATE (Substituir)
+
 ```sql
 CREATE POLICY "Public update access"
 ON storage.objects FOR UPDATE
@@ -92,6 +97,7 @@ WITH CHECK (bucket_id = 'analises');
 ```
 
 #### Policy: DELETE (Remover)
+
 ```sql
 CREATE POLICY "Public delete access"
 ON storage.objects FOR DELETE
@@ -114,6 +120,7 @@ node verify-storage.js
 ```
 
 Saída esperada:
+
 ```
 ✅ Buckets encontrados:
    - analises (público)
@@ -168,6 +175,7 @@ pnpm test:e2e e2e/upload.spec.ts
 ```
 
 Testes esperados para passar:
+
 - ✅ Upload de análise .md e preencher campos automaticamente
 - ✅ Upload de currículo PDF
 - ✅ Mostrar erro para arquivo com extensão inválida
@@ -184,6 +192,7 @@ Testes esperados para passar:
 **Causa:** Buckets não foram criados ou nome incorreto.
 
 **Solução:**
+
 1. Verifique que os buckets existem: Storage → Buckets
 2. Confirme os nomes exatos: `analises` e `curriculos` (sem espaços, acentos, ou caracteres especiais)
 3. Execute o script SQL novamente
@@ -193,6 +202,7 @@ Testes esperados para passar:
 **Causa:** RLS policies não configuradas ou incorretas.
 
 **Solução:**
+
 1. Verifique que as policies foram criadas
 2. Execute a seção de policies do script SQL
 3. Confirme que `TO public` está correto (não `TO authenticated`)
@@ -202,6 +212,7 @@ Testes esperados para passar:
 **Causa:** Arquivo com tipo MIME não permitido.
 
 **Solução:**
+
 1. Verifique `allowed_mime_types` no bucket
 2. Para .md: deve incluir `text/markdown` ou `text/plain`
 3. Para PDF: deve incluir `application/pdf`
@@ -212,6 +223,7 @@ Testes esperados para passar:
 **Causa:** Arquivo maior que o limite configurado.
 
 **Solução:**
+
 1. Bucket `analises`: limite de 2MB
 2. Bucket `curriculos`: limite de 5MB
 3. Ajuste `file_size_limit` se necessário (valor em bytes)
@@ -221,6 +233,7 @@ Testes esperados para passar:
 **Causa:** Cache ou sessão desatualizada.
 
 **Solução:**
+
 1. Pare o servidor de desenvolvimento (Ctrl+C)
 2. Limpe cache: `rm -rf .next`
 3. Reinicie: `pnpm dev`
