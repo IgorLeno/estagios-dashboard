@@ -73,7 +73,10 @@ function extractFromTable(markdown: string): Record<string, string> {
     if (!line.trim().startsWith("|") || !line.trim().endsWith("|")) continue
 
     // Dividir a linha em colunas
-    const columns = line.split("|").map((col) => col.trim()).filter((col) => col.length > 0)
+    const columns = line
+      .split("|")
+      .map((col) => col.trim())
+      .filter((col) => col.length > 0)
 
     // Precisa ter exatamente 2 colunas (Campo | Valor)
     if (columns.length !== 2) continue
@@ -83,9 +86,7 @@ function extractFromTable(markdown: string): Record<string, string> {
 
     if (rawField.includes("---") || rawValue.includes("---")) continue
     // Ignorar linhas de cabeçalho (match exato, case-insensitive)
-    const isHeader = 
-      normalizeFieldName(rawField) === "campo" && 
-      normalizeFieldName(rawValue).includes("detalhe")
+    const isHeader = normalizeFieldName(rawField) === "campo" && normalizeFieldName(rawValue).includes("detalhe")
     if (isHeader) continue
 
     // Limpar valor: remover asteriscos extras e espaços
@@ -128,7 +129,10 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     if (!match) return undefined
 
     // Limpar valor: remover pipes e espaços extras
-    const value = match[1].trim().replace(/^\|+|\|+$/g, "").trim()
+    const value = match[1]
+      .trim()
+      .replace(/^\|+|\|+$/g, "")
+      .trim()
 
     // Retornar undefined se valor estiver vazio após limpeza
     return value.length > 0 ? value : undefined
