@@ -112,13 +112,17 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.getByLabel(/status/i).click()
     await page.getByRole("option", { name: "Avançado" }).click()
 
-    // Salvar
-    await page.getByRole("button", { name: /^salvar$/i }).click()
+    // Salvar (o botão no EditVagaDialog tem texto "Salvar Alterações")
+    await page.getByRole("button", { name: /salvar/i }).click()
 
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
-    // Verificar que etapa foi atualizada (se visível na tabela)
-    await expect(page.getByText("Entrevista RH")).toBeVisible({ timeout: 5000 })
+    // Aguardar toast de sucesso
+    await expect(page.getByText(/vaga atualizada com sucesso/i)).toBeVisible({ timeout: 5000 })
+
+    // Verificar que etapa foi atualizada - buscar na linha específica da vaga
+    const updatedVagaRow = page.locator("tr").filter({ hasText: empresaName })
+    await expect(updatedVagaRow.getByText("Entrevista RH")).toBeVisible({ timeout: 5000 })
   })
 
   test("deve deletar vaga", async ({ page }) => {
@@ -154,13 +158,17 @@ test.describe("Gerenciamento de Vagas", () => {
       .filter({ hasText: /^excluir$/i })
       .first()
     await deleteMenuItem.waitFor({ state: "visible", timeout: 5000 })
+
+    // Configurar handler para o dialog nativo do browser (window.confirm)
+    page.on("dialog", async (dialog) => {
+      expect(dialog.type()).toBe("confirm")
+      await dialog.accept()
+    })
+
     await deleteMenuItem.click()
 
-    // Confirmar deleção (se houver dialog de confirmação)
-    const confirmButton = page.getByRole("button", { name: /confirmar|deletar|excluir/i })
-    if (await confirmButton.isVisible({ timeout: 1000 })) {
-      await confirmButton.click()
-    }
+    // Aguardar toast de sucesso
+    await expect(page.getByText(/vaga excluída com sucesso/i)).toBeVisible({ timeout: 5000 })
 
     // Verificar que não existe mais (o timeout já aguarda a operação concluir)
     await expect(page.locator("tr").filter({ hasText: empresaName })).not.toBeVisible({ timeout: 10000 })

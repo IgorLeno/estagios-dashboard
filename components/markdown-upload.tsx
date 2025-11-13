@@ -148,7 +148,14 @@ export function MarkdownUpload({
               <span className="text-sm font-medium">{uploadedFileName}</span>
               {success && <CheckCircle2 className="h-4 w-4 text-green-600" />}
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={handleRemove} disabled={uploading}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleRemove}
+              disabled={uploading}
+              aria-label="Remover arquivo"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
