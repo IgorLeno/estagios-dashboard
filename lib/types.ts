@@ -7,8 +7,8 @@ export interface VagaEstagio {
   cargo: string
   local: string
   modalidade: "Presencial" | "Híbrido" | "Remoto"
-  requisitos?: number // Score 0-100
-  fit?: number // Fit 0-10
+  requisitos?: number // Star rating 0-5 (with 0.5 increments)
+  perfil?: number // Star rating 0-5 (with 0.5 increments)
   etapa?: string
   status: "Pendente" | "Avançado" | "Melou" | "Contratado"
   observacoes?: string
