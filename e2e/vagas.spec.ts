@@ -98,9 +98,6 @@ test.describe("Gerenciamento de Vagas", () => {
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    // Aguardar dropdown abrir e clicar em "Editar"
-    // Usar um seletor que pega o item de menu diretamente dentro do portal do dropdown
-    await page.waitForTimeout(500) // Pequena espera para dropdown renderizar completamente
     const editMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^editar$/i }).first()
     await editMenuItem.waitFor({ state: "visible", timeout: 5000 })
     await editMenuItem.click()
@@ -149,8 +146,6 @@ test.describe("Gerenciamento de Vagas", () => {
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    // Aguardar dropdown abrir e clicar em "Excluir"
-    await page.waitForTimeout(500) // Pequena espera para dropdown renderizar completamente
     const deleteMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^excluir$/i }).first()
     await deleteMenuItem.waitFor({ state: "visible", timeout: 5000 })
     await deleteMenuItem.click()

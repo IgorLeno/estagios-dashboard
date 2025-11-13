@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
 import type { VagaEstagio, MetaDiaria, Configuracao } from "@/lib/types"
@@ -18,22 +18,19 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [config, setConfig] = useState<Configuracao | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Load config and initialize current date on mount
   useEffect(() => {
     loadConfigAndInitializeDate()
   }, [])
 
-  useEffect(() => {
-    if (currentDate) {
-      loadData()
-    }
-  }, [currentDate])
-
   async function loadConfigAndInitializeDate() {
     try {
-      const { data } = await supabase.from("configuracoes").select("*").single()
+      const { data, error: configError } = await supabase.from("configuracoes").select("*").single()
+      if (configError && configError.code !== "PGRST116") {
+        throw configError
+      }
       setConfig(data)
 
       // Initialize currentDate with the inscription date logic
@@ -51,7 +48,7 @@ export default function Page() {
     }
   }
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!currentDate) return
 
     setLoading(true)
@@ -83,7 +80,13 @@ export default function Page() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentDate, supabase])
+
+  useEffect(() => {
+    if (currentDate) {
+      loadData()
+    }
+  }, [currentDate, loadData])
 
   async function handleMetaChange(newMeta: number) {
     if (!currentDate) return
