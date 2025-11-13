@@ -152,18 +152,35 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     const cleaned = value.replace(/\\/g, "")
     const lower = cleaned.toLowerCase()
 
-    // Se múltiplas opções separadas por | ou /
+    // Se múltiplas opções separadas por | ou /: priorizar Remoto > Híbrido > Presencial
     if (lower.includes("|") || lower.includes("/")) {
       if (lower.includes("remoto")) return "Remoto"
       if (lower.includes("híbrido") || lower.includes("hibrido")) return "Híbrido"
       if (lower.includes("presencial")) return "Presencial"
     }
 
-    // Caso único
-    // Caso único - aplicar prioridade
-    if (lower.includes("remoto")) return "Remoto"
-    if (lower.includes("híbrido") || lower.includes("hibrido")) return "Híbrido"
-    if (lower.includes("presencial")) return "Presencial"
+    // Detectores de indicador híbrido (palavras mais explícitas)
+    const hasHome = lower.includes("home") || lower.includes("homeoffice") || lower.includes("home office")
+    const hasHybridWord = lower.includes("híbrido") || lower.includes("hibrido")
+    const hasAccentI = /í/.test(lower) // cobre casos como "círculo"
+    const hasH = /\b[h]\b/.test(lower) // opcional, deixa como fallback (raro)
+    const hasPresencial = lower.includes("presencial")
+    const hasRemoto = lower.includes("remoto")
+
+    // Se houver combinação que indique híbrido mesmo contendo 'remoto' ou 'presencial'
+    if (hasPresencial && (hasHome || hasHybridWord || hasRemoto)) return "Híbrido"
+
+    if (hasRemoto) {
+      if (hasHome || hasHybridWord || hasAccentI || hasH) return "Híbrido"
+      return "Remoto"
+    }
+
+    if (hasHybridWord) return "Híbrido"
+
+    // Se só tem indicadores de híbrido sem mencionar presencial/remoto
+    if (hasHome || hasAccentI) return "Híbrido"
+
+    if (hasPresencial) return "Presencial"
 
     return undefined
   }
