@@ -1,0 +1,36 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@custom-variant",
+      "description": "Tailwind CSS v4 custom variant directive",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Documentation",
+          "url": "https://tailwindcss.com/docs"
+        }
+      ]
+    },
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 theme configuration directive",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Documentation",
+          "url": "https://tailwindcss.com/docs"
+        }
+      ]
+    },
+    {
+      "name": "@apply",
+      "description": "Tailwind CSS apply directive to inline utility classes",
+      "references": [
+        {
+          "name": "Tailwind CSS Documentation",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#apply"
+        }
+      ]
+    }
+  ]
+}
+
