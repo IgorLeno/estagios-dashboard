@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
-import type { VagaEstagio, MetaDiaria, Configuracao } from "@/lib/types"
+import type { VagaEstagio, MetaDiaria } from "@/lib/types"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetaCard } from "@/components/meta-card"
@@ -17,37 +17,16 @@ export default function Page() {
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
   const [meta, setMeta] = useState<MetaDiaria | null>(null)
   const [loading, setLoading] = useState(true)
-  const [config, setConfig] = useState<Configuracao | null>(null)
 
   const supabase = useMemo(() => createClient(), [])
 
-  // Load config and initialize current date on mount
+  // Initialize current date on mount
   useEffect(() => {
-    loadConfigAndInitializeDate()
+    const dataInscricaoStr = getDataInscricao(new Date())
+    const [year, month, day] = dataInscricaoStr.split("-").map(Number)
+    const dataInscricaoDate = new Date(year, month - 1, day)
+    setCurrentDate(dataInscricaoDate)
   }, [])
-
-  async function loadConfigAndInitializeDate() {
-    try {
-      const { data, error: configError } = await supabase.from("configuracoes").select("*").single()
-      if (configError && configError.code !== "PGRST116") {
-        throw configError
-      }
-      setConfig(data)
-
-      // Initialize currentDate with the inscription date logic
-      const dataInscricaoStr = getDataInscricao(new Date(), data || undefined)
-      const [year, month, day] = dataInscricaoStr.split("-").map(Number)
-      const dataInscricaoDate = new Date(year, month - 1, day)
-      setCurrentDate(dataInscricaoDate)
-    } catch (error) {
-      console.error("Erro ao carregar configurações:", error)
-      // Fallback to today if config load fails
-      const dataInscricaoStr = getDataInscricao(new Date())
-      const [year, month, day] = dataInscricaoStr.split("-").map(Number)
-      const dataInscricaoDate = new Date(year, month - 1, day)
-      setCurrentDate(dataInscricaoDate)
-    }
-  }
 
   const loadData = useCallback(async () => {
     if (!currentDate) return

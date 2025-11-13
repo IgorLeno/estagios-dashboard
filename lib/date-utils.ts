@@ -1,32 +1,15 @@
 /**
- * Utilitários para lógica de data com horário customizável
- * O "dia" de inscrição é determinado pelo horário configurado (ex: 6h-5:59)
+ * Utilitários para lógica de data
+ * O "dia" de inscrição segue o calendário padrão (meia-noite como início)
  */
-
-import type { Configuracao } from "./types"
 
 /**
- * Calcula a data de inscrição considerando o horário de início do "dia"
- * Ex: Se hora_inicio é 06:00 e agora são 03:00, a data é de ontem
+ * Retorna a data de inscrição (sempre a data atual do calendário)
  * @param now Data/hora atual
- * @param config Configuração com hora_inicio
  * @returns Data de inscrição no formato YYYY-MM-DD
  */
-export function getDataInscricao(now: Date = new Date(), config?: Configuracao): string {
-  const horaInicio = config?.hora_inicio || "06:00:00"
-  const [hora, minuto] = horaInicio.split(":").map(Number)
-
-  // Cria data de referência com hora de início
-  const dataReferencia = new Date(now)
-  dataReferencia.setHours(hora, minuto, 0, 0)
-
-  // Se agora é antes da hora de início, o "dia" é de ontem
-  const dataInscricao = new Date(now)
-  if (now < dataReferencia) {
-    dataInscricao.setDate(dataInscricao.getDate() - 1)
-  }
-
-  return formatDateToYYYYMMDD(dataInscricao)
+export function getDataInscricao(now: Date = new Date()): string {
+  return formatDateToYYYYMMDD(now)
 }
 
 /**
