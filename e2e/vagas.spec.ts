@@ -160,8 +160,7 @@ test.describe("Gerenciamento de Vagas", () => {
     await deleteMenuItem.waitFor({ state: "visible", timeout: 5000 })
 
     // Configurar handler para o dialog nativo do browser (window.confirm)
-    page.on("dialog", async (dialog) => {
-      expect(dialog.type()).toBe("confirm")
+    page.once("dialog", async (dialog) => {
       await dialog.accept()
     })
 

@@ -152,15 +152,14 @@ test.describe("Navegação do Dashboard", () => {
     // Recarregar página com delay nas requisições
     await page.reload()
 
-    // Aguardar que as requisições completem e os dados sejam carregados
-    // O indicador de carregamento pode ser muito rápido, então não exigimos que apareça
-    await page.waitForTimeout(requestDelay + 500)
+    await page.reload()
 
-    // Aguardar que o indicador de carregamento não esteja mais visível (se estava)
+    // Verificar que o indicador de carregamento aparece
+    await expect(loadingText).toBeVisible({ timeout: 1000 })
+
+    // Aguardar que o indicador desapareça e a tabela apareça
     await expect(loadingText).not.toBeVisible({ timeout: 10000 })
-
-    // Verificar que a tabela está visível após o carregamento
-    await expect(page.locator("table")).toBeVisible({ timeout: 3000 })
+    await expect(page.locator("table")).toBeVisible()
 
     // Verificar que pelo menos uma requisição foi interceptada
     expect(requestCount).toBeGreaterThan(0)
