@@ -98,7 +98,10 @@ test.describe("Gerenciamento de Vagas", () => {
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    const editMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^editar$/i }).first()
+    const editMenuItem = page
+      .locator('[role="menuitem"]')
+      .filter({ hasText: /^editar$/i })
+      .first()
     await editMenuItem.waitFor({ state: "visible", timeout: 5000 })
     await editMenuItem.click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -146,7 +149,10 @@ test.describe("Gerenciamento de Vagas", () => {
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    const deleteMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^excluir$/i }).first()
+    const deleteMenuItem = page
+      .locator('[role="menuitem"]')
+      .filter({ hasText: /^excluir$/i })
+      .first()
     await deleteMenuItem.waitFor({ state: "visible", timeout: 5000 })
     await deleteMenuItem.click()
 
