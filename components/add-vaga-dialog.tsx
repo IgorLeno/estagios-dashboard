@@ -76,6 +76,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
     try {
       const dataInscricao = getDataInscricao(new Date(), config || undefined)
+      console.log('[AddVagaDialog] Criando vaga com data_inscricao:', dataInscricao, 'Config:', config)
 
       const { error } = await supabase.from("vagas_estagio").insert({
         empresa: formData.empresa,
@@ -164,7 +165,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               <Label htmlFor="modalidade">Modalidade *</Label>
               <Select
                 value={formData.modalidade}
-                onValueChange={(value) => setFormData({ ...formData, modalidade: value })}
+                onValueChange={(value) => setFormData({ ...formData, modalidade: value as "Presencial" | "Híbrido" | "Remoto" })}
               >
                 <SelectTrigger id="modalidade">
                   <SelectValue />

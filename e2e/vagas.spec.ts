@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { waitForVagaInTable } from "./helpers/test-utils"
 
 test.describe("Gerenciamento de Vagas", () => {
   test.beforeEach(async ({ page }) => {
@@ -37,11 +38,14 @@ test.describe("Gerenciamento de Vagas", () => {
     const saveButton = page.getByRole("button", { name: /^salvar$/i })
     await saveButton.click()
 
+    // Aguardar toast de sucesso aparecer
+    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
+
     // Aguardar modal fechar (indica que a operação foi concluída)
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
-    // Verificar que vaga aparece na tabela
-    await expect(page.getByText("[E2E-TEST] Petrobrás")).toBeVisible({ timeout: 10000 })
+    // Aguardar vaga aparecer na tabela (usa helper que aguarda loading desaparecer)
+    await waitForVagaInTable(page, "[E2E-TEST] Petrobrás")
     await expect(page.getByText("Engenheiro de Processos")).toBeVisible()
   })
 
@@ -73,10 +77,12 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.getByRole("option", { name: "Presencial" }).click()
     await page.getByRole("button", { name: /^salvar$/i }).click()
 
+    // Aguardar toast de sucesso
+    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
-    await expect(page.getByText("[E2E-TEST] Edit Company")).toBeVisible({ timeout: 5000 })
+    await waitForVagaInTable(page, "[E2E-TEST] Edit Company")
 
     // Encontrar e clicar em editar (botão de ações)
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Edit Company" })
@@ -117,10 +123,12 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.getByRole("option", { name: "Remoto" }).click()
     await page.getByRole("button", { name: /^salvar$/i }).click()
 
+    // Aguardar toast de sucesso
+    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
-    await expect(page.getByText("[E2E-TEST] Delete Me")).toBeVisible({ timeout: 5000 })
+    await waitForVagaInTable(page, "[E2E-TEST] Delete Me")
 
     // Deletar vaga
     const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Delete Me" })
@@ -169,10 +177,12 @@ test.describe("Gerenciamento de Vagas", () => {
     // Salvar
     await page.getByRole("button", { name: /^salvar$/i }).click()
 
+    // Aguardar toast de sucesso
+    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Verificar na tabela
-    await expect(page.getByText("[E2E-TEST] Full Form")).toBeVisible({ timeout: 5000 })
+    await waitForVagaInTable(page, "[E2E-TEST] Full Form")
     await expect(page.getByText("Full Stack Developer")).toBeVisible()
   })
 })

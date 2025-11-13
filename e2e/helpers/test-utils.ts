@@ -147,6 +147,27 @@ export async function getTableRowCount(page: Page): Promise<number> {
 }
 
 /**
+ * Wait for data to finish loading (loading indicator disappears)
+ * Aguarda que o indicador de carregamento desapareça
+ */
+export async function waitForDataLoad(page: Page) {
+  // Aguardar que "Carregando..." desapareça
+  await expect(page.getByText(/carregando/i)).not.toBeVisible({ timeout: 10000 })
+}
+
+/**
+ * Wait for vaga to appear in table
+ * Aguarda que uma vaga específica apareça na tabela após criação/edição
+ */
+export async function waitForVagaInTable(page: Page, empresaName: string) {
+  // Aguardar que o loading desapareça primeiro
+  await waitForDataLoad(page)
+
+  // Aguardar que a empresa apareça na tabela
+  await expect(page.getByText(empresaName)).toBeVisible({ timeout: 10000 })
+}
+
+/**
  * Clear all filters
  */
 export async function clearAllFilters(page: Page) {

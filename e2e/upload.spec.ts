@@ -22,8 +22,11 @@ test.describe("Upload de Arquivos", () => {
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(analiseFile)
 
-    // Aguardar processamento completo (toast de sucesso + preenchimento dos campos)
-    await waitForFileProcessing(page)
+    // Aguardar indicador de campos detectados aparecer
+    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+
+    // Aguardar que o campo empresa seja preenchido
+    await waitForEmpresaPopulated(page)
 
     // Verificar se campos foram preenchidos automaticamente
     const empresaInput = page.getByLabel(/empresa/i)
@@ -92,8 +95,9 @@ test.describe("Upload de Arquivos", () => {
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(file1)
 
-    // Aguardar processamento completo
-    await waitForFileProcessing(page)
+    // Aguardar indicador de campos detectados
+    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await waitForEmpresaPopulated(page)
 
     // Verificar primeiro arquivo
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
@@ -109,8 +113,9 @@ test.describe("Upload de Arquivos", () => {
     const file2 = path.join(__dirname, "fixtures/analise-exemplo-2.md")
     await fileInput.setInputFiles(file2)
 
-    // Aguardar processamento completo
-    await waitForFileProcessing(page)
+    // Aguardar indicador de campos detectados do segundo upload
+    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await waitForEmpresaPopulated(page)
 
     // Verificar que foi substituído
     await expect(page.getByLabel(/empresa/i)).toHaveValue(/Microsoft/i)
@@ -195,19 +200,17 @@ test.describe("Upload de Arquivos", () => {
 
     const analiseFile = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
-    await fileInput.waitFor({ state: 'visible' })
     await fileInput.setInputFiles(analiseFile)
 
-    // Aguardar preview de campos detectados aparecer com timeout maior
-    await page.getByText(/campos detectados automaticamente/i).waitFor({
-      state: "visible",
-      timeout: 30000
-    })
+    // Aguardar indicador de campos detectados aparecer
+    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
 
-    // Verificar preview de campos detectados
-    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible()
-    await expect(page.getByText(/empresa.*google/i)).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText(/cargo.*engenheiro/i)).toBeVisible({ timeout: 5000 })
+    // Aguardar que o campo empresa seja preenchido
+    await waitForEmpresaPopulated(page)
+
+    // Verificar que os campos foram preenchidos (o "preview" é o próprio formulário preenchido)
+    await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
+    await expect(page.getByLabel(/cargo/i)).toHaveValue(/Engenheiro/i)
 
     await page.keyboard.press("Escape")
   })
