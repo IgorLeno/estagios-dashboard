@@ -67,34 +67,53 @@ export function ConfiguracoesPage() {
 
   return (
     <div className="max-w-2xl">
-      <Card>
+      <Card className="glass-card-intense">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            <CardTitle>Horário de Trabalho</CardTitle>
-          </div>
-          <CardDescription>Configure seu horário de trabalho para melhor organização das candidaturas</CardDescription>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[rgb(19_255_227_/_0.2)] border-2 border-[rgb(19_255_227)] flex items-center justify-center shadow-[0_0_15px_rgb(19_255_227_/_0.6)]">
+              <Clock className="h-6 w-6 text-[rgb(19_255_227)]" />
+            </div>
+            <span className="text-foreground">Horário de Trabalho</span>
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Configure seu horário de trabalho para melhor organização das candidaturas
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="horaInicio">Hora de Início</Label>
-              <Input id="horaInicio" type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+              <Label htmlFor="horaInicio" className="text-foreground">
+                Hora de Início
+              </Label>
+              <Input
+                id="horaInicio"
+                type="time"
+                value={horaInicio}
+                onChange={(e) => setHoraInicio(e.target.value)}
+                className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="horaTermino">Hora de Término</Label>
+              <Label htmlFor="horaTermino" className="text-foreground">
+                Hora de Término
+              </Label>
               <Input
                 id="horaTermino"
                 type="time"
                 value={horaTermino}
                 onChange={(e) => setHoraTermino(e.target.value)}
+                className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
               />
             </div>
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={loading} className="flex-1">
+            <Button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex-1 bg-[rgb(19_255_227_/_0.2)] border border-[rgb(19_255_227_/_0.6)] text-[rgb(19_255_227)] hover:bg-[rgb(19_255_227_/_0.3)] hover:shadow-[0_0_15px_rgb(19_255_227_/_0.5)] transition-all"
+            >
               {loading ? "Salvando..." : saved ? "Salvo!" : "Salvar Configurações"}
               {saved && <Check className="ml-2 h-4 w-4" />}
             </Button>

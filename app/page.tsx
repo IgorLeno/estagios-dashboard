@@ -129,20 +129,26 @@ export default function Page() {
   // Don't render until currentDate is initialized
   if (!currentDate) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground animate-pulse">Carregando...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <Tabs defaultValue="estagios" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="estagios">Estágios</TabsTrigger>
-            <TabsTrigger value="resumo">Resumo</TabsTrigger>
-            <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+          <TabsList className="glass-card border-[rgb(19_255_227_/_0.4)]">
+            <TabsTrigger value="estagios" className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]">
+              Estágios
+            </TabsTrigger>
+            <TabsTrigger value="resumo" className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]">
+              Resumo
+            </TabsTrigger>
+            <TabsTrigger value="configuracoes" className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]">
+              Configurações
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="estagios" className="space-y-6">

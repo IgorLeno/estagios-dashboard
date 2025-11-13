@@ -115,22 +115,47 @@ export function ResumoPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="glass-card-intense">
         <CardHeader>
-          <CardTitle>Filtro por Período</CardTitle>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[rgb(19_255_227_/_0.2)] border-2 border-[rgb(19_255_227)] flex items-center justify-center shadow-[0_0_15px_rgb(19_255_227_/_0.6)]">
+              <TrendingUp className="h-6 w-6 text-[rgb(19_255_227)]" />
+            </div>
+            <span className="text-foreground">Filtro por Período</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 space-y-2">
-              <Label htmlFor="startDate">Data de Início</Label>
-              <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Label htmlFor="startDate" className="text-foreground">
+                Data de Início
+              </Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
+              />
             </div>
             <div className="flex-1 space-y-2">
-              <Label htmlFor="endDate">Data de Término</Label>
-              <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Label htmlFor="endDate" className="text-foreground">
+                Data de Término
+              </Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
+              />
             </div>
             <div className="flex items-end">
-              <Button onClick={loadResumo} disabled={loading || !startDate || !endDate}>
+              <Button
+                onClick={loadResumo}
+                disabled={loading || !startDate || !endDate}
+                className="bg-[rgb(19_255_227_/_0.2)] border border-[rgb(19_255_227_/_0.6)] text-[rgb(19_255_227)] hover:bg-[rgb(19_255_227_/_0.3)] hover:shadow-[0_0_15px_rgb(19_255_227_/_0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {loading ? "Carregando..." : "Gerar Resumo"}
               </Button>
             </div>
@@ -140,21 +165,25 @@ export function ResumoPage() {
 
       {totalCandidaturas > 0 && (
         <>
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0 shadow-lg">
+          <Card className="glass-card-intense border-[rgb(19_255_227_/_0.5)] hover:shadow-[0_0_30px_rgb(19_255_227_/_0.3)] transition-all">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white/90">Total de Candidaturas</p>
-                  <p className="text-5xl font-bold mt-2">{totalCandidaturas}</p>
+                  <p className="text-sm text-muted-foreground mb-2">Total de Candidaturas</p>
+                  <p className="text-5xl font-bold mt-2 text-[rgb(19_255_227)] drop-shadow-[0_0_15px_rgb(19_255_227_/_0.8)]">
+                    {totalCandidaturas}
+                  </p>
                 </div>
-                <TrendingUp className="h-12 w-12 text-white/80" />
+                <div className="w-16 h-16 rounded-full bg-[rgb(19_255_227_/_0.2)] border-2 border-[rgb(19_255_227)] flex items-center justify-center shadow-[0_0_20px_rgb(19_255_227_/_0.6)]">
+                  <TrendingUp className="h-8 w-8 text-[rgb(19_255_227)]" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card-intense">
             <CardHeader>
-              <CardTitle>Histórico</CardTitle>
+              <CardTitle className="text-foreground">Histórico</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -178,9 +207,9 @@ export function ResumoPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card-intense">
             <CardHeader>
-              <CardTitle>Status</CardTitle>
+              <CardTitle className="text-foreground">Status</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -229,9 +258,9 @@ export function ResumoPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card-intense">
             <CardHeader>
-              <CardTitle>Locais</CardTitle>
+              <CardTitle className="text-foreground">Locais</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>

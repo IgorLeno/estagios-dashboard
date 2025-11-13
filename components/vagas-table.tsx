@@ -46,11 +46,11 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
   })
 
   function getFitBadgeColor(fit?: number) {
-    if (!fit) return "bg-gray-500"
-    if (fit >= 80) return "bg-green-500"
-    if (fit >= 60) return "bg-yellow-500"
-    if (fit >= 40) return "bg-orange-500"
-    return "bg-red-500"
+    if (!fit) return "bg-[rgb(100_116_139)] border-[rgb(100_116_139_/_0.5)]"
+    if (fit >= 80) return "bg-[rgb(19_255_227_/_0.3)] border-[rgb(19_255_227)] text-[rgb(19_255_227)] shadow-[0_0_8px_rgb(19_255_227_/_0.4)]"
+    if (fit >= 60) return "bg-[rgb(139_92_246_/_0.3)] border-[rgb(139_92_246)] text-[rgb(139_92_246)] shadow-[0_0_8px_rgb(139_92_246_/_0.4)]"
+    if (fit >= 40) return "bg-[rgb(251_146_60_/_0.3)] border-[rgb(251_146_60)] text-[rgb(251_146_60)]"
+    return "bg-[rgb(239_68_68_/_0.3)] border-[rgb(239_68_68)] text-[rgb(239_68_68)]"
   }
 
   async function handleDeleteVaga(vaga: VagaEstagio) {
@@ -73,11 +73,14 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
 
   return (
     <>
-      <Card>
+      <Card className="glass-card-intense hover:shadow-[0_0_25px_rgb(19_255_227_/_0.2)] transition-all">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Vagas</CardTitle>
-            <Button onClick={() => setShowAddDialog(true)}>
+            <CardTitle className="text-foreground">Vagas</CardTitle>
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              className="bg-[rgb(19_255_227_/_0.2)] border border-[rgb(19_255_227_/_0.6)] text-[rgb(19_255_227)] hover:bg-[rgb(19_255_227_/_0.3)] hover:shadow-[0_0_15px_rgb(19_255_227_/_0.5)] transition-all"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Vaga
             </Button>
@@ -85,21 +88,21 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
 
           <div className="flex flex-col gap-3 mt-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgb(19_255_227)]" />
               <Input
                 placeholder="Buscar por empresa ou cargo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-9 bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground placeholder:text-muted-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
               />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Select value={filterModalidade} onValueChange={setFilterModalidade}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground hover:border-[rgb(19_255_227_/_0.5)]">
                   <SelectValue placeholder="Modalidade" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[rgb(13_27_42)] border-[rgb(19_255_227_/_0.4)]">
                   <SelectItem value="todas">Todas</SelectItem>
                   <SelectItem value="Presencial">Presencial</SelectItem>
                   <SelectItem value="Híbrido">Híbrido</SelectItem>
@@ -108,10 +111,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               </Select>
 
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground hover:border-[rgb(19_255_227_/_0.5)]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[rgb(13_27_42)] border-[rgb(19_255_227_/_0.4)]">
                   <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="Pendente">Pendente</SelectItem>
                   <SelectItem value="Avançado">Avançado</SelectItem>
@@ -121,10 +124,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               </Select>
 
               <Select value={filterEtapa} onValueChange={setFilterEtapa}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-[rgb(20_40_70_/_0.5)] border-[rgb(19_255_227_/_0.3)] text-foreground hover:border-[rgb(19_255_227_/_0.5)]">
                   <SelectValue placeholder="Etapa" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[rgb(13_27_42)] border-[rgb(19_255_227_/_0.4)]">
                   <SelectItem value="todas">Todas</SelectItem>
                   {etapas.map((etapa) => (
                     <SelectItem key={etapa} value={etapa}>
@@ -142,7 +145,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                   setFilterStatus("todos")
                   setFilterEtapa("todas")
                 }}
-                className="w-full"
+                className="w-full bg-transparent border-[rgb(19_255_227_/_0.4)] text-foreground hover:bg-[rgb(19_255_227_/_0.1)] hover:border-[rgb(19_255_227_/_0.6)]"
               >
                 Limpar Filtros
               </Button>
@@ -152,7 +155,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
 
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+            <div className="text-center py-8 text-muted-foreground animate-pulse">Carregando...</div>
           ) : filteredVagas.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">Nenhuma vaga encontrada para este dia</div>
           ) : (
@@ -175,43 +178,53 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                 <TableBody>
                   {filteredVagas.map((vaga) => (
                     <TableRow key={vaga.id}>
-                      <TableCell className="font-medium">{vaga.empresa}</TableCell>
-                      <TableCell>{vaga.cargo}</TableCell>
-                      <TableCell>{vaga.local}</TableCell>
+                      <TableCell className="font-medium text-foreground">{vaga.empresa}</TableCell>
+                      <TableCell className="text-foreground">{vaga.cargo}</TableCell>
+                      <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{vaga.modalidade}</Badge>
+                        <Badge
+                          variant="outline"
+                          className="bg-[rgb(20_40_70_/_0.3)] border-[rgb(19_255_227_/_0.4)] text-foreground"
+                        >
+                          {vaga.modalidade}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {vaga.requisitos !== undefined && vaga.requisitos !== null ? (
-                          <Badge className={`${getFitBadgeColor(vaga.requisitos)} text-white`}>{vaga.requisitos}</Badge>
+                          <Badge className={getFitBadgeColor(vaga.requisitos)}>{vaga.requisitos}</Badge>
                         ) : (
-                          "-"
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
                         {vaga.fit !== undefined && vaga.fit !== null ? (
-                          <Badge variant="outline">{vaga.fit}/10</Badge>
+                          <Badge
+                            variant="outline"
+                            className="bg-[rgb(20_40_70_/_0.3)] border-[rgb(19_255_227_/_0.4)] text-[rgb(19_255_227)]"
+                          >
+                            {vaga.fit}/10
+                          </Badge>
                         ) : (
-                          "-"
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>{vaga.etapa || "-"}</TableCell>
+                      <TableCell className="text-foreground">{vaga.etapa || <span className="text-muted-foreground">-</span>}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={
+                          className={
                             vaga.status === "Contratado"
-                              ? "default"
+                              ? "bg-[rgb(19_255_227_/_0.3)] border-[rgb(19_255_227)] text-[rgb(19_255_227)] shadow-[0_0_8px_rgb(19_255_227_/_0.5)]"
                               : vaga.status === "Melou"
-                                ? "destructive"
+                                ? "bg-[rgb(239_68_68_/_0.3)] border-[rgb(239_68_68)] text-[rgb(239_68_68)]"
                                 : vaga.status === "Avançado"
-                                  ? "secondary"
-                                  : "outline"
+                                  ? "bg-[rgb(139_92_246_/_0.3)] border-[rgb(139_92_246)] text-[rgb(139_92_246)]"
+                                  : "bg-[rgb(20_40_70_/_0.3)] border-[rgb(19_255_227_/_0.3)] text-muted-foreground"
                           }
                         >
                           {vaga.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[150px] truncate">{vaga.observacoes || "-"}</TableCell>
+                      <TableCell className="max-w-[150px] truncate text-muted-foreground">{vaga.observacoes || "-"}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
