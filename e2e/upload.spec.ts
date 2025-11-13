@@ -10,6 +10,8 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve fazer upload de análise .md e preencher campos automaticamente", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     // Abrir modal de adicionar vaga
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -37,6 +39,8 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve fazer upload de currículo PDF", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
@@ -60,6 +64,8 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve mostrar erro para arquivo com extensão inválida", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
@@ -76,6 +82,8 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve permitir substituir arquivo já enviado", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
@@ -111,6 +119,8 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve mostrar indicador de progresso durante upload", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     // Configurar delay controlado para o upload do Supabase Storage
     const uploadDelay = 1000 // 1 segundo de delay
     let uploadIntercepted = false
@@ -178,20 +188,26 @@ test.describe("Upload de Arquivos", () => {
   })
 
   test("deve exibir preview dos campos detectados após upload", async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
     const analiseFile = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
+    await fileInput.waitFor({ state: 'visible' })
     await fileInput.setInputFiles(analiseFile)
 
-    // Aguardar preview de campos detectados aparecer
-    await page.getByText(/campos detectados automaticamente/i).waitFor({ state: "visible" })
+    // Aguardar preview de campos detectados aparecer com timeout maior
+    await page.getByText(/campos detectados automaticamente/i).waitFor({
+      state: "visible",
+      timeout: 30000
+    })
 
     // Verificar preview de campos detectados
     await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible()
-    await expect(page.getByText(/empresa.*google/i)).toBeVisible()
-    await expect(page.getByText(/cargo.*engenheiro/i)).toBeVisible()
+    await expect(page.getByText(/empresa.*google/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/cargo.*engenheiro/i)).toBeVisible({ timeout: 5000 })
 
     await page.keyboard.press("Escape")
   })

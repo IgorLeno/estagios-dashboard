@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test"
+import dotenv from "dotenv"
+
+// Carregar variáveis de ambiente do .env.local
+dotenv.config({ path: ".env.local" })
 
 /**
  * Playwright Configuration for E2E Tests
@@ -51,5 +55,9 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+    },
   },
 })
