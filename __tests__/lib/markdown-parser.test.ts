@@ -266,6 +266,230 @@ Senior Developer
       expect(result.empresa).toBe("Google Inc")
       expect(result.cargo).toBe("Senior Developer")
     })
+
+    describe("Markdown Table Support", () => {
+      it("should parse basic markdown table", () => {
+        const markdown = `
+| Campo      | Detalhes                                  |
+|------------|-------------------------------------------|
+| **Empresa** | Saipem                                   |
+| **Cargo**   | Intern (QHSE)                            |
+| **Localização** | Guarujá, São Paulo, Brasil           |
+| **Status**  | Pendente                                  |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBe("Saipem")
+        expect(result.cargo).toBe("Intern (QHSE)")
+        expect(result.local).toBe("Guarujá, São Paulo, Brasil")
+        expect(result.status).toBe("Pendente")
+      })
+
+      it("should handle table with multiple modalidades (prioritize Remoto)", () => {
+        const markdown = `
+| Campo       | Detalhes                          |
+|-------------|-----------------------------------|
+| **Modalidade** | Presencial \\| Híbrido \\| Remoto |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+        expect(result.modalidade).toBe("Remoto")
+      })
+
+      it("should handle table with multiple modalidades (only Presencial and Híbrido)", () => {
+        const markdown = `
+| Campo       | Detalhes                  |
+|-------------|---------------------------|
+| **Modalidade** | Presencial / Híbrido   |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+        expect(result.modalidade).toBe("Híbrido")
+      })
+
+      it("should handle status with emoji in table", () => {
+        const markdown = `
+| Campo    | Detalhes                        |
+|----------|---------------------------------|
+| **Status** | ⏳ Pendente de Candidatura    |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+        expect(result.status).toBe("Pendente")
+      })
+
+      it("should handle alternative field names in table", () => {
+        const markdown = `
+| Campo           | Detalhes              |
+|-----------------|-----------------------|
+| **Empresa**     | Microsoft             |
+| **Vaga**        | Software Engineer     |
+| **Cidade**      | São Paulo             |
+| **Fase**        | Entrevista Técnica    |
+| **Score**       | 85                    |
+| **Adequação**   | 9                     |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBe("Microsoft")
+        expect(result.cargo).toBe("Software Engineer")
+        expect(result.local).toBe("São Paulo")
+        expect(result.etapa).toBe("Entrevista Técnica")
+        expect(result.requisitos).toBe(85)
+        expect(result.fit).toBe(9)
+      })
+
+      it("should handle table with case variations and special characters", () => {
+        const markdown = `
+| Campo           | Detalhes              |
+|-----------------|-----------------------|
+| EMPRESA         | Apple Inc.            |
+| cargo           | iOS Developer         |
+| **LOCALIZAÇÃO** | Cupertino, CA         |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBe("Apple Inc.")
+        expect(result.cargo).toBe("iOS Developer")
+        expect(result.local).toBe("Cupertino, CA")
+      })
+
+      it("should prioritize table values over inline format", () => {
+        const markdown = `
+**Empresa**: Google
+
+| Campo    | Detalhes   |
+|----------|------------|
+| **Empresa** | Amazon  |
+
+**Cargo**: Engineer
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        // Tabela tem prioridade
+        expect(result.empresa).toBe("Amazon")
+        // Cargo só tem formato inline, então usa ele
+        expect(result.cargo).toBe("Engineer")
+      })
+
+      it("should handle mixed table and inline format", () => {
+        const markdown = `
+| Campo       | Detalhes         |
+|-------------|------------------|
+| **Empresa** | Netflix          |
+| **Cargo**   | Data Engineer    |
+
+**Modalidade**: Remoto
+**Requisitos**: 90
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBe("Netflix")
+        expect(result.cargo).toBe("Data Engineer")
+        expect(result.modalidade).toBe("Remoto")
+        expect(result.requisitos).toBe(90)
+      })
+
+      it("should ignore table header rows", () => {
+        const markdown = `
+| Campo       | Detalhes         |
+|-------------|------------------|
+| **Empresa** | Tesla            |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        // Não deve pegar "Campo" ou "Detalhes" como valores
+        expect(result.empresa).toBe("Tesla")
+      })
+
+      it("should handle table with numbers in string format", () => {
+        const markdown = `
+| Campo         | Detalhes |
+|---------------|----------|
+| **Requisitos** | 75      |
+| **Fit**       | 8       |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.requisitos).toBe(75)
+        expect(result.fit).toBe(8)
+      })
+
+      it("should validate number ranges from table", () => {
+        const markdown = `
+| Campo         | Detalhes |
+|---------------|----------|
+| **Requisitos** | 150     |
+| **Fit**       | 15      |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        // Valores fora do range devem ser undefined
+        expect(result.requisitos).toBeUndefined()
+        expect(result.fit).toBeUndefined()
+      })
+
+      it("should handle observacoes from table", () => {
+        const markdown = `
+| Campo           | Detalhes                          |
+|-----------------|-----------------------------------|
+| **Observações** | Empresa com ótima cultura         |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+        expect(result.observacoes).toBe("Empresa com ótima cultura")
+      })
+
+      it("should handle complete table with all fields", () => {
+        const markdown = `
+| Campo          | Detalhes                     |
+|----------------|------------------------------|
+| **Empresa**    | Meta                         |
+| **Cargo**      | Backend Engineer             |
+| **Localização**| Menlo Park, CA               |
+| **Modalidade** | Híbrido                      |
+| **Requisitos** | 92                           |
+| **Fit**        | 10                           |
+| **Etapa**      | Technical Interview          |
+| **Status**     | ✅ Avançado                  |
+| **Notas**      | Excelente match cultural     |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBe("Meta")
+        expect(result.cargo).toBe("Backend Engineer")
+        expect(result.local).toBe("Menlo Park, CA")
+        expect(result.modalidade).toBe("Híbrido")
+        expect(result.requisitos).toBe(92)
+        expect(result.fit).toBe(10)
+        expect(result.etapa).toBe("Technical Interview")
+        expect(result.status).toBe("Avançado")
+        expect(result.observacoes).toBe("Excelente match cultural")
+      })
+
+      it("should handle all status variations with emojis", () => {
+        expect(parseVagaFromMarkdown("| Status | ⏳ Pendente |").status).toBe("Pendente")
+        expect(parseVagaFromMarkdown("| Status | 📝 Aguardando retorno |").status).toBe("Pendente")
+        expect(parseVagaFromMarkdown("| Status | 🔄 Em processo |").status).toBe("Avançado")
+        expect(parseVagaFromMarkdown("| Status | ✅ Contratado |").status).toBe("Contratado")
+        expect(parseVagaFromMarkdown("| Status | ❌ Reprovado |").status).toBe("Melou")
+      })
+
+      it("should handle modalidade with forward slash separator", () => {
+        const markdown = `| Modalidade | Presencial/Remoto |`
+        const result = parseVagaFromMarkdown(markdown)
+        expect(result.modalidade).toBe("Remoto")
+      })
+
+      it("should handle empty table cells gracefully", () => {
+        const markdown = `
+| Campo       | Detalhes |
+|-------------|----------|
+| **Empresa** |          |
+| **Cargo**   | Engineer |
+        `
+        const result = parseVagaFromMarkdown(markdown)
+
+        expect(result.empresa).toBeUndefined()
+        expect(result.cargo).toBe("Engineer")
+      })
+    })
   })
 
   describe("isMarkdownFile", () => {
