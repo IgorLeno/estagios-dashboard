@@ -81,9 +81,12 @@ function extractFromTable(markdown: string): Record<string, string> {
     const rawField = columns[0]
     const rawValue = columns[1]
 
-    // Ignorar linhas de cabeçalho ou separadores
     if (rawField.includes("---") || rawValue.includes("---")) continue
-    if (rawField.toLowerCase().includes("campo") && rawValue.toLowerCase().includes("detalhe")) continue
+    // Ignorar linhas de cabeçalho (match exato, case-insensitive)
+    const isHeader = 
+      normalizeFieldName(rawField) === "campo" && 
+      normalizeFieldName(rawValue).includes("detalhe")
+    if (isHeader) continue
 
     // Limpar valor: remover asteriscos extras e espaços
     const value = rawValue.replace(/\*\*/g, "").trim()
@@ -148,15 +151,15 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     // Se múltiplas opções separadas por | ou /
     if (lower.includes("|") || lower.includes("/")) {
       if (lower.includes("remoto")) return "Remoto"
-      if (lower.includes("h") || lower.includes("í")) return "Híbrido"
+      if (lower.includes("híbrido") || lower.includes("hibrido")) return "Híbrido"
       if (lower.includes("presencial")) return "Presencial"
     }
 
-    // Lógica antiga para caso único
-    if (lower.includes("presencial") && !lower.includes("remoto") && !lower.includes("h") && !lower.includes("í"))
+    // Caso único
+    if (lower.includes("presencial") && !lower.includes("remoto") && !lower.includes("híbrido") && !lower.includes("hibrido"))
       return "Presencial"
-    if (lower.includes("remoto") && !lower.includes("h") && !lower.includes("í")) return "Remoto"
-    if (lower.includes("h") || lower.includes("í")) return "Híbrido"
+    if (lower.includes("remoto") && !lower.includes("híbrido") && !lower.includes("hibrido")) return "Remoto"
+    if (lower.includes("híbrido") || lower.includes("hibrido")) return "Híbrido"
 
     return undefined
   }
