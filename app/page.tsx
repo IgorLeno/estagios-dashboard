@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
 import type { VagaEstagio, MetaDiaria, Configuracao } from "@/lib/types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetaCard } from "@/components/meta-card"
 import { VagasTable } from "@/components/vagas-table"
@@ -12,6 +12,7 @@ import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
 
 export default function Page() {
+  const [activeTab, setActiveTab] = useState("estagios")
   const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
   const [meta, setMeta] = useState<MetaDiaria | null>(null)
@@ -136,52 +137,31 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <Tabs defaultValue="estagios" className="space-y-6">
-          <TabsList className="glass-card border-[rgb(19_255_227_/_0.4)]">
-            <TabsTrigger
-              value="estagios"
-              className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]"
-            >
-              Estágios
-            </TabsTrigger>
-            <TabsTrigger
-              value="resumo"
-              className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]"
-            >
-              Resumo
-            </TabsTrigger>
-            <TabsTrigger
-              value="configuracoes"
-              className="data-[state=active]:bg-[rgb(19_255_227_/_0.2)] data-[state=active]:text-[rgb(19_255_227)] data-[state=active]:shadow-[0_0_10px_rgb(19_255_227_/_0.4)]"
-            >
-              Configurações
-            </TabsTrigger>
-          </TabsList>
+    <div className="min-h-screen flex">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <TabsContent value="estagios" className="space-y-6">
-            <DashboardHeader
-              currentDate={currentDate}
-              onPrevDate={handlePrevDate}
-              onNextDate={handleNextDate}
-              onDateSelect={handleDateSelect}
-            />
+      <main className="flex-1 ml-20">
+        <div className="container mx-auto px-8 py-6 max-w-7xl">
+          {activeTab === "estagios" && (
+            <div className="space-y-6">
+              <DashboardHeader
+                currentDate={currentDate}
+                onPrevDate={handlePrevDate}
+                onNextDate={handleNextDate}
+                onDateSelect={handleDateSelect}
+              />
 
-            <MetaCard meta={meta?.meta || 0} candidaturas={vagas.length} onMetaChange={handleMetaChange} />
+              <MetaCard meta={meta?.meta || 0} candidaturas={vagas.length} onMetaChange={handleMetaChange} />
 
-            <VagasTable vagas={vagas} loading={loading} onVagaUpdate={loadData} />
-          </TabsContent>
+              <VagasTable vagas={vagas} loading={loading} onVagaUpdate={loadData} />
+            </div>
+          )}
 
-          <TabsContent value="resumo">
-            <ResumoPage />
-          </TabsContent>
+          {activeTab === "resumo" && <ResumoPage />}
 
-          <TabsContent value="configuracoes">
-            <ConfiguracoesPage />
-          </TabsContent>
-        </Tabs>
-      </div>
+          {activeTab === "configuracoes" && <ConfiguracoesPage />}
+        </div>
+      </main>
     </div>
   )
 }
