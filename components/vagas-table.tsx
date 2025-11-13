@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import type { VagaEstagio } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,8 +11,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Plus, Search, Eye, Upload, FileText } from "lucide-react"
+import { MoreHorizontal, Plus, Search, Eye, Upload, FileText, Edit, Trash2 } from "lucide-react"
 import { AddVagaDialog } from "./add-vaga-dialog"
+import { EditVagaDialog } from "./edit-vaga-dialog"
+import { toast } from "sonner"
 
 interface VagasTableProps {
   vagas: VagaEstagio[]
@@ -21,11 +24,13 @@ interface VagasTableProps {
 
 export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
   const router = useRouter()
+  const supabase = createClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterModalidade, setFilterModalidade] = useState<string>("todas")
   const [filterStatus, setFilterStatus] = useState<string>("todos")
   const [filterEtapa, setFilterEtapa] = useState<string>("todas")
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [editingVaga, setEditingVaga] = useState<VagaEstagio | null>(null)
 
   // Get unique etapas from vagas for filter
   const etapas = Array.from(new Set(vagas.map((v) => v.etapa).filter(Boolean))) as string[]
@@ -46,6 +51,24 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
     if (fit >= 60) return "bg-yellow-500"
     if (fit >= 40) return "bg-orange-500"
     return "bg-red-500"
+  }
+
+  async function handleDeleteVaga(vaga: VagaEstagio) {
+    if (!confirm(`Tem certeza que deseja excluir a vaga de ${vaga.empresa}?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase.from("vagas_estagio").delete().eq("id", vaga.id)
+
+      if (error) throw error
+
+      toast.success("Vaga excluída com sucesso!")
+      onVagaUpdate()
+    } catch (error) {
+      console.error("Erro ao excluir vaga:", error)
+      toast.error("Erro ao excluir vaga. Tente novamente.")
+    }
   }
 
   return (
@@ -201,6 +224,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                               <Eye className="h-4 w-4 mr-2" />
                               Ver Detalhes
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setEditingVaga(vaga)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Upload className="h-4 w-4 mr-2" />
                               Upload Análise
@@ -208,6 +235,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                             <DropdownMenuItem>
                               <FileText className="h-4 w-4 mr-2" />
                               Upload CV
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteVaga(vaga)} className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -222,6 +253,17 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
       </Card>
 
       <AddVagaDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={onVagaUpdate} />
+      {editingVaga && (
+        <EditVagaDialog
+          open={!!editingVaga}
+          vaga={editingVaga}
+          onOpenChange={(open) => !open && setEditingVaga(null)}
+          onSuccess={() => {
+            setEditingVaga(null)
+            onVagaUpdate()
+          }}
+        />
+      )}
     </>
   )
 }

@@ -151,8 +151,20 @@ export async function getTableRowCount(page: Page): Promise<number> {
  * Aguarda que o indicador de carregamento desapareça
  */
 export async function waitForDataLoad(page: Page) {
-  // Aguardar que "Carregando..." desapareça
-  await expect(page.getByText(/carregando/i)).not.toBeVisible({ timeout: 10000 })
+  // Primeiro, verificar se o loading apareceu (pode aparecer muito rápido)
+  // Se não aparecer em 1s, assumir que já carregou
+  const loadingIndicator = page.getByText(/carregando/i)
+  const isLoadingVisible = await loadingIndicator.isVisible().catch(() => false)
+
+  if (isLoadingVisible) {
+    // Se o loading está visível, aguardar que desapareça
+    await expect(loadingIndicator).not.toBeVisible({ timeout: 10000 })
+  } else {
+    // Se não está visível, aguardar um pouco para garantir que a rede estabilizou
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {
+      // Ignorar timeout de networkidle, pode não atingir esse estado
+    })
+  }
 }
 
 /**
@@ -163,8 +175,13 @@ export async function waitForVagaInTable(page: Page, empresaName: string) {
   // Aguardar que o loading desapareça primeiro
   await waitForDataLoad(page)
 
-  // Aguardar que a empresa apareça na tabela
-  await expect(page.getByText(empresaName)).toBeVisible({ timeout: 10000 })
+  // Aguardar que a empresa apareça como célula na tabela (mais específico que getByText)
+  // Usar locator de célula da tabela para garantir que está visível na viewport
+  const tableCell = page.locator("table tbody td").filter({ hasText: empresaName }).first()
+  await expect(tableCell).toBeVisible({ timeout: 15000 })
+
+  // Scroll para garantir que o elemento está na viewport
+  await tableCell.scrollIntoViewIfNeeded()
 }
 
 /**
@@ -175,4 +192,11 @@ export async function clearAllFilters(page: Page) {
   if (await clearButton.isVisible()) {
     await clearButton.click()
   }
+}
+
+/**
+ * Generate unique test name with timestamp
+ */
+export function generateUniqueTestName(baseName: string): string {
+  return `${baseName}-${Date.now()}`
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import type { VagaEstagio, MetaDiaria } from "@/lib/types"
+import { getDataInscricao } from "@/lib/date-utils"
+import type { VagaEstagio, MetaDiaria, Configuracao } from "@/lib/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetaCard } from "@/components/meta-card"
@@ -11,18 +12,48 @@ import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
 
 export default function Page() {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
   const [meta, setMeta] = useState<MetaDiaria | null>(null)
   const [loading, setLoading] = useState(true)
+  const [config, setConfig] = useState<Configuracao | null>(null)
 
   const supabase = createClient()
 
+  // Load config and initialize current date on mount
   useEffect(() => {
-    loadData()
+    loadConfigAndInitializeDate()
+  }, [])
+
+  useEffect(() => {
+    if (currentDate) {
+      loadData()
+    }
   }, [currentDate])
 
+  async function loadConfigAndInitializeDate() {
+    try {
+      const { data } = await supabase.from("configuracoes").select("*").single()
+      setConfig(data)
+
+      // Initialize currentDate with the inscription date logic
+      const dataInscricaoStr = getDataInscricao(new Date(), data || undefined)
+      const [year, month, day] = dataInscricaoStr.split("-").map(Number)
+      const dataInscricaoDate = new Date(year, month - 1, day)
+      setCurrentDate(dataInscricaoDate)
+    } catch (error) {
+      console.error("Erro ao carregar configurações:", error)
+      // Fallback to today if config load fails
+      const dataInscricaoStr = getDataInscricao(new Date())
+      const [year, month, day] = dataInscricaoStr.split("-").map(Number)
+      const dataInscricaoDate = new Date(year, month - 1, day)
+      setCurrentDate(dataInscricaoDate)
+    }
+  }
+
   async function loadData() {
+    if (!currentDate) return
+
     setLoading(true)
     try {
       // Carregar vagas do dia selecionado
@@ -55,6 +86,8 @@ export default function Page() {
   }
 
   async function handleMetaChange(newMeta: number) {
+    if (!currentDate) return
+
     const dateStr = currentDate.toISOString().split("T")[0]
     try {
       const { data, error } = await supabase
@@ -71,12 +104,16 @@ export default function Page() {
   }
 
   function handlePrevDate() {
+    if (!currentDate) return
+
     const newDate = new Date(currentDate)
     newDate.setDate(newDate.getDate() - 1)
     setCurrentDate(newDate)
   }
 
   function handleNextDate() {
+    if (!currentDate) return
+
     const newDate = new Date(currentDate)
     newDate.setDate(newDate.getDate() + 1)
     setCurrentDate(newDate)
@@ -84,6 +121,15 @@ export default function Page() {
 
   function handleDateSelect(date: Date) {
     setCurrentDate(date)
+  }
+
+  // Don't render until currentDate is initialized
+  if (!currentDate) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Carregando...</p>
+      </div>
+    )
   }
 
   return (

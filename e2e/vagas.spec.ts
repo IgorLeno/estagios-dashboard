@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { waitForVagaInTable } from "./helpers/test-utils"
+import { waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
 
 test.describe("Gerenciamento de Vagas", () => {
   test.beforeEach(async ({ page }) => {
@@ -11,6 +11,9 @@ test.describe("Gerenciamento de Vagas", () => {
     // Garantir que página carregou completamente
     await page.waitForLoadState("networkidle")
 
+    const empresaName = generateUniqueTestName("[E2E-TEST] Petrobrás")
+    const cargoName = generateUniqueTestName("Engenheiro de Processos")
+
     // Abrir modal
     const addButton = page.getByRole("button", { name: /adicionar vaga/i })
     await addButton.waitFor({ state: "visible" })
@@ -18,8 +21,8 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Preencher formulário
-    await page.getByLabel(/empresa/i).fill("[E2E-TEST] Petrobrás")
-    await page.getByLabel(/cargo/i).fill("Engenheiro de Processos")
+    await page.getByLabel(/empresa/i).fill(empresaName)
+    await page.getByLabel(/cargo/i).fill(cargoName)
     await page.getByLabel(/local/i).fill("Rio de Janeiro")
 
     // Selecionar modalidade
@@ -45,8 +48,10 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer na tabela (usa helper que aguarda loading desaparecer)
-    await waitForVagaInTable(page, "[E2E-TEST] Petrobrás")
-    await expect(page.getByText("Engenheiro de Processos")).toBeVisible()
+    await waitForVagaInTable(page, empresaName)
+    // Verificar que o cargo também está visível na mesma linha
+    const vagaRow = page.locator("tr").filter({ hasText: empresaName })
+    await expect(vagaRow.getByText(cargoName)).toBeVisible()
   })
 
   test("deve validar campos obrigatórios", async ({ page }) => {
@@ -68,9 +73,11 @@ test.describe("Gerenciamento de Vagas", () => {
   test("deve editar vaga existente", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
+    const empresaName = generateUniqueTestName("[E2E-TEST] Edit Company")
+
     // Primeiro criar uma vaga para editar
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await page.getByLabel(/empresa/i).fill("[E2E-TEST] Edit Company")
+    await page.getByLabel(/empresa/i).fill(empresaName)
     await page.getByLabel(/cargo/i).fill("Test Position")
     await page.getByLabel(/local/i).fill("Test City")
     await page.getByLabel(/modalidade/i).click()
@@ -82,18 +89,21 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
-    await waitForVagaInTable(page, "[E2E-TEST] Edit Company")
+    await waitForVagaInTable(page, empresaName)
 
     // Encontrar e clicar em editar (botão de ações)
-    const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Edit Company" })
+    const vagaRow = page.locator("tr").filter({ hasText: empresaName })
     const actionsButton = vagaRow.getByTestId("vaga-actions-button")
+    await actionsButton.scrollIntoViewIfNeeded()
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    // Clicar em "Editar" no dropdown
-    const editButton = page.locator("text=/editar/i").first()
-    await editButton.waitFor({ state: "visible" })
-    await editButton.click()
+    // Aguardar dropdown abrir e clicar em "Editar"
+    // Usar um seletor que pega o item de menu diretamente dentro do portal do dropdown
+    await page.waitForTimeout(500) // Pequena espera para dropdown renderizar completamente
+    const editMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^editar$/i }).first()
+    await editMenuItem.waitFor({ state: "visible", timeout: 5000 })
+    await editMenuItem.click()
     await expect(page.getByRole("dialog")).toBeVisible()
     await expect(page.getByText(/editar vaga/i)).toBeVisible()
 
@@ -114,9 +124,11 @@ test.describe("Gerenciamento de Vagas", () => {
   test("deve deletar vaga", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
+    const empresaName = generateUniqueTestName("[E2E-TEST] Delete Me")
+
     // Criar vaga para deletar
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await page.getByLabel(/empresa/i).fill("[E2E-TEST] Delete Me")
+    await page.getByLabel(/empresa/i).fill(empresaName)
     await page.getByLabel(/cargo/i).fill("Delete Position")
     await page.getByLabel(/local/i).fill("Delete City")
     await page.getByLabel(/modalidade/i).click()
@@ -128,18 +140,20 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
-    await waitForVagaInTable(page, "[E2E-TEST] Delete Me")
+    await waitForVagaInTable(page, empresaName)
 
     // Deletar vaga
-    const vagaRow = page.locator("tr", { hasText: "[E2E-TEST] Delete Me" })
-    await vagaRow.hover()
+    const vagaRow = page.locator("tr").filter({ hasText: empresaName })
+    await vagaRow.scrollIntoViewIfNeeded()
     const actionsButton = vagaRow.getByTestId("vaga-actions-button")
     await actionsButton.waitFor({ state: "visible" })
     await actionsButton.click()
 
-    const deleteButton = page.getByText(/excluir/i)
-    await deleteButton.waitFor({ state: "visible" })
-    await deleteButton.click()
+    // Aguardar dropdown abrir e clicar em "Excluir"
+    await page.waitForTimeout(500) // Pequena espera para dropdown renderizar completamente
+    const deleteMenuItem = page.locator('[role="menuitem"]').filter({ hasText: /^excluir$/i }).first()
+    await deleteMenuItem.waitFor({ state: "visible", timeout: 5000 })
+    await deleteMenuItem.click()
 
     // Confirmar deleção (se houver dialog de confirmação)
     const confirmButton = page.getByRole("button", { name: /confirmar|deletar|excluir/i })
@@ -148,17 +162,19 @@ test.describe("Gerenciamento de Vagas", () => {
     }
 
     // Verificar que não existe mais (o timeout já aguarda a operação concluir)
-    await expect(page.getByText("[E2E-TEST] Delete Me")).not.toBeVisible({ timeout: 10000 })
+    await expect(page.locator("tr").filter({ hasText: empresaName })).not.toBeVisible({ timeout: 10000 })
   })
 
   test("deve preencher todos os campos do formulário", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
+    const empresaName = generateUniqueTestName("[E2E-TEST] Full Form")
+
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Preencher todos os campos
-    await page.getByLabel(/empresa/i).fill("[E2E-TEST] Full Form")
+    await page.getByLabel(/empresa/i).fill(empresaName)
     await page.getByLabel(/cargo/i).fill("Full Stack Developer")
     await page.getByLabel(/local/i).fill("Brasília")
 
@@ -182,7 +198,8 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 })
 
     // Verificar na tabela
-    await waitForVagaInTable(page, "[E2E-TEST] Full Form")
-    await expect(page.getByText("Full Stack Developer")).toBeVisible()
+    await waitForVagaInTable(page, empresaName)
+    const vagaRow = page.locator("tr").filter({ hasText: empresaName })
+    await expect(vagaRow.getByText("Full Stack Developer")).toBeVisible()
   })
 })
