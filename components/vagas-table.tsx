@@ -46,7 +46,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
   })
 
   function getFitBadgeColor(fit?: number) {
-    if (!fit) return "bg-[rgb(100_116_139)] border-[rgb(100_116_139_/_0.5)]"
+    if (!fit) return "bg-[rgb(100_116_139)] border-[rgb(100_116_139_/_0.5)] text-[rgb(100_116_139)]"
     if (fit >= 80) return "bg-[rgb(19_255_227_/_0.3)] border-[rgb(19_255_227)] text-[rgb(19_255_227)] shadow-[0_0_8px_rgb(19_255_227_/_0.4)]"
     if (fit >= 60) return "bg-[rgb(139_92_246_/_0.3)] border-[rgb(139_92_246)] text-[rgb(139_92_246)] shadow-[0_0_8px_rgb(139_92_246_/_0.4)]"
     if (fit >= 40) return "bg-[rgb(251_146_60_/_0.3)] border-[rgb(251_146_60)] text-[rgb(251_146_60)]"
