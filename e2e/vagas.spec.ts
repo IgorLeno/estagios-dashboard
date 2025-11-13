@@ -139,10 +139,7 @@ test.describe("Gerenciamento de Vagas", () => {
       await confirmButton.click()
     }
 
-    // Aguardar um pouco para a operação de delete concluir
-    await page.waitForTimeout(2000)
-
-    // Verificar que não existe mais
+    // Verificar que não existe mais (o timeout já aguarda a operação concluir)
     await expect(page.getByText("[E2E-TEST] Delete Me")).not.toBeVisible({ timeout: 10000 })
   })
 
