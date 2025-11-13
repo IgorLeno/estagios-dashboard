@@ -25,11 +25,11 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
   }
 
   return (
-    <Card className="glass-card-intense transition-all duration-700 ease-in-out hover:shadow-[0_0_30px_rgb(19_255_227_/_0.3)] hover:scale-[1.01] hover:border-[rgb(19_255_227_/_0.6)]">
+    <Card className="glass-card-intense hover-lift">
       <CardHeader>
         <CardTitle className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[rgb(19_255_227_/_0.2)] border-2 border-[rgb(19_255_227)] flex items-center justify-center shadow-[0_0_15px_rgb(19_255_227_/_0.6)]">
-            <Target className="h-6 w-6 text-[rgb(19_255_227)] transition-transform duration-300 hover:rotate-12" />
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Target className="h-6 w-6 text-primary" />
           </div>
           <span className="text-foreground">Meta do Dia</span>
         </CardTitle>
@@ -39,27 +39,26 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
           <div>
             <p className="text-sm text-muted-foreground mb-2">Meta:</p>
             {isEditing ? (
-              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+              <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   value={tempMeta}
                   onChange={(e) => setTempMeta(e.target.value)}
-                  className="w-24 h-9 bg-[rgb(20_40_70_/_0.6)] border-[rgb(19_255_227_/_0.4)] text-foreground placeholder:text-muted-foreground focus:border-[rgb(19_255_227)] focus:shadow-[0_0_10px_rgb(19_255_227_/_0.3)]"
+                  className="w-24 h-9 bg-input border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                   min="0"
                   autoFocus
                 />
                 <Button
                   size="sm"
-                  variant="secondary"
                   onClick={handleSave}
-                  className="h-9 bg-[rgb(19_255_227_/_0.2)] border border-[rgb(19_255_227_/_0.5)] text-[rgb(19_255_227)] hover:bg-[rgb(19_255_227_/_0.3)] hover:shadow-[0_0_10px_rgb(19_255_227_/_0.5)] transition-all"
+                  className="h-9 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Check className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <p
-                className="text-2xl font-bold cursor-pointer text-foreground hover:text-[rgb(19_255_227)] transition-all hover:scale-105 active:scale-95"
+                className="text-2xl font-bold cursor-pointer text-foreground hover:text-primary transition-all hover:scale-105 active:scale-95"
                 onClick={() => {
                   setIsEditing(true)
                   setTempMeta(meta.toString())
@@ -72,7 +71,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
 
           <div className="text-right">
             <p className="text-sm text-muted-foreground mb-2">Candidaturas de Hoje:</p>
-            <p className="text-5xl font-bold tabular-nums text-[rgb(19_255_227)] drop-shadow-[0_0_15px_rgb(19_255_227_/_0.8)] transition-all duration-500 hover:scale-110">
+            <p className="text-5xl font-bold tabular-nums text-primary transition-all duration-500 hover:scale-110">
               {candidaturas}
             </p>
           </div>
@@ -81,11 +80,11 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-foreground">Progresso</span>
-            <span className="font-semibold tabular-nums text-[rgb(19_255_227)]">{progress.toFixed(0)}%</span>
+            <span className="font-semibold tabular-nums text-primary">{progress.toFixed(0)}%</span>
           </div>
-          <div className="h-3 bg-[rgb(30_50_80_/_0.5)] rounded-full overflow-hidden border border-[rgb(19_255_227_/_0.3)]">
+          <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[rgb(19_255_227)] to-[rgb(0_240_255)] shadow-[0_0_10px_rgb(19_255_227_/_0.8)] transition-all duration-700 ease-out"
+              className="h-full bg-primary transition-all duration-700 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
