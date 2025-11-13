@@ -76,7 +76,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
     try {
       const dataInscricao = getDataInscricao(new Date(), config || undefined)
-      console.log("[AddVagaDialog] Criando vaga com data_inscricao:", dataInscricao, "Config:", config)
+      if (process.env.NODE_ENV === "development") {
+        console.log("[AddVagaDialog] Criando vaga com data_inscricao:", dataInscricao, "Config:", config)
+      }
 
       const { error } = await supabase.from("vagas_estagio").insert({
         empresa: formData.empresa,

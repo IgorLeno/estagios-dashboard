@@ -91,7 +91,7 @@ test.describe("Gerenciamento de Vagas", () => {
     await actionsButton.click()
 
     // Clicar em "Editar" no dropdown
-    const editButton = page.getByText(/editar/i)
+    const editButton = page.locator("text=/editar/i").first()
     await editButton.waitFor({ state: "visible" })
     await editButton.click()
     await expect(page.getByRole("dialog")).toBeVisible()

@@ -39,7 +39,7 @@ O banco de dados possui as seguintes tabelas:
 Executa queries SQL no banco de dados.
 
 **Como usar no Cursor:**
-Peça à IA: "Execute esta query no banco: SELECT \* FROM vagas_estagio WHERE status = 'Pendente' ORDER BY created_at DESC"
+Peça à IA: "Execute esta query no banco: SELECT * FROM vagas_estagio WHERE status = 'Pendente' ORDER BY created_at DESC"
 
 **Exemplo de query:**
 
@@ -301,7 +301,7 @@ A IA usará `mcp_supabase_generate_typescript_types` e mostrará os tipos gerado
 - **Propósito**: Desenvolvimento, migrações, análise
 - **Acesso**: Direto ao banco (com permissões do projeto)
 - **RLS**: Pode contornar RLS para operações administrativas
-- **Exemplo**: "Execute esta query: SELECT \* FROM vagas_estagio"
+- **Exemplo**: "Execute esta query: SELECT * FROM vagas_estagio"
 
 ## Boas Práticas
 
