@@ -152,8 +152,6 @@ test.describe("Navegação do Dashboard", () => {
     // Recarregar página com delay nas requisições
     await page.reload()
 
-    await page.reload()
-
     // Verificar que o indicador de carregamento aparece
     await expect(loadingText).toBeVisible({ timeout: 1000 })
 
