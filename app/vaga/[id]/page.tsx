@@ -14,6 +14,7 @@ import { StatusCard } from "@/components/status-card"
 import { Sidebar } from "@/components/sidebar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { safeOpenSupabaseStorageUrl } from "@/lib/url-utils"
 
 export default function VagaDetailPage() {
   const params = useParams()
@@ -59,7 +60,7 @@ export default function VagaDetailPage() {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar activeTab="dashboard" onTabChange={() => router.push("/")} />
+      <Sidebar onTabChange={() => router.push("/")} />
       <main className="flex-1 ml-20">
         <div className="container mx-auto px-8 py-6 max-w-6xl">
         <Button variant="ghost" onClick={() => router.push("/")} className="mb-6">
@@ -123,7 +124,11 @@ export default function VagaDetailPage() {
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <span className="text-sm font-medium">analise.md</span>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => window.open(vaga.arquivo_analise_url, '_blank')}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)}
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>
@@ -155,7 +160,11 @@ export default function VagaDetailPage() {
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <span className="text-sm font-medium">curriculo.pdf</span>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => window.open(vaga.arquivo_cv_url, '_blank')}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => safeOpenSupabaseStorageUrl(vaga.arquivo_cv_url)}
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>

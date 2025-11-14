@@ -22,6 +22,8 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
     lg: "w-6 h-6",
   }
 
+  const containerSizeClasses = sizeClasses
+
   function handleClick(starIndex: number, isHalf: boolean) {
     if (readonly || !onChange) return
     const newValue = starIndex + (isHalf ? 0.5 : 1)
@@ -86,7 +88,7 @@ function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
         const isHalf = displayValue >= starIndex + 0.5 && displayValue < starIndex + 1
 
         return (
-          <div key={starIndex} className="relative" style={{ width: "1.25em", height: "1.25em" }} role="presentation">
+          <div key={starIndex} className={cn("relative", containerSizeClasses[size])} role="presentation">
             {/* Left half (for 0.5 rating) */}
             <div
               className={cn(

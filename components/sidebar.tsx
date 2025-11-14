@@ -4,7 +4,7 @@ import { LayoutDashboard, Briefcase, TrendingUp, Settings, LogOut } from "lucide
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
-  activeTab: string
+  activeTab?: string
   onTabChange: (tab: string) => void
 }
 
@@ -36,7 +36,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               className={cn(
                 "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200",
                 "hover:bg-white/10",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary",
                 isActive ? "bg-white text-primary shadow-lg" : "text-white"
               )}
               title={item.label}
