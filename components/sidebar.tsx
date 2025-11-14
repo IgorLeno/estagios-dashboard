@@ -24,17 +24,14 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       </div>
 
       {/* Menu Items */}
-      <nav role="tablist" className="flex-1 flex flex-col items-center gap-4">
+      <nav className="flex-1 flex flex-col items-center gap-4">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
           return (
             <button
               key={item.id}
-              role="tab"
-              aria-selected={isActive}
               aria-label={item.label}
-              tabIndex={isActive ? 0 : -1}
               onClick={() => onTabChange(item.id)}
               className={cn(
                 "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200",

@@ -74,8 +74,8 @@ function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
       aria-label="Star rating"
       aria-valuemin={0}
       aria-valuemax={5}
-      aria-valuenow={displayValue}
-      aria-valuetext={`${displayValue.toFixed(1)} out of 5`}
+      aria-valuenow={value}
+      aria-valuetext={`${value.toFixed(1)} out of 5`}
       aria-readonly={readonly || !onChange ? true : undefined}
       onKeyDown={handleKeyDown}
       onMouseLeave={handleMouseLeave}
