@@ -24,7 +24,9 @@ export function isValidUrl(urlString: string | null | undefined, allowedOrigins?
 
     if (allowedOrigins && allowedOrigins.length > 0) {
       const origin = url.origin
-      return allowedOrigins.some((allowed) => origin === allowed || origin === `https://${allowed}` || origin === `http://${allowed}`)
+      return allowedOrigins.some(
+        (allowed) => origin === allowed || origin === `https://${allowed}` || origin === `http://${allowed}`
+      )
     }
 
     // Caso contrário, aceita qualquer URL HTTP/HTTPS
@@ -63,10 +65,7 @@ export function isSupabaseStorageUrl(urlString: string | null | undefined): bool
  * @param allowedOrigins - Lista de origens permitidas (opcional)
  * @returns true se a URL foi aberta com sucesso, false caso contrário
  */
-export function safeOpenUrl(
-  urlString: string | null | undefined,
-  allowedOrigins?: string[]
-): boolean {
+export function safeOpenUrl(urlString: string | null | undefined, allowedOrigins?: string[]): boolean {
   if (!isValidUrl(urlString, allowedOrigins)) {
     console.error("URL inválida ou não permitida:", urlString)
     return false
@@ -85,13 +84,13 @@ export function safeOpenUrl(
     anchor.target = "_blank"
     anchor.rel = "noopener noreferrer"
     anchor.style.display = "none"
-    
+
     // Adiciona ao DOM temporariamente
     document.body.appendChild(anchor)
-    
+
     // Simula o clique para abrir a URL
     anchor.click()
-    
+
     // Remove o elemento após um pequeno delay para garantir que o clique foi processado
     setTimeout(() => {
       try {
@@ -102,7 +101,7 @@ export function safeOpenUrl(
         // Ignora erros ao remover o elemento (pode já ter sido removido)
       }
     }, 0)
-    
+
     return true
   } catch (error) {
     console.error("Erro ao abrir URL:", error)
@@ -124,4 +123,3 @@ export function safeOpenSupabaseStorageUrl(urlString: string | null | undefined)
 
   return safeOpenUrl(urlString)
 }
-

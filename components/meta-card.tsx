@@ -96,10 +96,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
             <span className="font-semibold tabular-nums text-primary">{progress.toFixed(0)}%</span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-700 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </CardContent>

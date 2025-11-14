@@ -41,33 +41,33 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
     setHoverValue(null)
   }
 
-function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-  if (readonly || !onChange) return
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (readonly || !onChange) return
 
-  const step = 0.5
-  let newValue = value
+    const step = 0.5
+    let newValue = value
 
-  switch (event.key) {
-    case "ArrowRight":
-    case "ArrowUp":
-      event.preventDefault()
-      newValue = Math.min(5, value + step)
-      break
-    case "ArrowLeft":
-    case "ArrowDown":
-      event.preventDefault()
-      newValue = Math.max(0, value - step)
-      break
-    case " ":
-    case "Enter":
-      event.preventDefault()
-      return
-    default:
-      return
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowUp":
+        event.preventDefault()
+        newValue = Math.min(5, value + step)
+        break
+      case "ArrowLeft":
+      case "ArrowDown":
+        event.preventDefault()
+        newValue = Math.max(0, value - step)
+        break
+      case " ":
+      case "Enter":
+        event.preventDefault()
+        return
+      default:
+        return
+    }
+
+    onChange(newValue)
   }
-
-  onChange(newValue)
-}
 
   return (
     <div

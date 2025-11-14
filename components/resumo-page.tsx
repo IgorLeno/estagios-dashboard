@@ -53,8 +53,7 @@ export function ResumoPage() {
       // Count candidaturas per day
       for (const vaga of vagasData) {
         const rawKey = vaga.data_inscricao as string | Date
-        const dateKey =
-          typeof rawKey === "string" ? rawKey.slice(0, 10) : format(rawKey, "yyyy-MM-dd")
+        const dateKey = typeof rawKey === "string" ? rawKey.slice(0, 10) : format(rawKey, "yyyy-MM-dd")
         const current = historicoMap.get(dateKey)
         if (current) current.candidaturas++
       }
@@ -137,7 +136,10 @@ export function ResumoPage() {
                       {item.candidaturas > 0 && (
                         <>
                           <span className="text-xs font-medium text-white">{item.candidaturas}</span>
-                          <span className="sr-only"> de {maxCandidaturas} candidaturas ({clampedPercentage.toFixed(1)}%)</span>
+                          <span className="sr-only">
+                            {" "}
+                            de {maxCandidaturas} candidaturas ({clampedPercentage.toFixed(1)}%)
+                          </span>
                         </>
                       )}
                     </div>

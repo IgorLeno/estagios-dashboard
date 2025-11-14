@@ -38,7 +38,6 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
     return matchesSearch && matchesModalidade
   })
 
-
   async function handleDeleteVaga(vaga: VagaEstagio) {
     if (!confirm(`Tem certeza que deseja excluir a vaga de ${vaga.empresa}?`)) {
       return
@@ -63,7 +62,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-foreground">Vagas</CardTitle>
-            <Button onClick={() => setShowAddDialog(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Vaga
             </Button>
@@ -71,7 +73,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
 
           <div className="flex flex-col gap-3 mt-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
                 id="search-vagas"
                 aria-label="Buscar vagas por empresa ou cargo"
@@ -119,11 +124,21 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border">
-                    <TableHead scope="col" className="text-left font-semibold">Empresa</TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">Cargo</TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">Local</TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">Modalidade</TableHead>
-                    <TableHead scope="col" className="w-[50px]"><span className="sr-only">Ações</span></TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">
+                      Empresa
+                    </TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">
+                      Cargo
+                    </TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">
+                      Local
+                    </TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">
+                      Modalidade
+                    </TableHead>
+                    <TableHead scope="col" className="w-[50px]">
+                      <span className="sr-only">Ações</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -133,16 +148,14 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                       <TableCell className="text-foreground">{vaga.cargo}</TableCell>
                       <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {vaga.modalidade}
-                        </Badge>
+                        <Badge variant="outline">{vaga.modalidade}</Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               data-testid="vaga-actions-button"
                               aria-label="Ações da vaga"
                               title="Ações da vaga"
