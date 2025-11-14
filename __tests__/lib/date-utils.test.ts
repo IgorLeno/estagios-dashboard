@@ -10,7 +10,25 @@ import type { Configuracao } from "@/lib/types"
 
 describe("date-utils", () => {
   describe("getDataInscricao", () => {
-    it("should return current date when after hora_inicio", () => {
+    it("should return current calendar date regardless of time", () => {
+      // Any time returns the calendar date
+      const morning = new Date("2025-01-15T03:00:00")
+      expect(getDataInscricao(morning)).toBe("2025-01-15")
+
+      const afternoon = new Date("2025-01-15T10:00:00")
+      expect(getDataInscricao(afternoon)).toBe("2025-01-15")
+
+      const midnight = new Date("2025-01-15T00:00:00")
+      expect(getDataInscricao(midnight)).toBe("2025-01-15")
+    })
+
+    it("should use current date when no date provided", () => {
+      const result = getDataInscricao()
+      // Should be today's date in YYYY-MM-DD format
+      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    })
+
+    it("should ignore deprecated config parameter", () => {
       const config: Configuracao = {
         id: "1",
         created_at: "",
@@ -19,47 +37,10 @@ describe("date-utils", () => {
         hora_termino: "05:59:00",
       }
 
-      // 10:00 AM - after 6:00 AM, should be today
-      const now = new Date("2025-01-15T10:00:00")
+      const now = new Date("2025-01-15T03:00:00")
+      // Config is ignored, returns calendar date
       const result = getDataInscricao(now, config)
       expect(result).toBe("2025-01-15")
-    })
-
-    it("should return previous date when before hora_inicio", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "06:00:00",
-        hora_termino: "05:59:00",
-      }
-
-      // 3:00 AM - before 6:00 AM, should be yesterday
-      const now = new Date("2025-01-15T03:00:00")
-      const result = getDataInscricao(now, config)
-      expect(result).toBe("2025-01-14")
-    })
-
-    it("should use default hora_inicio (06:00) when no config", () => {
-      // 4:00 AM - before default 6:00 AM
-      const now = new Date("2025-01-15T04:00:00")
-      const result = getDataInscricao(now)
-      expect(result).toBe("2025-01-14")
-    })
-
-    it("should handle midnight correctly", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "06:00:00",
-        hora_termino: "05:59:00",
-      }
-
-      // Midnight - before 6:00 AM
-      const now = new Date("2025-01-15T00:00:00")
-      const result = getDataInscricao(now, config)
-      expect(result).toBe("2025-01-14")
     })
   })
 
@@ -125,67 +106,14 @@ describe("date-utils", () => {
   })
 
   describe("edge cases", () => {
-    it("should handle boundary time at hora_inicio", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "06:00:00",
-        hora_termino: "05:59:00",
-      }
-
-      // Exactly at hora_inicio (6:00:00)
-      const now = new Date("2025-01-15T06:00:00")
-      const result = getDataInscricao(now, config)
-      expect(result).toBe("2025-01-15") // Should be current day
+    it("should handle midnight correctly", () => {
+      const midnight = new Date("2025-01-15T00:00:00")
+      expect(getDataInscricao(midnight)).toBe("2025-01-15")
     })
 
-    it("should handle one second before hora_inicio", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "06:00:00",
-        hora_termino: "05:59:00",
-      }
-
-      // 5:59:59 AM - one second before 6:00 AM
-      const now = new Date("2025-01-15T05:59:59")
-      const result = getDataInscricao(now, config)
-      expect(result).toBe("2025-01-14") // Should be previous day
-    })
-
-    it("should handle custom hora_inicio at midnight", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "00:00:00",
-        hora_termino: "23:59:00",
-      }
-
-      // Any time during the day should be current day
-      const now = new Date("2025-01-15T12:00:00")
-      const result = getDataInscricao(now, config)
-      expect(result).toBe("2025-01-15")
-    })
-
-    it("should handle custom hora_inicio in afternoon", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "14:00:00",
-        hora_termino: "13:59:00",
-      }
-
-      // Before 14:00 (2:00 PM)
-      const morning = new Date("2025-01-15T10:00:00")
-      expect(getDataInscricao(morning, config)).toBe("2025-01-14")
-
-      // After 14:00 (2:00 PM)
-      const afternoon = new Date("2025-01-15T16:00:00")
-      expect(getDataInscricao(afternoon, config)).toBe("2025-01-15")
+    it("should handle end of day correctly", () => {
+      const endOfDay = new Date("2025-01-15T23:59:59")
+      expect(getDataInscricao(endOfDay)).toBe("2025-01-15")
     })
 
     it("should handle leap year dates", () => {
@@ -195,18 +123,15 @@ describe("date-utils", () => {
     })
 
     it("should handle end of year boundary", () => {
-      const config: Configuracao = {
-        id: "1",
-        created_at: "",
-        updated_at: "",
-        hora_inicio: "06:00:00",
-        hora_termino: "05:59:00",
-      }
-
-      // 3:00 AM on Jan 1st should be Dec 31st previous year
+      // Any time on Jan 1st returns Jan 1st (calendar date)
       const newYearMorning = new Date("2025-01-01T03:00:00")
-      const result = getDataInscricao(newYearMorning, config)
-      expect(result).toBe("2024-12-31")
+      const result = getDataInscricao(newYearMorning)
+      expect(result).toBe("2025-01-01")
+    })
+
+    it("should handle last day of year", () => {
+      const newYearEve = new Date("2024-12-31T23:59:59")
+      expect(getDataInscricao(newYearEve)).toBe("2024-12-31")
     })
 
     it("should handle invalid time format edge cases", () => {
