@@ -22,10 +22,9 @@ export function isValidUrl(urlString: string | null | undefined, allowedOrigins?
       return false
     }
 
-    // Se origens permitidas foram especificadas, valida contra elas
     if (allowedOrigins && allowedOrigins.length > 0) {
       const origin = url.origin
-      return allowedOrigins.some((allowed) => origin.includes(allowed))
+      return allowedOrigins.some((allowed) => origin === allowed || origin === `https://${allowed}` || origin === `http://${allowed}`)
     }
 
     // Caso contrário, aceita qualquer URL HTTP/HTTPS

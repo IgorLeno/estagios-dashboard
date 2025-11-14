@@ -35,6 +35,12 @@ const statusConfig = {
 
 export function StatusCard({ status, etapa }: StatusCardProps) {
   const config = statusConfig[status]
+  
+  if (!config) {
+    console.error('Invalid status:', status)
+    return null
+  }
+  
   const Icon = config.icon
 
   return (

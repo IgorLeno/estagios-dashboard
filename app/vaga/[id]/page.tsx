@@ -60,7 +60,7 @@ export default function VagaDetailPage() {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar onTabChange={() => router.push("/")} />
+      <Sidebar activeTab="dashboard" onTabChange={() => router.push("/")} />
       <main className="flex-1 ml-20">
         <div className="container mx-auto px-8 py-6 max-w-6xl">
         <Button variant="ghost" onClick={() => router.push("/")} className="mb-6">

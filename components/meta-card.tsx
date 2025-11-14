@@ -38,7 +38,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <label htmlFor="meta-input" className="text-sm text-muted-foreground mb-2 block">
+            <label {...(isEditing && { htmlFor: "meta-input" })} className="text-sm text-muted-foreground mb-2 block">
               Meta:
             </label>
             {isEditing ? (
