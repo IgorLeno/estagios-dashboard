@@ -39,14 +39,52 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
     setHoverValue(null)
   }
 
+function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  if (readonly || !onChange) return
+
+  const step = 0.5
+  let newValue = value
+
+  switch (event.key) {
+    case "ArrowRight":
+    case "ArrowUp":
+      event.preventDefault()
+      newValue = Math.min(5, value + step)
+      break
+    case "ArrowLeft":
+    case "ArrowDown":
+      event.preventDefault()
+      newValue = Math.max(0, value - step)
+      break
+    case " ":
+    case "Enter":
+      event.preventDefault()
+      return
+    default:
+      return
+  }
+
+  onChange(newValue)
+}
+
   return (
-    <div className="flex items-center gap-1" onMouseLeave={handleMouseLeave}>
+    <div
+      role="slider"
+      tabIndex={readonly || !onChange ? undefined : 0}
+      aria-label={`Rating: ${displayValue.toFixed(1)} out of 5`}
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={displayValue}
+      aria-readonly={readonly || !onChange ? true : undefined}
+      onKeyDown={handleKeyDown}
+      onMouseLeave={handleMouseLeave}
+    >
       {[0, 1, 2, 3, 4].map((starIndex) => {
         const isFull = displayValue >= starIndex + 1
         const isHalf = displayValue >= starIndex + 0.5 && displayValue < starIndex + 1
 
         return (
-          <div key={starIndex} className="relative" style={{ width: "1.25em", height: "1.25em" }}>
+          <div key={starIndex} className="relative" style={{ width: "1.25em", height: "1.25em" }} role="presentation">
             {/* Left half (for 0.5 rating) */}
             <div
               className={cn(
@@ -55,6 +93,8 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
               )}
               onClick={() => handleClick(starIndex, true)}
               onMouseMove={() => handleMouseMove(starIndex, true)}
+              role="presentation"
+              aria-hidden="true"
             >
               <Star
                 className={cn(
@@ -73,6 +113,8 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
               style={{ clipPath: "inset(0 0 0 50%)" }}
               onClick={() => handleClick(starIndex, false)}
               onMouseMove={() => handleMouseMove(starIndex, false)}
+              role="presentation"
+              aria-hidden="true"
             >
               <Star
                 className={cn(sizeClasses[size], isFull ? "fill-amber-400 text-amber-400" : "fill-none text-gray-300")}

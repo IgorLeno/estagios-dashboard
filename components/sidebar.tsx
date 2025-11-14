@@ -9,7 +9,7 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: "estagios", label: "Dashboard", icon: LayoutDashboard },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "vagas", label: "Vagas", icon: Briefcase },
   { id: "resumo", label: "Resumo", icon: TrendingUp },
   { id: "configuracoes", label: "Configurações", icon: Settings },

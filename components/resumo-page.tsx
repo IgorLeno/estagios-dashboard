@@ -110,7 +110,7 @@ export function ResumoPage() {
           <div className="space-y-4">
             {historico.map((item) => {
               const percentage = maxCandidaturas > 0 ? (item.candidaturas / maxCandidaturas) * 100 : 0
-              const dateFormatted = format(new Date(item.data), "dd/MM", { locale: ptBR })
+              const dateFormatted = format(new Date(item.data + "T00:00:00"), "dd/MM", { locale: ptBR })
 
               return (
                 <div key={item.data} className="space-y-2">

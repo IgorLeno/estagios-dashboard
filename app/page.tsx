@@ -12,7 +12,7 @@ import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState("estagios")
+  const [activeTab, setActiveTab] = useState("dashboard")
   const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
   const [meta, setMeta] = useState<MetaDiaria | null>(null)
@@ -24,7 +24,8 @@ export default function Page() {
   useEffect(() => {
     const dataInscricaoStr = getDataInscricao(new Date())
     const [year, month, day] = dataInscricaoStr.split("-").map(Number)
-    const dataInscricaoDate = new Date(year, month - 1, day)
+    // Cria data em UTC para evitar problemas de timezone
+    const dataInscricaoDate = new Date(Date.UTC(year, month - 1, day))
     setCurrentDate(dataInscricaoDate)
   }, [])
 
@@ -89,21 +90,28 @@ export default function Page() {
   function handlePrevDate() {
     if (!currentDate) return
 
+    // Manipula data em UTC para manter consistência
     const newDate = new Date(currentDate)
-    newDate.setDate(newDate.getDate() - 1)
+    newDate.setUTCDate(newDate.getUTCDate() - 1)
     setCurrentDate(newDate)
   }
 
   function handleNextDate() {
     if (!currentDate) return
 
+    // Manipula data em UTC para manter consistência
     const newDate = new Date(currentDate)
-    newDate.setDate(newDate.getDate() + 1)
+    newDate.setUTCDate(newDate.getUTCDate() + 1)
     setCurrentDate(newDate)
   }
 
   function handleDateSelect(date: Date) {
-    setCurrentDate(date)
+    // Normaliza data selecionada para UTC meia-noite para manter consistência
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const utcDate = new Date(Date.UTC(year, month, day))
+    setCurrentDate(utcDate)
   }
 
   // Don't render until currentDate is initialized
@@ -121,7 +129,7 @@ export default function Page() {
 
       <main className="flex-1 ml-20">
         <div className="container mx-auto px-8 py-6 max-w-7xl">
-          {activeTab === "estagios" && (
+          {activeTab === "dashboard" && (
             <div className="space-y-6">
               <DashboardHeader
                 currentDate={currentDate}

@@ -59,7 +59,7 @@ export default function VagaDetailPage() {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar activeTab="estagios" onTabChange={() => router.push("/")} />
+      <Sidebar activeTab="dashboard" onTabChange={() => router.push("/")} />
       <main className="flex-1 ml-20">
         <div className="container mx-auto px-8 py-6 max-w-6xl">
         <Button variant="ghost" onClick={() => router.push("/")} className="mb-6">
@@ -123,7 +123,7 @@ export default function VagaDetailPage() {
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <span className="text-sm font-medium">analise.md</span>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => window.open(vaga.arquivo_analise_url, '_blank')}>
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>
@@ -132,7 +132,7 @@ export default function VagaDetailPage() {
                     <div className="text-center py-6">
                       <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground mb-3">Nenhum arquivo de análise enviado</p>
-                      <Button size="sm" className="bg-primary hover:bg-primary/90">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => {/* TODO: Implement upload handler */}}>
                         <Upload className="h-4 w-4 mr-2" />
                         Upload Análise (.md)
                       </Button>
@@ -155,7 +155,7 @@ export default function VagaDetailPage() {
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <span className="text-sm font-medium">curriculo.pdf</span>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => window.open(vaga.arquivo_cv_url, '_blank')}>
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>
@@ -164,7 +164,7 @@ export default function VagaDetailPage() {
                     <div className="text-center py-6">
                       <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground mb-3">Nenhum currículo enviado</p>
-                      <Button size="sm" className="bg-primary hover:bg-primary/90">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => {/* TODO: Implement upload handler */}}>
                         <Upload className="h-4 w-4 mr-2" />
                         Upload CV (.pdf/.docx)
                       </Button>
