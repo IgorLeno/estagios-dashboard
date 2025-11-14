@@ -72,6 +72,11 @@ export function safeOpenUrl(
     return false
   }
 
+  // Após validação, sabemos que urlString é uma string válida
+  if (!urlString) {
+    return false
+  }
+
   try {
     // Cria um elemento anchor temporário com rel="noopener noreferrer" para segurança
     // Este método é mais seguro que window.open pois garante explicitamente os atributos de segurança
