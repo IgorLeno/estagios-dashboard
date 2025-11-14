@@ -25,9 +25,6 @@ test.describe("Navegação do Dashboard", () => {
 
     // Voltar para Dashboard via botão da sidebar (a aba Vagas está sob "Dashboard")
     await page.getByRole("button", { name: /^dashboard$/i }).click()
-    // Aguardar que o conteúdo seja renderizado
-    await page.waitForTimeout(1000) // Pequeno delay para garantir renderização
-    await page.waitForLoadState("networkidle")
     // Verificar que está na aba Dashboard/Vagas - verificar se algum elemento característico está visível
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
   })
@@ -120,9 +117,6 @@ test.describe("Navegação do Dashboard", () => {
 
     // Voltar para Dashboard via botão da sidebar
     await page.getByRole("button", { name: /^dashboard$/i }).click()
-    // Aguardar que o conteúdo seja renderizado
-    await page.waitForTimeout(1000) // Pequeno delay para garantir renderização
-    await page.waitForLoadState("networkidle")
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
 
     // Verificar que filtro foi mantido ou resetado (comportamento esperado)
