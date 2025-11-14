@@ -5,9 +5,9 @@ test.describe("Filtros do Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
     await expect(page.getByText("Vagas")).toBeVisible()
-    // Aguardar tabela carregar
+    // Aguardar página carregar
     await page.waitForLoadState("networkidle")
-    await expect(page.locator("table")).toBeVisible()
+    // A tabela só aparece se houver vagas, não forçar espera aqui
   })
 
   test("deve filtrar por busca de texto (empresa/cargo)", async ({ page }) => {
@@ -277,29 +277,16 @@ test.describe("Filtros do Dashboard", () => {
     const initialCount = await getTableRowCount(page)
     await searchInput.fill("XYZABC123NONEXISTENT")
 
-    // Aguardar que a tabela seja atualizada ou mensagem de vazio apareça
-    const emptyMessage = page.getByText(/nenhuma vaga encontrada|nenhum resultado/i)
-
-    // Poll até que a mensagem de vazio esteja visível OU a contagem de linhas seja 0
+    // Aguardar que a tabela seja atualizada - a contagem de linhas deve ser 0
     await expect
-      .poll(
-        async () => {
-          const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
-          const rowCount = await getTableRowCount(page)
-          return isMessageVisible || rowCount === 0
-        },
-        {
-          message: "Aguardando mensagem de vazio ou tabela vazia após busca sem resultados",
-          timeout: 5000,
-        }
-      )
-      .toBe(true)
+      .poll(async () => await getTableRowCount(page), {
+        message: "Aguardando tabela vazia após busca sem resultados",
+        timeout: 5000,
+      })
+      .toBe(0)
 
-    // Verificar estado final: tabela deve estar vazia e mensagem deve estar visível
-    const finalRowCount = await getTableRowCount(page)
-    expect(finalRowCount).toBe(0)
-
-    const isMessageVisible = await emptyMessage.isVisible().catch(() => false)
-    expect(isMessageVisible).toBe(true)
+    // Verificar que a mensagem de vazio está visível
+    const emptyMessage = page.getByText(/nenhuma vaga encontrada/i)
+    await expect(emptyMessage).toBeVisible({ timeout: 5000 })
   })
 })

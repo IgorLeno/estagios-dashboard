@@ -16,14 +16,15 @@ export async function waitForToast(page: Page, message: string | RegExp) {
  * Aguarda que o campo empresa seja preenchido, indicando que o processamento foi concluído
  */
 export async function waitForEmpresaPopulated(page: Page) {
-  const empresaInput = page.getByLabel(/empresa/i)
-  await empresaInput.waitFor({ state: "visible", timeout: 5000 })
-  // Aguarda que o campo tenha um valor não vazio
+  // Aguarda que o campo empresa dentro do dialog tenha um valor não vazio
   // Usa waitForFunction para verificar o valor diretamente no contexto do navegador
   await page.waitForFunction(
     () => {
-      // Busca todos os inputs e verifica qual corresponde ao label "empresa"
-      const inputs = Array.from(document.querySelectorAll("input, textarea"))
+      // Busca todos os inputs dentro do dialog
+      const dialog = document.querySelector('[role="dialog"]')
+      if (!dialog) return false
+
+      const inputs = Array.from(dialog.querySelectorAll("input, textarea"))
       for (const input of inputs) {
         const htmlInput = input as HTMLInputElement | HTMLTextAreaElement
         // Verifica se o input está associado a um label com "empresa"
@@ -31,11 +32,6 @@ export async function waitForEmpresaPopulated(page: Page) {
           htmlInput.labels?.[0] ||
           (htmlInput.id ? (document.querySelector(`label[for="${htmlInput.id}"]`) as HTMLLabelElement | null) : null)
         if (label && label.textContent && /empresa/i.test(label.textContent)) {
-          return htmlInput.value.trim().length > 0
-        }
-        // Verifica aria-label
-        const ariaLabel = htmlInput.getAttribute("aria-label")
-        if (ariaLabel && /empresa/i.test(ariaLabel)) {
           return htmlInput.value.trim().length > 0
         }
       }

@@ -14,8 +14,10 @@ test.describe("Upload de Arquivos", () => {
 
     // Abrir modal de adicionar vaga
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await expect(page.getByRole("dialog")).toBeVisible()
-    await expect(page.getByText(/adicionar nova vaga/i)).toBeVisible()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByText(/adicionar nova vaga/i)).toBeVisible()
 
     // Fazer upload do arquivo de análise
     const analiseFile = path.join(__dirname, "fixtures/analise-exemplo.md")
@@ -23,15 +25,15 @@ test.describe("Upload de Arquivos", () => {
     await fileInput.setInputFiles(analiseFile)
 
     // Aguardar indicador de campos detectados aparecer
-    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
 
     // Aguardar que o campo empresa seja preenchido
     await waitForEmpresaPopulated(page)
 
     // Verificar se campos foram preenchidos automaticamente
-    const empresaInput = page.getByLabel(/empresa/i)
-    const cargoInput = page.getByLabel(/cargo/i)
-    const localInput = page.getByLabel(/local/i)
+    const empresaInput = dialog.getByLabel(/^empresa/i)
+    const cargoInput = dialog.getByLabel(/^cargo/i)
+    const localInput = dialog.getByLabel(/^local/i)
 
     await expect(empresaInput).toHaveValue(/Google/i)
     await expect(cargoInput).toHaveValue(/Engenheiro de Software/i)
@@ -88,7 +90,9 @@ test.describe("Upload de Arquivos", () => {
     await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await expect(page.getByRole("dialog")).toBeVisible()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
 
     // Upload inicial
     const file1 = path.join(__dirname, "fixtures/analise-exemplo.md")
@@ -96,11 +100,11 @@ test.describe("Upload de Arquivos", () => {
     await fileInput.setInputFiles(file1)
 
     // Aguardar indicador de campos detectados
-    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
     await waitForEmpresaPopulated(page)
 
     // Verificar primeiro arquivo
-    await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
+    await expect(dialog.getByLabel(/^empresa/i)).toHaveValue(/Google/i)
 
     // Remover arquivo usando o aria-label
     const removeButton = page.getByRole("button", { name: /remover arquivo/i }).first()
@@ -119,11 +123,11 @@ test.describe("Upload de Arquivos", () => {
     await fileInput.setInputFiles(file2)
 
     // Aguardar indicador de campos detectados do segundo upload
-    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
     await waitForEmpresaPopulated(page)
 
     // Verificar que foi substituído
-    await expect(page.getByLabel(/empresa/i)).toHaveValue(/Microsoft/i)
+    await expect(dialog.getByLabel(/^empresa/i)).toHaveValue(/Microsoft/i)
 
     await page.keyboard.press("Escape")
   })
@@ -151,7 +155,9 @@ test.describe("Upload de Arquivos", () => {
     })
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await expect(page.getByRole("dialog")).toBeVisible()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
 
     const analiseFile = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
@@ -177,7 +183,7 @@ test.describe("Upload de Arquivos", () => {
     await waitForEmpresaPopulated(page)
 
     // Verificar que upload completou
-    await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
+    await expect(dialog.getByLabel(/^empresa/i)).toHaveValue(/Google/i)
 
     // Verificar que a requisição foi interceptada
     expect(uploadIntercepted).toBe(true)
@@ -189,21 +195,23 @@ test.describe("Upload de Arquivos", () => {
     await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar vaga/i }).click()
-    await expect(page.getByRole("dialog")).toBeVisible()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
 
     const analiseFile = path.join(__dirname, "fixtures/analise-exemplo.md")
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(analiseFile)
 
     // Aguardar indicador de campos detectados aparecer
-    await expect(page.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByText(/campos detectados automaticamente/i)).toBeVisible({ timeout: 10000 })
 
     // Aguardar que o campo empresa seja preenchido
     await waitForEmpresaPopulated(page)
 
     // Verificar que os campos foram preenchidos (o "preview" é o próprio formulário preenchido)
-    await expect(page.getByLabel(/empresa/i)).toHaveValue(/Google/i)
-    await expect(page.getByLabel(/cargo/i)).toHaveValue(/Engenheiro/i)
+    await expect(dialog.getByLabel(/^empresa/i)).toHaveValue(/Google/i)
+    await expect(dialog.getByLabel(/^cargo/i)).toHaveValue(/Engenheiro/i)
 
     await page.keyboard.press("Escape")
   })

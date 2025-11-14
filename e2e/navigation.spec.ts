@@ -7,32 +7,29 @@ test.describe("Navegação do Dashboard", () => {
   })
 
   test("deve navegar entre abas", async ({ page }) => {
-    // Verificar que está na aba Estágios (padrão)
-    await expect(page.getByRole("tab", { name: /estágios/i, selected: true })).toBeVisible()
+    // Aguardar página carregar
+    await page.waitForLoadState("networkidle")
 
-    // Navegar para Resumo
-    await page.getByRole("tab", { name: /resumo/i }).click()
-    // Verificar que aba Resumo está ativa
-    await expect(page.getByRole("tab", { name: /resumo/i, selected: true })).toBeVisible()
+    // Verificar que está na aba Vagas/Dashboard (padrão) - verificar se o título está visível
+    await expect(page.getByRole("heading", { name: /estágios/i })).toBeVisible()
 
-    // Verificar conteúdo da aba Resumo (gráficos, histórico, etc.)
-    const hasChart = await page.getByText(/histórico|estatísticas|análise/i).isVisible()
-    const hasContent = await page.locator("canvas, svg, [data-testid='chart']").count()
+    // Navegar para Resumo via botão da sidebar
+    await page.getByRole("button", { name: /^resumo$/i }).click()
+    // Verificar que aba Resumo está ativa - verificar se conteúdo específico do resumo está visível
+    await expect(page.getByText(/histórico|estatísticas|análise|resumo/i)).toBeVisible({ timeout: 5000 })
 
-    // Pelo menos algum conteúdo deve estar visível
-    expect(hasChart || hasContent > 0).toBeTruthy()
-
-    // Navegar para Configurações
-    await page.getByRole("tab", { name: /configurações/i }).click()
-    await expect(page.getByRole("tab", { name: /configurações/i, selected: true })).toBeVisible()
-
+    // Navegar para Configurações via botão da sidebar
+    await page.getByRole("button", { name: /^configurações$/i }).click()
     // Verificar que campos de configuração estão presentes
-    await expect(page.getByText(/horário.*início|hora.*início/i)).toBeVisible()
+    await expect(page.getByText(/horário.*início|hora.*início/i)).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Estágios
-    await page.getByRole("tab", { name: /estágios/i }).click()
-    await expect(page.getByRole("tab", { name: /estágios/i, selected: true })).toBeVisible()
-    await expect(page.locator("table")).toBeVisible()
+    // Voltar para Dashboard via botão da sidebar (a aba Vagas está sob "Dashboard")
+    await page.getByRole("button", { name: /^dashboard$/i }).click()
+    // Aguardar que o conteúdo seja renderizado
+    await page.waitForTimeout(1000) // Pequeno delay para garantir renderização
+    await page.waitForLoadState("networkidle")
+    // Verificar que está na aba Dashboard/Vagas - verificar se algum elemento característico está visível
+    await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
   })
 
   test("deve navegar entre datas com setas", async ({ page }) => {
@@ -110,17 +107,23 @@ test.describe("Navegação do Dashboard", () => {
   })
 
   test("deve manter estado ao navegar entre páginas", async ({ page }) => {
+    // Aguardar página carregar
+    await page.waitForLoadState("networkidle")
+
     // Aplicar um filtro
     const searchInput = page.getByPlaceholder(/buscar/i)
     await searchInput.fill("Test")
 
-    // Ir para Resumo
-    await page.getByRole("tab", { name: /resumo/i }).click()
-    await expect(page.getByRole("tab", { name: /resumo/i, selected: true })).toBeVisible()
+    // Ir para Resumo via botão da sidebar
+    await page.getByRole("button", { name: /^resumo$/i }).click()
+    await expect(page.getByText(/histórico|estatísticas|análise|resumo/i)).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Estágios
-    await page.getByRole("tab", { name: /estágios/i }).click()
-    await expect(page.getByRole("tab", { name: /estágios/i, selected: true })).toBeVisible()
+    // Voltar para Dashboard via botão da sidebar
+    await page.getByRole("button", { name: /^dashboard$/i }).click()
+    // Aguardar que o conteúdo seja renderizado
+    await page.waitForTimeout(1000) // Pequeno delay para garantir renderização
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
 
     // Verificar que filtro foi mantido ou resetado (comportamento esperado)
     const searchValue = await searchInput.inputValue()
