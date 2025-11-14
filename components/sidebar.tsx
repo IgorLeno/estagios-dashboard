@@ -24,22 +24,27 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 flex flex-col items-center gap-4">
+      <nav role="tablist" className="flex-1 flex flex-col items-center gap-4">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
           return (
             <button
               key={item.id}
+              role="tab"
+              aria-selected={isActive}
+              aria-label={item.label}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => onTabChange(item.id)}
               className={cn(
                 "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200",
                 "hover:bg-white/10",
-                isActive && "bg-white text-primary shadow-lg"
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                isActive ? "bg-white text-primary shadow-lg" : "text-white"
               )}
               title={item.label}
             >
-              <Icon className={cn("w-6 h-6", isActive ? "text-primary" : "text-white")} />
+              <Icon className="w-6 h-6 text-current" />
             </button>
           )
         })}
@@ -47,8 +52,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
       {/* Logout (future feature) */}
       <button
-        className="w-12 h-12 rounded-lg flex items-center justify-center text-white hover:bg-white/10 transition-all duration-200"
-        title="Logout"
+        type="button"
+        disabled
+        aria-disabled="true"
+        className="w-12 h-12 rounded-lg flex items-center justify-center text-white/40 opacity-50 cursor-not-allowed transition-all duration-200"
+        title="Logout (disabled)"
       >
         <LogOut className="w-6 h-6" />
       </button>

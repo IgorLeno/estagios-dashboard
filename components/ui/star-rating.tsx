@@ -2,7 +2,7 @@
 
 import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, type KeyboardEvent } from "react"
 
 interface StarRatingProps {
   value: number // 0 to 5 with 0.5 increments
@@ -39,7 +39,7 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
     setHoverValue(null)
   }
 
-function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
   if (readonly || !onChange) return
 
   const step = 0.5
@@ -71,13 +71,15 @@ function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     <div
       role="slider"
       tabIndex={readonly || !onChange ? undefined : 0}
-      aria-label={`Rating: ${displayValue.toFixed(1)} out of 5`}
+      aria-label="Star rating"
       aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={displayValue}
+      aria-valuetext={`${displayValue.toFixed(1)} out of 5`}
       aria-readonly={readonly || !onChange ? true : undefined}
       onKeyDown={handleKeyDown}
       onMouseLeave={handleMouseLeave}
+      className="flex items-center gap-1"
     >
       {[0, 1, 2, 3, 4].map((starIndex) => {
         const isFull = displayValue >= starIndex + 1

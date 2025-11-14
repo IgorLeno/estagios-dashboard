@@ -8,8 +8,11 @@
  * @param now Data/hora atual
  * @returns Data de inscrição no formato YYYY-MM-DD
  */
-export function getDataInscricao(now: Date = new Date()): string {
-  return formatDateToYYYYMMDD(now)
+/** @deprecated The second parameter is ignored and will be removed in the next major. */
+export function getDataInscricao(now?: Date, _config?: unknown): string {
+  const dt = now ?? new Date()
+  return formatDateToYYYYMMDD(dt)
+}
 }
 
 /**

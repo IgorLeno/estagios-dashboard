@@ -19,8 +19,9 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
   const progress = meta > 0 ? Math.min((candidaturas / meta) * 100, 100) : 0
 
   function handleSave() {
-    const newMeta = Number.parseInt(tempMeta) || 0
-    onMetaChange(newMeta)
+    const parsed = Number.parseInt(tempMeta, 10)
+    const newMeta = Number.isNaN(parsed) ? 0 : Math.max(0, parsed)
+    if (newMeta !== meta) onMetaChange(newMeta)
     setIsEditing(false)
   }
 
@@ -37,20 +38,32 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Meta:</p>
+            <label htmlFor="meta-input" className="text-sm text-muted-foreground mb-2 block">
+              Meta:
+            </label>
             {isEditing ? (
               <div className="flex items-center gap-2">
                 <Input
+                  id="meta-input"
                   type="number"
                   value={tempMeta}
                   onChange={(e) => setTempMeta(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSave()
+                    } else if (e.key === "Escape") {
+                      setIsEditing(false)
+                    }
+                  }}
                   className="w-24 h-9 bg-input border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                   min="0"
                   autoFocus
                 />
                 <Button
+                  type="button"
                   size="sm"
                   onClick={handleSave}
+                  aria-label="Salvar meta"
                   className="h-9 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Check className="h-4 w-4" />

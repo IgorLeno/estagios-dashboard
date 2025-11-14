@@ -52,10 +52,11 @@ export function ResumoPage() {
 
       // Count candidaturas per day
       for (const vaga of vagasData) {
-        const dateKey = vaga.data_inscricao
-        if (historicoMap.has(dateKey)) {
-          historicoMap.get(dateKey)!.candidaturas++
-        }
+        const rawKey = vaga.data_inscricao as string | Date
+        const dateKey =
+          typeof rawKey === "string" ? rawKey.slice(0, 10) : format(rawKey, "yyyy-MM-dd")
+        const current = historicoMap.get(dateKey)
+        if (current) current.candidaturas++
       }
 
       const historicoArray: HistoricoResumo[] = Array.from(historicoMap.entries()).map(([data, info]) => ({
@@ -110,20 +111,35 @@ export function ResumoPage() {
           <div className="space-y-4">
             {historico.map((item) => {
               const percentage = maxCandidaturas > 0 ? (item.candidaturas / maxCandidaturas) * 100 : 0
+              const clampedPercentage = Math.max(0, Math.min(100, percentage))
+              const displayWidth = Math.max(clampedPercentage, item.candidaturas > 0 ? 10 : 0)
               const dateFormatted = format(new Date(item.data + "T00:00:00"), "dd/MM", { locale: ptBR })
 
               return (
                 <div key={item.data} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground font-medium">{dateFormatted}</span>
-                    <span className="text-foreground font-semibold">{item.candidaturas}</span>
+                    <span className="text-foreground font-semibold">
+                      {item.candidaturas}
+                      <span className="sr-only"> candidaturas em {dateFormatted}</span>
+                    </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-8 overflow-hidden">
                     <div
+                      role="progressbar"
+                      aria-valuenow={clampedPercentage}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`Candidaturas para ${dateFormatted}: ${item.candidaturas}`}
                       className="bg-primary h-full rounded-full transition-all duration-300 flex items-center justify-end px-3"
-                      style={{ width: `${Math.max(percentage, item.candidaturas > 0 ? 10 : 0)}%` }}
+                      style={{ width: `${displayWidth}%` }}
                     >
-                      {item.candidaturas > 0 && <span className="text-xs font-medium text-white">{item.candidaturas}</span>}
+                      {item.candidaturas > 0 && (
+                        <>
+                          <span className="text-xs font-medium text-white">{item.candidaturas}</span>
+                          <span className="sr-only"> de {maxCandidaturas} candidaturas ({clampedPercentage.toFixed(1)}%)</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -71,8 +71,10 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
 
           <div className="flex flex-col gap-3 mt-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                id="search-vagas"
+                aria-label="Buscar vagas por empresa ou cargo"
                 placeholder="Buscar por empresa ou cargo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -117,11 +119,11 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border">
-                    <TableHead className="text-left font-semibold">Empresa</TableHead>
-                    <TableHead className="text-left font-semibold">Cargo</TableHead>
-                    <TableHead className="text-left font-semibold">Local</TableHead>
-                    <TableHead className="text-left font-semibold">Modalidade</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">Empresa</TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">Cargo</TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">Local</TableHead>
+                    <TableHead scope="col" className="text-left font-semibold">Modalidade</TableHead>
+                    <TableHead scope="col" className="w-[50px]"><span className="sr-only">Ações</span></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -131,14 +133,20 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                       <TableCell className="text-foreground">{vaga.cargo}</TableCell>
                       <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-muted border-border text-foreground">
+                        <Badge variant="outline">
                           {vaga.modalidade}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" data-testid="vaga-actions-button">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              data-testid="vaga-actions-button"
+                              aria-label="Ações da vaga"
+                              title="Ações da vaga"
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
