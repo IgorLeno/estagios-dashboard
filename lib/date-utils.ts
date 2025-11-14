@@ -12,8 +12,6 @@
 export function getDataInscricao(now?: Date, _config?: unknown): string {
   const dt = now ?? new Date()
   return formatDateToYYYYMMDD(dt)
-   return formatDateToYYYYMMDD(dt)
- }
 }
 
 /**
