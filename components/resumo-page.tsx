@@ -116,17 +116,17 @@ export function ResumoPage() {
               }))}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis
                 dataKey="data"
-                stroke="#6B7280"
-                tick={{ fill: "#6B7280", fontSize: 12 }}
-                tickLine={{ stroke: "#9CA3AF" }}
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
               />
               <YAxis
-                stroke="#6B7280"
-                tick={{ fill: "#6B7280", fontSize: 12 }}
-                tickLine={{ stroke: "#9CA3AF" }}
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
                 allowDecimals={false}
               />
               <Tooltip
@@ -142,10 +142,10 @@ export function ResumoPage() {
               <Line
                 type="monotone"
                 dataKey="candidaturas"
-                stroke="#2563EB"
+                stroke="hsl(var(--primary))"
                 strokeWidth={3}
-                dot={{ fill: "#06B6D4", r: 6, strokeWidth: 2, stroke: "#fff" }}
-                activeDot={{ r: 8, fill: "#06B6D4", strokeWidth: 2, stroke: "#fff" }}
+                dot={{ fill: "hsl(var(--accent))", r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                activeDot={{ r: 8, fill: "hsl(var(--accent))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
                 name="Candidaturas"
               />
             </LineChart>
