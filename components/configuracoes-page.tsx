@@ -1,11 +1,49 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clock, Calendar } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTheme } from "next-themes"
+import { Clock, Calendar, Palette } from "lucide-react"
 
 export function ConfiguracoesPage() {
+  const { theme, setTheme } = useTheme()
+
   return (
     <div className="max-w-2xl space-y-6">
+      {/* Theme Settings Card */}
+      <Card className="glass-card-intense hover-lift">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Palette className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-foreground">Aparência</span>
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Personalize a aparência do dashboard
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Tema</h3>
+              <p className="text-sm text-muted-foreground">Escolha entre tema claro, escuro ou automático</p>
+            </div>
+            <Select value={theme} onValueChange={setTheme}>
+              <SelectTrigger className="w-[140px] bg-background border-border">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="light">Claro</SelectItem>
+                <SelectItem value="dark">Escuro</SelectItem>
+                <SelectItem value="system">Sistema</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Date System Info Card */}
       <Card className="glass-card-intense hover-lift">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
