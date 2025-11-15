@@ -7,12 +7,7 @@ import { TableCell, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, ChevronRight, MoreHorizontal, Eye, Edit, Upload, FileText, Trash2, Download } from "lucide-react"
 import { StarRating } from "@/components/ui/star-rating"
 import { cn, toSafeNumber } from "@/lib/utils"

@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Target, Check } from "lucide-react"
-import {
-  cn,
-  getMetaProgressColor,
-  getMetaTextColor,
-  getMetaCompletionEffects,
-  toSafeNumber,
-} from "@/lib/utils"
+import { cn, getMetaProgressColor, getMetaTextColor, getMetaCompletionEffects, toSafeNumber } from "@/lib/utils"
 
 interface MetaCardProps {
   meta: number

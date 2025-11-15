@@ -198,11 +198,7 @@ export default function VagaDetailPage() {
 
               {/* Right column - Fit and Status cards */}
               <div className="space-y-6">
-                <FitCard
-                  requisitos={toSafeNumber(vaga.requisitos)}
-                  perfil={toSafeNumber(vaga.perfil)}
-                  readonly
-                />
+                <FitCard requisitos={toSafeNumber(vaga.requisitos)} perfil={toSafeNumber(vaga.perfil)} readonly />
                 <StatusCard status={vaga.status} etapa={vaga.etapa} />
               </div>
             </div>
