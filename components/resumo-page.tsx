@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, Briefcase } from "lucide-react"
 import { format, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 export function ResumoPage() {
   const [totalCandidaturas, setTotalCandidaturas] = useState(0)
@@ -98,7 +99,7 @@ export function ResumoPage() {
         </CardContent>
       </Card>
 
-      {/* Bar Chart - Last 7 Days */}
+      {/* Line Chart - Last 7 Days */}
       <Card className="glass-card-intense hover-lift">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -107,47 +108,48 @@ export function ResumoPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {historico.map((item) => {
-              const percentage = maxCandidaturas > 0 ? (item.candidaturas / maxCandidaturas) * 100 : 0
-              const clampedPercentage = Math.max(0, Math.min(100, percentage))
-              const displayWidth = Math.max(clampedPercentage, item.candidaturas > 0 ? 10 : 0)
-              const dateFormatted = format(new Date(item.data + "T00:00:00"), "dd/MM", { locale: ptBR })
-
-              return (
-                <div key={item.data} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground font-medium">{dateFormatted}</span>
-                    <span className="text-foreground font-semibold">
-                      {item.candidaturas}
-                      <span className="sr-only"> candidaturas em {dateFormatted}</span>
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-8 overflow-hidden">
-                    <div
-                      role="progressbar"
-                      aria-valuenow={clampedPercentage}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`Candidaturas para ${dateFormatted}: ${item.candidaturas}`}
-                      className="bg-primary h-full rounded-full transition-all duration-300 flex items-center justify-end px-3"
-                      style={{ width: `${displayWidth}%` }}
-                    >
-                      {item.candidaturas > 0 && (
-                        <>
-                          <span className="text-xs font-medium text-white">{item.candidaturas}</span>
-                          <span className="sr-only">
-                            {" "}
-                            de {maxCandidaturas} candidaturas ({clampedPercentage.toFixed(1)}%)
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart
+              data={historico.map((item) => ({
+                data: format(new Date(item.data + "T00:00:00"), "dd/MM", { locale: ptBR }),
+                candidaturas: item.candidaturas,
+              }))}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" vertical={false} />
+              <XAxis
+                dataKey="data"
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                tickLine={{ stroke: "hsl(var(--muted-foreground) / 0.3)" }}
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                tickLine={{ stroke: "hsl(var(--muted-foreground) / 0.3)" }}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--background))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                }}
+                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                itemStyle={{ color: "hsl(var(--primary))" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="candidaturas"
+                stroke="hsl(var(--primary))"
+                strokeWidth={3}
+                dot={{ fill: "#00D4FF", r: 6, strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 8, fill: "#00D4FF", strokeWidth: 2, stroke: "#fff" }}
+                name="Candidaturas"
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
