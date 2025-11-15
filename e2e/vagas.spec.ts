@@ -4,7 +4,7 @@ import { waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils
 test.describe("Gerenciamento de Vagas", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByText("Vagas")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
   })
 
   test("deve criar nova vaga manualmente", async ({ page }) => {
@@ -34,7 +34,6 @@ test.describe("Gerenciamento de Vagas", () => {
     // Preencher requisitos e fit
     await dialog.getByLabel(/requisitos/i).fill("85")
     await dialog.getByLabel(/fit/i).fill("8")
-    await dialog.getByLabel(/etapa/i).fill("Inscrição")
 
     // Observações
     await dialog.getByLabel(/observações/i).fill("Teste E2E automatizado")
@@ -115,8 +114,7 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(editDialog).toBeVisible()
     await expect(editDialog.getByText(/editar vaga/i)).toBeVisible()
 
-    // Editar campos
-    await editDialog.getByLabel(/etapa/i).fill("Entrevista RH")
+    // Editar campos (etapa foi removido do sistema)
     await editDialog.getByLabel(/status/i).click()
     await page.getByRole("option", { name: "Avançado" }).click()
 
@@ -205,7 +203,6 @@ test.describe("Gerenciamento de Vagas", () => {
 
     await dialog.getByLabel(/requisitos/i).fill("95")
     await dialog.getByLabel(/fit/i).fill("10")
-    await dialog.getByLabel(/etapa/i).fill("Teste Técnico")
 
     await dialog.getByLabel(/status/i).click()
     await page.getByRole("option", { name: "Avançado" }).click()

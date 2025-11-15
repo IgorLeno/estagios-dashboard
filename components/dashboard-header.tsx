@@ -24,6 +24,8 @@ export function DashboardHeader({ currentDate, onPrevDate, onNextDate, onDateSel
           variant="outline"
           size="icon"
           onClick={onPrevDate}
+          data-testid="prev-date-button"
+          aria-label="Dia anterior"
           className="h-9 w-9 border-border hover:bg-muted hover:border-primary"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -33,6 +35,7 @@ export function DashboardHeader({ currentDate, onPrevDate, onNextDate, onDateSel
           <PopoverTrigger asChild>
             <Button
               variant="outline"
+              data-testid="date-picker-trigger"
               className="min-w-[200px] justify-start text-left font-normal border-border hover:bg-muted hover:border-primary"
             >
               <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
@@ -54,6 +57,8 @@ export function DashboardHeader({ currentDate, onPrevDate, onNextDate, onDateSel
           variant="outline"
           size="icon"
           onClick={onNextDate}
+          data-testid="next-date-button"
+          aria-label="Próximo dia"
           className="h-9 w-9 border-border hover:bg-muted hover:border-primary"
         >
           <ChevronRight className="h-4 w-4" />

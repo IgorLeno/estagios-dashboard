@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test"
 test.describe("Navegação do Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByText("Vagas")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
   })
 
   test("deve navegar entre abas", async ({ page }) => {
@@ -13,18 +13,18 @@ test.describe("Navegação do Dashboard", () => {
     // Verificar que está na aba Vagas (padrão) - verificar se o título está visível
     await expect(page.getByRole("heading", { name: /estágios/i })).toBeVisible()
 
-    // Navegar para Resumo via botão "Resumo" da sidebar
-    await page.getByRole("button", { name: /^resumo$/i }).click()
+    // Navegar para Resumo via botão da sidebar
+    await page.getByTestId("sidebar-resumo").click()
     // Verificar que aba Resumo está ativa - verificar se conteúdo específico do resumo está visível
     await expect(page.getByText(/histórico|estatísticas|análise|últimos.*dias/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Navegar para Configurações via botão "Configurações" da sidebar
-    await page.getByRole("button", { name: /^configurações$/i }).click()
+    // Navegar para Configurações via botão da sidebar
+    await page.getByTestId("sidebar-configuracoes").click()
     // Verificar que página de configurações está ativa - procurar por "Sistema de Datas"
     await expect(page.getByText(/sistema.*datas|rastreamento|meia.*noite/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Dashboard via botão "Vagas" da sidebar (aba principal de Vagas)
-    await page.getByRole("button", { name: /^vagas$/i }).click()
+    // Voltar para Dashboard via botão da sidebar
+    await page.getByTestId("sidebar-vagas").click()
     // Verificar que está na aba Dashboard/Vagas - verificar se algum elemento característico está visível
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
   })
@@ -33,24 +33,39 @@ test.describe("Navegação do Dashboard", () => {
     // Aguardar data carregar
     await page.waitForLoadState("domcontentloaded")
 
-    // Procurar por elementos de navegação de data
-    const prevButton = page.getByRole("button", { name: /anterior|prev|<|◀/i }).first()
-    const nextButton = page.getByRole("button", { name: /próximo|next|>|▶/i }).first()
+    // Usar testids dos botões de navegação de data
+    const prevButton = page.getByTestId("prev-date-button")
+    const nextButton = page.getByTestId("next-date-button")
 
-    // Skip if navigation buttons don't exist
-    if ((await prevButton.count()) === 0 || (await nextButton.count()) === 0) {
-      test.skip()
-    }
+    // Verificar que botões existem
+    await expect(prevButton).toBeVisible()
+    await expect(nextButton).toBeVisible()
+
+    // Capturar data atual antes de navegar
+    const datePickerButton = page.getByTestId("date-picker-trigger")
+    const initialDate = await datePickerButton.textContent()
 
     // Clicar em próximo dia
     await nextButton.click()
-    await expect(page.locator("table")).toBeVisible()
+
+    // Aguardar que a data mude no picker
+    await expect
+      .poll(async () => await datePickerButton.textContent(), {
+        message: "Aguardando mudança de data",
+        timeout: 5000,
+      })
+      .not.toBe(initialDate)
 
     // Clicar em dia anterior
     await prevButton.click()
 
-    // Verificar que dados recarregaram (table deve estar presente)
-    await expect(page.locator("table")).toBeVisible()
+    // Aguardar que a data volte
+    await expect
+      .poll(async () => await datePickerButton.textContent(), {
+        message: "Aguardando data voltar",
+        timeout: 5000,
+      })
+      .toBe(initialDate)
   })
 
   test("deve abrir detalhes da vaga em nova página", async ({ page }) => {
@@ -111,12 +126,12 @@ test.describe("Navegação do Dashboard", () => {
     const searchInput = page.getByPlaceholder(/buscar/i)
     await searchInput.fill("Test")
 
-    // Ir para Resumo via botão "Resumo" da sidebar
-    await page.getByRole("button", { name: /^resumo$/i }).click()
+    // Ir para Resumo via botão da sidebar
+    await page.getByTestId("sidebar-resumo").click()
     await expect(page.getByText(/histórico|estatísticas|análise|últimos.*dias/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Dashboard via botão "Vagas" da sidebar
-    await page.getByRole("button", { name: /^vagas$/i }).click()
+    // Voltar para Dashboard via botão da sidebar
+    await page.getByTestId("sidebar-vagas").click()
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
 
     // Verificar que filtro foi mantido ou resetado (comportamento esperado)

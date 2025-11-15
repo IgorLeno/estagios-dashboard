@@ -43,6 +43,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
+              data-testid={`sidebar-${item.id}`}
               className={cn(
                 "w-full h-12 rounded-lg flex items-center gap-3 px-3 transition-all duration-200",
                 "hover:bg-sidebar-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent",

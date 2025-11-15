@@ -6,7 +6,7 @@ test.describe("Upload de Arquivos", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
     // Wait for page to load
-    await expect(page.getByText("Vagas")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
   })
 
   test("deve fazer upload de análise .md e preencher campos automaticamente", async ({ page }) => {

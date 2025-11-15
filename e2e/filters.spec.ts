@@ -4,7 +4,7 @@ import { getTableRowCount } from "./helpers/test-utils"
 test.describe("Filtros do Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByText("Vagas")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
     // Aguardar página carregar
     await page.waitForLoadState("networkidle")
     // A tabela só aparece se houver vagas, não forçar espera aqui
