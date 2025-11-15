@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Target, Check } from "lucide-react"
+import { cn, getMetaProgressColor, getMetaTextColor, getMetaCompletionEffects } from "@/lib/utils"
 
 interface MetaCardProps {
   meta: number
@@ -93,10 +94,15 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-foreground">Progresso</span>
-            <span className="font-semibold tabular-nums text-primary">{progress.toFixed(0)}%</span>
+            <span className={cn("font-semibold tabular-nums transition-colors duration-300", getMetaTextColor(progress))}>
+              {progress.toFixed(0)}%
+            </span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
+            <div
+              className={cn("h-full transition-all duration-700 ease-out", getMetaProgressColor(progress), getMetaCompletionEffects(progress))}
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
       </CardContent>
