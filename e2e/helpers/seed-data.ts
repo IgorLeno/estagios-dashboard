@@ -52,21 +52,66 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
 ]
 
 /**
- * Seed database with test data
- * Returns the number of records created
+ * Seed database with test data (idempotent and race-safe)
+ * Verifies existing records before inserting to prevent duplicates
+ * Returns the actual number of test records in the database after seeding
  */
 export async function seedTestData(): Promise<number> {
   const supabase = createClient()
 
-  // Insert sample vagas
-  const { data, error } = await supabase.from("vagas_estagio").insert(SAMPLE_VAGAS).select()
+  // Buscar todas as vagas de teste existentes em uma única query
+  const { data: existingVagas, error: fetchError } = await supabase
+    .from("vagas_estagio")
+    .select("empresa, observacoes")
+    .like("observacoes", "%Vaga de teste E2E%")
 
-  if (error) {
-    console.error("Error seeding test data:", error)
-    throw error
+  if (fetchError) {
+    console.error("Error fetching existing test data:", fetchError)
+    throw fetchError
   }
 
-  return data?.length || 0
+  // Criar um Set com chaves únicas (empresa + observacoes) para busca rápida
+  const existingKeys = new Set(
+    (existingVagas || []).map((v) => `${v.empresa}|${v.observacoes}`)
+  )
+
+  // Filtrar vagas que ainda não existem
+  const vagasToInsert = SAMPLE_VAGAS.filter(
+    (vaga) => !existingKeys.has(`${vaga.empresa}|${vaga.observacoes}`)
+  )
+
+  // Inserir apenas as vagas que não existem
+  if (vagasToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from("vagas_estagio")
+      .insert(vagasToInsert)
+
+    if (insertError) {
+      // Se erro for de duplicata (race condition com processo concorrente), ignorar
+      // Erro 23505 = unique constraint violation
+      // Outros erros devem ser lançados
+      if (insertError.code !== "23505") {
+        console.error("Error inserting test data:", insertError)
+        throw insertError
+      }
+      // Em caso de race condition, não fazer nada - os dados já existem
+    }
+  }
+
+  // Re-query para obter o count real do banco (após possíveis inserções concorrentes)
+  // Isso garante que retornamos o count correto mesmo se outros processos inseriram dados
+  const { count, error: countError } = await supabase
+    .from("vagas_estagio")
+    .select("*", { count: "exact", head: true })
+    .like("observacoes", "%Vaga de teste E2E%")
+
+  if (countError) {
+    console.error("Error getting final test data count:", countError)
+    // Em caso de erro, retornar o count baseado no que sabemos
+    return (existingVagas?.length || 0) + vagasToInsert.length
+  }
+
+  return count || 0
 }
 
 /**
@@ -110,19 +155,28 @@ export async function getTestDataCount(): Promise<number> {
 }
 
 /**
- * Ensure test data exists
- * If no test data exists, seed it
- * Returns the number of test records available
+ * Ensure test data exists (race-safe and idempotent)
+ * Seeds test data if needed, handling concurrent processes safely
+ * Returns the actual number of test records in the database
  */
 export async function ensureTestData(): Promise<number> {
-  const existingCount = await getTestDataCount()
+  // seedTestData é idempotente, então podemos chamar diretamente
+  // Ele verifica duplicatas internamente e retorna o count real
+  console.log("Ensuring test data exists...")
+  const finalCount = await seedTestData()
 
-  if (existingCount === 0) {
-    console.log("No test data found, seeding...")
-    await seedTestData()
-    return SAMPLE_VAGAS.length
+  if (finalCount === 0) {
+    // Se após seeding ainda não há dados, pode ser que outras vagas de teste
+    // com diferentes padrões existam, ou houve erro
+    const existingCount = await getTestDataCount()
+    if (existingCount > 0) {
+      console.log(`Found ${existingCount} existing test records (different pattern)`)
+      return existingCount
+    }
+    console.log("Warning: No test data found after seeding attempt")
+    return 0
   }
 
-  console.log(`Found ${existingCount} existing test records`)
-  return existingCount
+  console.log(`Ensured ${finalCount} test records exist`)
+  return finalCount
 }
