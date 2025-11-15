@@ -71,20 +71,14 @@ export async function seedTestData(): Promise<number> {
   }
 
   // Criar um Set com chaves únicas (empresa + observacoes) para busca rápida
-  const existingKeys = new Set(
-    (existingVagas || []).map((v) => `${v.empresa}|${v.observacoes}`)
-  )
+  const existingKeys = new Set((existingVagas || []).map((v) => `${v.empresa}|${v.observacoes}`))
 
   // Filtrar vagas que ainda não existem
-  const vagasToInsert = SAMPLE_VAGAS.filter(
-    (vaga) => !existingKeys.has(`${vaga.empresa}|${vaga.observacoes}`)
-  )
+  const vagasToInsert = SAMPLE_VAGAS.filter((vaga) => !existingKeys.has(`${vaga.empresa}|${vaga.observacoes}`))
 
   // Inserir apenas as vagas que não existem
   if (vagasToInsert.length > 0) {
-    const { error: insertError } = await supabase
-      .from("vagas_estagio")
-      .insert(vagasToInsert)
+    const { error: insertError } = await supabase.from("vagas_estagio").insert(vagasToInsert)
 
     if (insertError) {
       // Se erro for de duplicata (race condition com processo concorrente), ignorar
