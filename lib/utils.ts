@@ -42,7 +42,7 @@ export function getMetaTextColor(percentage: number): string {
  */
 export function getMetaCompletionEffects(percentage: number): string {
   if (percentage >= 100) {
-    return "shadow-lg shadow-green-500/50 scale-105"
+    return "shadow-lg shadow-green-500/50 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:animate-shimmer"
   }
   return ""
 }
