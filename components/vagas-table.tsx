@@ -61,7 +61,9 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
       <Card className="glass-card-intense hover-lift">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-foreground" data-testid="vagas-card-title">Vagas</CardTitle>
+            <CardTitle className="text-foreground" data-testid="vagas-card-title">
+              Vagas
+            </CardTitle>
             <Button
               onClick={() => setShowAddDialog(true)}
               data-testid="add-vaga-button"
