@@ -12,8 +12,8 @@ test.describe("Upload de Arquivos", () => {
   test("deve fazer upload de análise .md e preencher campos automaticamente", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    // Abrir modal de adicionar vaga
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    // Abrir modal de adicionar estágio
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
@@ -46,7 +46,7 @@ test.describe("Upload de Arquivos", () => {
   test("deve fazer upload de currículo PDF", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Scroll para seção de arquivos
@@ -71,7 +71,7 @@ test.describe("Upload de Arquivos", () => {
   test("deve mostrar erro para arquivo com extensão inválida", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Tentar fazer upload de arquivo inválido
@@ -89,7 +89,7 @@ test.describe("Upload de Arquivos", () => {
   test("deve permitir substituir arquivo já enviado", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
@@ -154,7 +154,7 @@ test.describe("Upload de Arquivos", () => {
       }
     })
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
@@ -194,7 +194,7 @@ test.describe("Upload de Arquivos", () => {
   test("deve exibir preview dos campos detectados após upload", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()

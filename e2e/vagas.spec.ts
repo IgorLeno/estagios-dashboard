@@ -15,7 +15,7 @@ test.describe("Gerenciamento de Vagas", () => {
     const cargoName = generateUniqueTestName("Engenheiro de Processos")
 
     // Abrir modal
-    const addButton = page.getByRole("button", { name: /adicionar vaga/i })
+    const addButton = page.getByRole("button", { name: /adicionar estágio/i })
     await addButton.waitFor({ state: "visible" })
     await addButton.click()
 
@@ -58,7 +58,7 @@ test.describe("Gerenciamento de Vagas", () => {
   test("deve validar campos obrigatórios", async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
 
     // Tentar salvar sem preencher campos obrigatórios
@@ -77,7 +77,7 @@ test.describe("Gerenciamento de Vagas", () => {
     const empresaName = generateUniqueTestName("[E2E-TEST] Edit Company")
 
     // Primeiro criar uma vaga para editar
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const addDialog = page.getByRole("dialog")
     await expect(addDialog).toBeVisible()
@@ -137,7 +137,7 @@ test.describe("Gerenciamento de Vagas", () => {
     const empresaName = generateUniqueTestName("[E2E-TEST] Delete Me")
 
     // Criar vaga para deletar
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const addDialog = page.getByRole("dialog")
     await expect(addDialog).toBeVisible()
@@ -188,7 +188,7 @@ test.describe("Gerenciamento de Vagas", () => {
 
     const empresaName = generateUniqueTestName("[E2E-TEST] Full Form")
 
-    await page.getByRole("button", { name: /adicionar vaga/i }).click()
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
