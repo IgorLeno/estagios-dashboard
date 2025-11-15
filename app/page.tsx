@@ -12,7 +12,7 @@ import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const [activeTab, setActiveTab] = useState("vagas") // Start with main vagas tab
   const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
   const [meta, setMeta] = useState<MetaDiaria | null>(null)
@@ -127,9 +127,9 @@ export default function Page() {
     <div className="min-h-screen flex">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="flex-1 ml-20">
+      <main className="flex-1 ml-64">
         <div className="container mx-auto px-8 py-6 max-w-7xl">
-          {activeTab === "dashboard" && (
+          {(activeTab === "dashboard" || activeTab === "vagas") && (
             <div className="space-y-6">
               <DashboardHeader
                 currentDate={currentDate}
@@ -147,6 +147,12 @@ export default function Page() {
           {activeTab === "resumo" && <ResumoPage />}
 
           {activeTab === "configuracoes" && <ConfiguracoesPage />}
+
+          {activeTab === "search" && (
+            <div className="flex items-center justify-center py-20">
+              <p className="text-muted-foreground">Funcionalidade de busca em desenvolvimento</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

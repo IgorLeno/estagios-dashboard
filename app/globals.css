@@ -4,54 +4,58 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light minimalist theme with purple/violet accents */
-  --background: 247 248 250; /* #F7F8FA - light off-white */
+  /* Modern minimalist theme following reference design (2816023.jpg) */
+  --background: 224 224 224; /* #E0E0E0 - light gray background */
   --background-secondary: 255 255 255; /* #FFFFFF - pure white for cards */
-  --foreground: 30 30 45; /* #1E1E2D - dark text */
+  --foreground: 44 62 80; /* #2C3E50 - dark gray text */
 
   --card: 255 255 255; /* white cards */
-  --card-foreground: 30 30 45;
+  --card-foreground: 44 62 80;
 
   --popover: 255 255 255;
-  --popover-foreground: 30 30 45;
+  --popover-foreground: 44 62 80;
 
-  --primary: 122 111 240; /* #7A6FF0 - purple/violet */
+  --primary: 123 63 237; /* #7B3FED - vibrant purple */
   --primary-foreground: 255 255 255;
 
   --secondary: 240 240 245;
-  --secondary-foreground: 30 30 45;
+  --secondary-foreground: 44 62 80;
 
   --muted: 243 244 246;
-  --muted-foreground: 107 114 128; /* gray-500 */
+  --muted-foreground: 117 117 117; /* #757575 - medium gray */
 
-  --accent: 122 111 240; /* purple/violet */
-  --accent-foreground: 255 255 255;
-  --accent-muted: 122 111 240 / 0.1; /* purple with low opacity */
+  --accent: 0 212 255; /* #00D4FF - cyan accent */
+  --accent-foreground: 44 62 80;
+  --accent-muted: 0 212 255 / 0.1; /* cyan with low opacity */
 
   --destructive: 239 68 68; /* red-500 */
   --destructive-foreground: 255 255 255;
 
   --border: 229 231 235; /* gray-200 */
   --input: 243 244 246;
-  --ring: 122 111 240 / 0.5;
+  --ring: 123 63 237 / 0.5;
 
-  /* Chart colors - purple tones */
-  --chart-1: 122 111 240; /* purple/violet */
-  --chart-2: 167 139 250; /* lighter violet */
-  --chart-3: 196 181 253; /* even lighter violet */
+  /* Chart colors - purple primary with cyan accents */
+  --chart-1: 123 63 237; /* purple primary */
+  --chart-2: 0 212 255; /* cyan accent */
+  --chart-3: 167 139 250; /* lighter violet */
   --chart-4: 139 92 246; /* violet-500 */
   --chart-5: 236 72 153; /* pink-500 */
 
-  --radius: 0.5rem;
+  --radius: 0.75rem; /* 12px - rounder corners */
 
-  --sidebar: 122 111 240; /* purple sidebar */
-  --sidebar-foreground: 255 255 255;
+  --sidebar: 44 62 80; /* #2C3E50 - dark gray sidebar */
+  --sidebar-foreground: 189 195 199; /* #BDC3C7 - light gray text */
   --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 122 111 240;
-  --sidebar-accent: 139 92 246;
+  --sidebar-primary-foreground: 44 62 80;
+  --sidebar-accent: 0 212 255; /* #00D4FF - cyan for active items */
   --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 229 231 235;
-  --sidebar-ring: 122 111 240;
+  --sidebar-border: 52 73 94; /* darker gray for sidebar borders */
+  --sidebar-ring: 0 212 255;
+
+  /* Header color */
+  --header: 117 117 117; /* #757575 - medium gray header */
+  --header-foreground: 255 255 255;
 
   /* Star rating color */
   --star-fill: 251 191 36; /* amber-400 for filled stars */
@@ -60,40 +64,42 @@
 
 .dark {
   /* Use same light theme - app is always in light mode */
-  --background: 247 248 250;
+  --background: 224 224 224;
   --background-secondary: 255 255 255;
-  --foreground: 30 30 45;
+  --foreground: 44 62 80;
   --card: 255 255 255;
-  --card-foreground: 30 30 45;
+  --card-foreground: 44 62 80;
   --popover: 255 255 255;
-  --popover-foreground: 30 30 45;
-  --primary: 122 111 240;
+  --popover-foreground: 44 62 80;
+  --primary: 123 63 237;
   --primary-foreground: 255 255 255;
   --secondary: 240 240 245;
-  --secondary-foreground: 30 30 45;
+  --secondary-foreground: 44 62 80;
   --muted: 243 244 246;
-  --muted-foreground: 107 114 128;
-  --accent: 122 111 240;
-  --accent-foreground: 255 255 255;
-  --accent-muted: 122 111 240 / 0.1;
+  --muted-foreground: 117 117 117;
+  --accent: 0 212 255;
+  --accent-foreground: 44 62 80;
+  --accent-muted: 0 212 255 / 0.1;
   --destructive: 239 68 68;
   --destructive-foreground: 255 255 255;
   --border: 229 231 235;
   --input: 243 244 246;
-  --ring: 122 111 240 / 0.5;
-  --chart-1: 122 111 240;
-  --chart-2: 167 139 250;
-  --chart-3: 196 181 253;
+  --ring: 123 63 237 / 0.5;
+  --chart-1: 123 63 237;
+  --chart-2: 0 212 255;
+  --chart-3: 167 139 250;
   --chart-4: 139 92 246;
   --chart-5: 236 72 153;
-  --sidebar: 122 111 240;
-  --sidebar-foreground: 255 255 255;
+  --sidebar: 44 62 80;
+  --sidebar-foreground: 189 195 199;
   --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 122 111 240;
-  --sidebar-accent: 139 92 246;
+  --sidebar-primary-foreground: 44 62 80;
+  --sidebar-accent: 0 212 255;
   --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 229 231 235;
-  --sidebar-ring: 122 111 240;
+  --sidebar-border: 52 73 94;
+  --sidebar-ring: 0 212 255;
+  --header: 117 117 117;
+  --header-foreground: 255 255 255;
   --star-fill: 251 191 36;
   --star-empty: 209 213 219;
 }
@@ -139,6 +145,8 @@
   --color-sidebar-accent-foreground: rgb(var(--sidebar-accent-foreground));
   --color-sidebar-border: rgb(var(--sidebar-border));
   --color-sidebar-ring: rgb(var(--sidebar-ring));
+  --color-header: rgb(var(--header));
+  --color-header-foreground: rgb(var(--header-foreground));
   --color-star-fill: rgb(var(--star-fill));
   --color-star-empty: rgb(var(--star-empty));
 }
