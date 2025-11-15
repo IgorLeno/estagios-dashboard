@@ -94,13 +94,19 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-foreground">Progresso</span>
-            <span className={cn("font-semibold tabular-nums transition-colors duration-300", getMetaTextColor(progress))}>
+            <span
+              className={cn("font-semibold tabular-nums transition-colors duration-300", getMetaTextColor(progress))}
+            >
               {progress.toFixed(0)}%
             </span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div
-              className={cn("h-full transition-all duration-700 ease-out", getMetaProgressColor(progress), getMetaCompletionEffects(progress))}
+              className={cn(
+                "h-full transition-all duration-700 ease-out",
+                getMetaProgressColor(progress),
+                getMetaCompletionEffects(progress)
+              )}
               style={{ width: `${progress}%` }}
             />
           </div>

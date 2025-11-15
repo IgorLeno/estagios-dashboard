@@ -23,7 +23,8 @@ Next.js 16 dashboard application for tracking internship applications ("Estágio
 **Reference:** Modern minimalist dashboard following reference design (2816023.jpg)
 
 **Color Palette:**
-- **Background**: `#E0E0E0` (light gray)  - `--background: 224 224 224`
+
+- **Background**: `#E0E0E0` (light gray) - `--background: 224 224 224`
 - **Cards**: `#FFFFFF` (pure white) - `--card: 255 255 255`
 - **Primary**: `#7B3FED` (vibrant purple) - `--primary: 123 63 237`
 - **Accent**: `#00D4FF` (cyan) - `--accent: 0 212 255`
@@ -31,6 +32,7 @@ Next.js 16 dashboard application for tracking internship applications ("Estágio
 - **Text**: `#2C3E50` (dark gray) - `--foreground: 44 62 80`
 
 **Sidebar Design:**
+
 - Width: 256px (w-64)
 - Dark gray background (#2C3E50)
 - Cyan accent for active items (#00D4FF)
@@ -38,17 +40,20 @@ Next.js 16 dashboard application for tracking internship applications ("Estágio
 - Following pattern: Search, Favorite, Deals, Activities, Charts
 
 **Card Styling:**
+
 - White background (#FFFFFF)
 - Border radius: 12px (--radius: 0.75rem)
 - Subtle shadows: `shadow-md` for elevation
 - Border: `border-border` (gray-200)
 
 **Typography:**
+
 - Primary text: Dark gray (#2C3E50)
 - Secondary text: Medium gray (#757575)
 - Accent text: Cyan (#00D4FF) for highlights
 
 **Charts & Visualizations:**
+
 - Line charts: Purple (#7B3FED) lines with cyan (#00D4FF) dots
 - Responsive containers
 - Subtle grids (20% opacity)

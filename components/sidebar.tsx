@@ -10,11 +10,11 @@ interface SidebarProps {
 
 // Following reference design (2816023.jpg)
 const menuItems = [
-  { id: "search", label: "Search", icon: Search },
-  { id: "vagas", label: "Favorite", icon: Heart }, // Main tab (vagas)
-  { id: "resumo", label: "Deals", icon: Star }, // Summary/Resumo
-  { id: "configuracoes", label: "Activities", icon: Activity }, // Settings
-  { id: "dashboard", label: "Charts", icon: BarChart3 }, // Dashboard/Charts
+  { id: "search", label: "Buscar", icon: Search },
+  { id: "vagas", label: "Vagas", icon: Heart },
+  { id: "resumo", label: "Resumo", icon: Star },
+  { id: "configuracoes", label: "Configurações", icon: Activity },
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
 ]
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -51,8 +51,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                   : "text-sidebar-foreground border-l-4 border-transparent"
               )}
             >
-              <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")} />
-              <span className={cn("text-sm font-medium", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")}>{item.label}</span>
+              <Icon
+                className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")}
+              />
+              <span className={cn("text-sm font-medium", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")}>
+                {item.label}
+              </span>
             </button>
           )
         })}

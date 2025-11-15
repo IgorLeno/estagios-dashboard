@@ -111,7 +111,7 @@ export function ResumoPage() {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={historico.map((item) => ({
-                data: format(new Date(item.data + "T00:00:00"), "dd/MM", { locale: ptBR }),
+                data: format(new Date(item.data), "dd/MM", { locale: ptBR }),
                 candidaturas: item.candidaturas,
               }))}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
