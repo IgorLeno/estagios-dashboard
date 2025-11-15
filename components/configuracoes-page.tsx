@@ -19,9 +19,7 @@ export function ConfiguracoesPage() {
             </div>
             <span className="text-foreground">Aparência</span>
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Personalize a aparência do dashboard
-          </CardDescription>
+          <CardDescription className="text-muted-foreground">Personalize a aparência do dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
