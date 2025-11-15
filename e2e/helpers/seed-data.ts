@@ -107,8 +107,8 @@ export async function seedTestData(): Promise<number> {
 
   if (countError) {
     console.error("Error getting final test data count:", countError)
-    // Em caso de erro, retornar o count baseado no que sabemos
-    return (existingVagas?.length || 0) + vagasToInsert.length
+    // Best-effort estimate: if insert failed due to 23505, records exist but count is unknown
+    return existingVagas?.length || 0
   }
 
   return count || 0
