@@ -23,11 +23,18 @@ export interface MetaDiaria {
   meta: number
 }
 
+/**
+ * @deprecated Configuração de horários customizáveis foi removida.
+ * O sistema agora usa horário fixo de meia-noite (00:00) como início do dia.
+ * Esta interface é mantida apenas para compatibilidade com o banco de dados.
+ */
 export interface Configuracao {
   id: string
   created_at: string
   updated_at: string
+  /** @deprecated Não mais utilizado. O dia sempre começa à meia-noite (00:00). */
   hora_inicio: string
+  /** @deprecated Não mais utilizado. O dia sempre termina às 23:59. */
   hora_termino: string
 }
 
