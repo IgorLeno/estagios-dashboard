@@ -82,6 +82,8 @@ export function toSafeNumber(value: unknown): number {
  * formatPercentage(null) // "0.0"
  */
 export function formatPercentage(value: unknown, decimals: number = 1): string {
-  const safeDecimals = Math.max(0, Math.min(100, Math.floor(decimals)))
+  const d = Number(decimals)
+  const normalized = Number.isFinite(d) ? Math.floor(d) : 0
+  const safeDecimals = Math.max(0, Math.min(100, normalized))
   return toSafeNumber(value).toFixed(safeDecimals)
 }
