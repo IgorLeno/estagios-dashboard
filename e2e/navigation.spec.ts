@@ -10,21 +10,21 @@ test.describe("Navegação do Dashboard", () => {
     // Aguardar página carregar
     await page.waitForLoadState("networkidle")
 
-    // Verificar que está na aba Vagas/Dashboard (padrão) - verificar se o título está visível
+    // Verificar que está na aba Vagas/Favorite (padrão) - verificar se o título está visível
     await expect(page.getByRole("heading", { name: /estágios/i })).toBeVisible()
 
-    // Navegar para Resumo via botão da sidebar
-    await page.getByRole("button", { name: /^resumo$/i }).click()
+    // Navegar para Resumo via botão "Deals" da sidebar (novo label seguindo referência)
+    await page.getByRole("button", { name: /^deals$/i }).click()
     // Verificar que aba Resumo está ativa - verificar se conteúdo específico do resumo está visível
-    await expect(page.getByText(/histórico|estatísticas|análise|resumo/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/histórico|estatísticas|análise|últimos.*dias/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Navegar para Configurações via botão da sidebar
-    await page.getByRole("button", { name: /^configurações$/i }).click()
-    // Verificar que campos de configuração estão presentes
-    await expect(page.getByText(/horário.*início|hora.*início/i)).toBeVisible({ timeout: 5000 })
+    // Navegar para Configurações via botão "Activities" da sidebar (novo label)
+    await page.getByRole("button", { name: /^activities$/i }).click()
+    // Verificar que página de configurações está ativa - procurar por "Sistema de Datas"
+    await expect(page.getByText(/sistema.*datas|rastreamento|meia.*noite/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Dashboard via botão da sidebar (a aba Vagas está sob "Dashboard")
-    await page.getByRole("button", { name: /^dashboard$/i }).click()
+    // Voltar para Dashboard via botão "Favorite" da sidebar (aba principal de Vagas)
+    await page.getByRole("button", { name: /^favorite$/i }).click()
     // Verificar que está na aba Dashboard/Vagas - verificar se algum elemento característico está visível
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
   })
@@ -111,12 +111,12 @@ test.describe("Navegação do Dashboard", () => {
     const searchInput = page.getByPlaceholder(/buscar/i)
     await searchInput.fill("Test")
 
-    // Ir para Resumo via botão da sidebar
-    await page.getByRole("button", { name: /^resumo$/i }).click()
-    await expect(page.getByText(/histórico|estatísticas|análise|resumo/i)).toBeVisible({ timeout: 5000 })
+    // Ir para Resumo via botão "Deals" da sidebar (novo label)
+    await page.getByRole("button", { name: /^deals$/i }).click()
+    await expect(page.getByText(/histórico|estatísticas|análise|últimos.*dias/i).first()).toBeVisible({ timeout: 5000 })
 
-    // Voltar para Dashboard via botão da sidebar
-    await page.getByRole("button", { name: /^dashboard$/i }).click()
+    // Voltar para Dashboard via botão "Favorite" da sidebar (novo label)
+    await page.getByRole("button", { name: /^favorite$/i }).click()
     await expect(page.getByText(/adicionar vaga|meta do dia/i).first()).toBeVisible({ timeout: 10000 })
 
     // Verificar que filtro foi mantido ou resetado (comportamento esperado)
