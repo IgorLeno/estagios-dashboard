@@ -146,7 +146,12 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                 </TableHeader>
                 <TableBody>
                   {filteredVagas.map((vaga) => (
-                    <TableRow key={vaga.id} className="border-b border-border hover:bg-muted/50">
+                    <TableRow
+                      key={vaga.id}
+                      className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                      onDoubleClick={() => router.push(`/vaga/${vaga.id}`)}
+                      title="Duplo clique para ver detalhes"
+                    >
                       <TableCell className="font-medium text-foreground">{vaga.empresa}</TableCell>
                       <TableCell className="text-foreground">{vaga.cargo}</TableCell>
                       <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
