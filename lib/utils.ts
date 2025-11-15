@@ -46,3 +46,41 @@ export function getMetaCompletionEffects(percentage: number): string {
   }
   return ""
 }
+
+/**
+ * Converte qualquer valor para número de forma segura
+ * Retorna 0 se o valor for inválido (null, undefined, NaN, string não numérica)
+ *
+ * @param value - Valor a ser convertido (number, string, null, undefined, etc.)
+ * @returns Número válido ou 0
+ *
+ * @example
+ * toSafeNumber(3.5) // 3.5
+ * toSafeNumber("3.5") // 3.5
+ * toSafeNumber(null) // 0
+ * toSafeNumber("abc") // 0
+ */
+export function toSafeNumber(value: unknown): number {
+  if (typeof value === "number") return isNaN(value) ? 0 : value
+  if (typeof value === "string") {
+    const parsed = parseFloat(value)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  return 0
+}
+
+/**
+ * Formata um valor numérico como porcentagem de forma segura
+ *
+ * @param value - Valor numérico (ou string convertível) a ser formatado
+ * @param decimals - Número de casas decimais (padrão: 1)
+ * @returns String formatada (ex: "75.0")
+ *
+ * @example
+ * formatPercentage(75.5) // "75.5"
+ * formatPercentage("75.5", 0) // "76"
+ * formatPercentage(null) // "0.0"
+ */
+export function formatPercentage(value: unknown, decimals: number = 1): string {
+  return toSafeNumber(value).toFixed(decimals)
+}

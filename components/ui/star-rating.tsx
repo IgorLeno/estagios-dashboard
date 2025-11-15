@@ -1,7 +1,7 @@
 "use client"
 
 import { Star } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, toSafeNumber } from "@/lib/utils"
 import { useState, type KeyboardEvent } from "react"
 
 interface StarRatingProps {
@@ -14,7 +14,9 @@ interface StarRatingProps {
 export function StarRating({ value, onChange, readonly = false, size = "md" }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
 
-  const displayValue = hoverValue !== null ? hoverValue : value
+  // Garantir que value seja sempre um número válido
+  const safeValue = toSafeNumber(value)
+  const displayValue = hoverValue !== null ? hoverValue : safeValue
 
   const sizeClasses = {
     sm: "w-4 h-4",
@@ -45,18 +47,18 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
     if (readonly || !onChange) return
 
     const step = 0.5
-    let newValue = value
+    let newValue = safeValue
 
     switch (event.key) {
       case "ArrowRight":
       case "ArrowUp":
         event.preventDefault()
-        newValue = Math.min(5, value + step)
+        newValue = Math.min(5, safeValue + step)
         break
       case "ArrowLeft":
       case "ArrowDown":
         event.preventDefault()
-        newValue = Math.max(0, value - step)
+        newValue = Math.max(0, safeValue - step)
         break
       case " ":
       case "Enter":
@@ -76,8 +78,8 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
       aria-label="Star rating"
       aria-valuemin={0}
       aria-valuemax={5}
-      aria-valuenow={value}
-      aria-valuetext={`${value.toFixed(1)} out of 5`}
+      aria-valuenow={safeValue}
+      aria-valuetext={`${safeValue.toFixed(1)} out of 5`}
       aria-readonly={readonly || !onChange ? true : undefined}
       onKeyDown={handleKeyDown}
       onMouseLeave={handleMouseLeave}

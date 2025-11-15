@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Target, Check } from "lucide-react"
-import { cn, getMetaProgressColor, getMetaTextColor, getMetaCompletionEffects } from "@/lib/utils"
+import {
+  cn,
+  getMetaProgressColor,
+  getMetaTextColor,
+  getMetaCompletionEffects,
+  toSafeNumber,
+} from "@/lib/utils"
 
 interface MetaCardProps {
   meta: number
@@ -17,7 +23,10 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [tempMeta, setTempMeta] = useState(meta.toString())
 
-  const progress = meta > 0 ? Math.min((candidaturas / meta) * 100, 100) : 0
+  // Garantir que meta e candidaturas sejam números válidos
+  const safeMeta = toSafeNumber(meta)
+  const safeCandidaturas = toSafeNumber(candidaturas)
+  const progress = safeMeta > 0 ? Math.min((safeCandidaturas / safeMeta) * 100, 100) : 0
 
   function handleSave() {
     const parsed = Number.parseInt(tempMeta, 10)

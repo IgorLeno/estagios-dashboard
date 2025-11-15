@@ -15,6 +15,7 @@ import { Sidebar } from "@/components/sidebar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { safeOpenSupabaseStorageUrl } from "@/lib/url-utils"
+import { toSafeNumber } from "@/lib/utils"
 
 export default function VagaDetailPage() {
   const params = useParams()
@@ -197,7 +198,11 @@ export default function VagaDetailPage() {
 
               {/* Right column - Fit and Status cards */}
               <div className="space-y-6">
-                <FitCard requisitos={vaga.requisitos || 0} perfil={vaga.perfil || 0} readonly />
+                <FitCard
+                  requisitos={toSafeNumber(vaga.requisitos)}
+                  perfil={toSafeNumber(vaga.perfil)}
+                  readonly
+                />
                 <StatusCard status={vaga.status} etapa={vaga.etapa} />
               </div>
             </div>
