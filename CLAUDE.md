@@ -11,11 +11,48 @@ Next.js 16 dashboard application for tracking internship applications ("Estágio
 - **Framework**: Next.js 16.0.0 (App Router)
 - **React**: 19.2.0
 - **TypeScript**: 5.x with strict mode enabled
-- **Styling**: Tailwind CSS 4.1.9 with PostCSS
+- **Styling**: Tailwind CSS 4.1.9 with PostCSS + custom CSS variables
 - **Database/Auth**: Supabase (SSR implementation)
 - **UI Components**: Radix UI primitives + custom components
 - **Forms**: React Hook Form + Zod validation
+- **Charts**: Recharts 2.15.4 for data visualization
 - **Analytics**: Vercel Analytics
+
+## Visual Design System
+
+**Reference:** Modern minimalist dashboard following reference design (2816023.jpg)
+
+**Color Palette:**
+- **Background**: `#E0E0E0` (light gray)  - `--background: 224 224 224`
+- **Cards**: `#FFFFFF` (pure white) - `--card: 255 255 255`
+- **Primary**: `#7B3FED` (vibrant purple) - `--primary: 123 63 237`
+- **Accent**: `#00D4FF` (cyan) - `--accent: 0 212 255`
+- **Sidebar**: `#2C3E50` (dark gray) - `--sidebar: 44 62 80`
+- **Text**: `#2C3E50` (dark gray) - `--foreground: 44 62 80`
+
+**Sidebar Design:**
+- Width: 256px (w-64)
+- Dark gray background (#2C3E50)
+- Cyan accent for active items (#00D4FF)
+- Icons + text labels for all menu items
+- Following pattern: Search, Favorite, Deals, Activities, Charts
+
+**Card Styling:**
+- White background (#FFFFFF)
+- Border radius: 12px (--radius: 0.75rem)
+- Subtle shadows: `shadow-md` for elevation
+- Border: `border-border` (gray-200)
+
+**Typography:**
+- Primary text: Dark gray (#2C3E50)
+- Secondary text: Medium gray (#757575)
+- Accent text: Cyan (#00D4FF) for highlights
+
+**Charts & Visualizations:**
+- Line charts: Purple (#7B3FED) lines with cyan (#00D4FF) dots
+- Responsive containers
+- Subtle grids (20% opacity)
+- Interactive tooltips
 
 ## Development Commands
 
@@ -217,11 +254,11 @@ Both buckets are configured as public with RLS policies for insert/select/delete
 
 **Date Utils** ([lib/date-utils.ts](lib/date-utils.ts))
 
-- `getDataInscricao()` - Calculates inscription date based on custom day start time (default 06:00)
-- If current time < configured start time, returns previous calendar day
-- Example: 03:00 Tuesday with 06:00 start = Monday's date
+- `getDataInscricao()` - Returns current calendar date (fixed midnight day start)
+- Day always starts at 00:00 (midnight) and ends at 23:59
+- Example: 03:00 Tuesday = Tuesday's date (standard calendar)
 - Used throughout app for consistent date tracking
-- Configurable via `configuracoes` table (hora_inicio, hora_termino)
+- **Note**: Previous `hora_inicio` configuration removed - system now uses fixed midnight start
 
 ## Testing
 
