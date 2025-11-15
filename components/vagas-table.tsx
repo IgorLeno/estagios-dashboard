@@ -1,19 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { VagaEstagio } from "@/lib/types"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Plus, Search, Eye, Upload, FileText, Edit, Trash2 } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { AddVagaDialog } from "./add-vaga-dialog"
 import { EditVagaDialog } from "./edit-vaga-dialog"
+import { VagaTableRow } from "./vaga-table-row"
 import { toast } from "sonner"
 
 interface VagasTableProps {
@@ -23,13 +21,13 @@ interface VagasTableProps {
 }
 
 export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
-  const router = useRouter()
   const supabase = createClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterModalidade, setFilterModalidade] = useState<string>("todas")
   const [filterStatus, setFilterStatus] = useState<string>("todos")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingVaga, setEditingVaga] = useState<VagaEstagio | null>(null)
+  const [expandedVagaId, setExpandedVagaId] = useState<string | null>(null)
 
   const filteredVagas = vagas.filter((vaga) => {
     const matchesSearch =
@@ -162,56 +160,14 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                 </TableHeader>
                 <TableBody>
                   {filteredVagas.map((vaga) => (
-                    <TableRow
+                    <VagaTableRow
                       key={vaga.id}
-                      className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                      onDoubleClick={() => router.push(`/vaga/${vaga.id}`)}
-                      title="Duplo clique para ver detalhes"
-                    >
-                      <TableCell className="font-medium text-foreground">{vaga.empresa}</TableCell>
-                      <TableCell className="text-foreground">{vaga.cargo}</TableCell>
-                      <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{vaga.modalidade}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              data-testid="vaga-actions-button"
-                              aria-label="Ações da vaga"
-                              title="Ações da vaga"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/vaga/${vaga.id}`)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Ver Detalhes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setEditingVaga(vaga)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Upload className="h-4 w-4 mr-2" />
-                              Upload Análise
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Upload CV
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteVaga(vaga)} className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
+                      vaga={vaga}
+                      isExpanded={expandedVagaId === vaga.id}
+                      onToggleExpand={() => setExpandedVagaId(expandedVagaId === vaga.id ? null : vaga.id)}
+                      onEdit={setEditingVaga}
+                      onDelete={handleDeleteVaga}
+                    />
                   ))}
                 </TableBody>
               </Table>
