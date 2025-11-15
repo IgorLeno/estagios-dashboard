@@ -1,24 +1,27 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from "./helpers/fixtures"
 import { getTableRowCount } from "./helpers/test-utils"
 
 test.describe("Filtros do Dashboard", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, testData }) => {
+    // testData fixture ensures we have test data available
+    expect(testData).toBeGreaterThan(0)
+
     await page.goto("/")
     await expect(page.getByTestId("vagas-card-title")).toBeVisible()
     // Aguardar página carregar
     await page.waitForLoadState("networkidle")
-    // A tabela só aparece se houver vagas, não forçar espera aqui
+    // Aguardar que a tabela carregue com dados (pelo menos algumas linhas)
+    await expect
+      .poll(async () => await page.locator("table tbody tr").count(), {
+        timeout: 10000,
+      })
+      .toBeGreaterThan(0)
   })
 
   test("deve filtrar por busca de texto (empresa/cargo)", async ({ page }) => {
     // Pegar contagem inicial
     const totalRows = await getTableRowCount(page)
-
-    // Se não houver vagas, pular teste
-    if (totalRows === 0) {
-      test.skip()
-      return
-    }
+    expect(totalRows).toBeGreaterThan(0)
 
     // Buscar por termo específico
     const searchInput = page.getByPlaceholder(/buscar.*empresa.*cargo/i)
@@ -82,11 +85,7 @@ test.describe("Filtros do Dashboard", () => {
 
   test("deve filtrar por modalidade", async ({ page }) => {
     const totalRows = await getTableRowCount(page)
-
-    if (totalRows === 0) {
-      test.skip()
-      return
-    }
+    expect(totalRows).toBeGreaterThan(0)
 
     // Encontrar e clicar no select de modalidade
     const modalidadeSelect = page
@@ -119,11 +118,7 @@ test.describe("Filtros do Dashboard", () => {
 
   test("deve filtrar por status", async ({ page }) => {
     const totalRows = await getTableRowCount(page)
-
-    if (totalRows === 0) {
-      test.skip()
-      return
-    }
+    expect(totalRows).toBeGreaterThan(0)
 
     // Encontrar select de status
     const statusSelect = page
@@ -154,11 +149,7 @@ test.describe("Filtros do Dashboard", () => {
 
   test("deve combinar múltiplos filtros", async ({ page }) => {
     const totalRows = await getTableRowCount(page)
-
-    if (totalRows === 0) {
-      test.skip()
-      return
-    }
+    expect(totalRows).toBeGreaterThan(0)
 
     // Buscar por texto
     const searchInput = page.getByPlaceholder(/buscar/i)
@@ -224,11 +215,7 @@ test.describe("Filtros do Dashboard", () => {
 
   test("deve limpar filtros", async ({ page }) => {
     const totalRows = await getTableRowCount(page)
-
-    if (totalRows === 0) {
-      test.skip()
-      return
-    }
+    expect(totalRows).toBeGreaterThan(0)
 
     // Pegar contagem inicial antes de aplicar filtros
     const initialCount = await getTableRowCount(page)

@@ -121,18 +121,10 @@ export async function fillFieldByLabel(page: Page, label: string, value: string)
 }
 
 /**
-/**
  * Wait for expected number of table rows
  */
 export async function waitForTableRows(page: Page, expectedCount: number = 1) {
   await expect(page.locator("table tbody tr")).toHaveCount(expectedCount, { timeout: 10000 })
-}
-
-/**
-export async function waitForTableRows(page: Page, expectedCount: number = 1) {
-  await expect(page.locator("table tbody tr")).toHaveCount(expectedCount, { timeout: 10000 })
-}
-  await expect(page.locator("table tbody tr")).toHaveCount(minCount, { timeout: 10000 })
 }
 
 /**

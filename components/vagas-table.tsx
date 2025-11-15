@@ -27,6 +27,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
   const supabase = createClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterModalidade, setFilterModalidade] = useState<string>("todas")
+  const [filterStatus, setFilterStatus] = useState<string>("todos")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingVaga, setEditingVaga] = useState<VagaEstagio | null>(null)
 
@@ -35,7 +36,8 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
       vaga.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vaga.cargo.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesModalidade = filterModalidade === "todas" || vaga.modalidade === filterModalidade
-    return matchesSearch && matchesModalidade
+    const matchesStatus = filterStatus === "todos" || vaga.status === filterStatus
+    return matchesSearch && matchesModalidade && matchesStatus
   })
 
   async function handleDeleteVaga(vaga: VagaEstagio) {
@@ -90,7 +92,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Select value={filterModalidade} onValueChange={setFilterModalidade}>
                 <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
                   <SelectValue placeholder="Modalidade" />
@@ -103,11 +105,25 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
                 </SelectContent>
               </Select>
 
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Avançado">Avançado</SelectItem>
+                  <SelectItem value="Melou">Melou</SelectItem>
+                  <SelectItem value="Contratado">Contratado</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchTerm("")
                   setFilterModalidade("todas")
+                  setFilterStatus("todos")
                 }}
                 className="bg-transparent border-border text-foreground hover:bg-muted hover:border-primary"
               >
