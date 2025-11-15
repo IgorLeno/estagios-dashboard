@@ -129,7 +129,7 @@ export default function Page() {
 
       <main className="flex-1 ml-64">
         <div className="container mx-auto px-8 py-6 max-w-7xl">
-          {(activeTab === "dashboard" || activeTab === "vagas") && (
+          {activeTab === "vagas" && (
             <div className="space-y-6">
               <DashboardHeader
                 currentDate={currentDate}
@@ -147,12 +147,6 @@ export default function Page() {
           {activeTab === "resumo" && <ResumoPage />}
 
           {activeTab === "configuracoes" && <ConfiguracoesPage />}
-
-          {activeTab === "search" && (
-            <div className="flex items-center justify-center py-20">
-              <p className="text-muted-foreground">Funcionalidade de busca em desenvolvimento</p>
-            </div>
-          )}
         </div>
       </main>
     </div>

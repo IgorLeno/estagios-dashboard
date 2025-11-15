@@ -62,7 +62,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-foreground" data-testid="vagas-card-title">
-              Vagas
+              Estágios
             </CardTitle>
             <Button
               onClick={() => setShowAddDialog(true)}
@@ -70,7 +70,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Vaga
+              Adicionar Estágio
             </Button>
           </div>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Heart, Star, Activity, BarChart3 } from "lucide-react"
+import { Briefcase, Star, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -10,11 +10,9 @@ interface SidebarProps {
 
 // Following reference design (2816023.jpg)
 const menuItems = [
-  { id: "search", label: "Buscar", icon: Search },
-  { id: "vagas", label: "Vagas", icon: Heart },
+  { id: "vagas", label: "Estágios", icon: Briefcase },
   { id: "resumo", label: "Resumo", icon: Star },
   { id: "configuracoes", label: "Configurações", icon: Activity },
-  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
 ]
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
