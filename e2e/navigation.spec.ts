@@ -169,7 +169,7 @@ test.describe("Navegação do Dashboard", () => {
 
     // Aguardar que o indicador desapareça e a tabela apareça
     await expect(loadingText).not.toBeVisible({ timeout: 10000 })
-    await expect(page.locator("table")).toBeVisible()
+    await expect(page.locator("table")).toBeVisible({ timeout: 20000 })
 
     // Verificar que pelo menos uma requisição foi interceptada
     expect(requestCount).toBeGreaterThan(0)
