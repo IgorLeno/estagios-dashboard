@@ -175,7 +175,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                       <div className="flex items-center gap-2">
                         <StarRating value={toSafeNumber(vaga.requisitos)} readonly size="sm" />
                         <span className="text-sm font-semibold text-gray-700">
-                          {Number(vaga.requisitos || 0).toFixed(1)}
+                          {toSafeNumber(vaga.requisitos || 0).toFixed(1)}
                         </span>
                       </div>
                     </div>
@@ -186,7 +186,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                       <div className="flex items-center gap-2">
                         <StarRating value={toSafeNumber(vaga.perfil)} readonly size="sm" />
                         <span className="text-sm font-semibold text-gray-700">
-                          {Number(vaga.perfil || 0).toFixed(1)}
+                          {toSafeNumber(vaga.perfil || 0).toFixed(1)}
                         </span>
                       </div>
                     </div>
