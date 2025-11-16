@@ -153,7 +153,7 @@ export function normalizeFitValue(value: number | null | undefined | string): nu
  * normalizeRatingForSave(null) // null
  */
 export function normalizeRatingForSave(value: string | number | null | undefined): number | null {
-  if (!value) return null
+  if (value === null || value === undefined || value === "") return null
 
   // Parse para número
   const parsed = typeof value === "string" ? Number.parseFloat(value) : value
