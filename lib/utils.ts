@@ -87,3 +87,24 @@ export function formatPercentage(value: unknown, decimals: number = 1): string {
   const safeDecimals = Math.max(0, Math.min(100, normalized))
   return toSafeNumber(value).toFixed(safeDecimals)
 }
+
+/**
+ * Retorna a variante apropriada do Badge baseada no status da vaga
+ *
+ * @param status - Status da vaga (Pendente, Avançado, Melou, Contratado)
+ * @returns Variante do badge para estilização
+ *
+ * @example
+ * getStatusVariant("Pendente") // "secondary"
+ * getStatusVariant("Avançado") // "default"
+ */
+export function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  const statusMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    Pendente: "secondary",
+    Avançado: "default",
+    Melou: "destructive",
+    Contratado: "outline",
+  }
+
+  return statusMap[status] || "secondary"
+}

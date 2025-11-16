@@ -1,8 +1,7 @@
 "use client"
 
-import { Star } from "lucide-react"
+import { Star, StarHalf } from "lucide-react"
 import { cn, toSafeNumber } from "@/lib/utils"
-import { useState, type KeyboardEvent } from "react"
 
 interface StarRatingProps {
   value: number // 0 to 5 with 0.5 increments
@@ -11,126 +10,41 @@ interface StarRatingProps {
   size?: "sm" | "md" | "lg"
 }
 
-export function StarRating({ value, onChange, readonly = false, size = "md" }: StarRatingProps) {
-  const [hoverValue, setHoverValue] = useState<number | null>(null)
-
+export function StarRating({ value, onChange: _onChange, readonly: _readonly = true, size = "md" }: StarRatingProps) {
   // Garantir que value seja sempre um número válido
   const safeValue = toSafeNumber(value)
-  const displayValue = hoverValue !== null ? hoverValue : safeValue
+  const fullStars = Math.floor(safeValue)
+  const hasHalfStar = (safeValue % 1) >= 0.5
 
+  // Tamanhos dos ícones (garantir que não sejam cortados)
   const sizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
-    lg: "w-6 h-6",
+    sm: "h-4 w-4",
+    md: "h-5 w-5",
+    lg: "h-6 w-6",
   }
 
-  const containerSizeClasses = sizeClasses
-
-  function handleClick(starIndex: number, isHalf: boolean) {
-    if (readonly || !onChange) return
-    const newValue = starIndex + (isHalf ? 0.5 : 1)
-    onChange(newValue)
-  }
-
-  function handleMouseMove(starIndex: number, isHalf: boolean) {
-    if (readonly || !onChange) return
-    const newValue = starIndex + (isHalf ? 0.5 : 1)
-    setHoverValue(newValue)
-  }
-
-  function handleMouseLeave() {
-    if (readonly || !onChange) return
-    setHoverValue(null)
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (readonly || !onChange) return
-
-    const step = 0.5
-    let newValue = safeValue
-
-    switch (event.key) {
-      case "ArrowRight":
-      case "ArrowUp":
-        event.preventDefault()
-        newValue = Math.min(5, safeValue + step)
-        break
-      case "ArrowLeft":
-      case "ArrowDown":
-        event.preventDefault()
-        newValue = Math.max(0, safeValue - step)
-        break
-      case " ":
-      case "Enter":
-        event.preventDefault()
-        return
-      default:
-        return
-    }
-
-    onChange(newValue)
-  }
+  const iconSize = sizeClasses[size]
 
   return (
-    <div
-      role="slider"
-      tabIndex={readonly || !onChange ? undefined : 0}
-      aria-label="Star rating"
-      aria-valuemin={0}
-      aria-valuemax={5}
-      aria-valuenow={safeValue}
-      aria-valuetext={`${safeValue.toFixed(1)} out of 5`}
-      aria-readonly={readonly || !onChange ? true : undefined}
-      onKeyDown={handleKeyDown}
-      onMouseLeave={handleMouseLeave}
-      className="flex items-center gap-1"
-    >
-      {[0, 1, 2, 3, 4].map((starIndex) => {
-        const isFull = displayValue >= starIndex + 1
-        const isHalf = displayValue >= starIndex + 0.5 && displayValue < starIndex + 1
+    <div className="flex items-center gap-0.5">
+      {[...Array(5)].map((_, i) => {
+        const isFull = i < fullStars
+        const isHalf = i === fullStars && hasHalfStar
 
         return (
-          <div key={starIndex} className={cn("relative", containerSizeClasses[size])} role="presentation">
-            {/* Left half (for 0.5 rating) */}
-            <div
-              className={cn(
-                "absolute left-0 top-0 w-1/2 h-full overflow-hidden",
-                !readonly && onChange && "cursor-pointer"
-              )}
-              onClick={() => handleClick(starIndex, true)}
-              onMouseMove={() => handleMouseMove(starIndex, true)}
-              role="presentation"
-              aria-hidden="true"
-            >
-              <Star
-                className={cn(
-                  sizeClasses[size],
-                  isHalf || isFull ? "fill-amber-400 text-amber-400" : "fill-none text-gray-300"
-                )}
-              />
-            </div>
-
-            {/* Right half (for full rating) */}
-            <div
-              className={cn(
-                "absolute right-0 top-0 w-1/2 h-full overflow-hidden",
-                !readonly && onChange && "cursor-pointer"
-              )}
-              style={{ clipPath: "inset(0 0 0 50%)" }}
-              onClick={() => handleClick(starIndex, false)}
-              onMouseMove={() => handleMouseMove(starIndex, false)}
-              role="presentation"
-              aria-hidden="true"
-            >
-              <Star
-                className={cn(sizeClasses[size], isFull ? "fill-amber-400 text-amber-400" : "fill-none text-gray-300")}
-                style={{ marginLeft: "-100%" }}
-              />
-            </div>
-          </div>
+          <span key={i} className="flex-shrink-0">
+            {" "}
+            {/* Previne corte */}
+            {isFull ? (
+              <Star className={cn(iconSize, "fill-yellow-400 text-yellow-400")} />
+            ) : isHalf ? (
+              <StarHalf className={cn(iconSize, "fill-yellow-400 text-yellow-400")} />
+            ) : (
+              <Star className={cn(iconSize, "text-gray-300")} />
+            )}
+          </span>
         )
       })}
-      <span className="ml-2 text-sm font-medium text-foreground">{displayValue.toFixed(1)}</span>
     </div>
   )
 }

@@ -8,9 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, ChevronRight, MoreHorizontal, Eye, Edit, Upload, FileText, Trash2, Download } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Upload,
+  FileText,
+  Trash2,
+  Download,
+  Target,
+  Activity,
+  ExternalLink,
+} from "lucide-react"
 import { StarRating } from "@/components/ui/star-rating"
-import { cn, toSafeNumber } from "@/lib/utils"
+import { cn, toSafeNumber, getStatusVariant } from "@/lib/utils"
 import { safeOpenSupabaseStorageUrl } from "@/lib/url-utils"
 
 interface VagaTableRowProps {
@@ -19,13 +32,6 @@ interface VagaTableRowProps {
   onToggleExpand: () => void
   onEdit: (vaga: VagaEstagio) => void
   onDelete: (vaga: VagaEstagio) => void
-}
-
-const statusConfig = {
-  Pendente: "bg-gray-100 text-gray-700 border-gray-300",
-  Avançado: "bg-purple-100 text-purple-700 border-purple-300",
-  Melou: "bg-red-100 text-red-700 border-red-300",
-  Contratado: "bg-green-100 text-green-700 border-green-300",
 }
 
 export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelete }: VagaTableRowProps) {
@@ -116,99 +122,124 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
       {isExpanded && (
         <TableRow className="border-b border-border">
           <TableCell colSpan={5} className="bg-muted/20 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Card Fit */}
-              <Card className="glass-card">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Card Principal: Resumo da Análise (2/3 da largura) */}
+              <Card className="glass-card lg:col-span-2">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Fit</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Requisitos</p>
-                    <StarRating value={toSafeNumber(vaga.requisitos)} readonly size="sm" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Perfil</p>
-                    <StarRating value={toSafeNumber(vaga.perfil)} readonly size="sm" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card Status */}
-              <Card className="glass-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Status</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Resumo
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Badge variant="outline" className={cn("w-full justify-center py-2", statusConfig[vaga.status])}>
-                    {vaga.status}
-                  </Badge>
-                  {vaga.etapa && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-1">Etapa</p>
-                      <p className="text-sm font-medium">{vaga.etapa}</p>
+                  {vaga.observacoes ? (
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{vaga.observacoes}</p>
+
+                      {/* Se houver link para análise completa */}
+                      {vaga.arquivo_analise_url && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm mt-3 px-0"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Ver análise completa
+                        </Button>
+                      )}
                     </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Nenhuma análise disponível para esta vaga.</p>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Card Análise (só mostra se houver arquivo) */}
-              {vaga.arquivo_analise_url && (
+              {/* Coluna Direita: Fit e Status empilhados (1/3 da largura) */}
+              <div className="lg:col-span-1 flex flex-col gap-4">
+                {/* Card Fit */}
                 <Card className="glass-card">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Análise</CardTitle>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Target className="h-4 w-4 text-blue-600" />
+                      Fit
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)
-                      }}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download .md
-                    </Button>
+                  <CardContent className="space-y-3">
+                    {/* Requisitos */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Requisitos</p>
+                      <div className="flex items-center gap-2">
+                        <StarRating value={toSafeNumber(vaga.requisitos)} readonly size="sm" />
+                        <span className="text-sm font-semibold text-gray-700">
+                          {Number(vaga.requisitos || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Perfil */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Perfil</p>
+                      <div className="flex items-center gap-2">
+                        <StarRating value={toSafeNumber(vaga.perfil)} readonly size="sm" />
+                        <span className="text-sm font-semibold text-gray-700">
+                          {Number(vaga.perfil || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              )}
 
-              {/* Card Currículo (só mostra se houver arquivo) */}
-              {vaga.arquivo_cv_url && (
+                {/* Card Status */}
                 <Card className="glass-card">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Currículo</CardTitle>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-blue-600" />
+                      Status
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        safeOpenSupabaseStorageUrl(vaga.arquivo_cv_url)
-                      }}
+                    <Badge
+                      variant={getStatusVariant(vaga.status)}
+                      className="w-full justify-center py-2 text-sm font-medium"
                     >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download PDF
-                    </Button>
+                      {vaga.status}
+                    </Badge>
+                    {vaga.etapa && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Etapa</p>
+                        <p className="text-sm font-medium">{vaga.etapa}</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              )}
 
-              {/* Card Observações (só mostra se houver) */}
-              {vaga.observacoes && (
-                <Card className="glass-card lg:col-span-2">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Observações</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{vaga.observacoes}</p>
-                  </CardContent>
-                </Card>
-              )}
+                {/* Card Currículo (só mostra se houver arquivo) */}
+                {vaga.arquivo_cv_url && (
+                  <Card className="glass-card">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Currículo</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          safeOpenSupabaseStorageUrl(vaga.arquivo_cv_url)
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </TableCell>
         </TableRow>
