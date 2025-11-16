@@ -8,13 +8,29 @@ import { TrendingUp, Briefcase } from "lucide-react"
 import { format, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { useTheme } from "next-themes"
 
 export function ResumoPage() {
   const [totalCandidaturas, setTotalCandidaturas] = useState(0)
   const [historico, setHistorico] = useState<HistoricoResumo[]>([])
   const [loading, setLoading] = useState(true)
+  const { theme, resolvedTheme } = useTheme()
 
   const supabase = createClient()
+
+  // Determine current theme (resolvedTheme handles "system" preference)
+  const isDark = resolvedTheme === "dark"
+
+  // Explicit color palette for chart visibility
+  const chartColors = {
+    line: isDark ? "#60A5FA" : "#2563EB", // Light blue (dark) / Blue (light)
+    dot: isDark ? "#3B82F6" : "#06B6D4", // Blue (dark) / Cyan (light)
+    grid: isDark ? "#374151" : "#E5E7EB", // Dark gray (dark) / Light gray (light)
+    axis: isDark ? "#9CA3AF" : "#6B7280", // Medium-light gray (dark) / Medium gray (light)
+    tooltipBg: isDark ? "#1F2937" : "#FFFFFF", // Dark (dark) / White (light)
+    tooltipBorder: isDark ? "#374151" : "#D1D5DB", // Dark gray (dark) / Light gray (light)
+    tooltipText: isDark ? "#E5E7EB" : "#1F2937", // Light (dark) / Dark (light)
+  }
 
   useEffect(() => {
     loadLast7Days()
@@ -116,37 +132,39 @@ export function ResumoPage() {
               }))}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} opacity={0.5} vertical={false} />
               <XAxis
                 dataKey="data"
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
+                stroke={chartColors.axis}
+                tick={{ fill: chartColors.axis, fontSize: 12 }}
+                tickLine={{ stroke: chartColors.axis }}
               />
               <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
+                stroke={chartColors.axis}
+                tick={{ fill: chartColors.axis, fontSize: 12 }}
+                tickLine={{ stroke: chartColors.axis }}
                 allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: chartColors.tooltipBg,
+                  border: `1px solid ${chartColors.tooltipBorder}`,
                   borderRadius: "8px",
                   boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
-                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-                itemStyle={{ color: "hsl(var(--primary))" }}
+                labelStyle={{ color: chartColors.tooltipText, fontWeight: 600 }}
+                itemStyle={{ color: chartColors.line }}
               />
               <Line
                 type="monotone"
                 dataKey="candidaturas"
-                stroke="hsl(var(--primary))"
+                stroke={chartColors.line}
                 strokeWidth={3}
-                dot={{ fill: "hsl(var(--accent))", r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                activeDot={{ r: 8, fill: "hsl(var(--accent))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                dot={{ fill: chartColors.dot, r: 6, strokeWidth: 2, stroke: "#FFFFFF" }}
+                activeDot={{ r: 8, fill: chartColors.line, strokeWidth: 2, stroke: "#FFFFFF" }}
                 name="Candidaturas"
+                animationDuration={800}
+                animationEasing="ease-in-out"
               />
             </LineChart>
           </ResponsiveContainer>

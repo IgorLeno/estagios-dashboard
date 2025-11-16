@@ -85,8 +85,8 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
           cargo: formData.cargo,
           local: formData.local,
           modalidade: formData.modalidade,
-          requisitos: formData.requisitos ? Number.parseInt(formData.requisitos) : null,
-          fit: formData.fit ? Number.parseInt(formData.fit) : null,
+          requisitos: formData.requisitos ? Number.parseFloat(formData.requisitos) : null,
+          fit: formData.fit ? Number.parseFloat(formData.fit) : null,
           etapa: formData.etapa || null,
           status: formData.status,
           observacoes: formData.observacoes || null,
@@ -171,28 +171,30 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="requisitos">Requisitos (Score)</Label>
+              <Label htmlFor="requisitos">Fit Requisitos (⭐)</Label>
               <Input
                 id="requisitos"
                 type="number"
                 min="0"
-                max="100"
+                max="5"
+                step="0.5"
                 value={formData.requisitos}
                 onChange={(e) => setFormData({ ...formData, requisitos: e.target.value })}
-                placeholder="0-100"
+                placeholder="0.0 - 5.0"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fit">Fit</Label>
+              <Label htmlFor="fit">Fit Perfil (⭐)</Label>
               <Input
                 id="fit"
                 type="number"
                 min="0"
-                max="10"
+                max="5"
+                step="0.5"
                 value={formData.fit}
                 onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
-                placeholder="0-10"
+                placeholder="0.0 - 5.0"
               />
             </div>
 

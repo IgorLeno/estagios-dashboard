@@ -108,3 +108,32 @@ export function getStatusVariant(status: string): "default" | "secondary" | "des
 
   return statusMap[status] || "secondary"
 }
+
+/**
+ * Normaliza valores de fit (requisitos/perfil) para escala 0-5 com incrementos de 0.5
+ * Converte automaticamente valores legados (0-100) para nova escala (0-5)
+ *
+ * @param value - Valor a ser normalizado (pode ser null, undefined, number, string)
+ * @returns Número normalizado entre 0-5 com incrementos de 0.5
+ *
+ * @example
+ * normalizeFitValue(4.5) // 4.5 (já está correto)
+ * normalizeFitValue(90) // 4.5 (converte de 0-100 para 0-5)
+ * normalizeFitValue(100) // 5.0 (converte de 0-100 para 0-5)
+ * normalizeFitValue(null) // 0 (valor nulo)
+ * normalizeFitValue("3.5") // 3.5 (string convertida)
+ */
+export function normalizeFitValue(value: number | null | undefined | string): number {
+  if (value === null || value === undefined) return 0
+
+  const num = toSafeNumber(value)
+
+  // Se valor está entre 0-100 (formato antigo de porcentagem)
+  if (num > 5) {
+    // Converte para 0-5 com step 0.5
+    return Math.round((num / 100) * 5 * 2) / 2
+  }
+
+  // Já está em formato correto (0-5), garantir step de 0.5
+  return Math.round(num * 2) / 2
+}
