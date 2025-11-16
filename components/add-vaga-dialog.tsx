@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MarkdownUpload } from "@/components/markdown-upload"
 import { FileUpload } from "@/components/file-upload"
 import { toast } from "sonner"
+import { normalizeRatingForSave } from "@/lib/utils"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -85,8 +86,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         cargo: formData.cargo,
         local: formData.local,
         modalidade: formData.modalidade,
-        requisitos: formData.requisitos ? Number.parseFloat(formData.requisitos) : null,
-        fit: formData.fit ? Number.parseFloat(formData.fit) : null,
+        requisitos: normalizeRatingForSave(formData.requisitos),
+        fit: normalizeRatingForSave(formData.fit),
         etapa: formData.etapa || null,
         status: formData.status,
         observacoes: formData.observacoes || null,

@@ -137,3 +137,39 @@ export function normalizeFitValue(value: number | null | undefined | string): nu
   // Já está em formato correto (0-5), garantir step de 0.5
   return Math.round(num * 2) / 2
 }
+
+/**
+ * Normaliza e valida valores de rating (fit/requisitos) para salvamento no banco
+ * Aplica normalização de escala e retorna null se o valor for inválido
+ *
+ * @param value - Valor a ser normalizado (string, number, null, undefined)
+ * @returns Número normalizado entre 0-5 ou null se inválido
+ *
+ * @example
+ * normalizeRatingForSave("4.5") // 4.5
+ * normalizeRatingForSave("90") // 4.5 (converte de 0-100 para 0-5)
+ * normalizeRatingForSave("abc") // null (inválido)
+ * normalizeRatingForSave("") // null (vazio)
+ * normalizeRatingForSave(null) // null
+ */
+export function normalizeRatingForSave(value: string | number | null | undefined): number | null {
+  if (!value) return null
+
+  // Parse para número
+  const parsed = typeof value === "string" ? Number.parseFloat(value) : value
+
+  // Valida se é um número válido (não NaN, não Infinity)
+  if (Number.isNaN(parsed) || !Number.isFinite(parsed)) {
+    return null
+  }
+
+  // Aplica normalização de escala
+  const normalized = normalizeFitValue(parsed)
+
+  // Valida novamente após normalização (edge case: se normalizeFitValue retornar NaN)
+  if (Number.isNaN(normalized) || !Number.isFinite(normalized)) {
+    return null
+  }
+
+  return normalized
+}

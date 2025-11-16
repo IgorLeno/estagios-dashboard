@@ -14,14 +14,24 @@ export function ResumoPage() {
   const [totalCandidaturas, setTotalCandidaturas] = useState(0)
   const [historico, setHistorico] = useState<HistoricoResumo[]>([])
   const [loading, setLoading] = useState(true)
+  const [themeReady, setThemeReady] = useState(false)
   const { theme, resolvedTheme } = useTheme()
 
   const supabase = createClient()
 
+  // Aguarda resolução do tema para evitar flash
+  useEffect(() => {
+    if (typeof resolvedTheme === "string") {
+      setThemeReady(true)
+    }
+  }, [resolvedTheme])
+
   // Determine current theme (resolvedTheme handles "system" preference)
-  const isDark = resolvedTheme === "dark"
+  // Só calcula após tema estar pronto para evitar flash
+  const isDark = themeReady && resolvedTheme === "dark"
 
   // Explicit color palette for chart visibility
+  // Usa valores padrão (light mode) até o tema estar pronto
   const chartColors = {
     line: isDark ? "#60A5FA" : "#2563EB", // Light blue (dark) / Blue (light)
     dot: isDark ? "#3B82F6" : "#06B6D4", // Blue (dark) / Cyan (light)

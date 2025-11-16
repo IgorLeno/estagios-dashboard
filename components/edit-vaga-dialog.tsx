@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MarkdownUpload } from "@/components/markdown-upload"
 import { FileUpload } from "@/components/file-upload"
 import { toast } from "sonner"
+import { normalizeRatingForSave } from "@/lib/utils"
 
 interface EditVagaDialogProps {
   vaga: VagaEstagio
@@ -47,7 +48,7 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
         local: vaga.local,
         modalidade: vaga.modalidade,
         requisitos: vaga.requisitos?.toString() || "",
-        fit: vaga.fit?.toString() || "",
+        fit: vaga.perfil?.toString() || "",
         etapa: vaga.etapa || "",
         status: vaga.status,
         observacoes: vaga.observacoes || "",
@@ -85,8 +86,8 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
           cargo: formData.cargo,
           local: formData.local,
           modalidade: formData.modalidade,
-          requisitos: formData.requisitos ? Number.parseFloat(formData.requisitos) : null,
-          fit: formData.fit ? Number.parseFloat(formData.fit) : null,
+          requisitos: normalizeRatingForSave(formData.requisitos),
+          fit: normalizeRatingForSave(formData.fit),
           etapa: formData.etapa || null,
           status: formData.status,
           observacoes: formData.observacoes || null,
@@ -155,7 +156,9 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
               <Label htmlFor="modalidade">Modalidade *</Label>
               <Select
                 value={formData.modalidade}
-                onValueChange={(value) => setFormData({ ...formData, modalidade: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, modalidade: value as "Presencial" | "Híbrido" | "Remoto" })
+                }
               >
                 <SelectTrigger id="modalidade">
                   <SelectValue />
