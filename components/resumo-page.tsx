@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { getVagasByDateRange } from "@/lib/supabase/queries"
 import type { HistoricoResumo } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, Briefcase } from "lucide-react"
@@ -16,8 +16,6 @@ export function ResumoPage() {
   const [loading, setLoading] = useState(true)
   const [themeReady, setThemeReady] = useState(false)
   const { theme, resolvedTheme } = useTheme()
-
-  const supabase = createClient()
 
   // Aguarda resolução do tema para evitar flash
   useEffect(() => {
@@ -56,13 +54,8 @@ export function ResumoPage() {
       const startDateStr = format(startDate, "yyyy-MM-dd")
       const endDateStr = format(endDate, "yyyy-MM-dd")
 
-      // Load all vagas from last 7 days
-      const { data: vagas, error } = await supabase
-        .from("vagas_estagio")
-        .select("*")
-        .gte("data_inscricao", startDateStr)
-        .lte("data_inscricao", endDateStr)
-        .order("data_inscricao", { ascending: true })
+      // Load all vagas from last 7 days (filtrando dados de teste automaticamente)
+      const { data: vagas, error } = await getVagasByDateRange(startDateStr, endDateStr)
 
       if (error) throw error
 

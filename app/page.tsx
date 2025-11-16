@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
+import { getVagasByDate } from "@/lib/supabase/queries"
 import type { VagaEstagio, MetaDiaria } from "@/lib/types"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -34,14 +35,10 @@ export default function Page() {
 
     setLoading(true)
     try {
-      // Carregar vagas do dia selecionado
+      // Carregar vagas do dia selecionado (filtrando dados de teste automaticamente)
       const dateStr = currentDate.toISOString().split("T")[0]
       console.log("[Page] Buscando vagas para data:", dateStr, "currentDate:", currentDate)
-      const { data: vagasData, error: vagasError } = await supabase
-        .from("vagas_estagio")
-        .select("*")
-        .eq("data_inscricao", dateStr)
-        .order("created_at", { ascending: false })
+      const { data: vagasData, error: vagasError } = await getVagasByDate(dateStr)
       console.log("[Page] Vagas encontradas:", vagasData?.length || 0)
 
       if (vagasError) throw vagasError

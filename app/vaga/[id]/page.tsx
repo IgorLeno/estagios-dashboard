@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { getVagaById } from "@/lib/supabase/queries"
 import type { VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,15 +24,13 @@ export default function VagaDetailPage() {
   const [loading, setLoading] = useState(true)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
 
-  const supabase = createClient()
-
   useEffect(() => {
     loadVaga()
   }, [params.id])
 
   async function loadVaga() {
     try {
-      const { data, error } = await supabase.from("vagas_estagio").select("*").eq("id", params.id).single()
+      const { data, error } = await getVagaById(params.id as string)
 
       if (error) throw error
       setVaga(data)

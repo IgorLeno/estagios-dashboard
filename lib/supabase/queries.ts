@@ -175,3 +175,30 @@ export async function getVagasByModalidade(
 
   return { data, error }
 }
+
+/**
+ * Fetch vagas for a specific date
+ * Used by main dashboard to show vagas for the selected day
+ * @param date - Date in YYYY-MM-DD format
+ * @param options - Query options
+ * @returns Vagas data or error
+ */
+export async function getVagasByDate(date: string, options?: { includeTestData?: boolean }) {
+  const supabase = createClient()
+
+  const includeTests = options?.includeTestData ?? shouldIncludeTestData()
+
+  let query = supabase
+    .from("vagas_estagio")
+    .select("*")
+    .eq("data_inscricao", date)
+    .order("created_at", { ascending: false })
+
+  if (!includeTests) {
+    query = query.eq("is_test_data", false)
+  }
+
+  const { data, error } = await query
+
+  return { data, error }
+}
