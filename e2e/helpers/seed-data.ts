@@ -3,6 +3,7 @@ import { VagaEstagio } from "@/lib/types"
 
 /**
  * Sample test data for seeding
+ * IMPORTANT: All test data MUST have is_test_data: true
  */
 const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
   {
@@ -15,6 +16,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     requisitos: 85,
     observacoes: "Vaga de teste E2E - Google",
     data_inscricao: new Date().toISOString().split("T")[0],
+    is_test_data: true, // ✅ Always mark test data
   },
   {
     empresa: "Meta",
@@ -26,6 +28,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     requisitos: 75,
     observacoes: "Vaga de teste E2E - Meta",
     data_inscricao: new Date().toISOString().split("T")[0],
+    is_test_data: true, // ✅ Always mark test data
   },
   {
     empresa: "Amazon",
@@ -37,6 +40,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     requisitos: 90,
     observacoes: "Vaga de teste E2E - Amazon",
     data_inscricao: new Date().toISOString().split("T")[0],
+    is_test_data: true, // ✅ Always mark test data
   },
   {
     empresa: "Microsoft",
@@ -48,6 +52,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     requisitos: 70,
     observacoes: "Vaga de teste E2E - Microsoft",
     data_inscricao: new Date().toISOString().split("T")[0],
+    is_test_data: true, // ✅ Always mark test data
   },
 ]
 
@@ -59,11 +64,11 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
 export async function seedTestData(): Promise<number> {
   const supabase = createClient()
 
-  // Buscar todas as vagas de teste existentes em uma única query
+  // Buscar todas as vagas de teste existentes usando is_test_data flag
   const { data: existingVagas, error: fetchError } = await supabase
     .from("vagas_estagio")
     .select("empresa, observacoes")
-    .like("observacoes", "%Vaga de teste E2E%")
+    .eq("is_test_data", true)
 
   if (fetchError) {
     console.error("Error fetching existing test data:", fetchError)
@@ -97,7 +102,7 @@ export async function seedTestData(): Promise<number> {
   const { count, error: countError } = await supabase
     .from("vagas_estagio")
     .select("*", { count: "exact", head: true })
-    .like("observacoes", "%Vaga de teste E2E%")
+    .eq("is_test_data", true)
 
   if (countError) {
     console.error("Error getting final test data count:", countError)
@@ -110,7 +115,7 @@ export async function seedTestData(): Promise<number> {
 
 /**
  * Clean up test data
- * Deletes all test vagas (identified by observacoes containing "Vaga de teste E2E")
+ * Deletes all test vagas (identified by is_test_data flag)
  */
 export async function cleanupTestData(): Promise<number> {
   const supabase = createClient()
@@ -118,7 +123,7 @@ export async function cleanupTestData(): Promise<number> {
   const { data, error } = await supabase
     .from("vagas_estagio")
     .delete()
-    .like("observacoes", "%Vaga de teste E2E%")
+    .eq("is_test_data", true)
     .select()
 
   if (error) {
@@ -138,7 +143,7 @@ export async function getTestDataCount(): Promise<number> {
   const { count, error } = await supabase
     .from("vagas_estagio")
     .select("*", { count: "exact", head: true })
-    .like("observacoes", "%Vaga de teste E2E%")
+    .eq("is_test_data", true)
 
   if (error) {
     console.error("Error getting test data count:", error)

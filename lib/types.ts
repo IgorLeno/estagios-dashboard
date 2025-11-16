@@ -14,6 +14,7 @@ export interface VagaEstagio {
   observacoes?: string
   arquivo_analise_url?: string
   arquivo_cv_url?: string
+  is_test_data?: boolean // Flag to identify E2E test data (true = test, false = production)
 }
 
 export interface MetaDiaria {
