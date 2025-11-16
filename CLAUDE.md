@@ -205,6 +205,42 @@ Note: These settings are permissive for rapid development. Tighten for productio
 - Repository syncs automatically with v0.app deployments
 - Continue building at: https://v0.app/chat/liFhxJ03Obw
 
+## Development Workflow Plugins
+
+This project uses integrated Claude Code plugins for professional development workflow:
+
+### **Installed Plugins**
+
+**Superpowers** (6 skills):
+- `brainstorming` - Refine ideas into designs via `/superpowers:brainstorm`
+- `writing-plans` - Create detailed implementation plans via `/superpowers:write-plan`
+- `executing-plans` - Execute plans in batches via `/superpowers:execute-plan`
+- `test-driven-development` - Auto-activated when implementing features
+- `systematic-debugging` - Auto-activated when debugging bugs
+- `verification-before-completion` - Auto-activated before marking tasks complete
+
+**Playwright Skill** (1 skill):
+- Browser automation and visual testing
+- Test flows, validate features, generate screenshots
+- Use natural language: "Test [feature] visually"
+
+### **Workflow Integration**
+
+**Complete development cycle:**
+1. Plan feature → `/superpowers:brainstorm`
+2. Create implementation plan → `/superpowers:write-plan`
+3. Execute in batches → `/superpowers:execute-plan`
+4. Validate visually → Playwright testing
+5. Debug if needed → `systematic-debugging` (auto)
+6. Re-validate → Playwright re-test
+7. Create persistent tests → Add to test suite
+
+**See `.claude/WORKFLOW.md` for:**
+- Detailed examples (expansión de vagas, bug fixes, dark mode)
+- Decision tree (quando usar cada plugin)
+- Quick reference commands
+- Project-specific workflows
+
 ## Common Tasks
 
 ### Adding a new page
