@@ -37,10 +37,7 @@ export async function GET(request: Request) {
     console.log("[Cron] Starting test data cleanup...")
 
     // Create Supabase client with SERVICE ROLE KEY (admin access)
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 
     // Delete test data older than 7 days
     const cutoffDate = new Date()

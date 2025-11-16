@@ -33,10 +33,7 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // Create Supabase client with SERVICE ROLE KEY (admin access)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 
 async function cleanupTestData() {
   console.log("🧹 Starting test data cleanup...")

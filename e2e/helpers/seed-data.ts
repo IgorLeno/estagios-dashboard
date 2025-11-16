@@ -120,11 +120,7 @@ export async function seedTestData(): Promise<number> {
 export async function cleanupTestData(): Promise<number> {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from("vagas_estagio")
-    .delete()
-    .eq("is_test_data", true)
-    .select()
+  const { data, error } = await supabase.from("vagas_estagio").delete().eq("is_test_data", true).select()
 
   if (error) {
     console.error("Error cleaning up test data:", error)

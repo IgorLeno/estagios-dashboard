@@ -97,11 +97,7 @@ export async function countVagas(options?: { includeTestData?: boolean }) {
  * @param options - Query options
  * @returns Vagas data or error
  */
-export async function getVagasByDateRange(
-  startDate: string,
-  endDate: string,
-  options?: { includeTestData?: boolean }
-) {
+export async function getVagasByDateRange(startDate: string, endDate: string, options?: { includeTestData?: boolean }) {
   const supabase = createClient()
 
   const includeTests = options?.includeTestData ?? shouldIncludeTestData()
@@ -128,10 +124,7 @@ export async function getVagasByDateRange(
  * @param options - Query options
  * @returns Vagas data or error
  */
-export async function getVagasByStatus(
-  status: VagaEstagio["status"],
-  options?: { includeTestData?: boolean }
-) {
+export async function getVagasByStatus(status: VagaEstagio["status"], options?: { includeTestData?: boolean }) {
   const supabase = createClient()
 
   const includeTests = options?.includeTestData ?? shouldIncludeTestData()
