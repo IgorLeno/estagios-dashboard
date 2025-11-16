@@ -212,6 +212,7 @@ This project uses integrated Claude Code plugins for professional development wo
 ### **Installed Plugins**
 
 **Superpowers** (6 skills):
+
 - `brainstorming` - Refine ideas into designs via `/superpowers:brainstorm`
 - `writing-plans` - Create detailed implementation plans via `/superpowers:write-plan`
 - `executing-plans` - Execute plans in batches via `/superpowers:execute-plan`
@@ -220,6 +221,7 @@ This project uses integrated Claude Code plugins for professional development wo
 - `verification-before-completion` - Auto-activated before marking tasks complete
 
 **Playwright Skill** (1 skill):
+
 - Browser automation and visual testing
 - Test flows, validate features, generate screenshots
 - Use natural language: "Test [feature] visually"
@@ -227,6 +229,7 @@ This project uses integrated Claude Code plugins for professional development wo
 ### **Workflow Integration**
 
 **Complete development cycle:**
+
 1. Plan feature → `/superpowers:brainstorm`
 2. Create implementation plan → `/superpowers:write-plan`
 3. Execute in batches → `/superpowers:execute-plan`
@@ -236,6 +239,7 @@ This project uses integrated Claude Code plugins for professional development wo
 7. Create persistent tests → Add to test suite
 
 **See `.claude/WORKFLOW.md` for:**
+
 - Detailed examples (expansión de vagas, bug fixes, dark mode)
 - Decision tree (quando usar cada plugin)
 - Quick reference commands

@@ -14,7 +14,7 @@ export function StarRating({ value, onChange: _onChange, readonly: _readonly = t
   // Garantir que value seja sempre um número válido
   const safeValue = toSafeNumber(value)
   const fullStars = Math.floor(safeValue)
-  const hasHalfStar = (safeValue % 1) >= 0.5
+  const hasHalfStar = safeValue % 1 >= 0.5
 
   // Tamanhos dos ícones (garantir que não sejam cortados)
   const sizeClasses = {

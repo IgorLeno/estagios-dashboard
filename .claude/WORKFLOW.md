@@ -3,6 +3,7 @@
 ## 🎯 Visão Geral da Integração
 
 Este projeto usa dois sistemas poderosos:
+
 - **Superpowers** (6 skills): TDD, Systematic Debugging, Planning, Brainstorming
 - **Playwright Skill** (1 skill): Browser automation e visual testing
 
@@ -14,24 +15,24 @@ Esta integração cria um workflow profissional que combina o melhor de ambos.
 
 ### **🔧 Use SUPERPOWERS para:**
 
-| Cenário | Comando | Skill Ativada |
-|---------|---------|---------------|
-| Planejar feature complexa | `/superpowers:brainstorm` | brainstorming |
-| Criar plano de implementação | `/superpowers:write-plan` | writing-plans |
-| Executar plano em lotes | `/superpowers:execute-plan` | executing-plans |
-| Desenvolver com TDD | (automático ao codificar) | test-driven-development |
-| Debugar bug sistemicamente | (automático ao debugar) | systematic-debugging |
+| Cenário                      | Comando                         | Skill Ativada                  |
+| ---------------------------- | ------------------------------- | ------------------------------ |
+| Planejar feature complexa    | `/superpowers:brainstorm`       | brainstorming                  |
+| Criar plano de implementação | `/superpowers:write-plan`       | writing-plans                  |
+| Executar plano em lotes      | `/superpowers:execute-plan`     | executing-plans                |
+| Desenvolver com TDD          | (automático ao codificar)       | test-driven-development        |
+| Debugar bug sistemicamente   | (automático ao debugar)         | systematic-debugging           |
 | Verificar antes de completar | (automático antes de finalizar) | verification-before-completion |
 
 ### **🎭 Use PLAYWRIGHT SKILL para:**
 
-| Cenário | Comando Exemplo |
-|---------|-----------------|
-| Validar feature visualmente | "Teste o fluxo de expansão de vagas visualmente" |
-| Debugar teste E2E falhando | "Execute o teste de upload e mostre onde quebra" |
-| Criar teste ad-hoc | "Verifique se dark mode funciona em todas as páginas" |
-| Explorar comportamento | "Navegue pelo app e teste duplo clique nas vagas" |
-| Gerar screenshots | "Tire screenshots do dashboard em mobile e desktop" |
+| Cenário                     | Comando Exemplo                                       |
+| --------------------------- | ----------------------------------------------------- |
+| Validar feature visualmente | "Teste o fluxo de expansão de vagas visualmente"      |
+| Debugar teste E2E falhando  | "Execute o teste de upload e mostre onde quebra"      |
+| Criar teste ad-hoc          | "Verifique se dark mode funciona em todas as páginas" |
+| Explorar comportamento      | "Navegue pelo app e teste duplo clique nas vagas"     |
+| Gerar screenshots           | "Tire screenshots do dashboard em mobile e desktop"   |
 
 ---
 
@@ -66,6 +67,7 @@ Commit & Deploy
 ### **Exemplo 1: Implementar Expansão de Vagas**
 
 #### **Fase 1: Planejamento (Superpowers)**
+
 ```
 /superpowers:brainstorm
 
@@ -80,6 +82,7 @@ Requisitos:
 ```
 
 **Claude vai:**
+
 - Fazer perguntas socráticas
 - Refinar requisitos
 - Identificar edge cases
@@ -88,6 +91,7 @@ Requisitos:
 ---
 
 #### **Fase 2: Criar Plano (Superpowers)**
+
 ```
 /superpowers:write-plan
 
@@ -95,6 +99,7 @@ Implemente expansão de vagas conforme brainstorm anterior.
 ```
 
 **Claude vai:**
+
 - Criar plano detalhado step-by-step
 - Dividir em lotes executáveis
 - Identificar riscos
@@ -103,11 +108,13 @@ Implemente expansão de vagas conforme brainstorm anterior.
 ---
 
 #### **Fase 3: Executar (Superpowers)**
+
 ```
 /superpowers:execute-plan
 ```
 
 **Claude vai:**
+
 - Executar lote por lote
 - Rodar testes após cada mudança
 - Parar se algo quebrar
@@ -116,6 +123,7 @@ Implemente expansão de vagas conforme brainstorm anterior.
 ---
 
 #### **Fase 4: Validar Visualmente (Playwright Skill)**
+
 ```
 Teste a expansão de vagas:
 
@@ -131,6 +139,7 @@ Execute com browser visível.
 ```
 
 **Playwright Skill vai:**
+
 - Escrever código Playwright customizado
 - Executar com browser aberto (você vê acontecendo)
 - Tirar screenshots
@@ -142,6 +151,7 @@ Execute com browser visível.
 #### **Fase 5: Corrigir Bugs (Superpowers)**
 
 Se Playwright encontrou bugs:
+
 ```
 Corrija o erro encontrado: [descrever erro]
 
@@ -154,6 +164,7 @@ Siga systematic debugging:
 ```
 
 **Superpowers vai:**
+
 - Aplicar debugging sistemático
 - Usar TDD
 - Verificar antes de completar
@@ -162,6 +173,7 @@ Siga systematic debugging:
 ---
 
 #### **Fase 6: Re-validar (Playwright Skill)**
+
 ```
 Re-execute o teste de expansão após correção.
 ```
@@ -169,6 +181,7 @@ Re-execute o teste de expansão após correção.
 ---
 
 #### **Fase 7: Criar Teste Persistente**
+
 ```
 Opção A (Manual com Superpowers):
 "Adicione teste E2E para expansão em e2e/vagas.spec.ts"
@@ -183,11 +196,13 @@ Opção B (Gerar com Playwright):
 ### **Exemplo 2: Corrigir Bug Crítico (TypeError)**
 
 #### **Fase 1: Debug (Superpowers - Automático)**
+
 ```
 Corrija TypeError: e.toFixed is not a function que ocorre ao duplo clicar em vaga.
 ```
 
 **Systematic Debugging skill ativa automaticamente:**
+
 - Reproduz erro
 - Busca causa raiz
 - Identifica locais com .toFixed()
@@ -196,6 +211,7 @@ Corrija TypeError: e.toFixed is not a function que ocorre ao duplo clicar em vag
 ---
 
 #### **Fase 2: Validar Correção (Playwright Skill)**
+
 ```
 Teste duplo clique em todas as vagas e verifique que nenhuma causa TypeError.
 
@@ -209,6 +225,7 @@ Teste duplo clique em todas as vagas e verifique que nenhuma causa TypeError.
 ```
 
 **Playwright vai:**
+
 - Iterar por todas as vagas
 - Detectar TypeError no console
 - Reportar exatamente qual vaga quebrou (se alguma)
@@ -218,6 +235,7 @@ Teste duplo clique em todas as vagas e verifique que nenhuma causa TypeError.
 ### **Exemplo 3: Nova Feature de Dark Mode**
 
 #### **Fase 1-3: Planejar + Implementar (Superpowers)**
+
 ```
 /superpowers:brainstorm
 
@@ -230,6 +248,7 @@ Implementar dark mode toggle em configurações.
 ---
 
 #### **Fase 4: Testar Visualmente (Playwright Skill)**
+
 ```
 Teste dark mode:
 
@@ -247,6 +266,7 @@ Teste dark mode:
 ## 🎓 Comandos Rápidos de Referência
 
 ### **Superpowers Slash Commands**
+
 ```bash
 /superpowers:brainstorm     # Refinar design com perguntas socráticas
 /superpowers:write-plan     # Criar plano de implementação detalhado
@@ -254,11 +274,13 @@ Teste dark mode:
 ```
 
 ### **Superpowers Auto-Activated Skills**
+
 - `test-driven-development` → Ao implementar features
 - `systematic-debugging` → Ao debugar bugs
 - `verification-before-completion` → Antes de marcar como completo
 
 ### **Playwright Skill (Natural Language)**
+
 ```bash
 # Não há slash commands - apenas descreva o que quer:
 "Teste [fluxo] visualmente"
@@ -293,10 +315,12 @@ Teste dark mode:
 ## 💡 Dicas de Produtividade
 
 ### **Atalhos Mentais:**
+
 - 🔧 **Código/Bug/Refactor** → Superpowers
 - 🎭 **Testar/Validar/Screenshots** → Playwright
 
 ### **Boas Práticas:**
+
 - ✅ Sempre use `/superpowers:brainstorm` para features complexas
 - ✅ Use Playwright após cada implementação para validar
 - ✅ Corrija bugs com Superpowers (systematic debugging)
@@ -304,6 +328,7 @@ Teste dark mode:
 - ✅ Crie testes persistentes após validação
 
 ### **Evite:**
+
 - ❌ Pular brainstorming em features complexas
 - ❌ Implementar sem plano
 - ❌ Não validar visualmente
@@ -314,6 +339,7 @@ Teste dark mode:
 ## 🚀 Exemplos Específicos do Dashboard Estágios
 
 ### **Upload de Arquivo Markdown**
+
 ```
 # Superpowers: Implementação
 /superpowers:brainstorm
@@ -335,6 +361,7 @@ Teste dark mode:
 ```
 
 ### **Filtros da Tabela de Vagas**
+
 ```
 # Superpowers: Implementação
 "Adicione filtro de etapa na tabela de vagas"
@@ -350,6 +377,7 @@ Teste dark mode:
 ```
 
 ### **Edição de Vaga**
+
 ```
 # Superpowers: Implementação
 "Atualize EditVagaDialog para suportar upload de CV"
@@ -370,17 +398,20 @@ Teste dark mode:
 ## ✅ Checklist de Setup
 
 ### Setup Inicial:
+
 - [x] Superpowers instalado (6 skills)
 - [x] Playwright Skill instalado (1 skill)
 - [ ] Testar Superpowers: `/superpowers:brainstorm`
 - [ ] Testar Playwright: "Teste se homepage carrega"
 
 ### Documentação:
+
 - [x] Criar `.claude/WORKFLOW.md` com este guia
 - [ ] Atualizar `.claude/CLAUDE.md` com referência ao workflow
 - [ ] Adicionar exemplos específicos conforme necessário
 
 ### Primeiros Usos:
+
 - [ ] Use Superpowers para próxima feature
 - [ ] Use Playwright para validar feature
 - [ ] Iterar conforme workflow acima
