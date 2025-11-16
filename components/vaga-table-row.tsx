@@ -127,21 +127,21 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
               <Card className="glass-card lg:col-span-2">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <FileText className="h-5 w-5 text-primary" />
                     Resumo
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {vaga.observacoes ? (
                     <div className="prose prose-sm max-w-none">
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{vaga.observacoes}</p>
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{vaga.observacoes}</p>
 
                       {/* Se houver link para análise completa */}
                       {vaga.arquivo_analise_url && (
                         <Button
                           variant="link"
                           size="sm"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm mt-3 px-0"
+                          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
                           onClick={(e) => {
                             e.stopPropagation()
                             safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)
@@ -153,7 +153,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 italic">Nenhuma análise disponível para esta vaga.</p>
+                    <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
                   )}
                 </CardContent>
               </Card>
@@ -164,17 +164,17 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                 <Card className="glass-card">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Target className="h-4 w-4 text-blue-600" />
+                      <Target className="h-4 w-4 text-primary" />
                       Fit
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {/* Requisitos */}
                     <div>
-                      <p className="text-xs text-gray-600 mb-1 font-medium">Requisitos</p>
+                      <p className="text-xs text-muted-foreground mb-1 font-medium">Requisitos</p>
                       <div className="flex items-center gap-2">
                         <StarRating value={toSafeNumber(vaga.requisitos)} readonly size="sm" />
-                        <span className="text-sm font-semibold text-gray-700">
+                        <span className="text-sm font-semibold text-foreground">
                           {toSafeNumber(vaga.requisitos || 0).toFixed(1)}
                         </span>
                       </div>
@@ -182,10 +182,10 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
 
                     {/* Perfil */}
                     <div>
-                      <p className="text-xs text-gray-600 mb-1 font-medium">Perfil</p>
+                      <p className="text-xs text-muted-foreground mb-1 font-medium">Perfil</p>
                       <div className="flex items-center gap-2">
                         <StarRating value={toSafeNumber(vaga.perfil)} readonly size="sm" />
-                        <span className="text-sm font-semibold text-gray-700">
+                        <span className="text-sm font-semibold text-foreground">
                           {toSafeNumber(vaga.perfil || 0).toFixed(1)}
                         </span>
                       </div>
@@ -197,7 +197,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                 <Card className="glass-card">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-blue-600" />
+                      <Activity className="h-4 w-4 text-primary" />
                       Status
                     </CardTitle>
                   </CardHeader>

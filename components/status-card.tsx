@@ -13,8 +13,8 @@ interface StatusCardProps {
 const statusConfig = {
   Pendente: {
     icon: Clock,
-    color: "bg-gray-100 text-gray-700 border-gray-300",
-    iconColor: "text-gray-500",
+    color: "bg-muted text-muted-foreground border-border",
+    iconColor: "text-muted-foreground",
   },
   Avançado: {
     icon: Briefcase,

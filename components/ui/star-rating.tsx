@@ -40,7 +40,7 @@ export function StarRating({ value, onChange: _onChange, readonly: _readonly = t
             ) : isHalf ? (
               <StarHalf className={cn(iconSize, "fill-yellow-400 text-yellow-400")} />
             ) : (
-              <Star className={cn(iconSize, "text-gray-300")} />
+              <Star className={cn(iconSize, "text-border")} />
             )}
           </span>
         )

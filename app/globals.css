@@ -63,45 +63,61 @@
 }
 
 .dark {
-  /* Use same light theme - app is always in light mode */
-  --background: 224 224 224;
-  --background-secondary: 255 255 255;
-  --foreground: 44 62 80;
-  --card: 255 255 255;
-  --card-foreground: 44 62 80;
-  --popover: 255 255 255;
-  --popover-foreground: 44 62 80;
-  --primary: 37 99 235;
+  /* Dark mode color palette - matching screenshots */
+  --background: 26 29 41; /* #1A1D29 - main dark background */
+  --background-secondary: 36 40 58; /* #24283A - cards and secondary areas */
+  --foreground: 229 231 235; /* #E5E7EB - light text */
+
+  --card: 36 40 58; /* #24283A - dark card background */
+  --card-foreground: 229 231 235; /* #E5E7EB - light text */
+
+  --popover: 36 40 58; /* #24283A */
+  --popover-foreground: 229 231 235; /* #E5E7EB */
+
+  --primary: 59 130 246; /* #3B82F6 - vibrant blue */
   --primary-foreground: 255 255 255;
-  --secondary: 240 240 245;
-  --secondary-foreground: 44 62 80;
-  --muted: 243 244 246;
-  --muted-foreground: 117 117 117;
-  --accent: 0 212 255;
-  --accent-foreground: 44 62 80;
-  --accent-muted: 0 212 255 / 0.1;
-  --destructive: 239 68 68;
+
+  --secondary: 45 49 66; /* #2D3142 - tertiary background */
+  --secondary-foreground: 229 231 235;
+
+  --muted: 45 49 66; /* #2D3142 */
+  --muted-foreground: 156 163 175; /* #9CA3AF - medium gray text */
+
+  --accent: 96 165 250; /* #60A5FA - light blue accent */
+  --accent-foreground: 255 255 255;
+  --accent-muted: 96 165 250 / 0.1; /* light blue with low opacity */
+
+  --destructive: 239 68 68; /* #EF4444 - red (keep vibrant in dark) */
   --destructive-foreground: 255 255 255;
-  --border: 229 231 235;
-  --input: 243 244 246;
-  --ring: 37 99 235 / 0.5;
-  --chart-1: 37 99 235;
-  --chart-2: 0 212 255;
-  --chart-3: 96 165 250;
-  --chart-4: 59 130 246;
-  --chart-5: 100 116 139;
-  --sidebar: 44 62 80;
-  --sidebar-foreground: 189 195 199;
-  --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 44 62 80;
-  --sidebar-accent: 0 212 255;
+
+  --border: 55 65 81; /* #374151 - dark borders */
+  --input: 45 49 66; /* #2D3142 - input backgrounds */
+  --ring: 59 130 246 / 0.5; /* blue ring */
+
+  /* Chart colors for dark mode - vibrant blues */
+  --chart-1: 96 165 250; /* #60A5FA - light blue line */
+  --chart-2: 59 130 246; /* #3B82F6 - primary blue */
+  --chart-3: 37 99 235; /* #2563EB - darker blue */
+  --chart-4: 147 197 253; /* #93C5FD - lighter blue */
+  --chart-5: 100 116 139; /* #64748B - slate */
+
+  /* Sidebar - darker than main background */
+  --sidebar: 20 23 34; /* #141722 - darkest sidebar */
+  --sidebar-foreground: 156 163 175; /* #9CA3AF - gray text */
+  --sidebar-primary: 229 231 235; /* #E5E7EB - light text */
+  --sidebar-primary-foreground: 20 23 34;
+  --sidebar-accent: 30 58 138; /* #1E3A8A - dark blue for active */
   --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 52 73 94;
-  --sidebar-ring: 0 212 255;
-  --header: 117 117 117;
-  --header-foreground: 255 255 255;
-  --star-fill: 251 191 36;
-  --star-empty: 209 213 219;
+  --sidebar-border: 31 41 55; /* #1F2937 - sidebar borders */
+  --sidebar-ring: 59 130 246; /* #3B82F6 */
+
+  /* Header - dark gray */
+  --header: 31 41 55; /* #1F2937 */
+  --header-foreground: 229 231 235; /* #E5E7EB */
+
+  /* Star rating - keep amber in dark mode */
+  --star-fill: 251 191 36; /* amber-400 for filled stars */
+  --star-empty: 75 85 99; /* #4B5563 - darker empty stars */
 }
 
 @theme inline {
