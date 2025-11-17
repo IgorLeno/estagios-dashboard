@@ -32,8 +32,8 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.getByRole("option", { name: "Híbrido" }).click()
 
     // Preencher requisitos e fit
-    await dialog.getByLabel(/requisitos/i).fill("85")
-    await dialog.getByLabel(/fit/i).fill("8")
+    await dialog.getByLabel(/fit requisitos/i).fill("4.5")
+    await dialog.getByLabel(/fit perfil/i).fill("4")
 
     // Observações
     await dialog.getByLabel(/observações/i).fill("Teste E2E automatizado")
@@ -201,8 +201,8 @@ test.describe("Gerenciamento de Vagas", () => {
     await dialog.getByLabel(/modalidade/i).click()
     await page.getByRole("option", { name: "Híbrido" }).click()
 
-    await dialog.getByLabel(/requisitos/i).fill("95")
-    await dialog.getByLabel(/fit/i).fill("10")
+    await dialog.getByLabel(/fit requisitos/i).fill("5")
+    await dialog.getByLabel(/fit perfil/i).fill("5")
 
     await dialog.getByLabel(/status/i).click()
     await page.getByRole("option", { name: "Avançado" }).click()
