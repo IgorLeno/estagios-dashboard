@@ -179,6 +179,7 @@ Processo seletivo: 4 etapas (triagem, teste técnico, 2 entrevistas)
 ```
 
 **Notas:**
+
 - **Requisitos**: Use escala 0-100 (convertida automaticamente para 0-5 estrelas)
 - **Fit**: Use escala 0-10 (convertida automaticamente para 0-5 estrelas)
 - **Status**: Aceita apenas `Pendente`, `Avançado`, `Melou`, `Contratado`
