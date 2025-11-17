@@ -13,7 +13,8 @@ Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vaga
 
 - **Upload com Drag-and-Drop** para arquivos Markdown (.md) e currículos (PDF/DOCX)
 - **Parser Automático de Markdown** - extrai dados da análise e preenche campos automaticamente
-- **Horário Customizável** - define quando o "dia" começa (padrão: 6h-5:59)
+- **Template de Análise** - arquivo modelo (`modelo-analise.md`) com instruções detalhadas de preenchimento
+- **Conversão Automática de Escalas** - converte scores antigos (0-100, 0-10) para sistema de estrelas (0-5)
 - **Barra de Progresso** visual durante uploads com feedback em tempo real
 
 ### 📈 Acompanhamento e Metas
@@ -26,7 +27,9 @@ Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vaga
 ### 🎯 Gestão de Vagas
 
 - **4 Status Principais**: Pendente, Avançado, Melou, Contratado
-- **Score de Requisitos** (0-100) e **Fit** (0-10)
+- **Sistema de Avaliação por Estrelas** ⭐ (0-5):
+  - **Requisitos Técnicos**: Avaliação de compatibilidade com requisitos da vaga
+  - **Fit de Perfil**: Avaliação de alinhamento cultural e comportamental
 - **Tracking de Etapas** do processo seletivo
 - **Anexos**: Análise em Markdown + Currículo
 
@@ -103,6 +106,7 @@ pnpm format
 
 - **[SETUP.md](SETUP.md)** - Guia completo de configuração do Supabase
 - **[CLAUDE.md](CLAUDE.md)** - Documentação da arquitetura do projeto
+- **[modelo-analise.md](modelo-analise.md)** - Template para análise de vagas
 - **[supabase-schema.sql](supabase-schema.sql)** - Schema SQL completo
 
 ## 🗂️ Estrutura do Projeto
@@ -145,27 +149,40 @@ estagios-dashboard/
 1. Clique em **"Adicionar Vaga"**
 2. **Opção 1 - Manual**: Preencha todos os campos
 3. **Opção 2 - Automático**:
-   - Faça upload de um arquivo `.md` com a análise da vaga
-   - Os campos serão preenchidos automaticamente
+   - Use o arquivo [`modelo-analise.md`](modelo-analise.md) como template
+   - Faça upload do arquivo `.md` preenchido com a análise da vaga
+   - Os campos serão preenchidos automaticamente via parser
    - Ajuste o que for necessário
 4. Adicione o currículo (opcional)
 5. Salve!
 
 ### Formato do Arquivo de Análise
 
+O arquivo deve seguir o formato do [`modelo-analise.md`](modelo-analise.md):
+
 ```markdown
-**Empresa**: Google
-**Cargo**: Engenheiro Químico Jr
+## Dados Gerais
+
+**Empresa**: TechCorp Brasil
+**Cargo**: Desenvolvedor Full Stack Pleno
 **Local**: São Paulo, SP
 **Modalidade**: Híbrido
 **Requisitos**: 85
-**Fit**: 9
+**Fit**: 8
 **Etapa**: Inscrição
 **Status**: Pendente
 
-**Observações**:
-Empresa com ótima reputação...
+## Observações
+
+Empresa com ótima reputação e benefícios excelentes.
+Processo seletivo: 4 etapas (triagem, teste técnico, 2 entrevistas)
 ```
+
+**Notas:**
+- **Requisitos**: Use escala 0-100 (convertida automaticamente para 0-5 estrelas)
+- **Fit**: Use escala 0-10 (convertida automaticamente para 0-5 estrelas)
+- **Status**: Aceita apenas `Pendente`, `Avançado`, `Melou`, `Contratado`
+- **Modalidade**: Aceita apenas `Presencial`, `Híbrido`, `Remoto`
 
 ## 🤝 Contribuindo
 
