@@ -1,9 +1,14 @@
 import { defineConfig, devices } from "@playwright/test"
 import dotenv from "dotenv"
+import { existsSync } from "fs"
 
 // Carregar variáveis de ambiente do .env.test (específico para E2E)
 // Se .env.test não existir, fallback para .env.local
-dotenv.config({ path: ".env.test" })
+if (existsSync(".env.test")) {
+  dotenv.config({ path: ".env.test" })
+} else {
+  dotenv.config({ path: ".env.local" })
+}
 
 /**
  * Playwright Configuration for E2E Tests

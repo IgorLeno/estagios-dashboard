@@ -162,14 +162,16 @@ See `lib/utils.ts:normalizeFitValue()` for conversion logic.
 Required environment variables (not in repo):
 
 **Development** (`.env.local`):
-```
+
+```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_SHOW_TEST_DATA=false  # Hide test data in development
 ```
 
 **E2E Tests** (`.env.test`):
-```
+
+```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_SHOW_TEST_DATA=true  # ✅ Show test data during E2E tests
