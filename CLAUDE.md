@@ -171,6 +171,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_SHOW_TEST_DATA=false  # Hide test data in development
 ```
 
+**Production/Staging** (Vercel Environment Variables):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SHOW_TEST_DATA=false  # ⚠️ OBRIGATÓRIO: Sempre false em ambientes reais
+```
+
 **E2E Tests** (`.env.test`):
 
 ```env
@@ -184,6 +192,8 @@ NEXT_PUBLIC_SHOW_TEST_DATA=true  # ✅ Show test data during E2E tests
 - `.env.test` is used exclusively by Playwright E2E tests
 - Playwright config (`playwright.config.ts`) loads `.env.test` automatically
 - Never commit `.env.local` or `.env.test` (covered by `.gitignore`)
+- **CRITICAL**: In production/staging environments (Vercel, etc.), always set `NEXT_PUBLIC_SHOW_TEST_DATA=false` to prevent test data from being displayed
+- The code has a safety check: if `NODE_ENV === "production"`, test data is never shown regardless of the env var, but it's still best practice to set it explicitly
 
 ### Path Aliases
 

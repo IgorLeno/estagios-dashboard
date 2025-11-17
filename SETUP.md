@@ -64,9 +64,12 @@ Na raiz do projeto, crie o arquivo `.env.local` com as seguintes variáveis:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_aqui
+NEXT_PUBLIC_SHOW_TEST_DATA=false
 ```
 
 Substitua pelos valores reais do seu projeto Supabase.
+
+**Importante**: Em ambientes de produção e staging, sempre defina `NEXT_PUBLIC_SHOW_TEST_DATA=false` para evitar mostrar dados de teste.
 
 ## 3. Instalação e Execução
 
@@ -223,7 +226,10 @@ Este projeto está pronto para deploy na Vercel:
 
 1. Faça push do código para GitHub
 2. Conecte seu repositório na Vercel
-3. Configure as variáveis de ambiente (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+3. Configure as variáveis de ambiente:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SHOW_TEST_DATA=false` (obrigatório em produção)
 4. Deploy!
 
 A Vercel configurará automaticamente tudo para Next.js 16.
