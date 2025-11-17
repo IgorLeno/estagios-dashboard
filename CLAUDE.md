@@ -131,6 +131,7 @@ Core interfaces:
 **Valid Range**: 0.0 to 5.0 with 0.5 increments
 
 Both `requisitos` (requirements fit) and `perfil` (profile fit) use a **star rating system**:
+
 - ✅ Valid values: 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0
 - ❌ Old percentage format (0-100) is **no longer accepted** in forms
 - ❌ Old 0-10 scale is **no longer accepted** in forms
@@ -139,14 +140,15 @@ Both `requisitos` (requirements fit) and `perfil` (profile fit) use a **star rat
   - Markdown parser still accepts old formats for backward compatibility
 
 **Examples**:
+
 ```typescript
 // Form input (valid)
-requisitos: 4.5  // ✅ Direct star rating
-perfil: 3.0      // ✅ Direct star rating
+requisitos: 4.5 // ✅ Direct star rating
+perfil: 3.0 // ✅ Direct star rating
 
 // Markdown parsing (auto-converted)
-requisitos: 85   // 🔄 Converted to 4.5 (85% → 4.5 stars)
-perfil: 8        // 🔄 Converted to 4.0 (8/10 → 4.0 stars)
+requisitos: 85 // 🔄 Converted to 4.5 (85% → 4.5 stars)
+perfil: 8 // 🔄 Converted to 4.0 (8/10 → 4.0 stars)
 ```
 
 See `lib/utils.ts:normalizeFitValue()` for conversion logic.
@@ -178,6 +180,7 @@ NEXT_PUBLIC_SHOW_TEST_DATA=true  # ✅ Show test data during E2E tests
 ```
 
 **Important**:
+
 - `.env.test` is used exclusively by Playwright E2E tests
 - Playwright config (`playwright.config.ts`) loads `.env.test` automatically
 - Never commit `.env.local` or `.env.test` (covered by `.gitignore`)
