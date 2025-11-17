@@ -246,7 +246,7 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
       return undefined
     }
 
-    // Se sourceScale é 5 ou não foi fornecido/detectado, usar lógica de detecção automática
+    // Fallback: executado quando a escala detectada não é 10 nem 100 (escala não foi detectada)
     // Valores > 10 são tratados como 0-100 (escala antiga de requisitos)
     if (num > 10 && num <= 100) {
       const normalized = Math.round((num / 100) * 5 * 2) / 2
