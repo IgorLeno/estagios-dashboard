@@ -29,8 +29,8 @@ Empresa com ótima reputação e benefícios excelentes.
       expect(result.cargo).toBe("Engenheiro Químico Jr")
       expect(result.local).toBe("São Paulo, SP")
       expect(result.modalidade).toBe("Híbrido")
-      expect(result.requisitos).toBe(85)
-      expect(result.fit).toBe(9)
+      expect(result.requisitos).toBe(4.5) // 85/100 → 4.5/5 (backward compatibility)
+      expect(result.fit).toBe(4.5) // 9/10 → 4.5/5 (backward compatibility)
       expect(result.etapa).toBe("Inscrição")
       expect(result.status).toBe("Pendente")
       expect(result.observacoes).toContain("ótima reputação")
@@ -108,19 +108,36 @@ Empresa com ótima reputação e benefícios excelentes.
       expect(parseVagaFromMarkdown("Status: Outro").status).toBeUndefined()
     })
 
-    it("should validate requisitos range (0-100)", () => {
-      expect(parseVagaFromMarkdown("Requisitos: 50").requisitos).toBe(50)
+    it("should validate requisitos range (0-5) and convert legacy formats", () => {
+      // Nova escala 0-5
+      expect(parseVagaFromMarkdown("Requisitos: 2.5").requisitos).toBe(2.5)
       expect(parseVagaFromMarkdown("Requisitos: 0").requisitos).toBe(0)
-      expect(parseVagaFromMarkdown("Requisitos: 100").requisitos).toBe(100)
+      expect(parseVagaFromMarkdown("Requisitos: 5").requisitos).toBe(5)
+
+      // Backward compatibility: converte 0-100 para 0-5
+      expect(parseVagaFromMarkdown("Requisitos: 50").requisitos).toBe(2.5) // 50/100 → 2.5/5
+      expect(parseVagaFromMarkdown("Requisitos: 100").requisitos).toBe(5.0) // 100/100 → 5.0/5
+
+      // Valores inválidos
       expect(parseVagaFromMarkdown("Requisitos: 150").requisitos).toBeUndefined()
       expect(parseVagaFromMarkdown("Requisitos: -10").requisitos).toBeUndefined()
     })
 
-    it("should validate fit range (0-10)", () => {
-      expect(parseVagaFromMarkdown("Fit: 5").fit).toBe(5)
+    it("should validate fit range (0-5) and convert legacy formats", () => {
+      // Nova escala 0-5
+      expect(parseVagaFromMarkdown("Fit: 2.5").fit).toBe(2.5)
       expect(parseVagaFromMarkdown("Fit: 0").fit).toBe(0)
-      expect(parseVagaFromMarkdown("Fit: 10").fit).toBe(10)
-      expect(parseVagaFromMarkdown("Fit: 15").fit).toBeUndefined()
+      expect(parseVagaFromMarkdown("Fit: 5").fit).toBe(5)
+
+      // Backward compatibility: converte 0-10 para 0-5
+      expect(parseVagaFromMarkdown("Fit: 10").fit).toBe(5.0) // 10/10 → 5.0/5
+      expect(parseVagaFromMarkdown("Fit: 6").fit).toBe(3.0) // 6/10 → 3.0/5
+
+      // Valores > 10 são interpretados como 0-100 (backward compatibility extrema)
+      expect(parseVagaFromMarkdown("Fit: 15").fit).toBe(1.0) // 15/100 → 0.75 ≈ 1.0/5
+
+      // Valores realmente inválidos
+      expect(parseVagaFromMarkdown("Fit: 150").fit).toBeUndefined()
       expect(parseVagaFromMarkdown("Fit: -1").fit).toBeUndefined()
     })
 
@@ -140,8 +157,8 @@ Fit: 8
 
       expect(result.empresa).toBe("Amazon")
       expect(result.cargo).toBe("Estágio em Engenharia")
-      expect(result.requisitos).toBe(90)
-      expect(result.fit).toBe(8)
+      expect(result.requisitos).toBe(4.5) // 90/100 → 4.5/5 (backward compatibility)
+      expect(result.fit).toBe(4.0) // 8/10 → 4.0/5 (backward compatibility)
     })
 
     it("should return empty object for invalid markdown", () => {
@@ -171,11 +188,11 @@ terceira linha final.
       // Campo alternativo "Cidade" para local
       expect(parseVagaFromMarkdown("**Cidade**: Belo Horizonte").local).toBe("Belo Horizonte")
 
-      // Campo alternativo "Score" para requisitos
-      expect(parseVagaFromMarkdown("**Score**: 75").requisitos).toBe(75)
+      // Campo alternativo "Score" para requisitos (converte 0-100 → 0-5)
+      expect(parseVagaFromMarkdown("**Score**: 75").requisitos).toBe(4.0) // 75/100 → 4.0/5
 
-      // Campo alternativo "Nota" para requisitos
-      expect(parseVagaFromMarkdown("**Nota**: 80").requisitos).toBe(80)
+      // Campo alternativo "Nota" para requisitos (converte 0-100 → 0-5)
+      expect(parseVagaFromMarkdown("**Nota**: 80").requisitos).toBe(4.0) // 80/100 → 4.0/5
 
       // Campo alternativo "Fase" para etapa
       expect(parseVagaFromMarkdown("**Fase**: Entrevista").etapa).toBe("Entrevista")
@@ -332,8 +349,8 @@ Senior Developer
         expect(result.cargo).toBe("Software Engineer")
         expect(result.local).toBe("São Paulo")
         expect(result.etapa).toBe("Entrevista Técnica")
-        expect(result.requisitos).toBe(85)
-        expect(result.fit).toBe(9)
+        expect(result.requisitos).toBe(4.5) // 85/100 → 4.5/5 (backward compatibility)
+        expect(result.fit).toBe(4.5) // 9/10 → 4.5/5 (backward compatibility)
       })
 
       it("should handle table with case variations and special characters", () => {
@@ -384,7 +401,7 @@ Senior Developer
         expect(result.empresa).toBe("Netflix")
         expect(result.cargo).toBe("Data Engineer")
         expect(result.modalidade).toBe("Remoto")
-        expect(result.requisitos).toBe(90)
+        expect(result.requisitos).toBe(4.5) // 90/100 → 4.5/5 (backward compatibility)
       })
 
       it("should ignore table header rows", () => {
@@ -408,8 +425,8 @@ Senior Developer
         `
         const result = parseVagaFromMarkdown(markdown)
 
-        expect(result.requisitos).toBe(75)
-        expect(result.fit).toBe(8)
+        expect(result.requisitos).toBe(4.0) // 75/100 → 4.0/5 (backward compatibility)
+        expect(result.fit).toBe(4.0) // 8/10 → 4.0/5 (backward compatibility)
       })
 
       it("should validate number ranges from table", () => {
@@ -421,9 +438,10 @@ Senior Developer
         `
         const result = parseVagaFromMarkdown(markdown)
 
-        // Valores fora do range devem ser undefined
+        // Valores fora do range devem ser undefined (> 100)
         expect(result.requisitos).toBeUndefined()
-        expect(result.fit).toBeUndefined()
+        // Valores 11-100 são backward compatible (15/100 → 1.0/5)
+        expect(result.fit).toBe(1.0)
       })
 
       it("should handle observacoes from table", () => {
@@ -456,8 +474,8 @@ Senior Developer
         expect(result.cargo).toBe("Backend Engineer")
         expect(result.local).toBe("Menlo Park, CA")
         expect(result.modalidade).toBe("Híbrido")
-        expect(result.requisitos).toBe(92)
-        expect(result.fit).toBe(10)
+        expect(result.requisitos).toBe(4.5) // 92/100 → 4.5/5 (backward compatibility)
+        expect(result.fit).toBe(5.0) // 10/10 → 5.0/5 (backward compatibility)
         expect(result.etapa).toBe("Technical Interview")
         expect(result.status).toBe("Avançado")
         expect(result.observacoes).toBe("Excelente match cultural")

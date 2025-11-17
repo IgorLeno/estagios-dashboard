@@ -8,8 +8,8 @@ export interface ParsedVagaData {
   cargo?: string
   local?: string
   modalidade?: "Presencial" | "Híbrido" | "Remoto"
-  requisitos?: number // Score 0-100
-  fit?: number // Fit 0-10
+  requisitos?: number // Score 0-5 (⭐)
+  fit?: number // Fit 0-5 (⭐)
   etapa?: string
   status?: "Pendente" | "Avançado" | "Melou" | "Contratado"
   observacoes?: string
@@ -199,10 +199,37 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     return undefined
   }
 
+  // Helper: extrair e normalizar número para escala 0-5
+  const parseAndNormalizeFit = (value: string): number | undefined => {
+    const num = Number.parseFloat(value)
+    if (Number.isNaN(num)) return undefined
+
+    // Se valor está em escala antiga, converter para 0-5
+    // Importante: verificar 0-10 ANTES de 0-100, pois 0-10 é subset de 0-100
+    if (num > 5 && num <= 10) {
+      // Formato 0-10 (escala antiga de fit)
+      const normalized = Math.round((num / 10) * 5 * 2) / 2
+      console.warn(`[Parser] Convertendo valor ${num} (escala 0-10) para ${normalized} (escala 0-5)`)
+      return normalized
+    }
+    if (num > 10 && num <= 100) {
+      // Formato 0-100 (escala antiga de requisitos)
+      const normalized = Math.round((num / 100) * 5 * 2) / 2
+      console.warn(`[Parser] Convertendo valor ${num} (escala 0-100) para ${normalized} (escala 0-5)`)
+      return normalized
+    }
+
+    // Valor já está em escala 0-5, apenas garantir step de 0.5
+    if (num >= 0 && num <= 5) {
+      return Math.round(num * 2) / 2
+    }
+
+    return undefined
+  }
+
   // Helper: extrair número de string (para requisitos/fit de tabela)
-  const parseNumber = (value: string, min = 0, max = 100): number | undefined => {
-    const num = Number.parseInt(value, 10)
-    return !Number.isNaN(num) && num >= min && num <= max ? num : undefined
+  const parseNumber = (value: string, min = 0, max = 5): number | undefined => {
+    return parseAndNormalizeFit(value)
   }
 
   // Empresa (prioriza tabela, fallback para regex)
@@ -238,21 +265,48 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
     if (processed) parsed.modalidade = processed
   }
 
-  // Requisitos (score 0-100) - prioriza tabela
+  // Requisitos (score 0-5) - prioriza tabela
   const requisitosStr = tableFields.requisitos
-  const requisitos =
-    (requisitosStr ? parseNumber(requisitosStr, 0, 100) : undefined) ??
-    extractNumber(/\*?\*?requisitos?\*?\*?\s*:?\s*(\d+)/i, 0, 100) ??
-    extractNumber(/\*?\*?score\*?\*?\s*:?\s*(\d+)/i, 0, 100) ??
-    extractNumber(/\*?\*?nota\*?\*?\s*:?\s*(\d+)/i, 0, 100)
+  let requisitos: number | undefined
+
+  if (requisitosStr) {
+    requisitos = parseNumber(requisitosStr, 0, 5)
+  } else {
+    // Tentar extrair no formato "X / 5" ou "X/5" (novo formato)
+    const match1 = markdown.match(/\*?\*?(requisitos?|score|nota)\*?\*?\s*:?\s*([\d.]+)\s*\/\s*5/i)
+    if (match1) {
+      requisitos = parseAndNormalizeFit(match1[2])
+    } else {
+      // Fallback: extrair apenas o número (pode ser formato antigo)
+      // Suporta: Requisitos, Score, Nota
+      const match2 = markdown.match(/\*?\*?(requisitos?|score|nota)\*?\*?\s*:?\s*([\d.]+)/i)
+      if (match2) {
+        requisitos = parseAndNormalizeFit(match2[2])
+      }
+    }
+  }
   if (requisitos !== undefined) parsed.requisitos = requisitos
 
-  // Fit (0-10) - prioriza tabela
+  // Fit (0-5) - prioriza tabela
   const fitStr = tableFields.fit
-  const fit =
-    (fitStr ? parseNumber(fitStr, 0, 10) : undefined) ??
-    extractNumber(/\*?\*?fit\*?\*?\s*:?\s*(\d+)/i, 0, 10) ??
-    extractNumber(/\*?\*?adequa[çc][ãa]o\*?\*?\s*:?\s*(\d+)/i, 0, 10)
+  let fit: number | undefined
+
+  if (fitStr) {
+    fit = parseNumber(fitStr, 0, 5)
+  } else {
+    // Tentar extrair no formato "X / 5" ou "X/5" (novo formato)
+    // Suporta: Fit, Adequação
+    const match1 = markdown.match(/\*?\*?(fit|adequa[çc][ãa]o)\*?\*?\s*:?\s*([\d.]+)\s*\/\s*5/i)
+    if (match1) {
+      fit = parseAndNormalizeFit(match1[2])
+    } else {
+      // Fallback: extrair apenas o número (pode ser formato antigo)
+      const match2 = markdown.match(/\*?\*?(fit|adequa[çc][ãa]o)\*?\*?\s*:?\s*([\d.]+)/i)
+      if (match2) {
+        fit = parseAndNormalizeFit(match2[2])
+      }
+    }
+  }
   if (fit !== undefined) parsed.fit = fit
 
   // Etapa (prioriza tabela, fallback para regex)

@@ -129,9 +129,18 @@ export function normalizeFitValue(value: number | null | undefined | string): nu
   const num = toSafeNumber(value)
 
   // Se valor está entre 0-100 (formato antigo de porcentagem)
-  if (num > 5) {
+  if (num > 5 && num <= 100) {
     // Converte para 0-5 com step 0.5
-    return Math.round((num / 100) * 5 * 2) / 2
+    const normalized = Math.round((num / 100) * 5 * 2) / 2
+    console.warn(`[normalizeFitValue] Convertendo ${num} (escala 0-100) → ${normalized} (escala 0-5)`)
+    return normalized
+  }
+
+  // Se valor está entre 5-10 (formato antigo 0-10)
+  if (num > 5 && num <= 10) {
+    const normalized = Math.round((num / 10) * 5 * 2) / 2
+    console.warn(`[normalizeFitValue] Convertendo ${num} (escala 0-10) → ${normalized} (escala 0-5)`)
+    return normalized
   }
 
   // Já está em formato correto (0-5), garantir step de 0.5
@@ -160,6 +169,7 @@ export function normalizeRatingForSave(value: string | number | null | undefined
 
   // Valida se é um número válido (não NaN, não Infinity)
   if (Number.isNaN(parsed) || !Number.isFinite(parsed)) {
+    console.warn(`[normalizeRatingForSave] Valor inválido recebido: ${value}`)
     return null
   }
 
@@ -168,7 +178,13 @@ export function normalizeRatingForSave(value: string | number | null | undefined
 
   // Valida novamente após normalização (edge case: se normalizeFitValue retornar NaN)
   if (Number.isNaN(normalized) || !Number.isFinite(normalized)) {
+    console.error(`[normalizeRatingForSave] Normalização resultou em valor inválido: ${normalized}`)
     return null
+  }
+
+  // Log se valor foi convertido (para debug)
+  if (parsed !== normalized && process.env.NODE_ENV === "development") {
+    console.info(`[normalizeRatingForSave] ${parsed} → ${normalized}`)
   }
 
   return normalized

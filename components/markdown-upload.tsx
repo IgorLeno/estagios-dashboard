@@ -170,8 +170,8 @@ export function MarkdownUpload({
                 {parsedData.cargo && <div>• Cargo: {parsedData.cargo}</div>}
                 {parsedData.local && <div>• Local: {parsedData.local}</div>}
                 {parsedData.modalidade && <div>• Modalidade: {parsedData.modalidade}</div>}
-                {parsedData.requisitos !== undefined && <div>• Requisitos: {parsedData.requisitos}%</div>}
-                {parsedData.fit !== undefined && <div>• Fit: {parsedData.fit}/10</div>}
+                {parsedData.requisitos !== undefined && <div>• Requisitos: ⭐ {parsedData.requisitos}/5</div>}
+                {parsedData.fit !== undefined && <div>• Fit: ⭐ {parsedData.fit}/5</div>}
               </div>
             </div>
           )}

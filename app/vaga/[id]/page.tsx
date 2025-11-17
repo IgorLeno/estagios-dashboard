@@ -43,7 +43,7 @@ export default function VagaDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center ml-20">
+      <div className="min-h-screen flex items-center justify-center ml-64">
         <p className="text-muted-foreground animate-pulse">Carregando...</p>
       </div>
     )
@@ -51,7 +51,7 @@ export default function VagaDetailPage() {
 
   if (!vaga) {
     return (
-      <div className="min-h-screen flex items-center justify-center ml-20">
+      <div className="min-h-screen flex items-center justify-center ml-64">
         <p className="text-muted-foreground">Vaga não encontrada</p>
       </div>
     )
@@ -60,7 +60,7 @@ export default function VagaDetailPage() {
   return (
     <div className="min-h-screen flex">
       <Sidebar activeTab="dashboard" onTabChange={() => router.push("/")} />
-      <main className="flex-1 ml-20">
+      <main className="flex-1 ml-64">
         <div className="container mx-auto px-8 py-6 max-w-6xl">
           <Button variant="ghost" onClick={() => router.push("/")} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />

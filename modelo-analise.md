@@ -5,8 +5,8 @@ INSTRUÇÕES DE PREENCHIMENTO:
 Este template é otimizado para parsing automático pelo sistema.
 - Mantenha os nomes dos campos exatamente como estão (Empresa, Cargo, Local, etc.)
 - Use o formato "**Campo**: valor" para campos inline
-- Requisitos: use escala 0-100 (será convertido automaticamente para 0-5 estrelas)
-- Fit: use escala 0-10 (será convertido automaticamente para 0-5 estrelas)
+- ⭐ IMPORTANTE: Requisitos e Fit devem usar escala 0-5 com incrementos de 0.5
+  Exemplos válidos: 0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0
 - Status aceita: Pendente, Avançado, Melou, Contratado
 - Modalidade aceita: Presencial, Híbrido, Remoto
 -->
@@ -29,9 +29,9 @@ Mencione os diferenciais buscados, o grau de autonomia do cargo, frameworks/proj
 
 **Modalidade**: [Presencial/Híbrido/Remoto]
 
-**Requisitos**: [0-100]
+**Requisitos**: [0-5, ex: 4.5]
 
-**Fit**: [0-10]
+**Fit**: [0-5, ex: 3.5]
 
 **Etapa**: [Ex: Inscrição, Triagem, Entrevista, Proposta]
 
@@ -41,15 +41,17 @@ Mencione os diferenciais buscados, o grau de autonomia do cargo, frameworks/proj
 
 ## Justificativas de Avaliação
 
-### Requisitos Técnicos (Score 0-100)
+### Requisitos Técnicos (⭐ 0-5)
 
-**Nota atribuída**: [valor] / 100
+**Nota atribuída**: [valor] / 5
+(Exemplo: 4.5 = excelente fit técnico, 2.0 = fit médio)
 
 **Justificativa**: Explique por que essa nota foi atribuída para os requisitos técnicos/específicos. Considere experiência exigida, stack tecnológico, certificações, conhecimentos específicos, etc.
 
-### Fit de Perfil (Score 0-10)
+### Fit de Perfil (⭐ 0-5)
 
-**Nota atribuída**: [valor] / 10
+**Nota atribuída**: [valor] / 5
+(Exemplo: 3.5 = bom fit comportamental, 1.5 = fit baixo)
 
 **Justificativa**: Explique por que essa nota foi atribuída para aderência de perfil comportamental, cultural, nível de senioridade, alinhamento de valores, estilo de trabalho, etc.
 
@@ -115,9 +117,9 @@ A vaga busca desenvolvedores full stack com experiência sólida em React e Node
 
 **Modalidade**: Híbrido
 
-**Requisitos**: 85
+**Requisitos**: 4.5
 
-**Fit**: 8
+**Fit**: 4.0
 
 **Etapa**: Inscrição
 
@@ -125,15 +127,15 @@ A vaga busca desenvolvedores full stack com experiência sólida em React e Node
 
 ### Justificativas de Avaliação
 
-#### Requisitos Técnicos (Score 0-100)
+#### Requisitos Técnicos (⭐ 0-5)
 
-**Nota atribuída**: 85 / 100
+**Nota atribuída**: 4.5 / 5
 
-**Justificativa**: Possuo sólida experiência com React e Node.js, incluindo TypeScript e Next.js. Tenho conhecimento em PostgreSQL e Redis conforme requisitado. Porém, falta experiência comprovada em Kubernetes e CI/CD com GitLab, o que reduz a nota em 15 pontos.
+**Justificativa**: Possuo sólida experiência com React e Node.js, incluindo TypeScript e Next.js. Tenho conhecimento em PostgreSQL e Redis conforme requisitado. Porém, falta experiência comprovada em Kubernetes e CI/CD com GitLab, o que reduz a nota em 0.5 pontos.
 
-#### Fit de Perfil (Score 0-10)
+#### Fit de Perfil (⭐ 0-5)
 
-**Nota atribuída**: 8 / 10
+**Nota atribuída**: 4.0 / 5
 
 **Justificativa**: Perfil altamente colaborativo com experiência em Scrum e equipes ágeis. Inglês fluente para comunicação internacional. Experiências anteriores foram majoritariamente em squads menores com menos autonomia técnica, o que pode exigir período de adaptação para o nível de ownership esperado.
 
