@@ -18,9 +18,11 @@
     "test:e2e:report": "playwright show-report",
     "cleanup:test-data": "tsx scripts/cleanup-test-data.ts",
     "cleanup:test-data:all": "tsx scripts/cleanup-test-data.ts -- --all",
+    "validate:ai": "tsx scripts/validate-ai-setup.ts",
     "start": "next start"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -99,6 +101,7 @@
     "postcss": "^8.5",
     "prettier": "^3.1.1",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.20.6",
     "typescript": "^5",
     "vitest": "^4.0.8"
   }
