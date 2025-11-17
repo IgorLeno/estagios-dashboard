@@ -185,6 +185,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           </div>
 
           <div className="grid grid-cols-3 gap-4">
+            {/*
+              Campo Fit Requisitos
+              - Valor válido: 0 a 5, em incrementos de 0.5
+              - Valores percentuais (0-100) NÃO são mais aceitos diretamente
+              - Se dados antigos/externos chegarem fora do range, a função normalizeRatingForSave()
+                realiza conversão automática de 0-100 → 0-5
+              - Exemplo: 85 (percentual) → 4.5 (normalizado)
+            */}
             <div className="space-y-2">
               <Label htmlFor="requisitos">Fit Requisitos (⭐)</Label>
               <Input
@@ -199,6 +207,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               />
             </div>
 
+            {/*
+              Campo Fit Perfil
+              - Valor válido: 0 a 5, em incrementos de 0.5
+              - Valores percentuais (0-100) ou escala 0-10 NÃO são mais aceitos diretamente
+              - Se dados antigos/externos chegarem fora do range, a função normalizeRatingForSave()
+                realiza conversão automática para escala 0-5
+              - Exemplo: 8 (escala 0-10) → 4.0 (normalizado)
+            */}
             <div className="space-y-2">
               <Label htmlFor="fit">Fit Perfil (⭐)</Label>
               <Input

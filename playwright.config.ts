@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test"
 import dotenv from "dotenv"
 
-// Carregar variáveis de ambiente do .env.local
-dotenv.config({ path: ".env.local" })
+// Carregar variáveis de ambiente do .env.test (específico para E2E)
+// Se .env.test não existir, fallback para .env.local
+dotenv.config({ path: ".env.test" })
 
 /**
  * Playwright Configuration for E2E Tests
@@ -58,6 +59,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+      NEXT_PUBLIC_SHOW_TEST_DATA: process.env.NEXT_PUBLIC_SHOW_TEST_DATA || "false",
     },
   },
 })

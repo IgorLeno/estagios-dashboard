@@ -7,8 +7,22 @@ export interface VagaEstagio {
   cargo: string
   local: string
   modalidade: "Presencial" | "Híbrido" | "Remoto"
-  requisitos?: number // Star rating 0-5 (with 0.5 increments)
-  perfil?: number // Star rating 0-5 (with 0.5 increments)
+  /**
+   * Fit de Requisitos - Avaliação estrelar 0-5
+   * - Range válido: 0.0 a 5.0
+   * - Incrementos: 0.5
+   * - Valores percentuais (0-100) são automaticamente convertidos via normalizeRatingForSave()
+   * - Exemplo: 85% → 4.5 estrelas
+   */
+  requisitos?: number
+  /**
+   * Fit de Perfil - Avaliação estrelar 0-5
+   * - Range válido: 0.0 a 5.0
+   * - Incrementos: 0.5
+   * - Valores em escala 0-10 ou 0-100 são automaticamente convertidos via normalizeRatingForSave()
+   * - Exemplo: 8/10 → 4.0 estrelas
+   */
+  perfil?: number
   etapa?: string
   status: "Pendente" | "Avançado" | "Melou" | "Contratado"
   observacoes?: string
