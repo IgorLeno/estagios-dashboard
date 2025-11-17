@@ -128,8 +128,8 @@ export function normalizeFitValue(value: number | null | undefined | string): nu
 
   const num = toSafeNumber(value)
 
-  // Se valor está entre 0-100 (formato antigo de porcentagem)
-  if (num > 5 && num <= 100) {
+  // Se valor está entre 10-100 (formato antigo de porcentagem)
+  if (num > 10 && num <= 100) {
     // Converte para 0-5 com step 0.5
     const normalized = Math.round((num / 100) * 5 * 2) / 2
     console.warn(`[normalizeFitValue] Convertendo ${num} (escala 0-100) → ${normalized} (escala 0-5)`)

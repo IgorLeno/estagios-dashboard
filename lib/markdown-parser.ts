@@ -200,27 +200,71 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   }
 
   // Helper: extrair e normalizar número para escala 0-5
-  const parseAndNormalizeFit = (value: string): number | undefined => {
-    const num = Number.parseFloat(value)
+  const parseAndNormalizeScore = (value: string, sourceScale?: 5 | 10 | 100): number | undefined => {
+    // Detectar escala a partir de sufixos na string
+    const trimmedValue = value.trim()
+    let detectedScale: 5 | 10 | 100 | undefined = sourceScale
+
+    // Detectar sufixos que indicam escala antiga
+    if (!detectedScale) {
+      if (/\/(10|5)\b/i.test(trimmedValue)) {
+        // Sufixo "/10" ou "/5" indica escala 0-10 ou 0-5
+        if (/\/(10)\b/i.test(trimmedValue)) {
+          detectedScale = 10
+        } else if (/\/(5)\b/i.test(trimmedValue)) {
+          detectedScale = 5
+        }
+      } else if (/\/(100)\b|%\b/i.test(trimmedValue)) {
+        // Sufixo "/100" ou "%" indica escala 0-100
+        detectedScale = 100
+      }
+    }
+
+    // Extrair número da string (remover sufixos)
+    const numStr = trimmedValue.replace(/\s*\/\s*\d+\s*$|\s*%\s*$/i, "").trim()
+    const num = Number.parseFloat(numStr)
     if (Number.isNaN(num)) return undefined
 
-    // Se valor está em escala antiga, converter para 0-5
-    // Importante: verificar 0-10 ANTES de 0-100, pois 0-10 é subset de 0-100
-    if (num > 5 && num <= 10) {
-      // Formato 0-10 (escala antiga de fit)
-      const normalized = Math.round((num / 10) * 5 * 2) / 2
-      console.warn(`[Parser] Convertendo valor ${num} (escala 0-10) para ${normalized} (escala 0-5)`)
-      return normalized
+    // Se sourceScale foi fornecido ou detectado, aplicar conversão baseada na escala
+    if (detectedScale === 10) {
+      // Converter de 0-10 para 0-5
+      if (num >= 0 && num <= 10) {
+        const normalized = Math.round((num / 10) * 5 * 2) / 2
+        console.warn(`[Parser] Convertendo valor ${num} (escala 0-10) para ${normalized} (escala 0-5)`)
+        return normalized
+      }
+      return undefined
     }
+
+    if (detectedScale === 100) {
+      // Converter de 0-100 para 0-5
+      if (num >= 0 && num <= 100) {
+        const normalized = Math.round((num / 100) * 5 * 2) / 2
+        console.warn(`[Parser] Convertendo valor ${num} (escala 0-100) para ${normalized} (escala 0-5)`)
+        return normalized
+      }
+      return undefined
+    }
+
+    // Se sourceScale é 5 ou não foi fornecido/detectado, usar lógica de detecção automática
+    // Valores > 10 são tratados como 0-100 (escala antiga de requisitos)
     if (num > 10 && num <= 100) {
-      // Formato 0-100 (escala antiga de requisitos)
       const normalized = Math.round((num / 100) * 5 * 2) / 2
       console.warn(`[Parser] Convertendo valor ${num} (escala 0-100) para ${normalized} (escala 0-5)`)
       return normalized
     }
 
-    // Valor já está em escala 0-5, apenas garantir step de 0.5
+    // Valores 5-10 são tratados como 0-10 (escala antiga de fit)
+    if (num > 5 && num <= 10) {
+      const normalized = Math.round((num / 10) * 5 * 2) / 2
+      console.warn(`[Parser] Convertendo valor ${num} (escala 0-10) para ${normalized} (escala 0-5)`)
+      return normalized
+    }
+
+    // Valores 0-5: apenas garantir step de 0.5 (assumir que já está na escala correta)
+    // Mas só se não houver hint de escala antiga
     if (num >= 0 && num <= 5) {
+      // Se não há sufixo e não foi fornecido sourceScale, assumir que já está em 0-5
       return Math.round(num * 2) / 2
     }
 
@@ -228,8 +272,8 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   }
 
   // Helper: extrair número de string (para requisitos/fit de tabela)
-  const parseNumber = (value: string, min = 0, max = 5): number | undefined => {
-    return parseAndNormalizeFit(value)
+  const parseNumber = (value: string): number | undefined => {
+    return parseAndNormalizeScore(value)
   }
 
   // Empresa (prioriza tabela, fallback para regex)
@@ -270,18 +314,19 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   let requisitos: number | undefined
 
   if (requisitosStr) {
-    requisitos = parseNumber(requisitosStr, 0, 5)
+    requisitos = parseNumber(requisitosStr)
   } else {
     // Tentar extrair no formato "X / 5" ou "X/5" (novo formato)
     const match1 = markdown.match(/\*?\*?(requisitos?|score|nota)\*?\*?\s*:?\s*([\d.]+)\s*\/\s*5/i)
     if (match1) {
-      requisitos = parseAndNormalizeFit(match1[2])
+      requisitos = parseAndNormalizeScore(match1[2] + " / 5")
     } else {
       // Fallback: extrair apenas o número (pode ser formato antigo)
       // Suporta: Requisitos, Score, Nota
+      // Deixar a função detectar automaticamente a escala baseada no valor
       const match2 = markdown.match(/\*?\*?(requisitos?|score|nota)\*?\*?\s*:?\s*([\d.]+)/i)
       if (match2) {
-        requisitos = parseAndNormalizeFit(match2[2])
+        requisitos = parseAndNormalizeScore(match2[2])
       }
     }
   }
@@ -292,18 +337,19 @@ export function parseVagaFromMarkdown(markdown: string): ParsedVagaData {
   let fit: number | undefined
 
   if (fitStr) {
-    fit = parseNumber(fitStr, 0, 5)
+    fit = parseNumber(fitStr)
   } else {
     // Tentar extrair no formato "X / 5" ou "X/5" (novo formato)
     // Suporta: Fit, Adequação
     const match1 = markdown.match(/\*?\*?(fit|adequa[çc][ãa]o)\*?\*?\s*:?\s*([\d.]+)\s*\/\s*5/i)
     if (match1) {
-      fit = parseAndNormalizeFit(match1[2])
+      fit = parseAndNormalizeScore(match1[2] + " / 5")
     } else {
       // Fallback: extrair apenas o número (pode ser formato antigo)
+      // Deixar a função detectar automaticamente a escala baseada no valor
       const match2 = markdown.match(/\*?\*?(fit|adequa[çc][ãa]o)\*?\*?\s*:?\s*([\d.]+)/i)
       if (match2) {
-        fit = parseAndNormalizeFit(match2[2])
+        fit = parseAndNormalizeScore(match2[2])
       }
     }
   }
