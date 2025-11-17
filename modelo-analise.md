@@ -60,15 +60,19 @@ Mencione os diferenciais buscados, o grau de autonomia do cargo, frameworks/proj
 Descreva os requisitos técnicos, comportamentais, diferenciais, idioma, experiências desejadas, escopo do trabalho, benefícios, faixa salarial e outros tópicos relevantes.
 
 **Principais responsabilidades:**
+
 - [Lista de responsabilidades]
 
 **Requisitos obrigatórios:**
+
 - [Lista de requisitos]
 
 **Requisitos desejáveis:**
+
 - [Lista de diferenciais]
 
 **Benefícios:**
+
 - [Lista de benefícios]
 
 ---
@@ -76,6 +80,7 @@ Descreva os requisitos técnicos, comportamentais, diferenciais, idioma, experi�
 ## Observações
 
 Inclua aqui qualquer observação adicional relevante:
+
 - Informações específicas da empresa
 - Restrições ou requisitos especiais
 - Histórico de tentativas anteriores
@@ -97,6 +102,7 @@ Inclua aqui qualquer observação adicional relevante:
 ## Exemplo de Preenchimento
 
 ### Resumo
+
 A vaga busca desenvolvedores full stack com experiência sólida em React e Node.js para atuar em projetos de grande escala. A empresa valoriza perfil colaborativo, autonomia técnica e comprometimento com entregas ágeis. O time trabalha com metodologia Scrum e possui squad distribuído globalmente. Inglês avançado é obrigatório para comunicação diária com times internacionais.
 
 ### Dados Gerais
