@@ -16,6 +16,12 @@ export const JobDetailsSchema = z.object({
   beneficios: z.array(z.string()),
   salario: z.string().nullable(),
   idioma_vaga: z.enum(['pt', 'en']),
+  // ParsedVagaData compatibility fields (optional)
+  requisitos: z.number().min(0).max(5).optional(),
+  fit: z.number().min(0).max(5).optional(),
+  etapa: z.string().optional(),
+  status: z.enum(['Pendente', 'Avançado', 'Melou', 'Contratado']).optional(),
+  observacoes: z.string().optional(),
 })
 
 export type JobDetails = z.infer<typeof JobDetailsSchema>
