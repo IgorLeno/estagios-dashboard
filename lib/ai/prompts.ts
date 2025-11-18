@@ -12,16 +12,29 @@ function sanitizeJobDescription(jobDescription: string): string {
   // Truncar para limite máximo
   let sanitized = jobDescription.slice(0, MAX_DESCRIPTION_LENGTH)
   
-  // Neutralize instruction tokens anywhere in the text (case-insensitive)
-  // Replace detected tokens with whitespace to preserve line content
-  const instructionPatterns = /\b(ignore|forget|skip|do not|don't|system|assistant|user):/gi
-  sanitized = sanitized.replace(instructionPatterns, (match) => {
-    // Replace with whitespace of same length to preserve structure
-    return ' '.repeat(match.length)
-  })
+  // Remover delimitadores de instrução comuns antes de processar tokens
+  // Code fences (```+ e ~~~+)
+  sanitized = sanitized.replace(/```+/g, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/~~~+/g, '[REDACTED_INSTRUCTION]')
   
-  // Replace code fence markers with stable placeholder
-  sanitized = sanitized.replace(/```+/g, '[CODE_FENCE]')
+  // Delimitadores de prompt de instrução
+  sanitized = sanitized.replace(/###+/g, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/\[INST\]/gi, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/\[\/INST\]/gi, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/<\|im_start\|>/gi, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/<\|im_end\|>/gi, '[REDACTED_INSTRUCTION]')
+  
+  // Outros marcadores de instrução entre colchetes
+  sanitized = sanitized.replace(/\[(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, '[REDACTED_INSTRUCTION]')
+  sanitized = sanitized.replace(/\[\/(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, '[REDACTED_INSTRUCTION]')
+  
+  // Neutralize instruction tokens: match at line start or after non-word characters (case-insensitive)
+  // Pattern matches tokens at start of line or after non-alphanumeric/underscore characters
+  const instructionPatterns = /(^|[^A-Za-z0-9_])(ignore|forget|skip|do not|don't|system|assistant|user):/gim
+  sanitized = sanitized.replace(instructionPatterns, (match, prefix, token) => {
+    // Replace token and colon with placeholder, preserve prefix if present
+    return prefix + '[REDACTED_INSTRUCTION]'
+  })
   
   return sanitized.trim()
 }

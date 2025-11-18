@@ -14,7 +14,7 @@ export const JobDetailsSchema = z.object({
   requisitos_desejaveis: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(0).default([]),
   responsabilidades: z.array(z.string().min(1, 'Responsabilidade não pode ser vazia')).min(0).default([]),
   beneficios: z.array(z.string().min(1, 'Benefício não pode ser vazio')).min(0).default([]),
-  salario: z.string().regex(/^[R$]?\s*\d+[\d.,\s-]*$|^[\d.,\s-]+$/, 'Formato de salário inválido').nullable(),
+  salario: z.string().regex(/^(?:R\$)?\s*\d+[\d.,\s-]*$|^[\d.,\s-]+$/, 'Formato de salário inválido').nullable(),
   idioma_vaga: z.enum(['pt', 'en']),
   // ParsedVagaData compatibility fields (optional)
   requisitos_score: z.number().min(0).max(5).optional(),
