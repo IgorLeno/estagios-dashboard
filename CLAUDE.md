@@ -417,7 +417,7 @@ pnpm test:coverage
 
 ### Overview
 
-The AI Job Parser uses Gemini 2.0 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
+The AI Job Parser uses Gemini 1.5 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
 
 **What it does:**
 - Accepts raw job description text (from LinkedIn, Indeed, emails, company websites)
