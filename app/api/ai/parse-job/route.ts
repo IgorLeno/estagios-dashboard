@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
 import { parseJobWithGemini, AllModelsFailedError } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
+import { checkRateLimit } from '@/lib/ai/rate-limiter'
 import { ZodError } from 'zod'
 
 /**
@@ -10,6 +11,34 @@ import { ZodError } from 'zod'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Get client identifier (IP address)
+    const identifier = request.headers.get('x-forwarded-for') ||
+                      request.headers.get('x-real-ip') ||
+                      'unknown'
+
+    // Check rate limit
+    const { allowed, remaining, resetTime } = checkRateLimit(identifier)
+
+    if (!allowed) {
+      const retryAfter = Math.ceil((resetTime - Date.now()) / 1000)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rate limit exceeded',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfter),
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
+          }
+        }
+      )
+    }
+
     // Validar configuração
     validateAIConfig()
 
@@ -24,16 +53,25 @@ export async function POST(request: NextRequest) {
 
     console.log(`[AI Parser] Parsing completed in ${duration}ms with model: ${model}`)
 
-    // Retornar sucesso
-    return NextResponse.json({
-      success: true,
-      data,
-      metadata: {
-        duration,
-        model,
-        timestamp: new Date().toISOString(),
+    // Retornar sucesso com rate limit headers
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        metadata: {
+          duration,
+          model,
+          timestamp: new Date().toISOString(),
+        },
       },
-    })
+      {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': String(remaining),
+          'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
+        }
+      }
+    )
   } catch (error) {
     console.error('[AI Parser] Error:', error)
 

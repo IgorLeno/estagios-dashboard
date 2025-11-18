@@ -18,16 +18,26 @@ describe('AI Config', () => {
       expect(() => createGeminiClient()).toThrow('GOOGLE_API_KEY not found')
     })
 
+    it('should throw if GOOGLE_API_KEY is too short', () => {
+      process.env.GOOGLE_API_KEY = 'short'
+      expect(() => createGeminiClient()).toThrow('GOOGLE_API_KEY appears invalid (too short)')
+    })
+
     it('should create client if GOOGLE_API_KEY exists', () => {
-      process.env.GOOGLE_API_KEY = 'test-key'
+      process.env.GOOGLE_API_KEY = 'valid-api-key-at-least-20-chars-long'
       const client = createGeminiClient()
       expect(client).toBeDefined()
     })
   })
 
   describe('validateAIConfig', () => {
+    it('should throw if GOOGLE_API_KEY is too short', () => {
+      process.env.GOOGLE_API_KEY = 'short'
+      expect(() => validateAIConfig()).toThrow('GOOGLE_API_KEY appears invalid (too short)')
+    })
+
     it('should return true if GOOGLE_API_KEY exists', () => {
-      process.env.GOOGLE_API_KEY = 'test-key'
+      process.env.GOOGLE_API_KEY = 'valid-api-key-at-least-20-chars-long'
       expect(validateAIConfig()).toBe(true)
     })
 

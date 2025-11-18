@@ -81,16 +81,21 @@ export async function parseJobWithGemini(
 
       return { data: validated, duration, model: modelName }
 
-    } catch (error: any) {
-      // If quota exceeded (429), try next model
-      if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('quota')) {
+    } catch (error: unknown) {
+      // Check if this is a quota error
+      const isQuotaError =
+        (error && typeof error === 'object' && 'status' in error && error.status === 429) ||
+        (error instanceof Error && (error.message.includes('429') || error.message.includes('quota')))
+
+      if (isQuotaError) {
         console.warn(`[Job Parser] ⚠️  Model ${modelName} quota exceeded, trying fallback...`)
-        lastError = error
+        lastError = error instanceof Error ? error : new Error(String(error))
         continue
       }
 
       // Other errors are critical - throw immediately
-      console.error(`[Job Parser] ❌ Critical error with model ${modelName}:`, error.message)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error(`[Job Parser] ❌ Critical error with model ${modelName}:`, errorMessage)
       throw error
     }
   }
