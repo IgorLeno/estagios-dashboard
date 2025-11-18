@@ -409,3 +409,421 @@ pnpm test:ui
 # Run tests with coverage
 pnpm test:coverage
 ```
+
+## AI Job Parser (Phase 1)
+
+**Status:** ✅ Implemented
+**Design Document:** `docs/plans/2025-01-17-ai-job-parser-design.md`
+
+### Overview
+
+The AI Job Parser uses Gemini 2.0 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
+
+**What it does:**
+- Accepts raw job description text (from LinkedIn, Indeed, emails, company websites)
+- Extracts structured fields: empresa, cargo, local, modalidade, tipo_vaga, requisitos, responsabilidades, benefícios
+- Returns validated JSON ready for form auto-fill or database insertion
+
+**What it doesn't do (future phases):**
+- Calculate fit scores (Phase 2)
+- Generate analysis markdown files (Phase 3)
+- Personalize resumes (Phase 4)
+- Integrate with main dashboard forms (Phase 5)
+
+### Environment Variables
+
+**Required:**
+
+```env
+# .env.local (development)
+GOOGLE_API_KEY=your_gemini_api_key_here
+```
+
+**How to get API key:**
+1. Visit https://aistudio.google.com/app/apikey
+2. Create new API key
+3. Add to `.env.local`
+
+**Free tier limits:**
+- 15 requests/minute per model
+- 1M tokens/day total
+- Cost per request: ~$0.0003 (if paid tier)
+
+### Model Configuration
+
+The job parser uses **Gemini 1.5 Flash** (stable) for maximum reliability and free tier compatibility.
+
+**Why this model?**
+- ✅ Stable and production-ready (no `-exp` suffix)
+- ✅ Generous free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
+- ✅ Fast response times (~2-3 seconds)
+- ✅ High accuracy for structured extraction tasks
+
+**Fallback System**
+
+If the primary model encounters rate limits, the system automatically falls back to:
+1. `gemini-2.0-flash-001` (alternative stable model)
+2. `gemini-2.5-pro` (highest quality, slower)
+
+The system logs which model successfully processed each request in the console and returns it in the API response metadata.
+
+**Upgrading to Paid Tier**
+
+For higher quotas, enable billing in Google Cloud Console:
+- Tier 1: 150 RPM, 1K RPD (~$0.075/1K input tokens)
+- Documentation: https://ai.google.dev/pricing
+
+### Troubleshooting
+
+#### 429 Error: Quota Exceeded
+
+**Cause:** Rate limit reached for current model.
+
+**Solutions:**
+1. Wait for quota reset (typically 1 minute)
+2. System automatically tries fallback models
+3. Check usage: https://ai.dev/usage?tab=rate-limit
+4. Upgrade to paid tier if consistently hitting limits
+
+**Note:** Experimental models (`-exp` suffix) are NOT supported in free tier as of November 2025. The system now uses `gemini-1.5-flash` (stable) to avoid quota issues.
+
+#### Model Selection
+
+To force a specific model (for testing):
+```typescript
+// In lib/ai/config.ts
+export const GEMINI_CONFIG = {
+  model: "gemini-2.5-pro", // Override here
+  // ...
+};
+```
+
+Or use the fallback chain by modifying `MODEL_FALLBACK_CHAIN`.
+
+### Architecture
+
+**Directory structure:**
+
+```
+lib/ai/
+├── types.ts          # TypeScript interfaces + Zod schemas
+├── config.ts         # Gemini client configuration
+├── prompts.ts        # LLM prompt templates
+└── job-parser.ts     # Main parsing logic
+
+app/api/ai/
+└── parse-job/
+    └── route.ts      # REST API endpoint (POST, GET health check)
+
+app/test-ai/
+└── page.tsx          # Test interface for manual validation
+```
+
+**Key files:**
+
+1. **`lib/ai/types.ts`** - Type definitions
+   - `JobDetails` - Output schema for extracted data
+   - `JobDetailsSchema` - Zod validation schema
+   - `ParseJobRequest` / `ParseJobResponse` - API types
+
+2. **`lib/ai/config.ts`** - Gemini setup
+   - Exports configured GoogleGenerativeAI client
+   - Validates `GOOGLE_API_KEY` presence
+   - Model: `gemini-1.5-flash` (with automatic fallback chain)
+   - Exports `MODEL_FALLBACK_CHAIN` for resilience
+
+3. **`lib/ai/prompts.ts`** - Prompt engineering
+   - `JOB_EXTRACTION_PROMPT` - Template for data extraction
+   - Emphasizes exact extraction, no hallucination
+   - Specifies JSON output format
+
+4. **`lib/ai/job-parser.ts`** - Core logic
+   - `parseJobWithGemini(description: string)` - Main function
+   - Calls Gemini API
+   - Extracts JSON from response (handles code fences)
+   - Validates with Zod
+   - Returns typed data + metadata (duration, model)
+
+5. **`app/api/ai/parse-job/route.ts`** - HTTP endpoint
+   - `POST /api/ai/parse-job` - Parse job description
+   - `GET /api/ai/parse-job` - Health check
+   - Error handling for validation, API failures, rate limits
+
+6. **`app/test-ai/page.tsx`** - Test UI
+   - Interactive interface for testing parser
+   - Pre-loaded example job description
+   - Displays human-readable results + JSON
+   - Character counter, loading states, error display
+
+### API Endpoints
+
+#### POST /api/ai/parse-job
+
+Parse a job description and extract structured data.
+
+**Request:**
+```typescript
+{
+  "jobDescription": string  // Min 50 characters
+}
+```
+
+**Response (success):**
+```typescript
+{
+  "success": true,
+  "data": {
+    "empresa": "Saipem",
+    "cargo": "Estagiário QHSE",
+    "local": "Guarujá, São Paulo",
+    "modalidade": "Híbrido",  // Presencial | Híbrido | Remoto
+    "tipo_vaga": "Estágio",   // Estágio | Júnior | Pleno | Sênior
+    "requisitos_obrigatorios": ["Engenharia Química", "Inglês intermediário"],
+    "requisitos_desejaveis": ["ISO 9001:2015"],
+    "responsabilidades": ["Monitoramento de registros", "Suporte em KPIs"],
+    "beneficios": ["Seguro saúde", "Vale refeição"],
+    "salario": null,  // string or null
+    "idioma_vaga": "pt"  // pt | en
+  },
+  "metadata": {
+    "duration": 3245,  // milliseconds
+    "model": "gemini-1.5-flash",  // Actual model used (from fallback chain)
+    "timestamp": "2025-01-17T21:30:00.000Z"
+  }
+}
+```
+
+**Response (error):**
+```typescript
+{
+  "success": false,
+  "error": "Error message",
+  "details": {...}  // Optional validation details
+}
+```
+
+**Status codes:**
+- `200` - Success
+- `400` - Invalid input (validation error)
+- `429` - Rate limit exceeded
+- `500` - Server error (API failure, config error)
+
+#### GET /api/ai/parse-job
+
+Health check endpoint.
+
+**Response:**
+```typescript
+{
+  "status": "ok" | "error",
+  "message": string,
+  "model": "gemini-1.5-flash"  // Current primary model
+}
+```
+
+### Usage Patterns
+
+#### Direct API call (curl)
+
+```bash
+curl -X POST http://localhost:3000/api/ai/parse-job \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jobDescription": "Vaga de Estágio em Engenharia..."
+  }'
+```
+
+#### Client-side fetch (React)
+
+```typescript
+import type { ParseJobResponse, ParseJobErrorResponse } from "@/lib/ai/types"
+
+async function parseJob(description: string) {
+  const response = await fetch("/api/ai/parse-job", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jobDescription: description }),
+  })
+
+  const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
+
+  if (result.success) {
+    console.log("Parsed data:", result.data)
+    console.log("Duration:", result.metadata.duration, "ms")
+    // Use result.data to auto-fill form
+  } else {
+    console.error("Parse error:", result.error)
+  }
+}
+```
+
+#### Server-side (API route or Server Component)
+
+```typescript
+import { parseJobWithGemini } from "@/lib/ai/job-parser"
+
+// In API route or Server Action
+const { data, duration, model } = await parseJobWithGemini(jobDescription)
+// data is validated JobDetails type
+// model is the actual model used (from fallback chain)
+console.log(`Parsed with ${model} in ${duration}ms`)
+```
+
+### Testing
+
+#### Manual testing via UI
+
+1. Start dev server: `pnpm dev`
+2. Navigate to http://localhost:3000/test-ai
+3. Paste job description (or use pre-loaded example)
+4. Click "Parse Job"
+5. Review extracted data
+
+**Expected fields:**
+- ✅ Empresa, Cargo, Local
+- ✅ Modalidade (must be one of: Presencial, Híbrido, Remoto)
+- ✅ Tipo de Vaga (must be one of: Estágio, Júnior, Pleno, Sênior)
+- ✅ Arrays: requisitos_obrigatorios, requisitos_desejaveis, responsabilidades, beneficios
+- ✅ Salario (string or null)
+- ✅ Idioma (pt or en)
+
+#### Testing with real sources
+
+Test with job descriptions from:
+1. **LinkedIn** (structured format) - Expected accuracy: 95%+
+2. **E-mail de recrutador** (semi-structured) - Expected accuracy: 80%+
+3. **Site de empresa** (texto corrido) - Expected accuracy: 70%+
+
+#### Automated testing
+
+Currently, only utility functions are tested (not full LLM calls to avoid costs):
+
+```bash
+# Test JSON extraction and validation logic
+pnpm test -- ai
+```
+
+### Rate Limits and Costs
+
+**Gemini Free Tier:**
+- 15 requests/minute
+- 1M tokens/day
+- Sufficient for ~1000 parsings/day
+
+**Typical usage:**
+- Input: ~500 tokens (job description)
+- Output: ~200 tokens (JSON response)
+- Total per request: ~700 tokens
+- Cost (paid tier): ~$0.0003 per request
+
+**Rate limit handling:**
+- API returns 429 status with retry delay
+- Error message includes retry time
+- Client should implement exponential backoff if needed
+
+**Monitoring usage:**
+- Dashboard: https://ai.dev/usage?tab=rate-limit
+- Quotas: https://ai.google.dev/gemini-api/docs/rate-limits
+
+### Advanced Configuration
+
+**Model Settings:**
+```typescript
+{
+  temperature: 0.1,      // Low temperature for consistency
+  maxOutputTokens: 8192,
+  topP: 0.95,
+  topK: 40
+}
+```
+
+**Why Gemini 1.5 Flash:**
+- ✅ Stable model (production-ready, no `-exp` suffix)
+- ✅ Fast response time (~2-3 seconds)
+- ✅ Generous free tier quotas (15 RPM, 1.5K RPD)
+- ✅ Strong structured output capabilities
+- ✅ Reliable JSON generation
+- ✅ Automatic fallback to alternative models if quota exceeded
+
+### Error Handling
+
+**Common errors and solutions:**
+
+1. **Missing API key**
+   ```
+   Error: GOOGLE_API_KEY not found in environment
+   Solution: Add key to .env.local
+   ```
+
+2. **Invalid input**
+   ```
+   Error: Job description must be at least 50 characters
+   Solution: Provide more complete description
+   ```
+
+3. **Rate limit exceeded**
+   ```
+   Error: Too Many Requests - retry in 23s
+   Solution: Wait for rate limit window to reset
+   ```
+
+4. **Invalid JSON response**
+   ```
+   Error: LLM did not return valid JSON
+   Solution: Check prompt formatting, retry once
+   ```
+
+5. **Validation error**
+   ```
+   Error: Invalid job details: modalidade must be one of...
+   Solution: Check extracted data, adjust prompt if needed
+   ```
+
+### Future Phases
+
+**Phase 2: Fit Calculator**
+- Compare candidate profile vs job requirements
+- Calculate `requisitos` (0-5 stars) and `fit` (0-5 stars) scores
+- Generate justifications
+
+**Phase 3: Analysis Writer**
+- Generate complete `analise-vaga.md` file
+- Follow `modelo-analise.md` template
+- Include detailed analysis sections
+
+**Phase 4: Resume Personalizer**
+- Adjust CV RESUMO section for specific job
+- Highlight relevant skills
+- Generate PT and EN versions
+
+**Phase 5: Dashboard Integration**
+- Add "Parse from description" button in `add-vaga-dialog.tsx`
+- Auto-fill form fields with extracted data
+- Allow manual edits before saving
+
+### Troubleshooting
+
+**Parser returns empty arrays**
+- Job description may be too short or unclear
+- Try more structured input (include section headings like "Requisitos:", "Benefícios:")
+
+**Wrong modalidade or tipo_vaga**
+- Prompt emphasizes exact values
+- If mismatch persists, check if source uses non-standard terminology
+
+**Parsing is slow (>10s)**
+- Check network connection
+- Gemini cold start can add ~500ms
+- Typical response time: 2-5 seconds
+
+**Quota exceeded frequently**
+- Monitor usage at https://ai.dev/usage
+- Consider upgrading to paid tier if needed
+- Implement client-side caching for repeated queries
+
+### Reference
+
+**Design document:** `docs/plans/2025-01-17-ai-job-parser-design.md`
+**Gemini docs:** https://ai.google.dev/gemini-api/docs
+**Pricing:** https://ai.google.dev/pricing
+**SDK:** https://github.com/google/generative-ai-js

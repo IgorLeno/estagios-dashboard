@@ -19,6 +19,7 @@
     "cleanup:test-data": "tsx scripts/cleanup-test-data.ts",
     "cleanup:test-data:all": "tsx scripts/cleanup-test-data.ts -- --all",
     "validate:ai": "tsx scripts/validate-ai-setup.ts",
+    "validate:gemini": "tsx scripts/validate-gemini-setup.ts",
     "start": "next start"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { createGeminiClient, GEMINI_CONFIG } from './config'
+import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType } from './config'
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from './prompts'
 import { JobDetails, JobDetailsSchema } from './types'
 
@@ -33,41 +33,71 @@ export function extractJsonFromResponse(response: string): unknown {
 }
 
 /**
- * Parseia descrição de vaga usando Gemini
+ * Parseia descrição de vaga usando Gemini com fallback automático
+ * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
  */
 export async function parseJobWithGemini(
   jobDescription: string
-): Promise<{ data: JobDetails; duration: number }> {
+): Promise<{ data: JobDetails; duration: number; model: string }> {
   const startTime = Date.now()
 
-  // Criar cliente Gemini
-  const genAI = createGeminiClient()
-  const model = genAI.getGenerativeModel({
-    model: GEMINI_CONFIG.model,
-    generationConfig: {
-      temperature: GEMINI_CONFIG.temperature,
-      maxOutputTokens: GEMINI_CONFIG.maxOutputTokens,
-      topP: GEMINI_CONFIG.topP,
-      topK: GEMINI_CONFIG.topK,
-    },
-    systemInstruction: SYSTEM_PROMPT,
-  })
+  let lastError: Error | null = null
 
-  // Montar prompt
-  const prompt = buildJobExtractionPrompt(jobDescription)
+  // Try each model in fallback chain
+  for (const modelName of MODEL_FALLBACK_CHAIN) {
+    try {
+      console.log(`[Job Parser] Attempting with model: ${modelName}`)
 
-  // Chamar Gemini
-  const result = await model.generateContent(prompt)
-  const response = result.response
-  const text = response.text()
+      // Criar cliente Gemini
+      const genAI = createGeminiClient()
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: GEMINI_CONFIG.temperature,
+          maxOutputTokens: GEMINI_CONFIG.maxOutputTokens,
+          topP: GEMINI_CONFIG.topP,
+          topK: GEMINI_CONFIG.topK,
+        },
+        systemInstruction: SYSTEM_PROMPT,
+      })
 
-  // Extrair JSON
-  const jsonData = extractJsonFromResponse(text)
+      // Montar prompt
+      const prompt = buildJobExtractionPrompt(jobDescription)
 
-  // Validar com Zod
-  const validated = JobDetailsSchema.parse(jsonData)
+      // Chamar Gemini
+      const result = await model.generateContent(prompt)
+      const response = result.response
+      const text = response.text()
 
-  const duration = Date.now() - startTime
+      // Extrair JSON
+      const jsonData = extractJsonFromResponse(text)
 
-  return { data: validated, duration }
+      // Validar com Zod
+      const validated = JobDetailsSchema.parse(jsonData)
+
+      const duration = Date.now() - startTime
+
+      console.log(`[Job Parser] ✅ Success with model: ${modelName} (${duration}ms)`)
+
+      return { data: validated, duration, model: modelName }
+
+    } catch (error: any) {
+      // If quota exceeded (429), try next model
+      if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('quota')) {
+        console.warn(`[Job Parser] ⚠️  Model ${modelName} quota exceeded, trying fallback...`)
+        lastError = error
+        continue
+      }
+
+      // Other errors are critical - throw immediately
+      console.error(`[Job Parser] ❌ Critical error with model ${modelName}:`, error.message)
+      throw error
+    }
+  }
+
+  // All models failed due to quota
+  throw new Error(
+    `All models exhausted due to quota limits. Last error: ${lastError?.message || 'Unknown'}. ` +
+    `Consider upgrading to paid tier: https://ai.google.dev/pricing`
+  )
 }

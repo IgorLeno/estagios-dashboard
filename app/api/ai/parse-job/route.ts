@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateAIConfig } from '@/lib/ai/config'
+import { validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
 import { parseJobWithGemini } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
 import { ZodError } from 'zod'
@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     console.log('[AI Parser] Starting job parsing...')
 
     // Chamar serviço de parsing
-    const { data, duration } = await parseJobWithGemini(jobDescription)
+    const { data, duration, model } = await parseJobWithGemini(jobDescription)
 
-    console.log(`[AI Parser] Parsing completed in ${duration}ms`)
+    console.log(`[AI Parser] Parsing completed in ${duration}ms with model: ${model}`)
 
     // Retornar sucesso
     return NextResponse.json({
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       data,
       metadata: {
         duration,
-        model: 'gemini-2.0-flash-exp',
+        model,
         timestamp: new Date().toISOString(),
       },
     })
@@ -70,7 +70,7 @@ export async function GET() {
     return NextResponse.json({
       status: 'ok',
       message: 'AI Parser configured correctly',
-      model: 'gemini-2.0-flash-exp',
+      model: GEMINI_CONFIG.model,
     })
   } catch (error) {
     return NextResponse.json(

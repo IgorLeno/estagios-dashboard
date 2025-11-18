@@ -1,10 +1,26 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 /**
+ * Model fallback chain for resilience
+ * Using gemini-1.5-flash (stable) as primary - NOT experimental versions
+ * Free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
+ *
+ * Background: gemini-2.0-flash-exp quota reduced to ZERO in free tier (Nov 2025)
+ * See: https://discuss.ai.google.dev/t/has-gemini-api-completely-stopped-its-free-tier/76543
+ */
+export const MODEL_FALLBACK_CHAIN = [
+  'gemini-1.5-flash',      // Primary: Most reliable for free tier
+  'gemini-2.0-flash-001',  // Secondary: Stable alternative
+  'gemini-2.5-pro',        // Tertiary: Highest quality (slower, may require billing)
+] as const
+
+export type GeminiModelType = typeof MODEL_FALLBACK_CHAIN[number]
+
+/**
  * Configuração do modelo Gemini
  */
 export const GEMINI_CONFIG = {
-  model: 'gemini-2.0-flash-exp',
+  model: 'gemini-1.5-flash', // Using stable model, not experimental
   temperature: 0.1, // Baixa para consistência
   maxOutputTokens: 8192,
   topP: 0.95,
@@ -13,9 +29,10 @@ export const GEMINI_CONFIG = {
 
 /**
  * Cria cliente Gemini configurado
+ * @param modelOverride - Optional model to use instead of default
  * @throws Error se GOOGLE_API_KEY não estiver configurada
  */
-export function createGeminiClient(): GoogleGenerativeAI {
+export function createGeminiClient(modelOverride?: GeminiModelType): GoogleGenerativeAI {
   const apiKey = process.env.GOOGLE_API_KEY
 
   if (!apiKey) {
