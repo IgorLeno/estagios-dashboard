@@ -28,7 +28,7 @@ describe('extractJsonFromResponse', () => {
 
   it('should throw if no JSON found', () => {
     const response = 'No JSON here at all'
-    expect(() => extractJsonFromResponse(response)).toThrow('No valid JSON found')
+    expect(() => extractJsonFromResponse(response)).toThrow('No valid JSON found in LLM response')
   })
 
   it('should throw if JSON is invalid', () => {

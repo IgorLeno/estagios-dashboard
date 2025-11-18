@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build REST API endpoint that uses Gemini 1.5 Flash to extract structured data from unstructured job descriptions.
+**Goal:** Build REST API endpoint that uses Gemini 1.5 Flash (with automatic fallback) to extract structured data from unstructured job descriptions.
 
 **Architecture:** Server-side API route receives job description text, calls Gemini LLM with extraction prompt, validates response with Zod, returns structured JSON compatible with existing `ParsedVagaData` interface.
 

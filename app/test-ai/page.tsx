@@ -56,6 +56,16 @@ export default function TestAIPage() {
         body: JSON.stringify({ jobDescription }),
       })
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        setResult({
+          success: false,
+          error: `HTTP ${response.status}: ${response.statusText}`,
+          details: errorData,
+        })
+        return
+      }
+
       const data = await response.json()
       setResult(data)
     } catch (error) {
@@ -156,7 +166,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_obrigatorios.map((req, i) => (
-                            <li key={i} className="text-sm">
+                            <li key={`${req}-${i}`} className="text-sm">
                               {req}
                             </li>
                           ))}
@@ -171,7 +181,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_desejaveis.map((req, i) => (
-                            <li key={i} className="text-sm">
+                            <li key={`${req}-${i}`} className="text-sm">
                               {req}
                             </li>
                           ))}
@@ -186,7 +196,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.responsabilidades.map((resp, i) => (
-                            <li key={i} className="text-sm">
+                            <li key={`${resp}-${i}`} className="text-sm">
                               {resp}
                             </li>
                           ))}
@@ -201,7 +211,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.beneficios.map((ben, i) => (
-                            <li key={i} className="text-sm">
+                            <li key={`${ben}-${i}`} className="text-sm">
                               {ben}
                             </li>
                           ))}

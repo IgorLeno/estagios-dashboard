@@ -30,8 +30,13 @@ describe('JobDetailsSchema', () => {
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it('should reject missing required fields', () => {
+  it('should reject empty string for empresa', () => {
     const invalid = { ...validJob, empresa: '' }
+    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  })
+
+  it('should reject undefined empresa field', () => {
+    const { empresa, ...invalid } = validJob
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
@@ -54,6 +59,14 @@ describe('JobDetailsSchema', () => {
       expect(() => JobDetailsSchema.parse(invalidLow)).toThrow()
     })
 
+    it('should accept requisitos boundary values 0 and 5', () => {
+      const withZero = { ...validJob, requisitos: 0 }
+      expect(() => JobDetailsSchema.parse(withZero)).not.toThrow()
+
+      const withFive = { ...validJob, requisitos: 5 }
+      expect(() => JobDetailsSchema.parse(withFive)).not.toThrow()
+    })
+
     it('should accept optional fit field (0-5 range)', () => {
       const withFit = { ...validJob, fit: 3.5 }
       expect(() => JobDetailsSchema.parse(withFit)).not.toThrow()
@@ -65,6 +78,14 @@ describe('JobDetailsSchema', () => {
 
       const invalidLow = { ...validJob, fit: -0.5 }
       expect(() => JobDetailsSchema.parse(invalidLow)).toThrow()
+    })
+
+    it('should accept fit boundary values 0 and 5', () => {
+      const withZero = { ...validJob, fit: 0 }
+      expect(() => JobDetailsSchema.parse(withZero)).not.toThrow()
+
+      const withFive = { ...validJob, fit: 5 }
+      expect(() => JobDetailsSchema.parse(withFive)).not.toThrow()
     })
 
     it('should accept optional etapa field', () => {

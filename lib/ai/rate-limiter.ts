@@ -57,7 +57,6 @@ export function checkRateLimit(identifier: string): {
 
   // Increment count
   entry.count++
-  rateLimitMap.set(identifier, entry)
 
   return {
     allowed: true,

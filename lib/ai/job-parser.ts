@@ -19,11 +19,22 @@ export function extractJsonFromResponse(response: string): unknown {
   }
 
   // Tentar extrair JSON direto
-  const jsonMatch = response.match(/\{[\s\S]+\}/)
-
-  if (jsonMatch) {
+  // Try to find JSON object boundaries more carefully
+  const jsonStart = response.indexOf('{')
+  if (jsonStart !== -1) {
+    let braceCount = 0
+    let jsonEnd = jsonStart
+    for (let i = jsonStart; i < response.length; i++) {
+      if (response[i] === '{') braceCount++
+      if (response[i] === '}') braceCount--
+      if (braceCount === 0) {
+        jsonEnd = i + 1
+        break
+      }
+    }
+    const jsonText = response.slice(jsonStart, jsonEnd)
     try {
-      return JSON.parse(jsonMatch[0])
+      return JSON.parse(jsonText)
     } catch (error) {
       throw new Error('Invalid JSON format')
     }

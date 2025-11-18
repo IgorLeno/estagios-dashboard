@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
 import { parseJobWithGemini, AllModelsFailedError } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
-import { checkRateLimit } from '@/lib/ai/rate-limiter'
+import { checkRateLimit, RATE_LIMIT_CONFIG } from '@/lib/ai/rate-limiter'
 import { ZodError } from 'zod'
 
 /**
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
           status: 429,
           headers: {
             'Retry-After': String(retryAfter),
-            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
           }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       },
       {
         headers: {
-          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
           'X-RateLimit-Remaining': String(remaining),
           'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
         }

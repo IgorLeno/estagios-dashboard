@@ -46,21 +46,55 @@ async function validateGeminiSetup() {
       console.log(`   ✅ ${model}: Working`)
       console.log(`   ⏱️  Response time: ${duration}ms`)
       console.log(`   📝 Response length: ${response.length} characters\n`)
-    } catch (error: any) {
-      if (error.status === 429 || error?.message?.includes('429') || error?.message?.includes('quota')) {
+    } catch (error: unknown) {
+      // Type guard para detectar erros de quota/429
+      const isQuotaError = (err: unknown): boolean => {
+        // Verifica se é um objeto com status === 429 (numérico ou string)
+        if (
+          typeof err === 'object' &&
+          err !== null &&
+          ('status' in err || 'statusCode' in err)
+        ) {
+          const status =
+            'status' in err ? err.status : 'statusCode' in err ? err.statusCode : null
+          if (status === 429 || status === '429') {
+            return true
+          }
+        }
+
+        // Verifica se é um Error com mensagem contendo '429' ou 'quota'
+        if (err instanceof Error) {
+          const message = err.message.toLowerCase()
+          return message.includes('429') || message.includes('quota')
+        }
+
+        return false
+      }
+
+      if (isQuotaError(error)) {
         console.warn(`   ⚠️  ${model}: Quota exceeded (may be expected in free tier)`)
         console.warn(`   💡 Tip: System will automatically fallback to next model\n`)
       } else {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
         console.error(`   ❌ ${model}: Failed`)
-        console.error(`   Error: ${error.message}\n`)
+        console.error(`   Error: ${errorMessage}\n`)
       }
     }
   }
 
   console.log('✅ Validation complete!')
   console.log('\n📊 Summary:')
-  console.log('   - Primary model: gemini-1.5-flash')
-  console.log('   - Fallback models: gemini-2.0-flash-001, gemini-2.5-pro')
+  
+  // Build dynamic summary from MODEL_FALLBACK_CHAIN
+  const primaryModel = MODEL_FALLBACK_CHAIN[0] ?? 'N/A'
+  const fallbackModels = MODEL_FALLBACK_CHAIN.slice(1)
+  const fallbackModelsStr = fallbackModels.length > 0 
+    ? fallbackModels.join(', ') 
+    : 'None'
+  
+  console.log(`   - Primary model: ${primaryModel}`)
+  console.log(`   - Fallback models: ${fallbackModelsStr}`)
   console.log('   - System automatically tries fallbacks on quota errors')
   console.log('\n💡 Next steps:')
   console.log('   1. Start dev server: pnpm dev')
