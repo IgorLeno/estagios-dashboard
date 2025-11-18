@@ -5,8 +5,11 @@ import { ParseJobRequestSchema } from '@/lib/ai/types'
 import { ZodError } from 'zod'
 
 /**
- * POST /api/ai/parse-job
- * Parseia descrição de vaga usando Gemini
+ * Parse a job description using the Gemini parser and return a structured result.
+ *
+ * @returns On success: an object with `success: true`, `data` (parsed result), and `metadata` containing `duration` (ms), `model`, and `timestamp`. 
+ * On validation failure: HTTP 400 and an object with `success: false`, `error: 'Invalid request data'`, and `details` (validation errors). 
+ * On other errors: HTTP 500 and an object with `success: false` and `error` (error message).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -61,8 +64,11 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/ai/parse-job
- * Health check endpoint
+ * Performs a health and configuration check for the AI parser.
+ *
+ * Validates the AI configuration and returns a JSON response indicating whether the parser is configured correctly.
+ *
+ * @returns A JSON response with `{ status, message, model }` when configuration is valid (`status` is `"ok"`), or `{ status: "error", message }` with HTTP status 500 when validation fails. The `model` field contains the configured Gemini model when present.
  */
 export async function GET() {
   try {

@@ -1,5 +1,8 @@
 /**
- * Prompt para extrair dados estruturados de descrições de vagas
+ * Builds a Portuguese prompt that instructs an analyst to extract structured job-posting data from a provided job description.
+ *
+ * @param jobDescription - The job description text to embed in the prompt.
+ * @returns The prompt text (in Portuguese) that directs extraction into a fixed JSON schema and enforces output rules, including producing a single JSON object inside a code fence with the fields: "empresa", "cargo", "local", "modalidade", "tipo_vaga", "requisitos_obrigatorios", "requisitos_desejaveis", "responsabilidades", "beneficios", "salario", and "idioma_vaga".
  */
 export function buildJobExtractionPrompt(jobDescription: string): string {
   return `

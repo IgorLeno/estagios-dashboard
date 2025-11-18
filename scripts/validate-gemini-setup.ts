@@ -1,8 +1,9 @@
 import { createGeminiClient, MODEL_FALLBACK_CHAIN } from '@/lib/ai/config'
 
 /**
- * Validates Gemini API setup and tests all models in fallback chain
- * Run with: pnpm tsx scripts/validate-gemini-setup.ts
+ * Validate Gemini API configuration and exercise each model in the configured fallback chain.
+ *
+ * If `GOOGLE_API_KEY` is missing the process exits with code 1. For each model the function attempts a sample generation and logs success, response time, and response length; quota-related conditions are logged as warnings and other failures are logged as errors. After testing all models it prints a concise summary and suggested next steps.
  */
 async function validateGeminiSetup() {
   console.log('🔍 Validating Gemini API setup...\n')

@@ -3,8 +3,15 @@ import { buildJobExtractionPrompt, SYSTEM_PROMPT } from './prompts'
 import { JobDetails, JobDetailsSchema } from './types'
 
 /**
- * Extrai JSON de resposta do LLM
- * Suporta JSON em code fence ou JSON direto
+ * Extracts a JSON value from an LLM text response.
+ *
+ * Supports JSON inside a ```json code fence or a standalone JSON object anywhere in the text.
+ *
+ * @param response - The raw LLM output that may contain JSON
+ * @returns The parsed JSON value
+ * @throws Error `'Invalid JSON in code fence'` if a JSON code fence is found but cannot be parsed
+ * @throws Error `'Invalid JSON format'` if a JSON-like substring is found but cannot be parsed
+ * @throws Error `'No valid JSON found in LLM response'` if no JSON content can be located
  */
 export function extractJsonFromResponse(response: string): unknown {
   // Tentar extrair de code fence primeiro
@@ -33,8 +40,11 @@ export function extractJsonFromResponse(response: string): unknown {
 }
 
 /**
- * Parseia descrição de vaga usando Gemini com fallback automático
- * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
+ * Parses a job description into structured JobDetails using Gemini with automatic model fallbacks.
+ *
+ * @param jobDescription - The free-text job description to extract structured fields from
+ * @returns An object containing the validated JobDetails (`data`), the elapsed time in milliseconds (`duration`), and the model name that succeeded (`model`)
+ * @throws Error if a non-quota error occurs during parsing or if all models are exhausted due to quota limits
  */
 export async function parseJobWithGemini(
   jobDescription: string

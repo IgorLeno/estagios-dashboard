@@ -28,9 +28,11 @@ export const GEMINI_CONFIG = {
 } as const
 
 /**
- * Cria cliente Gemini configurado
- * @param modelOverride - Optional model to use instead of default
- * @throws Error se GOOGLE_API_KEY não estiver configurada
+ * Create a Gemini client configured with the environment API key.
+ *
+ * @param modelOverride - Optional model identifier to select a specific Gemini model (accepted but not currently used)
+ * @returns A GoogleGenerativeAI client initialized with the configured API key
+ * @throws Error if `GOOGLE_API_KEY` is not set in the environment
  */
 export function createGeminiClient(modelOverride?: GeminiModelType): GoogleGenerativeAI {
   const apiKey = process.env.GOOGLE_API_KEY
@@ -46,8 +48,10 @@ export function createGeminiClient(modelOverride?: GeminiModelType): GoogleGener
 }
 
 /**
- * Valida que a configuração AI está correta
- * @throws Error se configuração inválida
+ * Ensures the required AI configuration is present.
+ *
+ * @returns `true` if the AI configuration is valid.
+ * @throws Error If `GOOGLE_API_KEY` is not set; the error message advises adding it (e.g., in `.env.local`) and includes a URL to obtain a key.
  */
 export function validateAIConfig(): boolean {
   if (!process.env.GOOGLE_API_KEY) {

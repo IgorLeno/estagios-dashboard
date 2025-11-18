@@ -38,6 +38,16 @@ Benefícios:
 - Vale transporte
 - Bolsa auxílio competitiva`
 
+/**
+ * Test page component that provides an interactive UI to parse job descriptions and inspect results.
+ *
+ * Displays a textarea prefilled with an example job description, a parse button with loading state,
+ * and conditionally renders either a human-readable extracted-data card plus a JSON response card on success,
+ * or an error card with details on failure. When parsing, the component POSTs `{ jobDescription }` to
+ * `/api/ai/parse-job` and stores the API response for rendering.
+ *
+ * @returns The React element for the AI job parser test interface.
+ */
 export default function TestAIPage() {
   const [jobDescription, setJobDescription] = useState(EXAMPLE_JOB_DESCRIPTION)
   const [isLoading, setIsLoading] = useState(false)
