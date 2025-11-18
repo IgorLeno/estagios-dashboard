@@ -39,7 +39,7 @@ describe('AI Config', () => {
 
   describe('GEMINI_CONFIG', () => {
     it('should have correct model name', () => {
-      expect(GEMINI_CONFIG.model).toBe('gemini-2.0-flash-exp')
+      expect(GEMINI_CONFIG.model).toBe('gemini-1.5-flash')
     })
 
     it('should have low temperature for consistency', () => {
