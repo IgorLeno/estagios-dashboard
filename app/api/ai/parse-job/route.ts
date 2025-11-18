@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
-import { parseJobWithGemini, AllModelsFailedError } from '@/lib/ai/job-parser'
+import { validateAIConfig, GEMINI_CONFIG, AI_TIMEOUT_CONFIG } from '@/lib/ai/config'
+import { parseJobWithGemini } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
-import { checkRateLimit, RATE_LIMIT_CONFIG } from '@/lib/ai/rate-limiter'
+import {
+  checkRateLimit,
+  consumeRequest,
+  consumeTokens,
+  RATE_LIMIT_CONFIG,
+} from '@/lib/ai/rate-limiter'
+import { withTimeout, TimeoutError } from '@/lib/ai/utils'
 import { ZodError } from 'zod'
 
 /**
@@ -41,28 +47,77 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check rate limit
-    const { allowed, remaining, resetTime } = checkRateLimit(identifier)
+    // Verificar rate limits (requests e tokens)
+    const rateLimitCheck = await checkRateLimit(identifier)
 
-    if (!allowed) {
-      const retryAfter = Math.ceil((resetTime - Date.now()) / 1000)
+    if (!rateLimitCheck.allowed) {
+      // Determinar qual limite foi excedido e calcular retry-after
+      const now = Date.now()
+      const requestRetryAfter = Math.max(
+        0,
+        Math.ceil((rateLimitCheck.resetTime.requests - now) / 1000)
+      )
+      const tokenRetryAfter = Math.max(
+        0,
+        Math.ceil((rateLimitCheck.resetTime.tokens - now) / 1000)
+      )
+      const retryAfter = Math.max(requestRetryAfter, tokenRetryAfter)
+
+      // Determinar mensagem de erro específica
+      const isRequestLimit = rateLimitCheck.remaining.requests === 0
+      const isTokenLimit = rateLimitCheck.remaining.tokens === 0
+      let errorMessage = 'Rate limit exceeded'
+      if (isRequestLimit && isTokenLimit) {
+        errorMessage = 'Request and token limits exceeded'
+      } else if (isRequestLimit) {
+        errorMessage = 'Request rate limit exceeded (15 requests/minute)'
+      } else if (isTokenLimit) {
+        errorMessage = 'Daily token limit exceeded (1M tokens/day)'
+      }
+
       return NextResponse.json(
         {
           success: false,
-          error: 'Rate limit exceeded',
+          error: errorMessage,
+          limits: {
+            requests: {
+              remaining: rateLimitCheck.remaining.requests,
+              limit: rateLimitCheck.limit.requests,
+              resetAt: new Date(rateLimitCheck.resetTime.requests).toISOString(),
+            },
+            tokens: {
+              remaining: rateLimitCheck.remaining.tokens,
+              limit: rateLimitCheck.limit.tokens,
+              resetAt: new Date(rateLimitCheck.resetTime.tokens).toISOString(),
+            },
+          },
           retryAfter,
         },
         {
           status: 429,
           headers: {
             'Retry-After': String(retryAfter),
-            'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
-          }
+            'X-RateLimit-Limit-Requests': String(rateLimitCheck.limit.requests),
+            'X-RateLimit-Remaining-Requests': String(
+              rateLimitCheck.remaining.requests
+            ),
+            'X-RateLimit-Reset-Requests': String(
+              Math.floor(rateLimitCheck.resetTime.requests / 1000)
+            ),
+            'X-RateLimit-Limit-Tokens': String(rateLimitCheck.limit.tokens),
+            'X-RateLimit-Remaining-Tokens': String(
+              rateLimitCheck.remaining.tokens
+            ),
+            'X-RateLimit-Reset-Tokens': String(
+              Math.floor(rateLimitCheck.resetTime.tokens / 1000)
+            ),
+          },
         }
       )
     }
+
+    // Consumir um request do budget
+    await consumeRequest(identifier)
 
     // Validar configuração
     validateAIConfig()
@@ -74,21 +129,23 @@ export async function POST(request: NextRequest) {
     console.log('[AI Parser] Starting job parsing...')
 
     // Chamar serviço de parsing com timeout protection
-    const TIMEOUT_MS = 30000 // 30 seconds
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Request timeout: parsing took longer than 30 seconds'))
-      }, TIMEOUT_MS)
-    })
-
-    const { data, duration, model } = await Promise.race([
+    const { data, duration, model, tokenUsage } = await withTimeout(
       parseJobWithGemini(jobDescription),
-      timeoutPromise,
-    ])
+      AI_TIMEOUT_CONFIG.parsingTimeoutMs,
+      `Parsing took longer than ${AI_TIMEOUT_CONFIG.parsingTimeoutMs}ms`
+    )
 
-    console.log(`[AI Parser] Parsing completed in ${duration}ms with model: ${model}`)
+    console.log(
+      `[AI Parser] Parsing completed in ${duration}ms with model: ${model} (${tokenUsage.totalTokens} tokens)`
+    )
 
-    // Retornar sucesso com rate limit headers
+    // Consumir tokens do budget
+    await consumeTokens(identifier, tokenUsage.totalTokens)
+
+    // Verificar limites atualizados para headers de resposta
+    const updatedLimits = await checkRateLimit(identifier)
+
+    // Retornar sucesso com rate limit headers atualizados
     return NextResponse.json(
       {
         success: true,
@@ -96,22 +153,50 @@ export async function POST(request: NextRequest) {
         metadata: {
           duration,
           model,
+          tokenUsage,
           timestamp: new Date().toISOString(),
         },
       },
       {
         headers: {
-          'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
-          'X-RateLimit-Remaining': String(remaining),
-          'X-RateLimit-Reset': String(Math.floor(resetTime / 1000)),
-        }
+          'X-RateLimit-Limit-Requests': String(
+            updatedLimits.limit.requests
+          ),
+          'X-RateLimit-Remaining-Requests': String(
+            updatedLimits.remaining.requests
+          ),
+          'X-RateLimit-Reset-Requests': String(
+            Math.floor(updatedLimits.resetTime.requests / 1000)
+          ),
+          'X-RateLimit-Limit-Tokens': String(updatedLimits.limit.tokens),
+          'X-RateLimit-Remaining-Tokens': String(
+            updatedLimits.remaining.tokens
+          ),
+          'X-RateLimit-Reset-Tokens': String(
+            Math.floor(updatedLimits.resetTime.tokens / 1000)
+          ),
+        },
       }
     )
   } catch (error) {
-    console.error('[AI Parser] Error:', error)
+    // Erro de timeout - log claro e retornar 504
+    if (error instanceof TimeoutError) {
+      console.error(
+        `[AI Parser] Timeout: Parsing exceeded ${error.timeoutMs}ms limit`
+      )
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Request timeout',
+          message: `Parsing operation timed out after ${error.timeoutMs}ms`,
+        },
+        { status: 504 }
+      )
+    }
 
     // Erro de validação Zod
     if (error instanceof ZodError) {
+      console.error('[AI Parser] Validation error:', error)
       return NextResponse.json(
         {
           success: false,
@@ -123,17 +208,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Erro genérico - sanitize error messages
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    const isTimeout = errorMessage.includes('timeout')
-    
-    console.error('[AI Parser] Error details:', error)
+    console.error('[AI Parser] Error:', error)
     
     return NextResponse.json(
       {
         success: false,
-        error: isTimeout ? 'Request timeout' : 'Internal server error',
+        error: 'Internal server error',
       },
-      { status: isTimeout ? 504 : 500 }
+      { status: 500 }
     )
   }
 }

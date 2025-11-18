@@ -1,6 +1,6 @@
 # AI Job Parser Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
 
 **Goal:** Build REST API endpoint that uses Gemini 2.0 Flash (gemini-2.0-flash-exp) to extract structured data from unstructured job descriptions.
 
@@ -49,6 +49,18 @@ Append to `.env.example`:
 # Get your key at: https://aistudio.google.com/app/apikey
 # Free tier: 15 requests/minute, 1M tokens/day
 GOOGLE_API_KEY=your_gemini_api_key_here
+
+# === Rate Limiting Configuration ===
+# Gemini Free Tier Limits (defaults shown below)
+# Adjust these if you have a paid tier or different quotas
+GOOGLE_API_RATE_LIMIT_PER_MIN=15
+GOOGLE_API_RATE_LIMIT_TOKENS_PER_DAY=1000000
+
+# === Redis Configuration (Optional) ===
+# For production deployments with multiple instances, set REDIS_URL to enable
+# Redis-backed rate limiting. If not set, in-memory rate limiting will be used.
+# REDIS_URL=redis://localhost:6379
+# REDIS_URL=redis://user:password@host:port
 ```
 
 **Step 5: Add validation script to package.json**
@@ -149,9 +161,11 @@ export const JobDetailsSchema = z.object({
   modalidade: z.enum(['Presencial', 'Híbrido', 'Remoto']),
   tipo_vaga: z.enum(['Estágio', 'Júnior', 'Pleno', 'Sênior']),
   requisitos_obrigatorios: z.array(z.string()),
-  requisitos_desejaveis: z.array(z.string()),
-  responsabilidades: z.array(z.string()),
-  beneficios: z.array(z.string()),
+export const ParseJobRequestSchema = z.object({
+  jobDescription: z.string()
+    .min(50, 'Descrição da vaga deve ter ao menos 50 caracteres')
+    .max(10000, 'Descrição da vaga não pode exceder 10.000 caracteres'),
+})
   salario: z.string().nullable(),
   idioma_vaga: z.enum(['pt', 'en']),
 })
@@ -746,12 +760,16 @@ Responsabilidades:
 - Participação em treinamentos
 
 Requisitos obrigatórios:
-- Graduação em andamento em Engenharia (Química, Mecânica, Produção)
-- Inglês intermediário
-- MS Excel, Word, PowerPoint
-
-Requisitos desejáveis:
-- Conhecimento em ISO 9001:2015
+export default function TestAIPage() {
+  const [jobDescription, setJobDescription] = useState(EXAMPLE_JOB)
+  const [result, setResult] = useState<JobDetails | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [metadata, setMetadata] = useState<{
+    duration: number
+    model: string
+    timestamp: string
+  } | null>(null)
 
 Benefícios:
 - Seguro saúde e odontológico
@@ -1028,7 +1046,7 @@ Expected: Valid JSON response with extracted data
 2. Click "Parse Job Description" (using pre-loaded example)
 3. Verify all fields extracted correctly
 
-**Step 5: Verify quality checklist**
+- [ ] Parsing completes in < 30 seconds (typical: 5-15s)
 
 - [ ] Empresa extracted correctly
 - [ ] Cargo extracted correctly

@@ -70,12 +70,58 @@ export function extractJsonFromResponse(response: string): unknown {
 }
 
 /**
+ * Extrai informações de uso de tokens da resposta do Gemini
+ */
+function extractTokenUsage(response: any): {
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+} {
+  try {
+    // A resposta do Gemini pode ter usageMetadata em diferentes lugares
+    const usageMetadata =
+      response.usageMetadata ||
+      (response as any).candidates?.[0]?.usageMetadata ||
+      null
+
+    if (usageMetadata) {
+      const promptTokenCount = usageMetadata.promptTokenCount || 0
+      const candidatesTokenCount = usageMetadata.candidatesTokenCount || 0
+      const totalTokenCount =
+        usageMetadata.totalTokenCount ||
+        promptTokenCount + candidatesTokenCount
+
+      return {
+        inputTokens: promptTokenCount,
+        outputTokens: candidatesTokenCount,
+        totalTokens: totalTokenCount,
+      }
+    }
+  } catch (error) {
+    console.warn('[Job Parser] Could not extract token usage:', error)
+  }
+
+  // Fallback: estimativa baseada em caracteres (aproximação)
+  // Gemini usa ~4 caracteres por token em média
+  return {
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+  }
+}
+
+/**
  * Parseia descrição de vaga usando Gemini com fallback automático
  * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
  */
 export async function parseJobWithGemini(
   jobDescription: string
-): Promise<{ data: JobDetails; duration: number; model: string }> {
+): Promise<{
+  data: JobDetails
+  duration: number
+  model: string
+  tokenUsage: { inputTokens: number; outputTokens: number; totalTokens: number }
+}> {
   const startTime = Date.now()
 
   let lastError: Error | null = null
@@ -108,6 +154,9 @@ export async function parseJobWithGemini(
       const response = result.response
       const text = response.text()
 
+      // Extrair token usage
+      const tokenUsage = extractTokenUsage(response)
+
       // Extrair JSON
       const jsonData = extractJsonFromResponse(text)
 
@@ -116,9 +165,11 @@ export async function parseJobWithGemini(
 
       const duration = Date.now() - startTime
 
-      console.log(`[Job Parser] ✅ Success with model: ${modelName} (${duration}ms)`)
+      console.log(
+        `[Job Parser] ✅ Success with model: ${modelName} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
+      )
 
-      return { data: validated, duration, model: modelName }
+      return { data: validated, duration, model: modelName, tokenUsage }
 
     } catch (error: unknown) {
       // Check if this is a quota error

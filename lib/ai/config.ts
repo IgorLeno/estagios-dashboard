@@ -28,6 +28,21 @@ export const GEMINI_CONFIG = {
 } as const
 
 /**
+ * Configuração de timeout para operações AI
+ * Timeout padrão de 30 segundos para parsing de vagas
+ */
+export const AI_TIMEOUT_CONFIG = {
+  /**
+   * Timeout em milissegundos para operações de parsing
+   * Pode ser sobrescrito via variável de ambiente AI_PARSING_TIMEOUT_MS
+   */
+  parsingTimeoutMs: Number.parseInt(
+    process.env.AI_PARSING_TIMEOUT_MS || '30000',
+    10
+  ),
+} as const
+
+/**
  * Helper para validar e obter API key
  * Centraliza validação de API key para evitar duplicação
  * @throws Error se GOOGLE_API_KEY não estiver configurada ou for inválida

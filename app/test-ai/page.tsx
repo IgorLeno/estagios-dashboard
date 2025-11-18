@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import type { ParseJobResponse, ParseJobErrorResponse } from "@/lib/ai/types"
 
 const EXAMPLE_JOB_DESCRIPTION = `Vaga de Estágio em Engenharia Química - Saipem
@@ -76,9 +77,49 @@ export default function TestAIPage() {
           parseError = err instanceof Error ? err.message : String(err)
         }
 
+        const errorResponse = typeof errorData === 'object' && errorData !== null 
+          ? errorData as ParseJobErrorResponse 
+          : null
+
+        // Extract user-friendly error message
+        let errorMessage = errorResponse?.error || `HTTP ${response.status}: ${response.statusText}`
+        
+        // Handle validation errors (400) with friendly messages
+        if (response.status === 400 && errorResponse?.details) {
+          const details = errorResponse.details
+          
+          // Check if it's a Zod validation error
+          if (typeof details === 'object' && 'issues' in details && Array.isArray(details.issues)) {
+            const zodIssues = details.issues as Array<{ path: (string | number)[], message: string }>
+            const validationMessages = zodIssues.map(issue => {
+              const field = issue.path.join('.')
+              return field ? `${field}: ${issue.message}` : issue.message
+            })
+            
+            if (validationMessages.length > 0) {
+              errorMessage = validationMessages.join(', ')
+            }
+          }
+        }
+
+        // Show toast notification for better UX
+        if (response.status === 400) {
+          toast.error("Validação falhou", {
+            description: errorMessage,
+          })
+        } else if (response.status === 429) {
+          toast.error("Limite de requisições excedido", {
+            description: errorResponse?.error || "Tente novamente em alguns instantes",
+          })
+        } else {
+          toast.error("Erro ao processar", {
+            description: errorMessage,
+          })
+        }
+
         setResult({
           success: false,
-          error: `HTTP ${response.status}: ${response.statusText}`,
+          error: errorMessage,
           details: {
             ...(typeof errorData === 'object' && errorData !== null ? errorData : {}),
             ...(parseError && { parseError }),
@@ -90,18 +131,32 @@ export default function TestAIPage() {
 
       const data = await response.json()
       setResult(data)
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        setResult({
-          success: false,
-          error: "Request timed out after 30 seconds",
-        })
-      } else {
-        setResult({
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+      
+      // Show success toast
+      if (data.success) {
+        toast.success("Vaga parseada com sucesso!", {
+          description: `Processado em ${data.metadata.duration}ms usando ${data.metadata.model}`,
         })
       }
+    } catch (error) {
+      let errorMessage: string
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        errorMessage = "Request timed out after 30 seconds"
+        toast.error("Tempo esgotado", {
+          description: "A requisição demorou mais de 30 segundos. Tente novamente.",
+        })
+      } else {
+        errorMessage = error instanceof Error ? error.message : "Unknown error"
+        toast.error("Erro de conexão", {
+          description: errorMessage,
+        })
+      }
+      
+      setResult({
+        success: false,
+        error: errorMessage,
+      })
     } finally {
       clearTimeout(timeoutId)
       setIsLoading(false)
@@ -136,9 +191,16 @@ export default function TestAIPage() {
             />
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">
-                {jobDescription.length} characters (min: 50)
+                {jobDescription.length} characters
+                {jobDescription.length > 0 && jobDescription.length < 50 && (
+                  <span className="text-destructive ml-2">(mínimo: 50 caracteres)</span>
+                )}
               </p>
-              <Button onClick={handleParse} disabled={isLoading || jobDescription.length < 50}>
+              <Button 
+                onClick={handleParse} 
+                disabled={isLoading}
+                aria-disabled={isLoading}
+              >
                 {isLoading ? "Parsing..." : "Parse Job"}
               </Button>
             </div>
