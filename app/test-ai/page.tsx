@@ -47,6 +47,11 @@ export default function TestAIPage() {
     setIsLoading(true)
     setResult(null)
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 30000) // 30 seconds
+
     try {
       const response = await fetch("/api/ai/parse-job", {
         method: "POST",
@@ -54,14 +59,31 @@ export default function TestAIPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ jobDescription }),
+        signal: controller.signal,
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
+        // Try to parse JSON, but capture both raw text and parse errors
+        let errorData: unknown = {}
+        let parseError: string | null = null
+        let rawText: string | null = null
+
+        try {
+          const text = await response.text()
+          rawText = text
+          errorData = JSON.parse(text)
+        } catch (err) {
+          parseError = err instanceof Error ? err.message : String(err)
+        }
+
         setResult({
           success: false,
           error: `HTTP ${response.status}: ${response.statusText}`,
-          details: errorData,
+          details: {
+            ...(typeof errorData === 'object' && errorData !== null ? errorData : {}),
+            ...(parseError && { parseError }),
+            ...(rawText && { rawResponse: rawText }),
+          },
         })
         return
       }
@@ -69,11 +91,19 @@ export default function TestAIPage() {
       const data = await response.json()
       setResult(data)
     } catch (error) {
-      setResult({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      })
+      if (error instanceof Error && error.name === 'AbortError') {
+        setResult({
+          success: false,
+          error: "Request timed out after 30 seconds",
+        })
+      } else {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
+      }
     } finally {
+      clearTimeout(timeoutId)
       setIsLoading(false)
     }
   }

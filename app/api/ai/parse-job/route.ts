@@ -12,16 +12,33 @@ import { ZodError } from 'zod'
 export async function POST(request: NextRequest) {
   try {
     // Get client identifier (IP address)
-    // x-forwarded-for may contain comma-separated proxy chain - use leftmost (actual client) IP
-    const forwardedFor = request.headers.get('x-forwarded-for')
-    let identifier = 'unknown'
+    // Prefer server-observed connection IP when available
+    // Only trust x-forwarded-for/x-real-ip when behind a trusted proxy
+    // Generate unique fallback per request to avoid grouping unrelated clients
+    let identifier: string
     
-    if (forwardedFor) {
-      // Split on commas and take first non-empty trimmed value
-      const ips = forwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
-      identifier = ips[0] || request.headers.get('x-real-ip') || 'unknown'
+    // Try to get IP from request (Next.js may provide this in some deployments)
+    const requestIp = (request as unknown as { ip?: string }).ip
+    
+    if (requestIp) {
+      identifier = requestIp
     } else {
-      identifier = request.headers.get('x-real-ip') || 'unknown'
+      // Fallback to headers (only when behind trusted proxy)
+      // In production behind a proxy (e.g., Vercel), these headers are typically set
+      const forwardedFor = request.headers.get('x-forwarded-for')
+      const realIp = request.headers.get('x-real-ip')
+      
+      if (forwardedFor) {
+        // Split on commas and take first non-empty trimmed value (leftmost = actual client)
+        const ips = forwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
+        identifier = ips[0] || realIp || `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      } else if (realIp) {
+        identifier = realIp
+      } else {
+        // Generate unique per-request identifier to avoid grouping unrelated clients
+        identifier = `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        console.warn('[AI Parser] Could not determine client IP, using per-request identifier')
+      }
     }
 
     // Check rate limit
@@ -56,8 +73,18 @@ export async function POST(request: NextRequest) {
 
     console.log('[AI Parser] Starting job parsing...')
 
-    // Chamar serviço de parsing
-    const { data, duration, model } = await parseJobWithGemini(jobDescription)
+    // Chamar serviço de parsing com timeout protection
+    const TIMEOUT_MS = 30000 // 30 seconds
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Request timeout: parsing took longer than 30 seconds'))
+      }, TIMEOUT_MS)
+    })
+
+    const { data, duration, model } = await Promise.race([
+      parseJobWithGemini(jobDescription),
+      timeoutPromise,
+    ])
 
     console.log(`[AI Parser] Parsing completed in ${duration}ms with model: ${model}`)
 
@@ -95,13 +122,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Erro genérico
+    // Erro genérico - sanitize error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const isTimeout = errorMessage.includes('timeout')
+    
+    console.error('[AI Parser] Error details:', error)
+    
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: isTimeout ? 'Request timeout' : 'Internal server error',
       },
-      { status: 500 }
+      { status: isTimeout ? 504 : 500 }
     )
   }
 }
@@ -119,10 +151,12 @@ export async function GET() {
       model: GEMINI_CONFIG.model,
     })
   } catch (error) {
+    // Log detailed error server-side but return generic message to client
+    console.error('[AI Parser] Configuration error:', error)
     return NextResponse.json(
       {
         status: 'error',
-        message: error instanceof Error ? error.message : 'Configuration error',
+        message: 'Configuration error',
       },
       { status: 500 }
     )

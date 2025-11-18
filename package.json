@@ -18,7 +18,7 @@
     "test:e2e:report": "playwright show-report",
     "cleanup:test-data": "tsx scripts/cleanup-test-data.ts",
     "cleanup:test-data:all": "tsx scripts/cleanup-test-data.ts -- --all",
-    "validate:ai": "tsx scripts/validate-ai-setup.ts",
+    "validate:ai": "tsx scripts/validate-gemini-setup.ts",
     "validate:gemini": "tsx scripts/validate-gemini-setup.ts",
     "start": "next start"
   },

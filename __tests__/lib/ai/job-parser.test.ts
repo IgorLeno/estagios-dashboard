@@ -78,4 +78,29 @@ describe('extractJsonFromResponse', () => {
     const result = extractJsonFromResponse(response)
     expect(result).toEqual({ test: 'data' })
   })
+
+  it('should return undefined or throw for empty string input', () => {
+    expect(() => extractJsonFromResponse('')).toThrow('No valid JSON found in LLM response')
+  })
+
+  it('should return undefined or throw for whitespace-only input', () => {
+    expect(() => extractJsonFromResponse('   \n\t  ')).toThrow('No valid JSON found in LLM response')
+  })
+
+  it('should handle malformed code fence (missing closing triple backticks)', () => {
+    const response = '```json\n{"test": "data"}'
+    // Should attempt to parse JSON directly when fence is incomplete
+    const result = extractJsonFromResponse(response)
+    expect(result).toEqual({ test: 'data' })
+  })
+
+  it('should handle JSON containing unicode/special characters', () => {
+    const response = '```json\n{"empresa": "São Paulo", "cargo": "Desenvolvedor", "emoji": "🚀"}\n```'
+    const result = extractJsonFromResponse(response)
+    expect(result).toEqual({
+      empresa: 'São Paulo',
+      cargo: 'Desenvolvedor',
+      emoji: '🚀',
+    })
+  })
 })

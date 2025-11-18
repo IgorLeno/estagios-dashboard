@@ -44,8 +44,9 @@ function getValidatedApiKey(): string {
   }
 
   // Validate key format without exposing it
-  if (apiKey.length < 20) {
-    throw new Error('GOOGLE_API_KEY appears invalid (too short)')
+  // Gemini API keys start with "AIza" and are typically 39 characters
+  if (!apiKey.startsWith('AIza') || apiKey.length !== 39) {
+    throw new Error('GOOGLE_API_KEY appears invalid')
   }
 
   return apiKey

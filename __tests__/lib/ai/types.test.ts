@@ -130,7 +130,7 @@ describe('JobDetailsSchema', () => {
     expect(() => JobDetailsSchema.parse(englishJob)).not.toThrow()
   })
 
-  it('should accept empty arrays for requisitos_obrigatorios when undefined', () => {
+  it('should throw when requisitos_obrigatorios is missing', () => {
     const { requisitos_obrigatorios, ...jobWithoutRequisitos } = validJob
     expect(() => JobDetailsSchema.parse(jobWithoutRequisitos)).toThrow()
   })

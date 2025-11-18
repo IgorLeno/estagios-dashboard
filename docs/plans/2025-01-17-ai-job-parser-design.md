@@ -113,7 +113,7 @@ Atualmente, o usuário precisa:
 - Botão "Parse Job"
 - Display JSON + human-readable
 
-**7. Script de Validação** (`scripts/validate-ai-setup.ts`)
+**7. Script de Validação** (`scripts/validate-gemini-setup.ts`)
 - Valida `GOOGLE_API_KEY` configurada
 - Testa conexão com Gemini
 - Executa via `pnpm validate:ai`
@@ -140,7 +140,7 @@ app/
 │   └── page.tsx
 
 scripts/
-└── validate-ai-setup.ts         # Script de validação
+└── validate-gemini-setup.ts         # Script de validação
 ```
 
 **Total:** 7-8 arquivos novos
@@ -577,7 +577,7 @@ pnpm add @google/generative-ai
 ```json
 {
   "scripts": {
-    "validate:ai": "tsx scripts/validate-ai-setup.ts"
+    "validate:ai": "tsx scripts/validate-gemini-setup.ts"
   }
 }
 ```
@@ -682,7 +682,7 @@ GOOGLE_API_KEY = <sua_key_aqui>
 - [ ] Criar `lib/ai/job-parser.ts` - Lógica principal
 - [ ] Criar `app/api/ai/parse-job/route.ts` - API endpoint
 - [ ] Criar `app/test-ai/page.tsx` - Interface de teste
-- [ ] Criar `scripts/validate-ai-setup.ts` - Script de validação
+- [ ] Criar `scripts/validate-gemini-setup.ts` - Script de validação
 
 ### Validação
 - [ ] Executar `pnpm validate:ai` - deve passar

@@ -62,6 +62,14 @@ async function validateGeminiSetup() {
     }
   }
 
+  // Guard against empty MODEL_FALLBACK_CHAIN (runtime check for safety)
+  // This check ensures the array has models even if config changes in future
+  if (!MODEL_FALLBACK_CHAIN || MODEL_FALLBACK_CHAIN.length < 1) {
+    console.error('❌ MODEL_FALLBACK_CHAIN is empty or invalid')
+    console.error('   No models available for testing. Check config.ts')
+    process.exit(1)
+  }
+
   console.log('✅ Validation complete!')
   console.log('\n📊 Summary:')
   

@@ -20,24 +20,49 @@ export function extractJsonFromResponse(response: string): unknown {
   }
 
   // Tentar extrair JSON direto
-  // Try to find JSON object boundaries more carefully
+  // Parser-aware extraction that tracks string boundaries
   const jsonStart = response.indexOf('{')
   if (jsonStart !== -1) {
     let braceCount = 0
     let jsonEnd = jsonStart
+    let inString = false
+    let escapeNext = false
+    
     for (let i = jsonStart; i < response.length; i++) {
-      if (response[i] === '{') braceCount++
-      if (response[i] === '}') braceCount--
-      if (braceCount === 0) {
-        jsonEnd = i + 1
-        break
+      const char = response[i]
+      
+      if (escapeNext) {
+        escapeNext = false
+        continue
+      }
+      
+      if (char === '\\') {
+        escapeNext = true
+        continue
+      }
+      
+      if (char === '"') {
+        inString = !inString
+        continue
+      }
+      
+      // Only count braces when not inside a string
+      if (!inString) {
+        if (char === '{') braceCount++
+        if (char === '}') braceCount--
+        if (braceCount === 0) {
+          jsonEnd = i + 1
+          break
+        }
       }
     }
+    
     const jsonText = response.slice(jsonStart, jsonEnd)
     try {
       return JSON.parse(jsonText)
     } catch (error) {
-      throw new Error('Invalid JSON format')
+      const parseError = error instanceof Error ? error.message : String(error)
+      throw new Error(`Invalid JSON format: ${parseError}`)
     }
   }
 

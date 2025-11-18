@@ -10,10 +10,10 @@ export const JobDetailsSchema = z.object({
   local: z.string().min(1, 'Local é obrigatório'),
   modalidade: z.enum(['Presencial', 'Híbrido', 'Remoto']),
   tipo_vaga: z.enum(['Estágio', 'Júnior', 'Pleno', 'Sênior']),
-  requisitos_obrigatorios: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(1, 'Pelo menos um requisito obrigatório é necessário'),
-  requisitos_desejaveis: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(1, 'Pelo menos um requisito desejável é necessário'),
-  responsabilidades: z.array(z.string().min(1, 'Responsabilidade não pode ser vazia')).min(1, 'Pelo menos uma responsabilidade é necessária'),
-  beneficios: z.array(z.string().min(1, 'Benefício não pode ser vazio')).min(1, 'Pelo menos um benefício é necessário'),
+  requisitos_obrigatorios: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(0).default([]),
+  requisitos_desejaveis: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(0).default([]),
+  responsabilidades: z.array(z.string().min(1, 'Responsabilidade não pode ser vazia')).min(0).default([]),
+  beneficios: z.array(z.string().min(1, 'Benefício não pode ser vazio')).min(0).default([]),
   salario: z.string().regex(/^[R$]?\s*\d+[\d.,\s-]*$|^[\d.,\s-]+$/, 'Formato de salário inválido').nullable(),
   idioma_vaga: z.enum(['pt', 'en']),
   // ParsedVagaData compatibility fields (optional)
@@ -56,7 +56,16 @@ export type ParseJobResponse = z.infer<typeof ParseJobResponseSchema>
 export const ParseJobErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.string(),
-  details: z.unknown().optional(),
+  details: z.union([
+    z.object({
+      issues: z.array(z.object({
+        path: z.array(z.union([z.string(), z.number()])),
+        message: z.string(),
+      })),
+    }),
+    z.record(z.unknown()),
+    z.string(),
+  ]).optional(),
 })
 
 export type ParseJobErrorResponse = z.infer<typeof ParseJobErrorResponseSchema>

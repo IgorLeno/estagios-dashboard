@@ -14,9 +14,9 @@ export function isQuotaError(error: unknown): boolean {
     error !== null &&
     ('status' in error || 'statusCode' in error)
   ) {
-    const status =
-      'status' in error ? error.status : 'statusCode' in error ? error.statusCode : null
-    if (status === 429 || status === '429') {
+    const status = (error as { status?: unknown; statusCode?: unknown }).status ?? 
+                   (error as { statusCode?: unknown }).statusCode ?? null
+    if (Number(status) === 429) {
       return true
     }
   }

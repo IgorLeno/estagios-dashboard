@@ -12,15 +12,16 @@ function sanitizeJobDescription(jobDescription: string): string {
   // Truncar para limite máximo
   let sanitized = jobDescription.slice(0, MAX_DESCRIPTION_LENGTH)
   
-  // Remover padrões que podem ser interpretados como instruções
-  // Remove linhas que começam com comandos comuns de prompt injection
-  const instructionPatterns = /^(ignore|forget|skip|do not|don't|system|assistant|user):/gmi
-  sanitized = sanitized.split('\n')
-    .filter(line => !instructionPatterns.test(line.trim()))
-    .join('\n')
+  // Neutralize instruction tokens anywhere in the text (case-insensitive)
+  // Replace detected tokens with whitespace to preserve line content
+  const instructionPatterns = /\b(ignore|forget|skip|do not|don't|system|assistant|user):/gi
+  sanitized = sanitized.replace(instructionPatterns, (match) => {
+    // Replace with whitespace of same length to preserve structure
+    return ' '.repeat(match.length)
+  })
   
-  // Escapar sequências de code fence que podem quebrar o prompt
-  sanitized = sanitized.replace(/```/g, '\\`\\`\\`')
+  // Replace code fence markers with stable placeholder
+  sanitized = sanitized.replace(/```+/g, '[CODE_FENCE]')
   
   return sanitized.trim()
 }

@@ -56,7 +56,7 @@ GOOGLE_API_KEY=your_gemini_api_key_here
 Add to `"scripts"` section:
 
 ```json
-"validate:ai": "tsx scripts/validate-ai-setup.ts"
+"validate:ai": "tsx scripts/validate-gemini-setup.ts"
 ```
 
 **Step 6: Commit setup**
@@ -920,11 +920,11 @@ git commit -m "feat(ai): add test interface for job parser"
 ## Task 8: Create Validation Script
 
 **Files:**
-- Create: `scripts/validate-ai-setup.ts`
+- Create: `scripts/validate-gemini-setup.ts`
 
 **Step 1: Create validation script**
 
-Create `scripts/validate-ai-setup.ts`:
+Create `scripts/validate-gemini-setup.ts`:
 
 ```typescript
 import { createGeminiClient, GEMINI_CONFIG } from '../lib/ai/config'
@@ -980,7 +980,7 @@ Expected: All checks pass, shows test response from Gemini
 **Step 3: Commit validation script**
 
 ```bash
-git add scripts/validate-ai-setup.ts
+git add scripts/validate-gemini-setup.ts
 git commit -m "feat(ai): add validation script for AI setup"
 ```
 
@@ -1139,7 +1139,7 @@ Expected: All pass
 - [ ] `lib/ai/job-parser.ts` - Main parsing service
 - [ ] `app/api/ai/parse-job/route.ts` - API endpoint
 - [ ] `app/test-ai/page.tsx` - Test interface
-- [ ] `scripts/validate-ai-setup.ts` - Validation script
+- [ ] `scripts/validate-gemini-setup.ts` - Validation script
 
 **Tests:**
 - [ ] `__tests__/lib/ai/types.test.ts` - Schema validation
