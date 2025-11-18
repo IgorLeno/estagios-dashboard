@@ -706,9 +706,15 @@ pnpm test -- ai
 ### Rate Limits and Costs
 
 **Gemini Free Tier:**
-- 15 requests/minute
+- 15 requests/minute (see lines 448, 709, 717)
 - 1M tokens/day
 - Sufficient for ~1000 parsings/day
+
+**Application Rate Limiter:**
+- Configured to 10 requests/minute in `rate-limiter.ts`
+- Intentionally more conservative than Gemini's 15 requests/minute limit
+- This safety margin prevents exceeding API quotas and eases burst handling and retry logic
+- The lower app limit provides a buffer zone to handle traffic spikes and retry attempts without hitting Gemini's hard limits
 
 **Typical usage:**
 - Input: ~500 tokens (job description)

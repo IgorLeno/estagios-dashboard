@@ -28,10 +28,12 @@ export const GEMINI_CONFIG = {
 } as const
 
 /**
- * Cria cliente Gemini configurado
- * @throws Error se GOOGLE_API_KEY não estiver configurada
+ * Helper para validar e obter API key
+ * Centraliza validação de API key para evitar duplicação
+ * @throws Error se GOOGLE_API_KEY não estiver configurada ou for inválida
+ * @returns API key validada
  */
-export function createGeminiClient(): GoogleGenerativeAI {
+function getValidatedApiKey(): string {
   const apiKey = process.env.GOOGLE_API_KEY
 
   if (!apiKey) {
@@ -46,6 +48,15 @@ export function createGeminiClient(): GoogleGenerativeAI {
     throw new Error('GOOGLE_API_KEY appears invalid (too short)')
   }
 
+  return apiKey
+}
+
+/**
+ * Cria cliente Gemini configurado
+ * @throws Error se GOOGLE_API_KEY não estiver configurada
+ */
+export function createGeminiClient(): GoogleGenerativeAI {
+  const apiKey = getValidatedApiKey()
   return new GoogleGenerativeAI(apiKey)
 }
 
@@ -54,19 +65,6 @@ export function createGeminiClient(): GoogleGenerativeAI {
  * @throws Error se configuração inválida
  */
 export function validateAIConfig(): boolean {
-  const apiKey = process.env.GOOGLE_API_KEY
-
-  if (!apiKey) {
-    throw new Error(
-      'GOOGLE_API_KEY not found. Configure in .env.local\n' +
-      'Get your key at: https://aistudio.google.com/app/apikey'
-    )
-  }
-
-  // Validate key format without exposing it
-  if (apiKey.length < 20) {
-    throw new Error('GOOGLE_API_KEY appears invalid (too short)')
-  }
-
+  getValidatedApiKey()
   return true
 }

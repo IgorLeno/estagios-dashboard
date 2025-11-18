@@ -1,4 +1,5 @@
 import { createGeminiClient, MODEL_FALLBACK_CHAIN } from '@/lib/ai/config'
+import { isQuotaError } from '@/lib/ai/errors'
 
 /**
  * Validates Gemini API setup and tests all models in fallback chain
@@ -16,12 +17,14 @@ async function validateGeminiSetup() {
   }
   console.log('✅ API key found\n')
 
+  // Criar cliente Gemini uma única vez (fora do loop)
+  const genAI = createGeminiClient()
+
   // Test each model in fallback chain
   for (const model of MODEL_FALLBACK_CHAIN) {
     try {
       console.log(`📡 Testing model: ${model}`)
 
-      const genAI = createGeminiClient()
       const geminiModel = genAI.getGenerativeModel({
         model,
         generationConfig: {
@@ -47,30 +50,6 @@ async function validateGeminiSetup() {
       console.log(`   ⏱️  Response time: ${duration}ms`)
       console.log(`   📝 Response length: ${response.length} characters\n`)
     } catch (error: unknown) {
-      // Type guard para detectar erros de quota/429
-      const isQuotaError = (err: unknown): boolean => {
-        // Verifica se é um objeto com status === 429 (numérico ou string)
-        if (
-          typeof err === 'object' &&
-          err !== null &&
-          ('status' in err || 'statusCode' in err)
-        ) {
-          const status =
-            'status' in err ? err.status : 'statusCode' in err ? err.statusCode : null
-          if (status === 429 || status === '429') {
-            return true
-          }
-        }
-
-        // Verifica se é um Error com mensagem contendo '429' ou 'quota'
-        if (err instanceof Error) {
-          const message = err.message.toLowerCase()
-          return message.includes('429') || message.includes('quota')
-        }
-
-        return false
-      }
-
       if (isQuotaError(error)) {
         console.warn(`   ⚠️  ${model}: Quota exceeded (may be expected in free tier)`)
         console.warn(`   💡 Tip: System will automatically fallback to next model\n`)

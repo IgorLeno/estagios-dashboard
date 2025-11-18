@@ -1,6 +1,7 @@
 import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType } from './config'
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from './prompts'
 import { JobDetails, JobDetailsSchema } from './types'
+import { isQuotaError } from './errors'
 
 /**
  * Extrai JSON de resposta do LLM
@@ -54,13 +55,15 @@ export async function parseJobWithGemini(
 
   let lastError: Error | null = null
 
+  // Criar cliente Gemini uma única vez (fora do loop)
+  const genAI = createGeminiClient()
+
   // Try each model in fallback chain
   for (const modelName of MODEL_FALLBACK_CHAIN) {
     try {
       console.log(`[Job Parser] Attempting with model: ${modelName}`)
 
-      // Criar cliente Gemini
-      const genAI = createGeminiClient()
+      // Obter modelo específico usando o cliente reutilizado
       const model = genAI.getGenerativeModel({
         model: modelName,
         generationConfig: {
@@ -94,11 +97,7 @@ export async function parseJobWithGemini(
 
     } catch (error: unknown) {
       // Check if this is a quota error
-      const isQuotaError =
-        (error && typeof error === 'object' && 'status' in error && error.status === 429) ||
-        (error instanceof Error && (error.message.includes('429') || error.message.includes('quota')))
-
-      if (isQuotaError) {
+      if (isQuotaError(error)) {
         console.warn(`[Job Parser] ⚠️  Model ${modelName} quota exceeded, trying fallback...`)
         lastError = error instanceof Error ? error : new Error(String(error))
         continue

@@ -166,7 +166,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_obrigatorios.map((req, i) => (
-                            <li key={`${req}-${i}`} className="text-sm">
+                            <li key={i} className="text-sm">
                               {req}
                             </li>
                           ))}
@@ -181,7 +181,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_desejaveis.map((req, i) => (
-                            <li key={`${req}-${i}`} className="text-sm">
+                            <li key={i} className="text-sm">
                               {req}
                             </li>
                           ))}
@@ -196,7 +196,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.responsabilidades.map((resp, i) => (
-                            <li key={`${resp}-${i}`} className="text-sm">
+                            <li key={i} className="text-sm">
                               {resp}
                             </li>
                           ))}
@@ -211,7 +211,7 @@ export default function TestAIPage() {
                         </p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.beneficios.map((ben, i) => (
-                            <li key={`${ben}-${i}`} className="text-sm">
+                            <li key={i} className="text-sm">
                               {ben}
                             </li>
                           ))}
@@ -252,7 +252,7 @@ export default function TestAIPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-destructive mb-4">{result.error}</p>
-                  {result.details && (
+                  {result.details !== undefined && (
                     <pre className="bg-muted p-4 rounded-lg overflow-auto text-xs">
                       {JSON.stringify(result.details, null, 2)}
                     </pre>

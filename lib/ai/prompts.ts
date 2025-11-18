@@ -1,14 +1,45 @@
 /**
+ * Configuração de sanitização para prevenir prompt injection
+ */
+const MAX_DESCRIPTION_LENGTH = 10000 // Limite de caracteres para prevenir token-stuffing
+
+/**
+ * Sanitiza descrição de vaga para prevenir prompt injection
+ * @param jobDescription - Descrição original da vaga
+ * @returns Descrição sanitizada e truncada
+ */
+function sanitizeJobDescription(jobDescription: string): string {
+  // Truncar para limite máximo
+  let sanitized = jobDescription.slice(0, MAX_DESCRIPTION_LENGTH)
+  
+  // Remover padrões que podem ser interpretados como instruções
+  // Remove linhas que começam com comandos comuns de prompt injection
+  const instructionPatterns = /^(ignore|forget|skip|do not|don't|system|assistant|user):/gmi
+  sanitized = sanitized.split('\n')
+    .filter(line => !instructionPatterns.test(line.trim()))
+    .join('\n')
+  
+  // Escapar sequências de code fence que podem quebrar o prompt
+  sanitized = sanitized.replace(/```/g, '\\`\\`\\`')
+  
+  return sanitized.trim()
+}
+
+/**
  * Prompt para extrair dados estruturados de descrições de vagas
  */
 export function buildJobExtractionPrompt(jobDescription: string): string {
+  // Sanitizar e delimitar conteúdo do usuário
+  const sanitizedDescription = sanitizeJobDescription(jobDescription)
+  
   return `
 Você é um especialista em análise de vagas de emprego com mais de 10 anos de experiência.
 
 Sua tarefa é extrair dados estruturados da descrição de vaga abaixo.
 
-DESCRIÇÃO DA VAGA:
-${jobDescription}
+-----BEGIN JOB DESCRIPTION-----
+${sanitizedDescription}
+-----END JOB DESCRIPTION-----
 
 CAMPOS A EXTRAIR:
 

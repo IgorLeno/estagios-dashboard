@@ -12,9 +12,17 @@ import { ZodError } from 'zod'
 export async function POST(request: NextRequest) {
   try {
     // Get client identifier (IP address)
-    const identifier = request.headers.get('x-forwarded-for') ||
-                      request.headers.get('x-real-ip') ||
-                      'unknown'
+    // x-forwarded-for may contain comma-separated proxy chain - use leftmost (actual client) IP
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    let identifier = 'unknown'
+    
+    if (forwardedFor) {
+      // Split on commas and take first non-empty trimmed value
+      const ips = forwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
+      identifier = ips[0] || request.headers.get('x-real-ip') || 'unknown'
+    } else {
+      identifier = request.headers.get('x-real-ip') || 'unknown'
+    }
 
     // Check rate limit
     const { allowed, remaining, resetTime } = checkRateLimit(identifier)

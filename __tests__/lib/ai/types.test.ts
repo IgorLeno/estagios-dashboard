@@ -46,24 +46,24 @@ describe('JobDetailsSchema', () => {
   })
 
   describe('ParsedVagaData compatibility fields', () => {
-    it('should accept optional requisitos field (0-5 range)', () => {
-      const withRequisitos = { ...validJob, requisitos: 4.5 }
+    it('should accept optional requisitos_score field (0-5 range)', () => {
+      const withRequisitos = { ...validJob, requisitos_score: 4.5 }
       expect(() => JobDetailsSchema.parse(withRequisitos)).not.toThrow()
     })
 
-    it('should reject requisitos outside 0-5 range', () => {
-      const invalidHigh = { ...validJob, requisitos: 6 }
+    it('should reject requisitos_score outside 0-5 range', () => {
+      const invalidHigh = { ...validJob, requisitos_score: 6 }
       expect(() => JobDetailsSchema.parse(invalidHigh)).toThrow()
 
-      const invalidLow = { ...validJob, requisitos: -1 }
+      const invalidLow = { ...validJob, requisitos_score: -1 }
       expect(() => JobDetailsSchema.parse(invalidLow)).toThrow()
     })
 
-    it('should accept requisitos boundary values 0 and 5', () => {
-      const withZero = { ...validJob, requisitos: 0 }
+    it('should accept requisitos_score boundary values 0 and 5', () => {
+      const withZero = { ...validJob, requisitos_score: 0 }
       expect(() => JobDetailsSchema.parse(withZero)).not.toThrow()
 
-      const withFive = { ...validJob, requisitos: 5 }
+      const withFive = { ...validJob, requisitos_score: 5 }
       expect(() => JobDetailsSchema.parse(withFive)).not.toThrow()
     })
 
@@ -111,7 +111,7 @@ describe('JobDetailsSchema', () => {
     it('should accept all optional fields together', () => {
       const fullJob = {
         ...validJob,
-        requisitos: 4.5,
+        requisitos_score: 4.5,
         fit: 3.5,
         etapa: 'Entrevista RH',
         status: 'Pendente' as const,
@@ -123,5 +123,67 @@ describe('JobDetailsSchema', () => {
     it('should work without any optional fields', () => {
       expect(() => JobDetailsSchema.parse(validJob)).not.toThrow()
     })
+  })
+
+  it('should accept idioma_vaga: "en"', () => {
+    const englishJob = { ...validJob, idioma_vaga: 'en' as const }
+    expect(() => JobDetailsSchema.parse(englishJob)).not.toThrow()
+  })
+
+  it('should accept empty arrays for requisitos_obrigatorios when undefined', () => {
+    const { requisitos_obrigatorios, ...jobWithoutRequisitos } = validJob
+    expect(() => JobDetailsSchema.parse(jobWithoutRequisitos)).toThrow()
+  })
+
+  it('should reject empty arrays for requisitos_obrigatorios', () => {
+    const invalid = { ...validJob, requisitos_obrigatorios: [] }
+    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  })
+
+  it('should reject empty arrays for requisitos_desejaveis', () => {
+    const invalid = { ...validJob, requisitos_desejaveis: [] }
+    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  })
+
+  it('should reject empty arrays for responsabilidades', () => {
+    const invalid = { ...validJob, responsabilidades: [] }
+    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  })
+
+  it('should reject empty arrays for beneficios', () => {
+    const invalid = { ...validJob, beneficios: [] }
+    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  })
+
+  it('should reject empty strings in array elements', () => {
+    const invalid = { ...validJob, requisitos_obrigatorios: ['JavaScript', '', 'TypeScript'] }
+    const result = () => JobDetailsSchema.parse(invalid)
+    expect(result).toThrow()
+    try {
+      result()
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'issues' in error) {
+        const zodError = error as { issues: Array<{ path: string[]; message: string }> }
+        expect(zodError.issues.some(issue => 
+          issue.path.includes('requisitos_obrigatorios') && 
+          issue.message.includes('vazio')
+        )).toBe(true)
+      }
+    }
+  })
+
+  it('should provide specific validation error message for invalid campo', () => {
+    const invalid = { ...validJob, empresa: '' }
+    try {
+      JobDetailsSchema.parse(invalid)
+      expect.fail('Should have thrown')
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'issues' in error) {
+        const zodError = error as { issues: Array<{ path: string[]; message: string }> }
+        const empresaError = zodError.issues.find(issue => issue.path.includes('empresa'))
+        expect(empresaError).toBeDefined()
+        expect(empresaError?.message).toContain('obrigatória')
+      }
+    }
   })
 })
