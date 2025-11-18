@@ -32,7 +32,7 @@ export const GEMINI_CONFIG = {
  * @param modelOverride - Optional model to use instead of default
  * @throws Error se GOOGLE_API_KEY não estiver configurada
  */
-export function createGeminiClient(modelOverride?: GeminiModelType): GoogleGenerativeAI {
+export function createGeminiClient(): GoogleGenerativeAI {
   const apiKey = process.env.GOOGLE_API_KEY
 
   if (!apiKey) {
