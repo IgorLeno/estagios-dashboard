@@ -4,6 +4,7 @@
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://vercel.com/igorlenos-projects/v0-estagios-dashboard)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat&logo=next.js)](https://nextjs.org/)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/IgorLeno/estagios-dashboard?utm_source=oss&utm_medium=github&utm_campaign=IgorLeno%2Festagios-dashboard&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vagas de estágio** de Engenharia Química, com funcionalidades avançadas de automação e análise.
 
