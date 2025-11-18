@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
-import { parseJobWithGemini } from '@/lib/ai/job-parser'
+import { parseJobWithGemini, AllModelsFailedError } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
 import { ZodError } from 'zod'
 
