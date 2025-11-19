@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       if (isRequestLimit && isTokenLimit) {
         errorMessage = 'Request and token limits exceeded'
       } else if (isRequestLimit) {
-        errorMessage = 'Request rate limit exceeded (15 requests/minute)'
+        errorMessage = `Request rate limit exceeded (${RATE_LIMIT_CONFIG.maxRequestsPerMin} requests/minute)`
       } else if (isTokenLimit) {
         errorMessage = 'Daily token limit exceeded (1M tokens/day)'
       }

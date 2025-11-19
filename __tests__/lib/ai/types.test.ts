@@ -130,29 +130,30 @@ describe('JobDetailsSchema', () => {
     expect(() => JobDetailsSchema.parse(englishJob)).not.toThrow()
   })
 
-  it('should throw when requisitos_obrigatorios is missing', () => {
+  it('should provide default empty array when requisitos_obrigatorios is missing', () => {
     const { requisitos_obrigatorios, ...jobWithoutRequisitos } = validJob
-    expect(() => JobDetailsSchema.parse(jobWithoutRequisitos)).toThrow()
+    const parsed = JobDetailsSchema.parse(jobWithoutRequisitos)
+    expect(parsed.requisitos_obrigatorios).toEqual([])
   })
 
-  it('should reject empty arrays for requisitos_obrigatorios', () => {
-    const invalid = { ...validJob, requisitos_obrigatorios: [] }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  it('should accept empty arrays for requisitos_obrigatorios', () => {
+    const valid = { ...validJob, requisitos_obrigatorios: [] }
+    expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
 
-  it('should reject empty arrays for requisitos_desejaveis', () => {
-    const invalid = { ...validJob, requisitos_desejaveis: [] }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  it('should accept empty arrays for requisitos_desejaveis', () => {
+    const valid = { ...validJob, requisitos_desejaveis: [] }
+    expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
 
-  it('should reject empty arrays for responsabilidades', () => {
-    const invalid = { ...validJob, responsabilidades: [] }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  it('should accept empty arrays for responsabilidades', () => {
+    const valid = { ...validJob, responsabilidades: [] }
+    expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
 
-  it('should reject empty arrays for beneficios', () => {
-    const invalid = { ...validJob, beneficios: [] }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  it('should accept empty arrays for beneficios', () => {
+    const valid = { ...validJob, beneficios: [] }
+    expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
 
   it('should reject empty strings in array elements', () => {

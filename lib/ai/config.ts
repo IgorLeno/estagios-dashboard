@@ -51,17 +51,11 @@ export const AI_TIMEOUT_CONFIG = {
 function getValidatedApiKey(): string {
   const apiKey = process.env.GOOGLE_API_KEY
 
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === '') {
     throw new Error(
       'GOOGLE_API_KEY not found in environment. ' +
       'Get your key at: https://aistudio.google.com/app/apikey'
     )
-  }
-
-  // Validate key format without exposing it
-  // Gemini API keys start with "AIza" and are typically 39 characters
-  if (!apiKey.startsWith('AIza') || apiKey.length !== 39) {
-    throw new Error('GOOGLE_API_KEY appears invalid')
   }
 
   return apiKey

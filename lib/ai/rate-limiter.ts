@@ -37,9 +37,12 @@ export interface TokenUsage {
 // ============================================================================
 
 export const RATE_LIMIT_CONFIG = {
-  // Requests per minute (default: 15 para free tier)
+  // Requests per minute
+  // Gemini free tier: 15 RPM documented limit
+  // Application limit: 10 RPM (33% safety margin to handle bursts and retries)
+  // This conservative buffer prevents hitting Gemini's hard limits during traffic spikes
   maxRequestsPerMin: parseInt(
-    process.env.GOOGLE_API_RATE_LIMIT_PER_MIN || '15',
+    process.env.GOOGLE_API_RATE_LIMIT_PER_MIN || '10',
     10
   ),
   // Tokens per day (default: 1M para free tier)

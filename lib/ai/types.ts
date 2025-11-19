@@ -36,6 +36,17 @@ export const ParseJobRequestSchema = z.object({
 export type ParseJobRequest = z.infer<typeof ParseJobRequestSchema>
 
 /**
+ * Schema de validação para token usage metrics
+ */
+export const TokenUsageSchema = z.object({
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+  totalTokens: z.number(),
+})
+
+export type TokenUsage = z.infer<typeof TokenUsageSchema>
+
+/**
  * Schema de validação para resposta de sucesso da API
  */
 export const ParseJobResponseSchema = z.object({
@@ -44,6 +55,7 @@ export const ParseJobResponseSchema = z.object({
   metadata: z.object({
     duration: z.number(),
     model: z.string(),
+    tokenUsage: TokenUsageSchema,
     timestamp: z.string(),
   }),
 })
