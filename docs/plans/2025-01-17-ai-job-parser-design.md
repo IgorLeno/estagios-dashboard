@@ -11,11 +11,13 @@
 ### Problema
 
 O dashboard atual suporta upload de arquivos `.md` (análises de vagas) que são parseados para preencher formulários. Porém, descrições de vagas vêm de fontes não estruturadas:
+
 - LinkedIn, Indeed, Gupy
 - E-mails de recrutadores
 - Sites de empresas
 
 Atualmente, o usuário precisa:
+
 1. Copiar descrição da vaga
 2. Manualmente criar arquivo `.md` seguindo template
 3. Fazer upload
@@ -25,12 +27,14 @@ Atualmente, o usuário precisa:
 ### Escopo - Fase 1
 
 **O que será implementado:**
+
 - ✅ Endpoint REST que recebe texto livre (descrição de vaga)
 - ✅ Integração com Gemini 2.0 Flash para extração de dados
 - ✅ Validação e normalização de output
 - ✅ Interface de teste para validação manual
 
 **O que NÃO será implementado (fases futuras):**
+
 - ❌ Cálculo automático de fit (requisitos/perfil)
 - ❌ Geração de arquivo `analise-vaga.md`
 - ❌ Personalização de currículos
@@ -83,12 +87,14 @@ Atualmente, o usuário precisa:
 ### Componentes
 
 **1. API Route** (`app/api/ai/parse-job/route.ts`)
+
 - Valida input (min 50 caracteres)
 - Valida `GOOGLE_API_KEY` presente
 - Chama serviço de parsing
 - Retorna JSON estruturado ou erro
 
 **2. Job Parser Service** (`lib/ai/job-parser.ts`)
+
 - Carrega prompt de extração
 - Chama Gemini 2.0 Flash
 - Extrai JSON da resposta
@@ -96,23 +102,28 @@ Atualmente, o usuário precisa:
 - Normaliza scores (0-100 → 0-5, 0-10 → 0-5)
 
 **3. Prompts** (`lib/ai/prompts.ts`)
+
 - Prompt de extração isolado
 - Fácil iterar e versionar
 
 **4. Configuração** (`lib/ai/config.ts`)
+
 - Cliente Gemini com API key
 - Parâmetros do modelo (temperature=0.1)
 
 **5. Tipos** (`lib/ai/types.ts`)
+
 - Interface `JobDetails`
 - Schema Zod para validação
 
 **6. Interface de Teste** (`app/test-ai/page.tsx`)
+
 - Textarea para colar descrição
 - Botão "Parse Job"
 - Display JSON + human-readable
 
 **7. Script de Validação** (`scripts/validate-ai-setup.ts`)
+
 - Valida `GOOGLE_API_KEY` configurada
 - Testa conexão com Gemini
 - Executa via `pnpm validate:ai`
@@ -229,6 +240,7 @@ scripts/
 ### 5.1 Modelo LLM
 
 **Gemini 2.0 Flash**
+
 - Model ID: `gemini-2.0-flash-exp`
 - Temperature: 0.1 (consistência)
 - Max tokens: 8192
@@ -236,18 +248,21 @@ scripts/
 - Top-k: 40
 
 **Custos:**
+
 - Input: ~$0.075/1M tokens
 - Output: ~$0.30/1M tokens
 - Parsing típico: ~1000 tokens → $0.0003
 
 **Free tier:**
+
 - 15 requests/minuto
 - 1M tokens/dia
 
 ### 5.2 Prompt Engineering
 
 **Estrutura do prompt:**
-```
+
+````
 Você é um especialista em análise de vagas de emprego.
 
 Extraia os seguintes dados da descrição abaixo:
@@ -282,8 +297,9 @@ RETORNE APENAS JSON válido em code fence:
   "cargo": "...",
   ...
 }
-```
-```
+````
+
+````
 
 ### 5.3 Validação com Zod
 
@@ -305,7 +321,7 @@ export const JobDetailsSchema = z.object({
 })
 
 export type JobDetails = z.infer<typeof JobDetailsSchema>
-```
+````
 
 ### 5.4 Normalização de Scores (Futuro)
 
@@ -367,6 +383,7 @@ function normalizeScore(value: number): number {
    - Action: Usuário aguarda
 
 **Retry Strategy:**
+
 - Max 1 retry para API failures
 - Não retry para validation errors (evitar loop)
 
@@ -377,6 +394,7 @@ function normalizeScore(value: number): number {
 ### 6.1 Testes Manuais
 
 **Interface `/test-ai`:**
+
 - Textarea com exemplo pré-carregado
 - Botão "Parse Job"
 - Display:
@@ -385,6 +403,7 @@ function normalizeScore(value: number): number {
   - Metadata (tempo, modelo)
 
 **Exemplo embutido:**
+
 ```
 Vaga de Estágio em Engenharia Química - Saipem
 
@@ -409,6 +428,7 @@ Benefícios:
 ```
 
 **Checklist de validação manual:**
+
 - ✅ Empresa: "Saipem"
 - ✅ Cargo: "Estágio em Engenharia Química" (ou similar)
 - ✅ Local: "Guarujá, São Paulo"
@@ -421,30 +441,30 @@ Benefícios:
 
 **Escopo:** Apenas lógica pura (sem LLM calls)
 
-```typescript
+````typescript
 // __tests__/lib/ai/job-parser.test.ts
 
-describe('extractJsonFromResponse', () => {
-  it('should extract JSON from code fence', () => {
+describe("extractJsonFromResponse", () => {
+  it("should extract JSON from code fence", () => {
     const response = '```json\n{"empresa": "Test"}\n```'
     const result = extractJsonFromResponse(response)
     expect(result).toEqual({ empresa: "Test" })
   })
 
-  it('should extract JSON without code fence', () => {
+  it("should extract JSON without code fence", () => {
     const response = '{"empresa": "Test"}'
     const result = extractJsonFromResponse(response)
     expect(result).toEqual({ empresa: "Test" })
   })
 
-  it('should throw if no JSON found', () => {
-    const response = 'No JSON here'
+  it("should throw if no JSON found", () => {
+    const response = "No JSON here"
     expect(() => extractJsonFromResponse(response)).toThrow()
   })
 })
 
-describe('JobDetailsSchema validation', () => {
-  it('should accept valid job details', () => {
+describe("JobDetailsSchema validation", () => {
+  it("should accept valid job details", () => {
     const valid = {
       empresa: "Test Corp",
       cargo: "Dev",
@@ -456,19 +476,20 @@ describe('JobDetailsSchema validation', () => {
       responsabilidades: ["Code"],
       beneficios: [],
       salario: null,
-      idioma_vaga: "pt"
+      idioma_vaga: "pt",
     }
     expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
 
-  it('should reject invalid modalidade', () => {
+  it("should reject invalid modalidade", () => {
     const invalid = { ...validData, modalidade: "Invalid" }
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 })
-```
+````
 
 **Não testar:**
+
 - ❌ Calls diretas ao Gemini (custa dinheiro, lentas)
 - ❌ Integração completa (usar testes manuais)
 
@@ -489,6 +510,7 @@ describe('JobDetailsSchema validation', () => {
    - Esperado: 70%+ acurácia
 
 **Métricas de sucesso:**
+
 - ✅ 80%+ dos campos extraídos corretamente
 - ✅ Sem campos com dados ERRADOS (prefiro vazio a errado)
 - ✅ Parsing completa em < 5 segundos
@@ -501,6 +523,7 @@ describe('JobDetailsSchema validation', () => {
 ### 7.1 Variáveis de Ambiente
 
 **`.env.local` (desenvolvimento):**
+
 ```env
 # Existing variables...
 NEXT_PUBLIC_SUPABASE_URL=...
@@ -511,11 +534,13 @@ GOOGLE_API_KEY=your_api_key_here
 ```
 
 **Obter API key:**
+
 1. Acesse https://aistudio.google.com/app/apikey
 2. Crie nova API key
 3. Copie e adicione ao `.env.local`
 
 **`.env.example` (documentação):**
+
 ```env
 # === AI Agents (Gemini 2.0 Flash) ===
 # Get your key at: https://aistudio.google.com/app/apikey
@@ -526,16 +551,19 @@ GOOGLE_API_KEY=your_gemini_api_key_here
 ### 7.2 Dependências
 
 **Adicionar ao `package.json`:**
+
 ```bash
 pnpm add @google/generative-ai
 ```
 
 **Versões:**
+
 - `@google/generative-ai`: ^0.21.0
 
 ### 7.3 Scripts npm
 
 **Adicionar a `package.json`:**
+
 ```json
 {
   "scripts": {
@@ -545,6 +573,7 @@ pnpm add @google/generative-ai
 ```
 
 **Uso:**
+
 ```bash
 # Validar configuração AI
 pnpm validate:ai
@@ -559,11 +588,13 @@ pnpm dev
 ### 7.4 Deploy (Vercel)
 
 **Environment Variables no Vercel:**
+
 ```
 GOOGLE_API_KEY = <sua_key_aqui>
 ```
 
 **Considerações:**
+
 - API key é server-side only (segura)
 - Next.js API routes rodam em serverless functions
 - Gemini tem cold start ~500ms (aceitável)
@@ -573,21 +604,25 @@ GOOGLE_API_KEY = <sua_key_aqui>
 ## 8. Próximos Passos (Fases Futuras)
 
 ### Fase 2: Fit Calculator
+
 - Comparar perfil do candidato vs requisitos
 - Calcular scores `fit_requisitos` e `fit_perfil` (0-5)
 - Gerar justificativas
 
 ### Fase 3: Analysis Writer
+
 - Gerar arquivo `analise-vaga.md`
 - Seguir template `modelo-analise.md`
 - Incluir resumo detalhado
 
 ### Fase 4: Resume Personalizer
+
 - Ajustar seção RESUMO do CV
 - Destacar skills relevantes
 - Gerar PDFs (PT e EN)
 
 ### Fase 5: Integração com Dashboard
+
 - Adicionar botão "Parse from description" no `add-vaga-dialog.tsx`
 - Auto-preencher formulário com dados extraídos
 - Upload opcional de análise gerada
@@ -597,32 +632,40 @@ GOOGLE_API_KEY = <sua_key_aqui>
 ## 9. Riscos e Mitigações
 
 ### Risco 1: LLM retorna dados incorretos
+
 **Impacto:** Médio
 **Probabilidade:** Baixa (temperature=0.1)
 **Mitigação:**
+
 - Validação com Zod bloqueia estrutura inválida
 - Interface de teste permite revisão manual
 - Futuro: adicionar feedback loop para corrigir
 
 ### Risco 2: Rate limit excedido (15 req/min)
+
 **Impacto:** Baixo (uso pessoal)
 **Probabilidade:** Baixa
 **Mitigação:**
+
 - Mensagem clara: "Try again in X seconds"
 - Futuro: implementar queue se necessário
 
 ### Risco 3: Custo inesperado
+
 **Impacto:** Muito Baixo
 **Probabilidade:** Muito Baixa
 **Mitigação:**
+
 - Free tier: 1M tokens/dia (suficiente para ~1000 parsings)
 - Custo por parsing: ~$0.0003
 - 100 parsings/dia = $0.03/dia = $1/mês
 
 ### Risco 4: Gemini API instável
+
 **Impacto:** Médio
 **Probabilidade:** Baixa
 **Mitigação:**
+
 - Retry 1x automático
 - Error handling graceful
 - Futuro: fallback para GPT-4o-mini se necessário
@@ -632,12 +675,14 @@ GOOGLE_API_KEY = <sua_key_aqui>
 ## 10. Checklist de Implementação
 
 ### Setup
+
 - [ ] Instalar dependência: `pnpm add @google/generative-ai`
 - [ ] Obter `GOOGLE_API_KEY` em https://aistudio.google.com/app/apikey
 - [ ] Adicionar key ao `.env.local`
 - [ ] Atualizar `.env.example` com documentação
 
 ### Código
+
 - [ ] Criar `lib/ai/types.ts` - Interfaces e schemas Zod
 - [ ] Criar `lib/ai/config.ts` - Cliente Gemini
 - [ ] Criar `lib/ai/prompts.ts` - Prompt de extração
@@ -647,6 +692,7 @@ GOOGLE_API_KEY = <sua_key_aqui>
 - [ ] Criar `scripts/validate-ai-setup.ts` - Script de validação
 
 ### Validação
+
 - [ ] Executar `pnpm validate:ai` - deve passar
 - [ ] Iniciar `pnpm dev`
 - [ ] Acessar http://localhost:3000/test-ai
@@ -657,12 +703,14 @@ GOOGLE_API_KEY = <sua_key_aqui>
 - [ ] Verificar tempo de resposta < 5s
 
 ### Testes
+
 - [ ] Criar `__tests__/lib/ai/job-parser.test.ts`
 - [ ] Testar `extractJsonFromResponse()`
 - [ ] Testar validação Zod
 - [ ] Executar `pnpm test` - deve passar
 
 ### Documentação
+
 - [ ] Atualizar `CLAUDE.md` com instruções AI
 - [ ] Documentar scripts npm em README (opcional)
 - [ ] Commitar design document
@@ -672,17 +720,20 @@ GOOGLE_API_KEY = <sua_key_aqui>
 ## 11. Referências
 
 **Projeto:**
+
 - `lib/markdown-parser.ts` - Parser existente (padrão a seguir)
 - `lib/types.ts` - Tipos existentes (compatibilidade)
 - `modelo-analise.md` - Template de análise (referência futura)
 
 **Documentação Externa:**
+
 - [Gemini API Docs](https://ai.google.dev/gemini-api/docs)
 - [Google Generative AI Node.js SDK](https://github.com/google/generative-ai-js)
 - [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
 - [Zod Validation](https://zod.dev/)
 
 **Custos:**
+
 - [Gemini Pricing](https://ai.google.dev/pricing)
 - Free tier: 15 RPM, 1M tokens/day
 
