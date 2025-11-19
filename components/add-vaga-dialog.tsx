@@ -3,18 +3,16 @@
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
-import type { ParsedVagaData } from "@/lib/markdown-parser"
 import type { Configuracao } from "@/lib/types"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MarkdownUpload } from "@/components/markdown-upload"
-import { FileUpload } from "@/components/file-upload"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AiParserTab } from "@/components/tabs/ai-parser-tab"
+import { ManualEntryTab } from "@/components/tabs/manual-entry-tab"
+import { MarkdownUploadTab } from "@/components/tabs/markdown-upload-tab"
 import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
+import type { FormData } from "@/lib/utils/ai-mapper"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -25,15 +23,16 @@ interface AddVagaDialogProps {
 export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogProps) {
   const [loading, setLoading] = useState(false)
   const [config, setConfig] = useState<Configuracao | null>(null)
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState("ai-parser")
+  const [formData, setFormData] = useState<FormData>({
     empresa: "",
     cargo: "",
     local: "",
-    modalidade: "Presencial" as "Presencial" | "Híbrido" | "Remoto",
+    modalidade: "Presencial",
     requisitos: "",
     fit: "",
     etapa: "",
-    status: "Pendente" as "Pendente" | "Avançado" | "Melou" | "Contratado",
+    status: "Pendente",
     observacoes: "",
     arquivo_analise_url: "",
     arquivo_cv_url: "",
@@ -53,22 +52,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     } catch (error) {
       console.error("Erro ao carregar configurações:", error)
     }
-  }
-
-  function handleParsedData(parsed: ParsedVagaData) {
-    setFormData((prev) => ({
-      ...prev,
-      ...(parsed.empresa && { empresa: parsed.empresa }),
-      ...(parsed.cargo && { cargo: parsed.cargo }),
-      ...(parsed.local && { local: parsed.local }),
-      ...(parsed.modalidade && { modalidade: parsed.modalidade }),
-      ...(parsed.requisitos !== undefined && { requisitos: parsed.requisitos.toString() }),
-      ...(parsed.fit !== undefined && { fit: parsed.fit.toString() }),
-      ...(parsed.etapa && { etapa: parsed.etapa }),
-      ...(parsed.status && { status: parsed.status }),
-      ...(parsed.observacoes && { observacoes: parsed.observacoes }),
-    }))
-    toast.success("Campos preenchidos automaticamente a partir da análise!")
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -98,208 +81,87 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
       if (error) throw error
 
-      toast.success("Vaga adicionada com sucesso!")
-      setFormData({
-        empresa: "",
-        cargo: "",
-        local: "",
-        modalidade: "Presencial",
-        requisitos: "",
-        fit: "",
-        etapa: "",
-        status: "Pendente",
-        observacoes: "",
-        arquivo_analise_url: "",
-        arquivo_cv_url: "",
-      })
+      toast.success("Job added successfully!")
+      resetForm()
       onOpenChange(false)
       onSuccess()
     } catch (error) {
-      console.error("Erro ao adicionar vaga:", error)
-      toast.error("Erro ao adicionar vaga. Tente novamente.")
+      console.error("Error adding job:", error)
+      toast.error("Failed to add job. Try again.")
     } finally {
       setLoading(false)
     }
+  }
+
+  function resetForm() {
+    setFormData({
+      empresa: "",
+      cargo: "",
+      local: "",
+      modalidade: "Presencial",
+      requisitos: "",
+      fit: "",
+      etapa: "",
+      status: "Pendente",
+      observacoes: "",
+      arquivo_analise_url: "",
+      arquivo_cv_url: "",
+    })
+    setActiveTab("ai-parser")
+  }
+
+  function handleTabComplete() {
+    setActiveTab("manual")
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Vaga</DialogTitle>
-          <DialogDescription>Preencha os dados da vaga de estágio</DialogDescription>
+          <DialogTitle>Add New Job</DialogTitle>
+          <DialogDescription>
+            Use AI parsing, manual entry, or upload markdown file
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="empresa">Empresa *</Label>
-              <Input
-                id="empresa"
-                value={formData.empresa}
-                onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
-                required
-              />
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="ai-parser">AI Parser</TabsTrigger>
+            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+            <TabsTrigger value="upload">Upload .md</TabsTrigger>
+          </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="cargo">Cargo *</Label>
-              <Input
-                id="cargo"
-                value={formData.cargo}
-                onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="local">Local *</Label>
-              <Input
-                id="local"
-                value={formData.local}
-                onChange={(e) => setFormData({ ...formData, local: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="modalidade">Modalidade *</Label>
-              <Select
-                value={formData.modalidade}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, modalidade: value as "Presencial" | "Híbrido" | "Remoto" })
-                }
-              >
-                <SelectTrigger id="modalidade">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Híbrido">Híbrido</SelectItem>
-                  <SelectItem value="Remoto">Remoto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            {/*
-              Campo Fit Requisitos
-              - Valor válido: 0 a 5, em incrementos de 0.5
-              - Valores percentuais (0-100) NÃO são mais aceitos diretamente
-              - Se dados antigos/externos chegarem fora do range, a função normalizeRatingForSave()
-                realiza conversão automática de 0-100 → 0-5
-              - Exemplo: 85 (percentual) → 4.5 (normalizado)
-            */}
-            <div className="space-y-2">
-              <Label htmlFor="requisitos">Fit Requisitos (⭐)</Label>
-              <Input
-                id="requisitos"
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={formData.requisitos}
-                onChange={(e) => setFormData({ ...formData, requisitos: e.target.value })}
-                placeholder="0.0 - 5.0"
-              />
-            </div>
-
-            {/*
-              Campo Fit Perfil
-              - Valor válido: 0 a 5, em incrementos de 0.5
-              - Valores percentuais (0-100) ou escala 0-10 NÃO são mais aceitos diretamente
-              - Se dados antigos/externos chegarem fora do range, a função normalizeRatingForSave()
-                realiza conversão automática para escala 0-5
-              - Exemplo: 8 (escala 0-10) → 4.0 (normalizado)
-            */}
-            <div className="space-y-2">
-              <Label htmlFor="fit">Fit Perfil (⭐)</Label>
-              <Input
-                id="fit"
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={formData.fit}
-                onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
-                placeholder="0.0 - 5.0"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="etapa">Etapa</Label>
-              <Input
-                id="etapa"
-                value={formData.etapa}
-                onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}
-                placeholder="Ex: Inscrição"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">Status *</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) =>
-                setFormData({ ...formData, status: value as "Pendente" | "Avançado" | "Melou" | "Contratado" })
-              }
-            >
-              <SelectTrigger id="status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Avançado">Avançado</SelectItem>
-                <SelectItem value="Melou">Melou</SelectItem>
-                <SelectItem value="Contratado">Contratado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
-            <Textarea
-              id="observacoes"
-              value={formData.observacoes}
-              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-              rows={3}
+          <TabsContent value="ai-parser" className="mt-4">
+            <AiParserTab
+              formData={formData}
+              setFormData={setFormData}
+              onComplete={handleTabComplete}
             />
-          </div>
+          </TabsContent>
 
-          <div className="border-t pt-4 space-y-4">
-            <h3 className="font-medium text-sm">Arquivos</h3>
-
-            <MarkdownUpload
-              onUploadComplete={(url, parsedData) => {
-                setFormData({ ...formData, arquivo_analise_url: url })
-                if (parsedData) handleParsedData(parsedData)
-              }}
-              onParseComplete={handleParsedData}
-              currentFile={formData.arquivo_analise_url}
-              label="Análise da Vaga (.md)"
-              autoFillFields={true}
+          <TabsContent value="manual" className="mt-4">
+            <ManualEntryTab
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              loading={loading}
             />
+          </TabsContent>
 
-            <FileUpload
-              onUploadComplete={(url) => setFormData({ ...formData, arquivo_cv_url: url })}
-              currentFile={formData.arquivo_cv_url}
-              label="Currículo (PDF/DOCX)"
+          <TabsContent value="upload" className="mt-4">
+            <MarkdownUploadTab
+              formData={formData}
+              setFormData={setFormData}
+              onComplete={handleTabComplete}
             />
-          </div>
+          </TabsContent>
+        </Tabs>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        </form>
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )
