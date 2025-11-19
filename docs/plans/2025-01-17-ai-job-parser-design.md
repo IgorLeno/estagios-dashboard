@@ -29,7 +29,7 @@ Atualmente, o usuário precisa:
 **O que será implementado:**
 
 - ✅ Endpoint REST que recebe texto livre (descrição de vaga)
-- ✅ Integração com Gemini 2.0 Flash para extração de dados
+- ✅ Integração com Gemini 1.5 Flash para extração de dados
 - ✅ Validação e normalização de output
 - ✅ Interface de teste para validação manual
 
@@ -96,10 +96,11 @@ Atualmente, o usuário precisa:
 **2. Job Parser Service** (`lib/ai/job-parser.ts`)
 
 - Carrega prompt de extração
-- Chama Gemini 2.0 Flash
+- Chama Gemini 1.5 Flash (com fallback automático)
 - Extrai JSON da resposta
 - Valida com Zod
 - Normaliza scores (0-100 → 0-5, 0-10 → 0-5)
+- Registra modelo usado com sucesso
 
 **3. Prompts** (`lib/ai/prompts.ts`)
 
@@ -150,7 +151,7 @@ app/
 │   └── page.tsx
 
 scripts/
-└── validate-ai-setup.ts         # Script de validação
+└── validate-gemini-setup.ts         # Script de validação
 ```
 
 **Total:** 7-8 arquivos novos
@@ -175,9 +176,10 @@ scripts/
    - Injeta descrição no prompt
    - Chama Gemini API
    ↓
-4. Gemini 2.0 Flash
+4. Gemini 1.5 Flash (+ fallback chain)
    - Analisa texto não estruturado
    - Retorna JSON em code fence
+   - Fallback automático se quota excedida
    ↓
 5. job-parser.ts (validação)
    - Extrai JSON (regex)
@@ -542,10 +544,17 @@ GOOGLE_API_KEY=your_api_key_here
 **`.env.example` (documentação):**
 
 ```env
-# === AI Agents (Gemini 2.0 Flash) ===
-# Get your key at: https://aistudio.google.com/app/apikey
-# Free tier: 15 requests/minute, 1M tokens/day
-GOOGLE_API_KEY=your_gemini_api_key_here
+# === Google Gemini API Configuration ===
+# Get your API key at: https://aistudio.google.com/app/apikey
+# Free tier limits: 15 requests/min, 1.5K requests/day, 1M tokens/min
+# Monitor usage: https://ai.dev/usage
+GOOGLE_API_KEY=your_api_key_here
+
+# Model used: gemini-1.5-flash (stable)
+# Alternative models available via automatic fallback:
+# - gemini-2.0-flash-001 (stable, higher quality)
+# - gemini-2.5-pro (highest quality, requires billing for production)
+# Note: Experimental models (-exp suffix) are NOT supported in free tier as of Nov 2025
 ```
 
 ### 7.2 Dependências
@@ -567,7 +576,7 @@ pnpm add @google/generative-ai
 ```json
 {
   "scripts": {
-    "validate:ai": "tsx scripts/validate-ai-setup.ts"
+    "validate:ai": "tsx scripts/validate-gemini-setup.ts"
   }
 }
 ```
@@ -689,7 +698,7 @@ GOOGLE_API_KEY = <sua_key_aqui>
 - [ ] Criar `lib/ai/job-parser.ts` - Lógica principal
 - [ ] Criar `app/api/ai/parse-job/route.ts` - API endpoint
 - [ ] Criar `app/test-ai/page.tsx` - Interface de teste
-- [ ] Criar `scripts/validate-ai-setup.ts` - Script de validação
+- [ ] Criar `scripts/validate-gemini-setup.ts` - Script de validação
 
 ### Validação
 
