@@ -14,7 +14,11 @@ export const JobDetailsSchema = z.object({
   requisitos_desejaveis: z.array(z.string().min(1, 'Requisito não pode ser vazio')).min(0).default([]),
   responsabilidades: z.array(z.string().min(1, 'Responsabilidade não pode ser vazia')).min(0).default([]),
   beneficios: z.array(z.string().min(1, 'Benefício não pode ser vazio')).min(0).default([]),
-  salario: z.string().regex(/^(?:R\$)?\s*\d+[\d.,\s-]*$|^[\d.,\s-]+$/, 'Formato de salário inválido').nullable(),
+  salario: z
+    .string()
+    .max(100, 'Salary information too long')
+    .nullable()
+    .optional(),
   idioma_vaga: z.enum(['pt', 'en']),
   // ParsedVagaData compatibility fields (optional)
   requisitos_score: z.number().min(0).max(5).optional(),
@@ -30,7 +34,10 @@ export type JobDetails = z.infer<typeof JobDetailsSchema>
  * Schema de validação para input da API
  */
 export const ParseJobRequestSchema = z.object({
-  jobDescription: z.string().min(50, 'Descrição da vaga deve ter ao menos 50 caracteres'),
+  jobDescription: z
+    .string()
+    .min(50, 'Job description too short (minimum 50 characters)')
+    .max(50000, 'Job description too long (maximum 50,000 characters)'),
 })
 
 export type ParseJobRequest = z.infer<typeof ParseJobRequestSchema>

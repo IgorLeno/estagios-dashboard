@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { validateAIConfig, GEMINI_CONFIG, AI_TIMEOUT_CONFIG } from '@/lib/ai/config'
 import { parseJobWithGemini } from '@/lib/ai/job-parser'
 import { ParseJobRequestSchema } from '@/lib/ai/types'
@@ -37,12 +38,12 @@ export async function POST(request: NextRequest) {
       if (forwardedFor) {
         // Split on commas and take first non-empty trimmed value (leftmost = actual client)
         const ips = forwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
-        identifier = ips[0] || realIp || `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        identifier = ips[0] || realIp || `req-${randomUUID()}`
       } else if (realIp) {
         identifier = realIp
       } else {
         // Generate unique per-request identifier to avoid grouping unrelated clients
-        identifier = `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        identifier = `req-${randomUUID()}`
         console.warn('[AI Parser] Could not determine client IP, using per-request identifier')
       }
     }
