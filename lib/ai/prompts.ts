@@ -11,31 +11,31 @@ const MAX_DESCRIPTION_LENGTH = 10000 // Limite de caracteres para prevenir token
 function sanitizeJobDescription(jobDescription: string): string {
   // Truncar para limite máximo
   let sanitized = jobDescription.slice(0, MAX_DESCRIPTION_LENGTH)
-  
+
   // Remover delimitadores de instrução comuns antes de processar tokens
   // Code fences (```+ e ~~~+)
-  sanitized = sanitized.replace(/```+/g, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/~~~+/g, '[REDACTED_INSTRUCTION]')
-  
+  sanitized = sanitized.replace(/```+/g, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/~~~+/g, "[REDACTED_INSTRUCTION]")
+
   // Delimitadores de prompt de instrução
-  sanitized = sanitized.replace(/###+/g, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/\[INST\]/gi, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/\[\/INST\]/gi, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/<\|im_start\|>/gi, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/<\|im_end\|>/gi, '[REDACTED_INSTRUCTION]')
-  
+  sanitized = sanitized.replace(/###+/g, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/\[INST\]/gi, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/\[\/INST\]/gi, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/<\|im_start\|>/gi, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/<\|im_end\|>/gi, "[REDACTED_INSTRUCTION]")
+
   // Outros marcadores de instrução entre colchetes
-  sanitized = sanitized.replace(/\[(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, '[REDACTED_INSTRUCTION]')
-  sanitized = sanitized.replace(/\[\/(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, '[REDACTED_INSTRUCTION]')
-  
+  sanitized = sanitized.replace(/\[(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, "[REDACTED_INSTRUCTION]")
+  sanitized = sanitized.replace(/\[\/(SYSTEM|USER|ASSISTANT|INSTRUCTION|PROMPT)\]/gi, "[REDACTED_INSTRUCTION]")
+
   // Neutralize instruction tokens: match at line start or after non-word characters (case-insensitive)
   // Pattern matches tokens at start of line or after non-alphanumeric/underscore characters
   const instructionPatterns = /(^|[^A-Za-z0-9_])(ignore|forget|skip|do not|don't|system|assistant|user):/gim
   sanitized = sanitized.replace(instructionPatterns, (match, prefix, token) => {
     // Replace token and colon with placeholder, preserve prefix if present
-    return prefix + '[REDACTED_INSTRUCTION]'
+    return prefix + "[REDACTED_INSTRUCTION]"
   })
-  
+
   return sanitized.trim()
 }
 
@@ -45,7 +45,7 @@ function sanitizeJobDescription(jobDescription: string): string {
 export function buildJobExtractionPrompt(jobDescription: string): string {
   // Sanitizar e delimitar conteúdo do usuário
   const sanitizedDescription = sanitizeJobDescription(jobDescription)
-  
+
   return `
 Você é um especialista em análise de vagas de emprego com mais de 10 anos de experiência.
 

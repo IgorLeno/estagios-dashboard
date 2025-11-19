@@ -41,15 +41,9 @@ export const RATE_LIMIT_CONFIG = {
   // Gemini free tier: 15 RPM documented limit
   // Application limit: 10 RPM (33% safety margin to handle bursts and retries)
   // This conservative buffer prevents hitting Gemini's hard limits during traffic spikes
-  maxRequestsPerMin: parseInt(
-    process.env.GOOGLE_API_RATE_LIMIT_PER_MIN || '10',
-    10
-  ),
+  maxRequestsPerMin: parseInt(process.env.GOOGLE_API_RATE_LIMIT_PER_MIN || "10", 10),
   // Tokens per day (default: 1M para free tier)
-  maxTokensPerDay: parseInt(
-    process.env.GOOGLE_API_RATE_LIMIT_TOKENS_PER_DAY || '1000000',
-    10
-  ),
+  maxTokensPerDay: parseInt(process.env.GOOGLE_API_RATE_LIMIT_TOKENS_PER_DAY || "1000000", 10),
   // Redis configuration (optional)
   redisUrl: process.env.REDIS_URL,
   redisEnabled: !!process.env.REDIS_URL,
@@ -63,11 +57,11 @@ interface RateLimitStorage {
   // Request tracking
   getRequestCount(identifier: string, windowStart: number): Promise<number>
   incrementRequest(identifier: string, windowStart: number, ttl: number): Promise<number>
-  
+
   // Token tracking
   getTokenCount(identifier: string, dayKey: string): Promise<number>
   incrementTokens(identifier: string, dayKey: string, tokens: number, ttl: number): Promise<number>
-  
+
   // Cleanup
   cleanup(): Promise<void>
 }
@@ -104,11 +98,7 @@ class InMemoryStorage implements RateLimitStorage {
     return entry.requests.get(windowStart) || 0
   }
 
-  async incrementRequest(
-    identifier: string,
-    windowStart: number,
-    _ttl: number
-  ): Promise<number> {
+  async incrementRequest(identifier: string, windowStart: number, _ttl: number): Promise<number> {
     this.maybeCleanup()
     const entry = this.getOrCreateEntry(identifier)
     const current = entry.requests.get(windowStart) || 0
@@ -122,12 +112,7 @@ class InMemoryStorage implements RateLimitStorage {
     return entry.tokens.get(dayKey) || 0
   }
 
-  async incrementTokens(
-    identifier: string,
-    dayKey: string,
-    tokens: number,
-    _ttl: number
-  ): Promise<number> {
+  async incrementTokens(identifier: string, dayKey: string, tokens: number, _ttl: number): Promise<number> {
     this.maybeCleanup()
     const entry = this.getOrCreateEntry(identifier)
     const current = entry.tokens.get(dayKey) || 0
@@ -151,7 +136,7 @@ class InMemoryStorage implements RateLimitStorage {
       // Cleanup expired token entries (older than 1 day)
       for (const [dayKey] of entry.tokens.entries()) {
         // dayKey format: "YYYY-MM-DD"
-        const dayDate = new Date(dayKey + 'T00:00:00Z')
+        const dayDate = new Date(dayKey + "T00:00:00Z")
         if (now - dayDate.getTime() > oneDayMs) {
           entry.tokens.delete(dayKey)
         }
@@ -189,13 +174,13 @@ class RedisStorage implements RateLimitStorage {
     try {
       // Dynamic import para evitar erro se Redis não estiver instalado
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const redis = require('redis')
+      const redis = require("redis")
       this.client = redis.createClient({ url: RATE_LIMIT_CONFIG.redisUrl })
       await this.client.connect()
       this.initialized = true
       return this.client
     } catch (error) {
-      console.error('[Rate Limiter] Redis connection failed, falling back to in-memory:', error)
+      console.error("[Rate Limiter] Redis connection failed, falling back to in-memory:", error)
       throw error
     }
   }
@@ -207,20 +192,16 @@ class RedisStorage implements RateLimitStorage {
     return count ? parseInt(count, 10) : 0
   }
 
-  async incrementRequest(
-    identifier: string,
-    windowStart: number,
-    ttl: number
-  ): Promise<number> {
+  async incrementRequest(identifier: string, windowStart: number, ttl: number): Promise<number> {
     const client = await this.getClient()
     const key = `rate-limit:requests:${identifier}:${windowStart}`
     const count = await client.incr(key)
-    
+
     // Set TTL apenas na primeira vez (quando count === 1)
     if (count === 1) {
       await client.expire(key, Math.ceil(ttl / 1000))
     }
-    
+
     return count
   }
 
@@ -231,21 +212,16 @@ class RedisStorage implements RateLimitStorage {
     return count ? parseInt(count, 10) : 0
   }
 
-  async incrementTokens(
-    identifier: string,
-    dayKey: string,
-    tokens: number,
-    ttl: number
-  ): Promise<number> {
+  async incrementTokens(identifier: string, dayKey: string, tokens: number, ttl: number): Promise<number> {
     const client = await this.getClient()
     const key = `rate-limit:tokens:${identifier}:${dayKey}`
     const count = await client.incrBy(key, tokens)
-    
+
     // Set TTL apenas na primeira vez (quando count === tokens)
     if (count === tokens) {
       await client.expire(key, Math.ceil(ttl / 1000))
     }
-    
+
     return count
   }
 
@@ -268,14 +244,14 @@ function getStorage(): RateLimitStorage {
   if (RATE_LIMIT_CONFIG.redisEnabled && RATE_LIMIT_CONFIG.redisUrl) {
     try {
       storageInstance = new RedisStorage()
-      console.log('[Rate Limiter] Using Redis storage')
+      console.log("[Rate Limiter] Using Redis storage")
     } catch (error) {
-      console.warn('[Rate Limiter] Redis initialization failed, using in-memory storage:', error)
+      console.warn("[Rate Limiter] Redis initialization failed, using in-memory storage:", error)
       storageInstance = new InMemoryStorage()
     }
   } else {
     storageInstance = new InMemoryStorage()
-    console.log('[Rate Limiter] Using in-memory storage')
+    console.log("[Rate Limiter] Using in-memory storage")
   }
 
   return storageInstance
@@ -298,8 +274,8 @@ function getRequestWindowStart(now: number): number {
 function getDayKey(now: number): string {
   const date = new Date(now)
   const year = date.getUTCFullYear()
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-  const day = String(date.getUTCDate()).padStart(2, '0')
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(date.getUTCDate()).padStart(2, "0")
   return `${year}-${month}-${day}`
 }
 
@@ -318,15 +294,13 @@ function getNextDayReset(now: number): number {
  * @param identifier - Identificador único (ex: IP address)
  * @returns Resultado da verificação com informações de limite
  */
-export async function checkRateLimit(
-  identifier: string
-): Promise<RateLimitCheckResult> {
+export async function checkRateLimit(identifier: string): Promise<RateLimitCheckResult> {
   const now = Date.now()
   const storage = getStorage()
 
   // Validar identifier
-  if (typeof identifier !== 'string' || identifier.trim() === '') {
-    console.warn('[Rate Limiter] Invalid identifier provided')
+  if (typeof identifier !== "string" || identifier.trim() === "") {
+    console.warn("[Rate Limiter] Invalid identifier provided")
     return {
       allowed: false,
       remaining: { requests: 0, tokens: 0 },
@@ -392,10 +366,7 @@ export async function consumeRequest(identifier: string): Promise<number> {
  * @param tokens - Número de tokens consumidos
  * @returns Novo total de tokens no dia atual
  */
-export async function consumeTokens(
-  identifier: string,
-  tokens: number
-): Promise<number> {
+export async function consumeTokens(identifier: string, tokens: number): Promise<number> {
   const now = Date.now()
   const storage = getStorage()
   const dayKey = getDayKey(now)

@@ -1,7 +1,5 @@
 # AI Job Parser Implementation Plan
 
-
-
 **Goal:** Build REST API endpoint that uses Gemini 2.0 Flash (gemini-2.0-flash-exp) to extract structured data from unstructured job descriptions.
 
 **Architecture:** Server-side API route receives job description text, calls Gemini LLM with extraction prompt, validates response with Zod, returns structured JSON compatible with existing `ParsedVagaData` interface.
@@ -13,6 +11,7 @@
 ## Task 1: Setup Dependencies and Environment
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `.env.local`
 - Modify: `.env.example`
@@ -83,6 +82,7 @@ git commit -m "chore: add @google/generative-ai dependency and env config"
 ## Task 2: Create Types and Zod Schemas
 
 **Files:**
+
 - Create: `lib/ai/types.ts`
 - Test: `__tests__/lib/ai/types.test.ts`
 
@@ -91,44 +91,44 @@ git commit -m "chore: add @google/generative-ai dependency and env config"
 Create `__tests__/lib/ai/types.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { JobDetailsSchema } from '@/lib/ai/types'
+import { describe, it, expect } from "vitest"
+import { JobDetailsSchema } from "@/lib/ai/types"
 
-describe('JobDetailsSchema', () => {
+describe("JobDetailsSchema", () => {
   const validJob = {
-    empresa: 'Test Corp',
-    cargo: 'Developer',
-    local: 'São Paulo, SP',
-    modalidade: 'Remoto' as const,
-    tipo_vaga: 'Júnior' as const,
-    requisitos_obrigatorios: ['JavaScript'],
-    requisitos_desejaveis: ['TypeScript'],
-    responsabilidades: ['Code'],
-    beneficios: ['Health insurance'],
-    salario: 'R$ 5000',
-    idioma_vaga: 'pt' as const,
+    empresa: "Test Corp",
+    cargo: "Developer",
+    local: "São Paulo, SP",
+    modalidade: "Remoto" as const,
+    tipo_vaga: "Júnior" as const,
+    requisitos_obrigatorios: ["JavaScript"],
+    requisitos_desejaveis: ["TypeScript"],
+    responsabilidades: ["Code"],
+    beneficios: ["Health insurance"],
+    salario: "R$ 5000",
+    idioma_vaga: "pt" as const,
   }
 
-  it('should accept valid job details', () => {
+  it("should accept valid job details", () => {
     expect(() => JobDetailsSchema.parse(validJob)).not.toThrow()
   })
 
-  it('should reject invalid modalidade', () => {
-    const invalid = { ...validJob, modalidade: 'Invalid' }
+  it("should reject invalid modalidade", () => {
+    const invalid = { ...validJob, modalidade: "Invalid" }
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it('should reject invalid tipo_vaga', () => {
-    const invalid = { ...validJob, tipo_vaga: 'Invalid' }
+  it("should reject invalid tipo_vaga", () => {
+    const invalid = { ...validJob, tipo_vaga: "Invalid" }
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it('should reject missing required fields', () => {
-    const invalid = { ...validJob, empresa: '' }
+  it("should reject missing required fields", () => {
+    const invalid = { ...validJob, empresa: "" }
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it('should accept null salario', () => {
+  it("should accept null salario", () => {
     const valid = { ...validJob, salario: null }
     expect(() => JobDetailsSchema.parse(valid)).not.toThrow()
   })
@@ -224,6 +224,7 @@ git commit -m "feat(ai): add TypeScript types and Zod schemas for job parsing"
 ## Task 3: Create Gemini Configuration
 
 **Files:**
+
 - Create: `lib/ai/config.ts`
 - Test: `__tests__/lib/ai/config.test.ts`
 
@@ -232,10 +233,10 @@ git commit -m "feat(ai): add TypeScript types and Zod schemas for job parsing"
 Create `__tests__/lib/ai/config.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { createGeminiClient, validateAIConfig, GEMINI_CONFIG } from '@/lib/ai/config'
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { createGeminiClient, validateAIConfig, GEMINI_CONFIG } from "@/lib/ai/config"
 
-describe('AI Config', () => {
+describe("AI Config", () => {
   let originalApiKey: string | undefined
 
   beforeEach(() => {
@@ -246,37 +247,37 @@ describe('AI Config', () => {
     process.env.GOOGLE_API_KEY = originalApiKey
   })
 
-  describe('createGeminiClient', () => {
-    it('should throw if GOOGLE_API_KEY is missing', () => {
+  describe("createGeminiClient", () => {
+    it("should throw if GOOGLE_API_KEY is missing", () => {
       delete process.env.GOOGLE_API_KEY
-      expect(() => createGeminiClient()).toThrow('GOOGLE_API_KEY not found')
+      expect(() => createGeminiClient()).toThrow("GOOGLE_API_KEY not found")
     })
 
-    it('should create client if GOOGLE_API_KEY exists', () => {
-      process.env.GOOGLE_API_KEY = 'test-key'
+    it("should create client if GOOGLE_API_KEY exists", () => {
+      process.env.GOOGLE_API_KEY = "test-key"
       const client = createGeminiClient()
       expect(client).toBeDefined()
     })
   })
 
-  describe('validateAIConfig', () => {
-    it('should return true if GOOGLE_API_KEY exists', () => {
-      process.env.GOOGLE_API_KEY = 'test-key'
+  describe("validateAIConfig", () => {
+    it("should return true if GOOGLE_API_KEY exists", () => {
+      process.env.GOOGLE_API_KEY = "test-key"
       expect(validateAIConfig()).toBe(true)
     })
 
-    it('should throw if GOOGLE_API_KEY is missing', () => {
+    it("should throw if GOOGLE_API_KEY is missing", () => {
       delete process.env.GOOGLE_API_KEY
       expect(() => validateAIConfig()).toThrow()
     })
   })
 
-  describe('GEMINI_CONFIG', () => {
-    it('should have correct model name', () => {
-      expect(GEMINI_CONFIG.model).toBe('gemini-2.0-flash-exp')
+  describe("GEMINI_CONFIG", () => {
+    it("should have correct model name", () => {
+      expect(GEMINI_CONFIG.model).toBe("gemini-2.0-flash-exp")
     })
 
-    it('should have low temperature for consistency', () => {
+    it("should have low temperature for consistency", () => {
       expect(GEMINI_CONFIG.temperature).toBe(0.1)
     })
   })
@@ -296,13 +297,13 @@ Expected: FAIL - "Cannot find module '@/lib/ai/config'"
 Create `lib/ai/config.ts`:
 
 ```typescript
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 /**
  * Configuração do modelo Gemini
  */
 export const GEMINI_CONFIG = {
-  model: 'gemini-2.0-flash-exp',
+  model: "gemini-2.0-flash-exp",
   temperature: 0.1, // Baixa para consistência
   maxOutputTokens: 8192,
   topP: 0.95,
@@ -318,8 +319,7 @@ export function createGeminiClient(): GoogleGenerativeAI {
 
   if (!apiKey) {
     throw new Error(
-      'GOOGLE_API_KEY not found in environment. ' +
-      'Get your key at: https://aistudio.google.com/app/apikey'
+      "GOOGLE_API_KEY not found in environment. " + "Get your key at: https://aistudio.google.com/app/apikey"
     )
   }
 
@@ -333,8 +333,7 @@ export function createGeminiClient(): GoogleGenerativeAI {
 export function validateAIConfig(): boolean {
   if (!process.env.GOOGLE_API_KEY) {
     throw new Error(
-      'GOOGLE_API_KEY not found. Configure in .env.local\n' +
-      'Get your key at: https://aistudio.google.com/app/apikey'
+      "GOOGLE_API_KEY not found. Configure in .env.local\n" + "Get your key at: https://aistudio.google.com/app/apikey"
     )
   }
   return true
@@ -361,6 +360,7 @@ git commit -m "feat(ai): add Gemini client configuration"
 ## Task 4: Create Extraction Prompts
 
 **Files:**
+
 - Create: `lib/ai/prompts.ts`
 
 **Step 1: Create prompts file**
@@ -456,6 +456,7 @@ git commit -m "feat(ai): add job extraction prompts"
 ## Task 5: Create Job Parser Service
 
 **Files:**
+
 - Create: `lib/ai/job-parser.ts`
 - Test: `__tests__/lib/ai/job-parser.test.ts`
 
@@ -463,46 +464,46 @@ git commit -m "feat(ai): add job extraction prompts"
 
 Create `__tests__/lib/ai/job-parser.test.ts`:
 
-```typescript
-import { describe, it, expect } from 'vitest'
-import { extractJsonFromResponse } from '@/lib/ai/job-parser'
+````typescript
+import { describe, it, expect } from "vitest"
+import { extractJsonFromResponse } from "@/lib/ai/job-parser"
 
-describe('extractJsonFromResponse', () => {
-  it('should extract JSON from code fence', () => {
+describe("extractJsonFromResponse", () => {
+  it("should extract JSON from code fence", () => {
     const response = '```json\n{"empresa": "Test Corp"}\n```'
     const result = extractJsonFromResponse(response)
-    expect(result).toEqual({ empresa: 'Test Corp' })
+    expect(result).toEqual({ empresa: "Test Corp" })
   })
 
-  it('should extract JSON without code fence', () => {
+  it("should extract JSON without code fence", () => {
     const response = '{"empresa": "Test Corp"}'
     const result = extractJsonFromResponse(response)
-    expect(result).toEqual({ empresa: 'Test Corp' })
+    expect(result).toEqual({ empresa: "Test Corp" })
   })
 
-  it('should extract JSON with extra text before', () => {
+  it("should extract JSON with extra text before", () => {
     const response = 'Here is the data:\n```json\n{"empresa": "Test"}\n```'
     const result = extractJsonFromResponse(response)
-    expect(result).toEqual({ empresa: 'Test' })
+    expect(result).toEqual({ empresa: "Test" })
   })
 
-  it('should extract JSON with extra text after', () => {
+  it("should extract JSON with extra text after", () => {
     const response = '```json\n{"empresa": "Test"}\n```\nHope this helps!'
     const result = extractJsonFromResponse(response)
-    expect(result).toEqual({ empresa: 'Test' })
+    expect(result).toEqual({ empresa: "Test" })
   })
 
-  it('should throw if no JSON found', () => {
-    const response = 'No JSON here at all'
-    expect(() => extractJsonFromResponse(response)).toThrow('No valid JSON found')
+  it("should throw if no JSON found", () => {
+    const response = "No JSON here at all"
+    expect(() => extractJsonFromResponse(response)).toThrow("No valid JSON found")
   })
 
-  it('should throw if JSON is invalid', () => {
-    const response = '```json\n{invalid json}\n```'
+  it("should throw if JSON is invalid", () => {
+    const response = "```json\n{invalid json}\n```"
     expect(() => extractJsonFromResponse(response)).toThrow()
   })
 })
-```
+````
 
 **Step 2: Run test to verify it fails**
 
@@ -516,10 +517,10 @@ Expected: FAIL - "Cannot find module '@/lib/ai/job-parser'"
 
 Create `lib/ai/job-parser.ts`:
 
-```typescript
-import { createGeminiClient, GEMINI_CONFIG } from './config'
-import { buildJobExtractionPrompt, SYSTEM_PROMPT } from './prompts'
-import { JobDetails, JobDetailsSchema } from './types'
+````typescript
+import { createGeminiClient, GEMINI_CONFIG } from "./config"
+import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
+import { JobDetails, JobDetailsSchema } from "./types"
 
 /**
  * Extrai JSON de resposta do LLM
@@ -533,7 +534,7 @@ export function extractJsonFromResponse(response: string): unknown {
     try {
       return JSON.parse(codeFenceMatch[1])
     } catch (error) {
-      throw new Error('Invalid JSON in code fence')
+      throw new Error("Invalid JSON in code fence")
     }
   }
 
@@ -544,19 +545,17 @@ export function extractJsonFromResponse(response: string): unknown {
     try {
       return JSON.parse(jsonMatch[0])
     } catch (error) {
-      throw new Error('Invalid JSON format')
+      throw new Error("Invalid JSON format")
     }
   }
 
-  throw new Error('No valid JSON found in LLM response')
+  throw new Error("No valid JSON found in LLM response")
 }
 
 /**
  * Parseia descrição de vaga usando Gemini
  */
-export async function parseJobWithGemini(
-  jobDescription: string
-): Promise<{ data: JobDetails; duration: number }> {
+export async function parseJobWithGemini(jobDescription: string): Promise<{ data: JobDetails; duration: number }> {
   const startTime = Date.now()
 
   // Criar cliente Gemini
@@ -590,7 +589,7 @@ export async function parseJobWithGemini(
 
   return { data: validated, duration }
 }
-```
+````
 
 **Step 4: Run tests to verify they pass**
 
@@ -614,6 +613,7 @@ git commit -m "feat(ai): add job parser service with Gemini integration"
 ## Task 6: Create API Route
 
 **Files:**
+
 - Create: `app/api/ai/parse-job/route.ts`
 
 **Step 1: Create API route**
@@ -621,11 +621,11 @@ git commit -m "feat(ai): add job parser service with Gemini integration"
 Create `app/api/ai/parse-job/route.ts`:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateAIConfig } from '@/lib/ai/config'
-import { parseJobWithGemini } from '@/lib/ai/job-parser'
-import { ParseJobRequestSchema } from '@/lib/ai/types'
-import { ZodError } from 'zod'
+import { NextRequest, NextResponse } from "next/server"
+import { validateAIConfig } from "@/lib/ai/config"
+import { parseJobWithGemini } from "@/lib/ai/job-parser"
+import { ParseJobRequestSchema } from "@/lib/ai/types"
+import { ZodError } from "zod"
 
 /**
  * POST /api/ai/parse-job
@@ -640,7 +640,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { jobDescription } = ParseJobRequestSchema.parse(body)
 
-    console.log('[AI Parser] Starting job parsing...')
+    console.log("[AI Parser] Starting job parsing...")
 
     // Chamar serviço de parsing
     const { data, duration } = await parseJobWithGemini(jobDescription)
@@ -653,19 +653,19 @@ export async function POST(request: NextRequest) {
       data,
       metadata: {
         duration,
-        model: 'gemini-2.0-flash-exp',
+        model: "gemini-2.0-flash-exp",
         timestamp: new Date().toISOString(),
       },
     })
   } catch (error) {
-    console.error('[AI Parser] Error:', error)
+    console.error("[AI Parser] Error:", error)
 
     // Erro de validação Zod
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid request data',
+          error: "Invalid request data",
           details: error.errors,
         },
         { status: 400 }
@@ -676,7 +676,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     )
@@ -691,15 +691,15 @@ export async function GET() {
   try {
     validateAIConfig()
     return NextResponse.json({
-      status: 'ok',
-      message: 'AI Parser configured correctly',
-      model: 'gemini-2.0-flash-exp',
+      status: "ok",
+      message: "AI Parser configured correctly",
+      model: "gemini-2.0-flash-exp",
     })
   } catch (error) {
     return NextResponse.json(
       {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Configuration error',
+        status: "error",
+        message: error instanceof Error ? error.message : "Configuration error",
       },
       { status: 500 }
     )
@@ -734,6 +734,7 @@ git commit -m "feat(ai): add REST API endpoint for job parsing"
 ## Task 7: Create Test Interface
 
 **Files:**
+
 - Create: `app/test-ai/page.tsx`
 
 **Step 1: Create test interface**
@@ -938,6 +939,7 @@ git commit -m "feat(ai): add test interface for job parser"
 ## Task 8: Create Validation Script
 
 **Files:**
+
 - Create: `scripts/validate-gemini-setup.ts`
 
 **Step 1: Create validation script**
@@ -945,18 +947,18 @@ git commit -m "feat(ai): add test interface for job parser"
 Create `scripts/validate-gemini-setup.ts`:
 
 ```typescript
-import { createGeminiClient, GEMINI_CONFIG } from '../lib/ai/config'
+import { createGeminiClient, GEMINI_CONFIG } from "../lib/ai/config"
 
 async function validateSetup() {
-  console.log('🔍 Validating AI Setup...\n')
+  console.log("🔍 Validating AI Setup...\n")
 
   // Check environment variable
   if (!process.env.GOOGLE_API_KEY) {
-    console.error('❌ GOOGLE_API_KEY not found in .env.local')
-    console.error('\nGet your key at: https://aistudio.google.com/app/apikey')
+    console.error("❌ GOOGLE_API_KEY not found in .env.local")
+    console.error("\nGet your key at: https://aistudio.google.com/app/apikey")
     process.exit(1)
   }
-  console.log('✅ GOOGLE_API_KEY configured')
+  console.log("✅ GOOGLE_API_KEY configured")
 
   // Test Gemini connection
   try {
@@ -965,21 +967,21 @@ async function validateSetup() {
       model: GEMINI_CONFIG.model,
     })
 
-    console.log('🔄 Testing Gemini connection...')
+    console.log("🔄 Testing Gemini connection...")
 
     const result = await model.generateContent('Say "Hello, AI Parser!"')
     const response = result.response.text()
 
-    console.log('✅ Gemini connection successful')
+    console.log("✅ Gemini connection successful")
     console.log(`📝 Test response: ${response}\n`)
 
-    console.log('🎉 All validations passed!')
+    console.log("🎉 All validations passed!")
     console.log(`\nConfiguration:`)
     console.log(`  - Model: ${GEMINI_CONFIG.model}`)
     console.log(`  - Temperature: ${GEMINI_CONFIG.temperature}`)
     console.log(`  - Max tokens: ${GEMINI_CONFIG.maxOutputTokens}`)
   } catch (error) {
-    console.error('❌ Failed to connect to Gemini:', error)
+    console.error("❌ Failed to connect to Gemini:", error)
     process.exit(1)
   }
 }
@@ -1007,6 +1009,7 @@ git commit -m "feat(ai): add validation script for AI setup"
 ## Task 9: End-to-End Validation
 
 **Files:**
+
 - None (validation only)
 
 **Step 1: Run all tests**
@@ -1073,6 +1076,7 @@ git commit -m "test(ai): add end-to-end validation script"
 ## Task 10: Documentation and Cleanup
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 - Create: `README-AI.md` (optional)
 
@@ -1080,29 +1084,34 @@ git commit -m "test(ai): add end-to-end validation script"
 
 Add to `CLAUDE.md` after "File Upload Architecture" section:
 
-```markdown
+````markdown
 ### AI Job Parser (Phase 1)
 
 The system includes LLM-powered parsing to extract structured data from unstructured job descriptions.
 
 **Architecture:**
+
 - **Service:** `lib/ai/job-parser.ts` - Gemini 2.0 Flash integration
 - **API:** `POST /api/ai/parse-job` - REST endpoint
 - **Test UI:** `/test-ai` - Manual validation interface
 
 **Configuration:**
+
 ```env
 GOOGLE_API_KEY=your_key_here  # Get at: https://aistudio.google.com/app/apikey
 ```
+````
 
 **Validation:**
+
 ```bash
 pnpm validate:ai  # Test Gemini connection
 ```
 
 **Usage:**
+
 ```typescript
-import { parseJobWithGemini } from '@/lib/ai/job-parser'
+import { parseJobWithGemini } from "@/lib/ai/job-parser"
 
 const { data, duration } = await parseJobWithGemini(jobDescription)
 // data: JobDetails (validated with Zod)
@@ -1113,17 +1122,19 @@ const { data, duration } = await parseJobWithGemini(jobDescription)
 **Costs:** ~$0.0003 per parsing (Gemini free tier: 15 req/min, 1M tokens/day)
 
 **Future Phases:**
+
 - Phase 2: Fit calculator (compare profile vs requirements)
 - Phase 3: Analysis writer (generate `analise-vaga.md`)
 - Phase 4: Resume personalizer (generate PDFs)
-```
+
+````
 
 **Step 2: Commit documentation**
 
 ```bash
 git add CLAUDE.md
 git commit -m "docs: document AI job parser in CLAUDE.md"
-```
+````
 
 **Step 3: Final validation**
 
@@ -1145,12 +1156,14 @@ Expected: All pass
 ## Completion Checklist
 
 **Setup:**
+
 - [ ] `@google/generative-ai` installed
 - [ ] `GOOGLE_API_KEY` configured in `.env.local`
 - [ ] `.env.example` updated with documentation
 - [ ] `validate:ai` script added to package.json
 
 **Code:**
+
 - [ ] `lib/ai/types.ts` - Types and Zod schemas
 - [ ] `lib/ai/config.ts` - Gemini client config
 - [ ] `lib/ai/prompts.ts` - Extraction prompts
@@ -1160,12 +1173,14 @@ Expected: All pass
 - [ ] `scripts/validate-gemini-setup.ts` - Validation script
 
 **Tests:**
+
 - [ ] `__tests__/lib/ai/types.test.ts` - Schema validation
 - [ ] `__tests__/lib/ai/config.test.ts` - Config validation
 - [ ] `__tests__/lib/ai/job-parser.test.ts` - JSON extraction
 - [ ] All tests pass (`pnpm test --run`)
 
 **Validation:**
+
 - [ ] Health check works: `curl localhost:3000/api/ai/parse-job`
 - [ ] Validation script works: `pnpm validate:ai`
 - [ ] Test interface loads: `http://localhost:3000/test-ai`
@@ -1176,6 +1191,7 @@ Expected: All pass
 - [ ] No lint errors (`pnpm lint`)
 
 **Documentation:**
+
 - [ ] `CLAUDE.md` updated with AI parser docs
 - [ ] Design document committed (`docs/plans/2025-01-17-ai-job-parser-design.md`)
 - [ ] All commits follow conventional commits format

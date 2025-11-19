@@ -420,11 +420,13 @@ pnpm test:coverage
 The AI Job Parser uses Gemini 1.5 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
 
 **What it does:**
+
 - Accepts raw job description text (from LinkedIn, Indeed, emails, company websites)
 - Extracts structured fields: empresa, cargo, local, modalidade, tipo_vaga, requisitos, responsabilidades, benefícios
 - Returns validated JSON ready for form auto-fill or database insertion
 
 **What it doesn't do (future phases):**
+
 - Calculate fit scores (Phase 2)
 - Generate analysis markdown files (Phase 3)
 - Personalize resumes (Phase 4)
@@ -440,11 +442,13 @@ GOOGLE_API_KEY=your_gemini_api_key_here
 ```
 
 **How to get API key:**
+
 1. Visit https://aistudio.google.com/app/apikey
 2. Create new API key
 3. Add to `.env.local`
 
 **Free tier limits:**
+
 - 15 requests/minute per model
 - 1M tokens/day total
 - Cost per request: ~$0.0003 (if paid tier)
@@ -454,6 +458,7 @@ GOOGLE_API_KEY=your_gemini_api_key_here
 The job parser uses **Gemini 1.5 Flash** (stable) for maximum reliability and free tier compatibility.
 
 **Why this model?**
+
 - ✅ Stable and production-ready (no `-exp` suffix)
 - ✅ Generous free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
 - ✅ Fast response times (~2-3 seconds)
@@ -462,6 +467,7 @@ The job parser uses **Gemini 1.5 Flash** (stable) for maximum reliability and fr
 **Fallback System**
 
 If the primary model encounters rate limits, the system automatically falls back to:
+
 1. `gemini-2.0-flash-001` (alternative stable model)
 2. `gemini-2.5-pro` (highest quality, slower)
 
@@ -470,6 +476,7 @@ The system logs which model successfully processed each request in the console a
 **Upgrading to Paid Tier**
 
 For higher quotas, enable billing in Google Cloud Console:
+
 - Tier 1: 150 RPM, 1K RPD (~$0.075/1K input tokens)
 - Documentation: https://ai.google.dev/pricing
 
@@ -480,6 +487,7 @@ For higher quotas, enable billing in Google Cloud Console:
 **Cause:** Rate limit reached for current model.
 
 **Solutions:**
+
 1. Wait for quota reset (typically 1 minute)
 2. System automatically tries fallback models
 3. Check usage: https://ai.dev/usage?tab=rate-limit
@@ -490,12 +498,13 @@ For higher quotas, enable billing in Google Cloud Console:
 #### Model Selection
 
 To force a specific model (for testing):
+
 ```typescript
 // In lib/ai/config.ts
 export const GEMINI_CONFIG = {
   model: "gemini-2.5-pro", // Override here
   // ...
-};
+}
 ```
 
 Or use the fallback chain by modifying `MODEL_FALLBACK_CHAIN`.
@@ -562,6 +571,7 @@ app/test-ai/
 Parse a job description and extract structured data.
 
 **Request:**
+
 ```typescript
 {
   "jobDescription": string  // Min 50 characters
@@ -569,6 +579,7 @@ Parse a job description and extract structured data.
 ```
 
 **Response (success):**
+
 ```typescript
 {
   "success": true,
@@ -594,6 +605,7 @@ Parse a job description and extract structured data.
 ```
 
 **Response (error):**
+
 ```typescript
 {
   "success": false,
@@ -603,6 +615,7 @@ Parse a job description and extract structured data.
 ```
 
 **Status codes:**
+
 - `200` - Success
 - `400` - Invalid input (validation error)
 - `429` - Rate limit exceeded
@@ -613,6 +626,7 @@ Parse a job description and extract structured data.
 Health check endpoint.
 
 **Response:**
+
 ```typescript
 {
   "status": "ok" | "error",
@@ -680,6 +694,7 @@ console.log(`Parsed with ${model} in ${duration}ms`)
 5. Review extracted data
 
 **Expected fields:**
+
 - ✅ Empresa, Cargo, Local
 - ✅ Modalidade (must be one of: Presencial, Híbrido, Remoto)
 - ✅ Tipo de Vaga (must be one of: Estágio, Júnior, Pleno, Sênior)
@@ -690,6 +705,7 @@ console.log(`Parsed with ${model} in ${duration}ms`)
 #### Testing with real sources
 
 Test with job descriptions from:
+
 1. **LinkedIn** (structured format) - Expected accuracy: 95%+
 2. **E-mail de recrutador** (semi-structured) - Expected accuracy: 80%+
 3. **Site de empresa** (texto corrido) - Expected accuracy: 70%+
@@ -706,33 +722,39 @@ pnpm test -- ai
 ### Rate Limits and Costs
 
 **Gemini Free Tier:**
+
 - 15 requests/minute (Gemini's documented free tier API limit)
 - 1M tokens/day
 - Sufficient for ~1000 parsings/day
 
 **Application Rate Limiter:**
+
 - Configured to 10 requests/minute in `rate-limiter.ts` (intentionally lower than Gemini's 15 requests/minute limit as a conservative buffer)
 - This safety margin prevents exceeding API quotas and eases burst handling and retry logic
 - The lower app limit provides a buffer zone to handle traffic spikes and retry attempts without hitting Gemini's hard limits
 
 **Typical usage:**
+
 - Input: ~500 tokens (job description)
 - Output: ~200 tokens (JSON response)
 - Total per request: ~700 tokens
 - Cost (paid tier): ~$0.0003 per request
 
 **Rate limit handling:**
+
 - API returns 429 status with retry delay
 - Error message includes retry time
 - Client should implement exponential backoff if needed
 
 **Monitoring usage:**
+
 - Dashboard: https://ai.dev/usage?tab=rate-limit
 - Quotas: https://ai.google.dev/gemini-api/docs/rate-limits
 
 ### Advanced Configuration
 
 **Model Settings:**
+
 ```typescript
 {
   temperature: 0.1,      // Low temperature for consistency
@@ -743,6 +765,7 @@ pnpm test -- ai
 ```
 
 **Why Gemini 1.5 Flash:**
+
 - ✅ Stable model (production-ready, no `-exp` suffix)
 - ✅ Fast response time (~2-3 seconds)
 - ✅ Generous free tier quotas (15 RPM, 1.5K RPD)
@@ -755,24 +778,28 @@ pnpm test -- ai
 **Common errors and solutions:**
 
 1. **Missing API key**
+
    ```
    Error: GOOGLE_API_KEY not found in environment
    Solution: Add key to .env.local
    ```
 
 2. **Invalid input**
+
    ```
    Error: Job description must be at least 50 characters
    Solution: Provide more complete description
    ```
 
 3. **Rate limit exceeded**
+
    ```
    Error: Too Many Requests - retry in 23s
    Solution: Wait for rate limit window to reset
    ```
 
 4. **Invalid JSON response**
+
    ```
    Error: LLM did not return valid JSON
    Solution: Check prompt formatting, retry once
@@ -787,21 +814,25 @@ pnpm test -- ai
 ### Future Phases
 
 **Phase 2: Fit Calculator**
+
 - Compare candidate profile vs job requirements
 - Calculate `requisitos` (0-5 stars) and `fit` (0-5 stars) scores
 - Generate justifications
 
 **Phase 3: Analysis Writer**
+
 - Generate complete `analise-vaga.md` file
 - Follow `modelo-analise.md` template
 - Include detailed analysis sections
 
 **Phase 4: Resume Personalizer**
+
 - Adjust CV RESUMO section for specific job
 - Highlight relevant skills
 - Generate PT and EN versions
 
 **Phase 5: Dashboard Integration**
+
 - Add "Parse from description" button in `add-vaga-dialog.tsx`
 - Auto-fill form fields with extracted data
 - Allow manual edits before saving
@@ -809,19 +840,23 @@ pnpm test -- ai
 ### Troubleshooting
 
 **Parser returns empty arrays**
+
 - Job description may be too short or unclear
 - Try more structured input (include section headings like "Requisitos:", "Benefícios:")
 
 **Wrong modalidade or tipo_vaga**
+
 - Prompt emphasizes exact values
 - If mismatch persists, check if source uses non-standard terminology
 
 **Parsing is slow (>10s)**
+
 - Check network connection
 - Gemini cold start can add ~500ms
 - Typical response time: 2-5 seconds
 
 **Quota exceeded frequently**
+
 - Monitor usage at https://ai.dev/usage
 - Consider upgrading to paid tier if needed
 - Implement client-side caching for repeated queries

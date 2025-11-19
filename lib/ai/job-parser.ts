@@ -1,7 +1,7 @@
-import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType } from './config'
-import { buildJobExtractionPrompt, SYSTEM_PROMPT } from './prompts'
-import { JobDetails, JobDetailsSchema } from './types'
-import { isQuotaError } from './errors'
+import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType } from "./config"
+import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
+import { JobDetails, JobDetailsSchema } from "./types"
+import { isQuotaError } from "./errors"
 
 /**
  * Extrai JSON de resposta do LLM
@@ -15,48 +15,48 @@ export function extractJsonFromResponse(response: string): unknown {
     try {
       return JSON.parse(codeFenceMatch[1])
     } catch (error) {
-      throw new Error('Invalid JSON in code fence')
+      throw new Error("Invalid JSON in code fence")
     }
   }
 
   // Tentar extrair JSON direto
   // Parser-aware extraction that tracks string boundaries
-  const jsonStart = response.indexOf('{')
+  const jsonStart = response.indexOf("{")
   if (jsonStart !== -1) {
     let braceCount = 0
     let jsonEnd = jsonStart
     let inString = false
     let escapeNext = false
-    
+
     for (let i = jsonStart; i < response.length; i++) {
       const char = response[i]
-      
+
       if (escapeNext) {
         escapeNext = false
         continue
       }
-      
-      if (char === '\\') {
+
+      if (char === "\\") {
         escapeNext = true
         continue
       }
-      
+
       if (char === '"') {
         inString = !inString
         continue
       }
-      
+
       // Only count braces when not inside a string
       if (!inString) {
-        if (char === '{') braceCount++
-        if (char === '}') braceCount--
+        if (char === "{") braceCount++
+        if (char === "}") braceCount--
         if (braceCount === 0) {
           jsonEnd = i + 1
           break
         }
       }
     }
-    
+
     const jsonText = response.slice(jsonStart, jsonEnd)
     try {
       return JSON.parse(jsonText)
@@ -66,7 +66,7 @@ export function extractJsonFromResponse(response: string): unknown {
     }
   }
 
-  throw new Error('No valid JSON found in LLM response')
+  throw new Error("No valid JSON found in LLM response")
 }
 
 /**
@@ -79,17 +79,12 @@ function extractTokenUsage(response: any): {
 } {
   try {
     // A resposta do Gemini pode ter usageMetadata em diferentes lugares
-    const usageMetadata =
-      response.usageMetadata ||
-      (response as any).candidates?.[0]?.usageMetadata ||
-      null
+    const usageMetadata = response.usageMetadata || (response as any).candidates?.[0]?.usageMetadata || null
 
     if (usageMetadata) {
       const promptTokenCount = usageMetadata.promptTokenCount || 0
       const candidatesTokenCount = usageMetadata.candidatesTokenCount || 0
-      const totalTokenCount =
-        usageMetadata.totalTokenCount ||
-        promptTokenCount + candidatesTokenCount
+      const totalTokenCount = usageMetadata.totalTokenCount || promptTokenCount + candidatesTokenCount
 
       return {
         inputTokens: promptTokenCount,
@@ -98,7 +93,7 @@ function extractTokenUsage(response: any): {
       }
     }
   } catch (error) {
-    console.warn('[Job Parser] Could not extract token usage:', error)
+    console.warn("[Job Parser] Could not extract token usage:", error)
   }
 
   // Fallback: estimativa baseada em caracteres (aproximação)
@@ -114,9 +109,7 @@ function extractTokenUsage(response: any): {
  * Parseia descrição de vaga usando Gemini com fallback automático
  * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
  */
-export async function parseJobWithGemini(
-  jobDescription: string
-): Promise<{
+export async function parseJobWithGemini(jobDescription: string): Promise<{
   data: JobDetails
   duration: number
   model: string
@@ -165,12 +158,9 @@ export async function parseJobWithGemini(
 
       const duration = Date.now() - startTime
 
-      console.log(
-        `[Job Parser] ✅ Success with model: ${modelName} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
-      )
+      console.log(`[Job Parser] ✅ Success with model: ${modelName} (${duration}ms, ${tokenUsage.totalTokens} tokens)`)
 
       return { data: validated, duration, model: modelName, tokenUsage }
-
     } catch (error: unknown) {
       // Check if this is a quota error
       if (isQuotaError(error)) {
@@ -188,7 +178,7 @@ export async function parseJobWithGemini(
 
   // All models failed due to quota
   throw new Error(
-    `All models exhausted due to quota limits. Last error: ${lastError?.message || 'Unknown'}. ` +
-    `Consider upgrading to paid tier: https://ai.google.dev/pricing`
+    `All models exhausted due to quota limits. Last error: ${lastError?.message || "Unknown"}. ` +
+      `Consider upgrading to paid tier: https://ai.google.dev/pricing`
   )
 }

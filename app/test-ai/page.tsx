@@ -77,27 +77,26 @@ export default function TestAIPage() {
           parseError = err instanceof Error ? err.message : String(err)
         }
 
-        const errorResponse = typeof errorData === 'object' && errorData !== null 
-          ? errorData as ParseJobErrorResponse 
-          : null
+        const errorResponse =
+          typeof errorData === "object" && errorData !== null ? (errorData as ParseJobErrorResponse) : null
 
         // Extract user-friendly error message
         let errorMessage = errorResponse?.error || `HTTP ${response.status}: ${response.statusText}`
-        
+
         // Handle validation errors (400) with friendly messages
         if (response.status === 400 && errorResponse?.details) {
           const details = errorResponse.details
-          
+
           // Check if it's a Zod validation error
-          if (typeof details === 'object' && 'issues' in details && Array.isArray(details.issues)) {
-            const zodIssues = details.issues as Array<{ path: (string | number)[], message: string }>
-            const validationMessages = zodIssues.map(issue => {
-              const field = issue.path.join('.')
+          if (typeof details === "object" && "issues" in details && Array.isArray(details.issues)) {
+            const zodIssues = details.issues as Array<{ path: (string | number)[]; message: string }>
+            const validationMessages = zodIssues.map((issue) => {
+              const field = issue.path.join(".")
               return field ? `${field}: ${issue.message}` : issue.message
             })
-            
+
             if (validationMessages.length > 0) {
-              errorMessage = validationMessages.join(', ')
+              errorMessage = validationMessages.join(", ")
             }
           }
         }
@@ -121,7 +120,7 @@ export default function TestAIPage() {
           success: false,
           error: errorMessage,
           details: {
-            ...(typeof errorData === 'object' && errorData !== null ? errorData : {}),
+            ...(typeof errorData === "object" && errorData !== null ? errorData : {}),
             ...(parseError && { parseError }),
             ...(rawText && { rawResponse: rawText }),
           },
@@ -131,7 +130,7 @@ export default function TestAIPage() {
 
       const data = await response.json()
       setResult(data)
-      
+
       // Show success toast
       if (data.success) {
         toast.success("Vaga parseada com sucesso!", {
@@ -140,8 +139,8 @@ export default function TestAIPage() {
       }
     } catch (error) {
       let errorMessage: string
-      
-      if (error instanceof Error && error.name === 'AbortError') {
+
+      if (error instanceof Error && error.name === "AbortError") {
         errorMessage = "Request timed out after 30 seconds"
         toast.error("Tempo esgotado", {
           description: "A requisição demorou mais de 30 segundos. Tente novamente.",
@@ -152,7 +151,7 @@ export default function TestAIPage() {
           description: errorMessage,
         })
       }
-      
+
       setResult({
         success: false,
         error: errorMessage,
@@ -196,11 +195,7 @@ export default function TestAIPage() {
                   <span className="text-destructive ml-2">(mínimo: 50 caracteres)</span>
                 )}
               </p>
-              <Button 
-                onClick={handleParse} 
-                disabled={isLoading}
-                aria-disabled={isLoading}
-              >
+              <Button onClick={handleParse} disabled={isLoading} aria-disabled={isLoading}>
                 {isLoading ? "Parsing..." : "Parse Job"}
               </Button>
             </div>
@@ -253,9 +248,7 @@ export default function TestAIPage() {
                     {/* Arrays */}
                     {result.data.requisitos_obrigatorios.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
-                          Requisitos Obrigatórios
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Requisitos Obrigatórios</p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_obrigatorios.map((req, i) => (
                             <li key={i} className="text-sm">
@@ -268,9 +261,7 @@ export default function TestAIPage() {
 
                     {result.data.requisitos_desejaveis.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
-                          Requisitos Desejáveis
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Requisitos Desejáveis</p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.requisitos_desejaveis.map((req, i) => (
                             <li key={i} className="text-sm">
@@ -283,9 +274,7 @@ export default function TestAIPage() {
 
                     {result.data.responsabilidades.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
-                          Responsabilidades
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Responsabilidades</p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.responsabilidades.map((resp, i) => (
                             <li key={i} className="text-sm">
@@ -298,9 +287,7 @@ export default function TestAIPage() {
 
                     {result.data.beneficios.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
-                          Benefícios
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Benefícios</p>
                         <ul className="list-disc list-inside space-y-1">
                           {result.data.beneficios.map((ben, i) => (
                             <li key={i} className="text-sm">
