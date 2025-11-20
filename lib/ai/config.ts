@@ -74,3 +74,36 @@ export function validateAIConfig(): boolean {
   getValidatedApiKey()
   return true
 }
+
+/**
+ * Configuração específica para modelo de análise
+ * Note: Google Search grounding requires @google/genai SDK (not @google/generative-ai)
+ * TODO: Migrate to @google/genai to enable external company research
+ */
+export const ANALYSIS_MODEL_CONFIG = {
+  model: "gemini-2.0-flash-exp", // Experimental model for analysis
+  temperature: 0.1,
+  maxOutputTokens: 8192,
+  topP: 0.95,
+  topK: 40,
+} as const
+
+/**
+ * Creates Gemini model configured for job analysis
+ * @throws Error if GOOGLE_API_KEY not configured
+ */
+export function createAnalysisModel() {
+  const genAI = createGeminiClient()
+
+  return genAI.getGenerativeModel({
+    model: ANALYSIS_MODEL_CONFIG.model,
+    generationConfig: {
+      temperature: ANALYSIS_MODEL_CONFIG.temperature,
+      maxOutputTokens: ANALYSIS_MODEL_CONFIG.maxOutputTokens,
+      topP: ANALYSIS_MODEL_CONFIG.topP,
+      topK: ANALYSIS_MODEL_CONFIG.topK,
+    },
+    // Note: tools with googleSearch requires @google/genai SDK
+    // Current implementation uses @google/generative-ai (legacy)
+  })
+}
