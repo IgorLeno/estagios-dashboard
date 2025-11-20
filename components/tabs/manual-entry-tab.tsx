@@ -131,12 +131,13 @@ export function ManualEntryTab({ formData, setFormData, onSubmit, loading }: Man
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="observacoes">Observações</Label>
+        <Label htmlFor="observacoes">Análise</Label>
         <Textarea
           id="observacoes"
           value={formData.observacoes}
           onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-          rows={3}
+          placeholder="Insights sobre a vaga, fit técnico e cultural, preparação para entrevista..."
+          rows={8}
         />
       </div>
 
