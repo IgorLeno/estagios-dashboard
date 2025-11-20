@@ -1,5 +1,9 @@
 import { createGeminiClient, MODEL_FALLBACK_CHAIN } from "@/lib/ai/config"
 import { isQuotaError } from "@/lib/ai/errors"
+import dotenv from "dotenv"
+
+// Carregar variáveis de ambiente do .env.local
+dotenv.config({ path: ".env.local" })
 
 /**
  * Validates Gemini API setup and tests all models in fallback chain
