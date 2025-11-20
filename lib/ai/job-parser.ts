@@ -1,7 +1,10 @@
-import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType } from "./config"
+import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType, createAnalysisModel, ANALYSIS_MODEL_CONFIG } from "./config"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
-import { JobDetails, JobDetailsSchema } from "./types"
+import { JobDetails, JobDetailsSchema, JobAnalysisResponseSchema } from "./types"
 import { isQuotaError } from "./errors"
+import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "./analysis-prompts"
+import { USER_PROFILE } from "./user-profile"
+import { validateAnalysisMarkdown } from "./validation"
 
 /**
  * Extrai JSON de resposta do LLM
@@ -181,4 +184,94 @@ export async function parseJobWithGemini(jobDescription: string): Promise<{
     `All models exhausted due to quota limits. Last error: ${lastError?.message || "Unknown"}. ` +
       `Consider upgrading to paid tier: https://ai.google.dev/pricing`
   )
+}
+
+/**
+ * Parses job description and generates comprehensive analysis using Gemini
+ * @param jobDescription - Job description text
+ * @returns Structured data, analysis markdown, duration, model, and token usage
+ */
+export async function parseJobWithAnalysis(jobDescription: string): Promise<{
+  data: JobDetails
+  analise: string
+  duration: number
+  model: string
+  tokenUsage: { inputTokens: number; outputTokens: number; totalTokens: number }
+}> {
+  const startTime = Date.now()
+
+  try {
+    console.log(`[Job Parser] Starting analysis with model: ${ANALYSIS_MODEL_CONFIG.model}`)
+
+    // Create analysis model
+    const model = createAnalysisModel()
+
+    // Build prompt with user profile
+    const prompt = buildJobAnalysisPrompt(jobDescription, USER_PROFILE)
+
+    // Call Gemini
+    const result = await model.generateContent(prompt)
+    const response = result.response
+    const text = response.text()
+
+    // Extract token usage
+    const tokenUsage = extractTokenUsage(response)
+
+    // Extract JSON
+    const jsonData = extractJsonFromResponse(text)
+
+    // Validate with Zod
+    const validated = JobAnalysisResponseSchema.parse(jsonData)
+
+    // Validate analysis markdown
+    if (!validateAnalysisMarkdown(validated.analise_markdown)) {
+      console.warn("[Job Parser] Analysis validation failed, using fallback")
+      // Fallback to basic observations if analysis is invalid
+      const fallbackAnalise = buildObservacoes(validated.structured_data)
+      validated.analise_markdown = fallbackAnalise
+    }
+
+    const duration = Date.now() - startTime
+
+    console.log(
+      `[Job Parser] ✅ Analysis complete: ${ANALYSIS_MODEL_CONFIG.model} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
+    )
+
+    return {
+      data: validated.structured_data,
+      analise: validated.analise_markdown,
+      duration,
+      model: ANALYSIS_MODEL_CONFIG.model,
+      tokenUsage,
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`[Job Parser] ❌ Analysis error:`, errorMessage)
+    throw error
+  }
+}
+
+/**
+ * Helper: builds fallback observations from structured data
+ */
+function buildObservacoes(data: JobDetails): string {
+  const sections: string[] = []
+
+  if (data.requisitos_obrigatorios.length > 0) {
+    sections.push("**Requisitos Obrigatórios:**\n" + data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n"))
+  }
+
+  if (data.requisitos_desejaveis.length > 0) {
+    sections.push("**Requisitos Desejáveis:**\n" + data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n"))
+  }
+
+  if (data.responsabilidades.length > 0) {
+    sections.push("**Responsabilidades:**\n" + data.responsabilidades.map((r) => `- ${r}`).join("\n"))
+  }
+
+  if (data.beneficios.length > 0) {
+    sections.push("**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n"))
+  }
+
+  return sections.join("\n\n")
 }

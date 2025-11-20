@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest"
-import { extractJsonFromResponse } from "@/lib/ai/job-parser"
+import { describe, it, expect, vi } from "vitest"
+import { extractJsonFromResponse, parseJobWithAnalysis } from "@/lib/ai/job-parser"
 
 describe("extractJsonFromResponse", () => {
   it("should extract JSON from code fence", () => {
@@ -102,5 +102,79 @@ describe("extractJsonFromResponse", () => {
       cargo: "Desenvolvedor",
       emoji: "🚀",
     })
+  })
+})
+
+// Mock the Gemini API
+vi.mock("@/lib/ai/config", () => ({
+  createAnalysisModel: vi.fn(() => ({
+    generateContent: vi.fn(async () => ({
+      response: {
+        text: () => {
+          const analysisMarkdown = `# Análise da Vaga - Dev @ Tech Corp
+
+## 🏢 Sobre a Empresa
+Tech Corp é uma empresa de tecnologia moderna focada em React.
+
+## 💡 Oportunidades para se Destacar
+Sua experiência com React é um diferencial importante.
+
+## 🎯 Fit Técnico e Cultural
+Score: 4/5 estrelas. Excelente match técnico.
+
+## 🗣️ Preparação para Entrevista
+1. Pergunte sobre arquitetura do projeto
+2. Entenda o processo de code review`
+
+          return `\`\`\`json
+{
+  "structured_data": {
+    "empresa": "Tech Corp",
+    "cargo": "Dev",
+    "local": "SP",
+    "modalidade": "Remoto",
+    "tipo_vaga": "Estágio",
+    "requisitos_obrigatorios": ["React"],
+    "requisitos_desejaveis": [],
+    "responsabilidades": ["Code"],
+    "beneficios": [],
+    "salario": null,
+    "idioma_vaga": "pt"
+  },
+  "analise_markdown": ${JSON.stringify(analysisMarkdown)}
+}
+\`\`\``
+        },
+        usageMetadata: {
+          promptTokenCount: 500,
+          candidatesTokenCount: 1500,
+          totalTokenCount: 2000,
+        },
+      },
+    })),
+  })),
+  ANALYSIS_MODEL_CONFIG: { model: "gemini-2.0-flash-exp" },
+}))
+
+vi.mock("@/lib/ai/user-profile", () => ({
+  USER_PROFILE: {
+    skills: ["React"],
+    experience: ["Project X"],
+    education: "CS",
+    goals: "Get internship",
+  },
+}))
+
+describe("parseJobWithAnalysis", () => {
+  it("should parse job and generate analysis", async () => {
+    const jobDescription = "Vaga de Dev React na Tech Corp"
+
+    const result = await parseJobWithAnalysis(jobDescription)
+
+    expect(result.data.empresa).toBe("Tech Corp")
+    expect(result.analise).toContain("## 🏢 Sobre a Empresa")
+    expect(result.model).toBe("gemini-2.0-flash-exp")
+    expect(result.duration).toBeGreaterThan(0)
+    expect(result.tokenUsage.totalTokens).toBe(2000)
   })
 })
