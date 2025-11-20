@@ -51,9 +51,7 @@ export function MarkdownUploadTab({ formData, setFormData, onComplete }: Markdow
       />
 
       <FileUpload
-        onUploadComplete={(url) =>
-          setFormData((prev) => ({ ...prev, arquivo_cv_url: url }))
-        }
+        onUploadComplete={(url) => setFormData((prev) => ({ ...prev, arquivo_cv_url: url }))}
         currentFile={formData.arquivo_cv_url}
         label="Resume (PDF/DOCX)"
       />

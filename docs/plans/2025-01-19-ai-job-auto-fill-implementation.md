@@ -15,6 +15,7 @@
 Create utility to map API response (JobDetails) to form data structure.
 
 **Files:**
+
 - Create: `lib/utils/ai-mapper.ts`
 - Test: `__tests__/lib/ai-mapper.test.ts`
 
@@ -189,30 +190,19 @@ export function buildObservacoes(data: JobDetails): string {
   const sections: string[] = []
 
   if (data.requisitos_obrigatorios.length > 0) {
-    sections.push(
-      "**Requisitos Obrigatórios:**\n" +
-        data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Obrigatórios:**\n" + data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.requisitos_desejaveis.length > 0) {
-    sections.push(
-      "**Requisitos Desejáveis:**\n" +
-        data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Desejáveis:**\n" + data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.responsabilidades.length > 0) {
-    sections.push(
-      "**Responsabilidades:**\n" +
-        data.responsabilidades.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Responsabilidades:**\n" + data.responsabilidades.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.beneficios.length > 0) {
-    sections.push(
-      "**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n"))
   }
 
   return sections.join("\n\n")
@@ -245,6 +235,7 @@ git commit -m "feat: add AI response to form data mapper utility
 Extract form fields from AddVagaDialog into reusable ManualEntryTab component.
 
 **Files:**
+
 - Create: `components/tabs/manual-entry-tab.tsx`
 - Test: `__tests__/components/tabs/manual-entry-tab.test.tsx`
 
@@ -556,6 +547,7 @@ git commit -m "feat: add ManualEntryTab component
 Create AI Parser tab for pasting job descriptions and triggering analysis.
 
 **Files:**
+
 - Create: `components/tabs/ai-parser-tab.tsx`
 - Test: `__tests__/components/tabs/ai-parser-tab.test.tsx`
 
@@ -978,6 +970,7 @@ git commit -m "feat: add AiParserTab component
 Create wrapper for existing MarkdownUpload component with auto-switch behavior.
 
 **Files:**
+
 - Create: `components/tabs/markdown-upload-tab.tsx`
 - Test: `__tests__/components/tabs/markdown-upload-tab.test.tsx`
 
@@ -1149,6 +1142,7 @@ git commit -m "feat: add MarkdownUploadTab wrapper component
 Refactor AddVagaDialog to orchestrate tabs with shared state.
 
 **Files:**
+
 - Modify: `components/add-vaga-dialog.tsx`
 - Test: `__tests__/components/add-vaga-dialog.test.tsx` (update existing)
 
@@ -1491,6 +1485,7 @@ git commit -m "refactor: convert AddVagaDialog to tabs-based architecture
 Test complete flow from AI parse to save.
 
 **Files:**
+
 - Create: `__tests__/integration/ai-job-auto-fill.test.tsx`
 
 ### Step 1: Write integration test
@@ -1812,6 +1807,7 @@ All tests passing, build successful, ready for production."
 **Estimated Time:** 2-3 hours (with testing)
 
 **Task Breakdown:**
+
 1. AI Mapper Utility (20 min)
 2. ManualEntryTab Component (30 min)
 3. AiParserTab Component (40 min)
@@ -1821,6 +1817,7 @@ All tests passing, build successful, ready for production."
 7. Final Verification (20 min)
 
 **Files Created:**
+
 - `lib/utils/ai-mapper.ts`
 - `components/tabs/ai-parser-tab.tsx`
 - `components/tabs/manual-entry-tab.tsx`
@@ -1832,13 +1829,16 @@ All tests passing, build successful, ready for production."
 - `__tests__/integration/ai-job-auto-fill.test.tsx`
 
 **Files Modified:**
+
 - `components/add-vaga-dialog.tsx`
 - `__tests__/components/add-vaga-dialog.test.tsx`
 
 **Dependencies Added:**
+
 - None (all existing: Radix Tabs, Sonner, Zod)
 
 **Success Criteria Met:**
+
 - ✅ Textarea for pasting job descriptions
 - ✅ AI analysis with /api/ai/parse-job
 - ✅ Auto-fill all form fields
@@ -1855,6 +1855,7 @@ All tests passing, build successful, ready for production."
 ---
 
 **Related Documentation:**
+
 - Design: `docs/plans/2025-01-19-ai-job-auto-fill-design.md`
 - API: `CLAUDE.md` (AI Job Parser section)
 - Components: `components/CLAUDE.md`

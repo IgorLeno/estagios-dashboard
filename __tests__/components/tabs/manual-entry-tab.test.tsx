@@ -23,12 +23,7 @@ describe("ManualEntryTab", () => {
     const mockOnSubmit = vi.fn((e) => e.preventDefault())
 
     render(
-      <ManualEntryTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onSubmit={mockOnSubmit}
-        loading={false}
-      />
+      <ManualEntryTab formData={mockFormData} setFormData={mockSetFormData} onSubmit={mockOnSubmit} loading={false} />
     )
 
     expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
@@ -54,12 +49,7 @@ describe("ManualEntryTab", () => {
     const mockOnSubmit = vi.fn((e) => e.preventDefault())
 
     render(
-      <ManualEntryTab
-        formData={preFilledData}
-        setFormData={mockSetFormData}
-        onSubmit={mockOnSubmit}
-        loading={false}
-      />
+      <ManualEntryTab formData={preFilledData} setFormData={mockSetFormData} onSubmit={mockOnSubmit} loading={false} />
     )
 
     expect(screen.getByDisplayValue("Google")).toBeInTheDocument()
@@ -81,12 +71,7 @@ describe("ManualEntryTab", () => {
     const mockOnSubmit = vi.fn((e) => e.preventDefault())
 
     render(
-      <ManualEntryTab
-        formData={validFormData}
-        setFormData={mockSetFormData}
-        onSubmit={mockOnSubmit}
-        loading={false}
-      />
+      <ManualEntryTab formData={validFormData} setFormData={mockSetFormData} onSubmit={mockOnSubmit} loading={false} />
     )
 
     const submitButton = screen.getByText(/salvar vaga/i)
@@ -100,12 +85,7 @@ describe("ManualEntryTab", () => {
     const mockOnSubmit = vi.fn((e) => e.preventDefault())
 
     render(
-      <ManualEntryTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onSubmit={mockOnSubmit}
-        loading={true}
-      />
+      <ManualEntryTab formData={mockFormData} setFormData={mockSetFormData} onSubmit={mockOnSubmit} loading={true} />
     )
 
     const submitButton = screen.getByText(/salvando/i)

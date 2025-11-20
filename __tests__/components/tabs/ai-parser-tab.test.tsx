@@ -35,26 +35,14 @@ describe("AiParserTab", () => {
   })
 
   it("should render textarea and analyze button", () => {
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     expect(screen.getByRole("textbox")).toBeInTheDocument()
     expect(screen.getByText(/analyze with ai/i)).toBeInTheDocument()
   })
 
   it("should disable button when input < 50 chars", () => {
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     const textarea = screen.getByRole("textbox")
     fireEvent.change(textarea, { target: { value: "short" } })
@@ -64,13 +52,7 @@ describe("AiParserTab", () => {
   })
 
   it("should enable button when input >= 50 chars", () => {
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     const textarea = screen.getByRole("textbox")
     const longText = "a".repeat(50)
@@ -116,13 +98,7 @@ describe("AiParserTab", () => {
       } as Response)
     )
 
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     const textarea = screen.getByRole("textbox")
     const longText = "a".repeat(100)
@@ -156,13 +132,7 @@ describe("AiParserTab", () => {
       } as Response)
     )
 
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     const textarea = screen.getByRole("textbox")
     const longText = "a".repeat(100)
@@ -181,13 +151,7 @@ describe("AiParserTab", () => {
   it("should handle network error", async () => {
     global.fetch = vi.fn(() => Promise.reject(new Error("Network error")))
 
-    render(
-      <AiParserTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     const textarea = screen.getByRole("textbox")
     const longText = "a".repeat(100)

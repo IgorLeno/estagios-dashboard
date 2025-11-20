@@ -89,14 +89,14 @@ async function handleAnalyze() {
     const response = await fetch("/api/ai/parse-job", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobDescription })
+      body: JSON.stringify({ jobDescription }),
     })
 
     const result = await response.json()
 
     if (result.success) {
       const mapped = mapJobDetailsToFormData(result.data)
-      setFormData(prev => ({ ...prev, ...mapped }))
+      setFormData((prev) => ({ ...prev, ...mapped }))
       toast.success("Analysis complete! Review the data.")
       onComplete() // Auto-switch to manual tab
     } else {
@@ -404,31 +404,19 @@ function buildObservacoes(data: JobDetails): string {
   const sections = []
 
   if (data.requisitos_obrigatorios.length > 0) {
-    sections.push(
-      "**Requisitos Obrigatórios:**\n" +
-      data.requisitos_obrigatorios.map(r => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Obrigatórios:**\n" + data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.requisitos_desejaveis.length > 0) {
-    sections.push(
-      "**Requisitos Desejáveis:**\n" +
-      data.requisitos_desejaveis.map(r => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Desejáveis:**\n" + data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.responsabilidades.length > 0) {
-    sections.push(
-      "**Responsabilidades:**\n" +
-      data.responsabilidades.map(r => `- ${r}`).join("\n")
-    )
+    sections.push("**Responsabilidades:**\n" + data.responsabilidades.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.beneficios.length > 0) {
-    sections.push(
-      "**Benefícios:**\n" +
-      data.beneficios.map(r => `- ${r}`).join("\n")
-    )
+    sections.push("**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n"))
   }
 
   return sections.join("\n\n")
@@ -497,12 +485,12 @@ The system never blocks users completely. All errors provide fallback options.
 
 **Error Types:**
 
-| Error Code | Message | Actions |
-|------------|---------|---------|
-| 429 | "Rate limit reached. Try again or enter manually." | Try Again, Switch to Manual |
-| 504 | "Analysis timed out. Try shorter description or enter manually." | Try Again, Switch to Manual |
-| 400 | "Could not parse format. Check description or enter manually." | Back, Switch to Manual |
-| Network | "Network error. Check connection and try again." | Try Again, Switch to Manual |
+| Error Code | Message                                                          | Actions                     |
+| ---------- | ---------------------------------------------------------------- | --------------------------- |
+| 429        | "Rate limit reached. Try again or enter manually."               | Try Again, Switch to Manual |
+| 504        | "Analysis timed out. Try shorter description or enter manually." | Try Again, Switch to Manual |
+| 400        | "Could not parse format. Check description or enter manually."   | Back, Switch to Manual      |
+| Network    | "Network error. Check connection and try again."                 | Try Again, Switch to Manual |
 
 **Partial Success:**
 
@@ -565,10 +553,10 @@ test("complete AI parsing flow", async ({ page }) => {
   await page.click('text="Add Job"')
 
   // Should default to AI Parser tab
-  await expect(page.locator('textarea')).toBeVisible()
+  await expect(page.locator("textarea")).toBeVisible()
 
   // Paste job description
-  await page.fill('textarea', JOB_DESCRIPTION)
+  await page.fill("textarea", JOB_DESCRIPTION)
   await page.click('text="Analyze with AI"')
 
   // Wait for analysis and auto-switch

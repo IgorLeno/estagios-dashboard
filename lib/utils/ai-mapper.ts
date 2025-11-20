@@ -41,30 +41,19 @@ export function buildObservacoes(data: JobDetails): string {
   const sections: string[] = []
 
   if (data.requisitos_obrigatorios.length > 0) {
-    sections.push(
-      "**Requisitos Obrigatórios:**\n" +
-        data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Obrigatórios:**\n" + data.requisitos_obrigatorios.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.requisitos_desejaveis.length > 0) {
-    sections.push(
-      "**Requisitos Desejáveis:**\n" +
-        data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Requisitos Desejáveis:**\n" + data.requisitos_desejaveis.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.responsabilidades.length > 0) {
-    sections.push(
-      "**Responsabilidades:**\n" +
-        data.responsabilidades.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Responsabilidades:**\n" + data.responsabilidades.map((r) => `- ${r}`).join("\n"))
   }
 
   if (data.beneficios.length > 0) {
-    sections.push(
-      "**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n")
-    )
+    sections.push("**Benefícios:**\n" + data.beneficios.map((r) => `- ${r}`).join("\n"))
   }
 
   return sections.join("\n\n")

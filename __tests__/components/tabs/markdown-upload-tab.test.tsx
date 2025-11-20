@@ -32,29 +32,15 @@ describe("MarkdownUploadTab", () => {
   const mockOnComplete = vi.fn()
 
   it("should render MarkdownUpload and FileUpload components", () => {
-    render(
-      <MarkdownUploadTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<MarkdownUploadTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     expect(screen.getByText(/job analysis/i)).toBeInTheDocument()
     expect(screen.getByText(/resume/i)).toBeInTheDocument()
   })
 
   it("should render description text", () => {
-    render(
-      <MarkdownUploadTab
-        formData={mockFormData}
-        setFormData={mockSetFormData}
-        onComplete={mockOnComplete}
-      />
-    )
+    render(<MarkdownUploadTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
-    expect(
-      screen.getByText(/upload a markdown analysis file/i)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/upload a markdown analysis file/i)).toBeInTheDocument()
   })
 })

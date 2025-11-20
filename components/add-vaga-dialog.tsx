@@ -119,9 +119,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Job</DialogTitle>
-          <DialogDescription>
-            Use AI parsing, manual entry, or upload markdown file
-          </DialogDescription>
+          <DialogDescription>Use AI parsing, manual entry, or upload markdown file</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -132,28 +130,15 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           </TabsList>
 
           <TabsContent value="ai-parser" className="mt-4">
-            <AiParserTab
-              formData={formData}
-              setFormData={setFormData}
-              onComplete={handleTabComplete}
-            />
+            <AiParserTab formData={formData} setFormData={setFormData} onComplete={handleTabComplete} />
           </TabsContent>
 
           <TabsContent value="manual" className="mt-4">
-            <ManualEntryTab
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              loading={loading}
-            />
+            <ManualEntryTab formData={formData} setFormData={setFormData} onSubmit={handleSubmit} loading={loading} />
           </TabsContent>
 
           <TabsContent value="upload" className="mt-4">
-            <MarkdownUploadTab
-              formData={formData}
-              setFormData={setFormData}
-              onComplete={handleTabComplete}
-            />
+            <MarkdownUploadTab formData={formData} setFormData={setFormData} onComplete={handleTabComplete} />
           </TabsContent>
         </Tabs>
 

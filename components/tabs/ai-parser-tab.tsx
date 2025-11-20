@@ -112,8 +112,8 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
         />
 
         <p className="text-xs text-muted-foreground">
-          Paste job description from LinkedIn, Indeed, emails, or company websites. The AI will
-          extract company, role, location, requirements, and more.
+          Paste job description from LinkedIn, Indeed, emails, or company websites. The AI will extract company, role,
+          location, requirements, and more.
         </p>
       </div>
 
@@ -123,12 +123,7 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
           <AlertDescription className="flex items-center justify-between">
             <span>{error}</span>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setError(null)}
-                disabled={analyzing}
-              >
+              <Button size="sm" variant="outline" onClick={() => setError(null)} disabled={analyzing}>
                 Try Again
               </Button>
               <Button size="sm" variant="outline" onClick={handleSwitchToManual}>
@@ -140,12 +135,7 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
       )}
 
       <div className="flex gap-2">
-        <Button
-          onClick={handleAnalyze}
-          disabled={!isValid || analyzing}
-          className="flex-1"
-          size="lg"
-        >
+        <Button onClick={handleAnalyze} disabled={!isValid || analyzing} className="flex-1" size="lg">
           {analyzing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

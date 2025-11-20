@@ -37,25 +37,13 @@ describe("AddVagaDialog", () => {
   })
 
   it("should render dialog when open", () => {
-    render(
-      <AddVagaDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSuccess={mockOnSuccess}
-      />
-    )
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     expect(screen.getByText(/add new job/i)).toBeInTheDocument()
   })
 
   it("should default to AI Parser tab", () => {
-    render(
-      <AddVagaDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSuccess={mockOnSuccess}
-      />
-    )
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     // AI Parser tab should be active (has textarea)
     expect(screen.getByRole("textbox")).toBeInTheDocument()
@@ -65,13 +53,7 @@ describe("AddVagaDialog", () => {
   it("should allow switching to manual tab", async () => {
     const user = userEvent.setup()
 
-    render(
-      <AddVagaDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSuccess={mockOnSuccess}
-      />
-    )
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     // Verify initial state (AI Parser tab)
     expect(screen.getByRole("textbox")).toBeInTheDocument()
@@ -81,9 +63,12 @@ describe("AddVagaDialog", () => {
     await user.click(manualTabTrigger)
 
     // Wait for TabsContent to render
-    await waitFor(() => {
-      expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
 
     expect(screen.getByText(/salvar vaga/i)).toBeInTheDocument()
   })
@@ -91,42 +76,36 @@ describe("AddVagaDialog", () => {
   it("should allow switching to upload tab", async () => {
     const user = userEvent.setup()
 
-    render(
-      <AddVagaDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSuccess={mockOnSuccess}
-      />
-    )
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     const uploadTabTrigger = screen.getByText("Upload .md")
     await user.click(uploadTabTrigger)
 
     // Wait for upload section to appear
-    await waitFor(() => {
-      expect(screen.getByText(/upload a markdown analysis file/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/upload a markdown analysis file/i)).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
   })
 
   it("should share formData across tabs", async () => {
     const user = userEvent.setup()
 
-    render(
-      <AddVagaDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSuccess={mockOnSuccess}
-      />
-    )
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     // Switch to manual tab
     const manualTab = screen.getByText("Manual Entry")
     await user.click(manualTab)
 
     // Wait for manual tab content to render
-    await waitFor(() => {
-      expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
 
     // Fill empresa field
     const empresaInput = screen.getByLabelText(/empresa/i)
@@ -138,17 +117,23 @@ describe("AddVagaDialog", () => {
     await user.click(aiTab)
 
     // Wait for AI Parser content
-    await waitFor(() => {
-      expect(screen.getByRole("textbox")).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByRole("textbox")).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
 
     // Switch back to manual tab
     await user.click(manualTab)
 
     // Wait for manual tab content again
-    await waitFor(() => {
-      expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText(/empresa/i)).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
 
     // Data should persist
     const empresaInputAfter = screen.getByLabelText(/empresa/i)
