@@ -88,3 +88,13 @@ export const ParseJobErrorResponseSchema = z.object({
 })
 
 export type ParseJobErrorResponse = z.infer<typeof ParseJobErrorResponseSchema>
+
+/**
+ * Schema for complete job analysis response (structured data + markdown)
+ */
+export const JobAnalysisResponseSchema = z.object({
+  structured_data: JobDetailsSchema,
+  analise_markdown: z.string().min(1, "Analysis markdown is required"),
+})
+
+export type JobAnalysisResponse = z.infer<typeof JobAnalysisResponseSchema>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { JobDetailsSchema } from "@/lib/ai/types"
+import { JobDetailsSchema, JobAnalysisResponseSchema } from "@/lib/ai/types"
 
 describe("JobDetailsSchema", () => {
   const validJob = {
@@ -187,5 +187,50 @@ describe("JobDetailsSchema", () => {
         expect(empresaError?.message).toContain("obrigatória")
       }
     }
+  })
+})
+
+describe("JobAnalysisResponse Schema", () => {
+  it("should validate complete analysis response", () => {
+    const response = {
+      structured_data: {
+        empresa: "Empresa X",
+        cargo: "Dev",
+        local: "SP",
+        modalidade: "Remoto",
+        tipo_vaga: "Estágio",
+        requisitos_obrigatorios: ["React"],
+        requisitos_desejaveis: [],
+        responsabilidades: ["Desenvolver"],
+        beneficios: [],
+        salario: null,
+        idioma_vaga: "pt",
+      },
+      analise_markdown: "# Análise\n\nConteúdo...",
+    }
+
+    const result = JobAnalysisResponseSchema.parse(response)
+    expect(result.structured_data.empresa).toBe("Empresa X")
+    expect(result.analise_markdown).toContain("Análise")
+  })
+
+  it("should reject response without analise_markdown", () => {
+    const invalid = {
+      structured_data: {
+        empresa: "X",
+        cargo: "Dev",
+        local: "SP",
+        modalidade: "Remoto",
+        tipo_vaga: "Estágio",
+        requisitos_obrigatorios: [],
+        requisitos_desejaveis: [],
+        responsabilidades: [],
+        beneficios: [],
+        salario: null,
+        idioma_vaga: "pt",
+      },
+    }
+
+    expect(() => JobAnalysisResponseSchema.parse(invalid)).toThrow()
   })
 })
