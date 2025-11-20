@@ -115,6 +115,11 @@ Retorne APENAS um objeto JSON válido dentro de code fence markdown:
 }
 \`\`\`
 
+FORMATO FINAL:
+NÃO retorne o markdown formatado separadamente.
+Toda a análise markdown deve estar dentro do campo "analise_markdown" como string única.
+Use \\n para quebras de linha dentro do markdown.
+
 IMPORTANTE:
 - Use busca Google para encontrar informações reais sobre a empresa
 - A análise deve ser personalizada com base no perfil do candidato
