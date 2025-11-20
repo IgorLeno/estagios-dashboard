@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { randomUUID } from "crypto"
 import { validateAIConfig, GEMINI_CONFIG, AI_TIMEOUT_CONFIG } from "@/lib/ai/config"
-import { parseJobWithGemini } from "@/lib/ai/job-parser"
+import { parseJobWithAnalysis } from "@/lib/ai/job-parser"
 import { ParseJobRequestSchema } from "@/lib/ai/types"
 import { checkRateLimit, consumeRequest, consumeTokens, RATE_LIMIT_CONFIG } from "@/lib/ai/rate-limiter"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
 
     console.log("[AI Parser] Starting job parsing...")
 
-    // Chamar serviço de parsing com timeout protection
-    const { data, duration, model, tokenUsage } = await withTimeout(
-      parseJobWithGemini(jobDescription),
+    // Chamar serviço de análise com timeout protection
+    const { data, analise, duration, model, tokenUsage } = await withTimeout(
+      parseJobWithAnalysis(jobDescription),
       AI_TIMEOUT_CONFIG.parsingTimeoutMs,
-      `Parsing took longer than ${AI_TIMEOUT_CONFIG.parsingTimeoutMs}ms`
+      `Analysis took longer than ${AI_TIMEOUT_CONFIG.parsingTimeoutMs}ms`
     )
 
     console.log(
@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         data,
+        analise, // Include analysis markdown
         metadata: {
           duration,
           model,
