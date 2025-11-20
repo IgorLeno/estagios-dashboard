@@ -38,9 +38,10 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
 
       if (result.success) {
-        const mapped = mapJobDetailsToFormData(result.data)
+        const analiseMarkdown = (result as any).analise || ""
+        const mapped = mapJobDetailsToFormData(result.data, analiseMarkdown)
         setFormData((prev) => ({ ...prev, ...mapped }))
-        toast.success("Analysis complete! Review the data.")
+        toast.success("Análise gerada com sucesso!")
 
         // Auto-switch to manual tab after brief delay
         setTimeout(() => onComplete(), 1500)
@@ -139,12 +140,12 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
           {analyzing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing with AI...
+              Gerando análise...
             </>
           ) : (
             <>
               <Sparkles className="mr-2 h-4 w-4" />
-              Analyze with AI
+              Gerar Análise
             </>
           )}
         </Button>
