@@ -417,7 +417,7 @@ pnpm test:coverage
 
 ### Overview
 
-The AI Job Parser uses Gemini 1.5 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
+The AI Job Parser uses Gemini 2.5 Flash to automatically extract structured data from unstructured job descriptions. This eliminates the need for manual data entry when adding new job applications to the dashboard.
 
 **What it does:**
 
@@ -455,20 +455,23 @@ GOOGLE_API_KEY=your_gemini_api_key_here
 
 ### Model Configuration
 
-The job parser uses **Gemini 1.5 Flash** (stable) for maximum reliability and free tier compatibility.
+The job parser uses **Gemini 2.5 Flash** (stable, newest flash model) for maximum reliability and free tier compatibility.
 
 **Why this model?**
 
 - ✅ Stable and production-ready (no `-exp` suffix)
 - ✅ Generous free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
-- ✅ Fast response times (~2-3 seconds)
+- ✅ Fast response times (~2-4 seconds)
 - ✅ High accuracy for structured extraction tasks
+- ✅ Latest flash model with improved capabilities
+
+**Important:** Gemini 1.5 Flash does NOT exist. The Gemini 1.5 series only includes Pro models. Flash models start from the 2.0 series onwards.
 
 **Fallback System**
 
 If the primary model encounters rate limits, the system automatically falls back to:
 
-1. `gemini-2.0-flash-001` (alternative stable model)
+1. `gemini-2.0-flash-001` (older stable flash model)
 2. `gemini-2.5-pro` (highest quality, slower)
 
 The system logs which model successfully processed each request in the console and returns it in the API response metadata.
@@ -493,7 +496,7 @@ For higher quotas, enable billing in Google Cloud Console:
 3. Check usage: https://ai.dev/usage?tab=rate-limit
 4. Upgrade to paid tier if consistently hitting limits
 
-**Note:** Experimental models (`-exp` suffix) are NOT supported in free tier as of November 2025. The system now uses `gemini-1.5-flash` (stable) to avoid quota issues.
+**Note:** Experimental models (`-exp` suffix) are NOT supported in free tier as of November 2025. The system now uses `gemini-2.5-flash` (stable) to avoid quota issues.
 
 #### Model Selection
 

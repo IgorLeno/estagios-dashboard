@@ -181,12 +181,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Erro genérico - sanitize error messages
-    console.error("[AI Parser] Error:", error)
+    console.error("[AI Parser] Error:", error instanceof Error ? error.message : String(error))
+
+    // In development, return detailed error information
+    const isDevelopment = process.env.NODE_ENV === "development"
 
     return NextResponse.json(
       {
         success: false,
         error: "Internal server error",
+        ...(isDevelopment && {
+          debug: {
+            type: error?.constructor?.name,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack?.split("\n").slice(0, 5) : undefined,
+          },
+        }),
       },
       { status: 500 }
     )

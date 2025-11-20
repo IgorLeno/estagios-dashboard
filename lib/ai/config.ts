@@ -2,15 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 
 /**
  * Model fallback chain for resilience
- * Using gemini-1.5-flash (stable) as primary - NOT experimental versions
+ * Using gemini-2.5-flash (stable, newest flash model) as primary
  * Free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
  *
- * Background: gemini-2.0-flash-exp quota reduced to ZERO in free tier (Nov 2025)
- * See: https://discuss.ai.google.dev/t/has-gemini-api-completely-stopped-its-free-tier/76543
+ * Note: gemini-1.5-flash does NOT exist - Gemini 1.5 series only has Pro models
+ * Flash models start from 2.0 series onwards
  */
 export const MODEL_FALLBACK_CHAIN = [
-  "gemini-1.5-flash", // Primary: Most reliable for free tier
-  "gemini-2.0-flash-001", // Secondary: Stable alternative
+  "gemini-2.5-flash", // Primary: Newest stable flash model for free tier
+  "gemini-2.0-flash-001", // Secondary: Older stable flash alternative
   "gemini-2.5-pro", // Tertiary: Highest quality (slower, may require billing)
 ] as const
 
@@ -20,7 +20,7 @@ export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
  * Configuração do modelo Gemini
  */
 export const GEMINI_CONFIG = {
-  model: "gemini-1.5-flash", // Using stable model, not experimental
+  model: "gemini-2.5-flash", // Using newest stable flash model
   temperature: 0.1, // Baixa para consistência
   maxOutputTokens: 8192,
   topP: 0.95,
