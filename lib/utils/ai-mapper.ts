@@ -19,8 +19,13 @@ export interface FormData {
 
 /**
  * Maps AI API response (JobDetails) to form data structure
+ * @param apiData - Structured job details from AI
+ * @param analiseMarkdown - Optional analysis markdown (if not provided, builds from data)
  */
-export function mapJobDetailsToFormData(apiData: JobDetails): Partial<FormData> {
+export function mapJobDetailsToFormData(
+  apiData: JobDetails,
+  analiseMarkdown?: string
+): Partial<FormData> {
   return {
     empresa: apiData.empresa,
     cargo: apiData.cargo,
@@ -30,7 +35,7 @@ export function mapJobDetailsToFormData(apiData: JobDetails): Partial<FormData> 
     fit: apiData.fit?.toString() || "",
     etapa: apiData.etapa || "",
     status: apiData.status || "Pendente",
-    observacoes: buildObservacoes(apiData),
+    observacoes: analiseMarkdown || buildObservacoes(apiData),
   }
 }
 
