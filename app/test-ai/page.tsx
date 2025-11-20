@@ -307,6 +307,49 @@ export default function TestAIPage() {
                   </CardContent>
                 </Card>
 
+                {/* Analysis Markdown */}
+                {(result as any).analise && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Análise Gerada</CardTitle>
+                      <CardDescription>Análise personalizada gerada pela IA</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm whitespace-pre-wrap">
+                          {(result as any).analise}
+                        </pre>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Metadata */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Metadata</CardTitle>
+                    <CardDescription>Request performance and model information</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Duration</p>
+                        <p className="font-semibold">{result.metadata.duration}ms</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Model</p>
+                        <p className="font-semibold">{result.metadata.model}</p>
+                      </div>
+                      {result.metadata.tokenUsage && (
+                        <div>
+                          <p className="text-muted-foreground">Total Tokens</p>
+                          <p className="font-semibold">{result.metadata.tokenUsage.totalTokens}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* JSON Output */}
                 <Card>
                   <CardHeader>
