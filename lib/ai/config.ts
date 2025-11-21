@@ -29,14 +29,15 @@ export const GEMINI_CONFIG = {
 
 /**
  * Configuração de timeout para operações AI
- * Timeout padrão de 30 segundos para parsing de vagas
+ * Timeout padrão de 60 segundos para parsing de vagas com análise completa
  */
 export const AI_TIMEOUT_CONFIG = {
   /**
    * Timeout em milissegundos para operações de parsing
    * Pode ser sobrescrito via variável de ambiente AI_PARSING_TIMEOUT_MS
+   * Default: 60s para acomodar análises longas (7000+ tokens)
    */
-  parsingTimeoutMs: Number.parseInt(process.env.AI_PARSING_TIMEOUT_MS || "30000", 10),
+  parsingTimeoutMs: Number.parseInt(process.env.AI_PARSING_TIMEOUT_MS || "60000", 10),
 } as const
 
 /**
