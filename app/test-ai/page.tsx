@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import type { ParseJobResponse, ParseJobErrorResponse } from "@/lib/ai/types"
+import { ResumeGeneratorButton } from "@/components/resume-generator-button"
 
 const EXAMPLE_JOB_DESCRIPTION = `Vaga de Estágio em Engenharia Química - Saipem
 
@@ -306,6 +307,11 @@ export default function TestAIPage() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Resume Generator Button */}
+                <div className="mt-4">
+                  <ResumeGeneratorButton jobDescription={jobDescription} className="w-full" />
+                </div>
 
                 {/* Analysis Markdown */}
                 {(result as any).analise && (
