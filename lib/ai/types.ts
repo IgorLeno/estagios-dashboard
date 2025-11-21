@@ -210,7 +210,7 @@ export interface PersonalizedSections {
  * Schema for validating personalized sections from LLM
  */
 export const PersonalizedSectionsSchema = z.object({
-  summary: z.string().min(50, "Summary too short").max(500, "Summary too long"),
+  summary: z.string().min(50, "Summary too short").max(1000, "Summary too long"),
   skills: z.array(
     z.object({
       category: z.string().min(1),

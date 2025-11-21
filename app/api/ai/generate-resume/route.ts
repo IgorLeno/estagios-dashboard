@@ -7,9 +7,12 @@ import {
   GenerateResumeResponse,
   GenerateResumeErrorResponse,
   JobDetailsSchema,
+  JobDetails,
 } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
 import { validateAIConfig } from "@/lib/ai/config"
+import { withTimeout, TimeoutError } from "@/lib/ai/utils"
+import { ZodError } from "zod"
 
 /**
  * POST /api/ai/generate-resume
@@ -23,15 +26,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     validateAIConfig()
 
     // Parse request body
-    const body = await req.json()
+    let body
+    try {
+      body = await req.json()
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        const errorResponse: GenerateResumeErrorResponse = {
+          success: false,
+          error: "Invalid JSON body",
+        }
+        return NextResponse.json(errorResponse, { status: 400 })
+      }
+      throw error
+    }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
 
     const { vagaId, jobDescription, language } = validatedInput
 
     console.log(`[Resume API] Request: ${vagaId ? `vaga ${vagaId}` : "job description"}, language: ${language}`)
 
-    // Get job details
-    let jobDetails
+    // Get job details (outside timeout wrapper to handle 404 early)
+    let jobDetails: JobDetails | undefined
 
     if (vagaId) {
       // Fetch from database
@@ -62,63 +77,74 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         idioma_vaga: vaga.idioma_vaga || "pt",
       })
     } else if (jobDescription) {
-      // Parse from description
-      const parseResult = await parseJobWithGemini(jobDescription)
-      jobDetails = parseResult.data
+      // Parse from description - will be done inside timeout wrapper
+      jobDetails = undefined
     } else {
       throw new Error("Either vagaId or jobDescription is required")
     }
 
-    // Generate tailored resume
-    const resumeResult = await generateTailoredResume(jobDetails, language)
+    // Main processing pipeline with timeout protection (60s)
+    // Wrap job parsing (if needed) + resume generation + PDF creation in timeout
+    const result = await withTimeout(
+      (async () => {
+        // Parse job description if needed
+        if (!jobDetails && jobDescription) {
+          const parseResult = await parseJobWithGemini(jobDescription)
+          jobDetails = parseResult.data
+        }
 
-    // Generate PDF
-    const pdfBuffer = await generateResumePDF(resumeResult.cv)
+        if (!jobDetails) {
+          throw new Error("Job details not available")
+        }
 
-    // Convert to base64
-    const pdfBase64 = pdfBuffer.toString("base64")
+        // Generate tailored resume
+        const resumeResult = await generateTailoredResume(jobDetails, language)
 
-    // Generate filename
-    const filename = generateResumeFilename(jobDetails.empresa, language)
+        // Generate PDF
+        const pdfBuffer = await generateResumePDF(resumeResult.cv)
 
-    const totalDuration = Date.now() - startTime
+        // Convert to base64
+        const pdfBase64 = pdfBuffer.toString("base64")
 
-    // Return success response
-    const successResponse: GenerateResumeResponse = {
-      success: true,
-      data: {
-        pdfBase64,
-        filename,
-      },
-      metadata: {
-        duration: totalDuration,
-        model: resumeResult.model,
-        tokenUsage: resumeResult.tokenUsage,
-        personalizedSections: resumeResult.personalizedSections,
-      },
-    }
+        // Generate filename
+        const filename = generateResumeFilename(jobDetails.empresa, language)
 
-    console.log(`[Resume API] ✅ Success (${totalDuration}ms)`)
+        const totalDuration = Date.now() - startTime
 
-    return NextResponse.json(successResponse)
+        // Return success response
+        const successResponse: GenerateResumeResponse = {
+          success: true,
+          data: {
+            pdfBase64,
+            filename,
+          },
+          metadata: {
+            duration: totalDuration,
+            model: resumeResult.model,
+            tokenUsage: resumeResult.tokenUsage,
+            personalizedSections: resumeResult.personalizedSections,
+          },
+        }
+
+        console.log(`[Resume API] ✅ Success (${totalDuration}ms)`)
+
+        return successResponse
+      })(),
+      60000,
+      "Resume generation exceeded 60s timeout"
+    )
+
+    return NextResponse.json(result)
   } catch (error: unknown) {
     const duration = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     console.error(`[Resume API] ❌ Error (${duration}ms):`, errorMessage)
 
-    // Handle validation errors
-    if (error instanceof Error && error.name === "ZodError") {
-      const errorResponse: GenerateResumeErrorResponse = {
-        success: false,
-        error: "Invalid request data",
-        details: error,
-      }
-      return NextResponse.json(errorResponse, { status: 400 })
-    }
-
-    // Handle timeout
-    if (duration > 60000) {
+    // Handle timeout errors
+    if (error instanceof TimeoutError) {
+      const timeoutError = error as TimeoutError
+      console.error(`[Resume API] Timeout: ${timeoutError.message}`)
       const errorResponse: GenerateResumeErrorResponse = {
         success: false,
         error: "Resume generation timed out (>60s)",
@@ -126,10 +152,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json(errorResponse, { status: 504 })
     }
 
-    // Generic error
+    // Handle validation errors
+    if (error instanceof ZodError) {
+      const errorResponse: GenerateResumeErrorResponse = {
+        success: false,
+        error: "Invalid request data",
+        details: error.errors,
+      }
+      return NextResponse.json(errorResponse, { status: 400 })
+    }
+
+    // Generic error - don't leak internal error messages
     const errorResponse: GenerateResumeErrorResponse = {
       success: false,
-      error: errorMessage,
+      error: "Internal server error",
     }
 
     return NextResponse.json(errorResponse, { status: 500 })

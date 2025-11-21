@@ -1,6 +1,18 @@
 import type { CVTemplate } from "./types"
 
 /**
+ * Escape HTML special characters to prevent injection
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
+/**
  * Generate HTML content from CV template
  * Matches styling from saipem-cv-igor_fernandes.pdf
  */
@@ -10,7 +22,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${cv.header.name} - CV</title>
+  <title>${escapeHtml(cv.header.name)} - CV</title>
   <style>
     @page {
       size: A4;
@@ -209,20 +221,20 @@ export function generateResumeHTML(cv: CVTemplate): string {
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <h1>${cv.header.name}</h1>
-      <div class="title">${cv.header.title}</div>
+      <h1>${escapeHtml(cv.header.name)}</h1>
+      <div class="title">${escapeHtml(cv.header.title)}</div>
       <div class="contact">
-        ${cv.header.email} | ${cv.header.phone} | ${cv.header.location}
+        ${escapeHtml(cv.header.email)} | ${escapeHtml(cv.header.phone)} | ${escapeHtml(cv.header.location)}
       </div>
       <div class="links">
-        ${cv.header.links.map((link) => `<a href="${link.url}">${link.label}</a>`).join(" | ")}
+        ${cv.header.links.map((link) => `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join(" | ")}
       </div>
     </div>
 
     <!-- Professional Summary -->
     <div class="section">
       <h2 class="section-title">${cv.language === "pt" ? "Resumo Profissional" : "Professional Summary"}</h2>
-      <p class="summary">${cv.summary}</p>
+      <p class="summary">${escapeHtml(cv.summary)}</p>
     </div>
 
     <!-- Experience -->
@@ -234,16 +246,16 @@ export function generateResumeHTML(cv: CVTemplate): string {
         <div class="experience-item">
           <div class="experience-header">
             <div>
-              <div class="experience-title">${exp.title}</div>
-              <div class="experience-company">${exp.company}</div>
+              <div class="experience-title">${escapeHtml(exp.title)}</div>
+              <div class="experience-company">${escapeHtml(exp.company)}</div>
             </div>
             <div style="text-align: right;">
-              <div class="experience-period">${exp.period}</div>
-              <div class="experience-location">${exp.location}</div>
+              <div class="experience-period">${escapeHtml(exp.period)}</div>
+              <div class="experience-location">${escapeHtml(exp.location)}</div>
             </div>
           </div>
           <ul class="experience-description">
-            ${exp.description.map((item) => `<li>${item}</li>`).join("\n")}
+            ${exp.description.map((item) => `<li>${escapeHtml(item)}</li>`).join("\n")}
           </ul>
         </div>
       `
@@ -258,9 +270,9 @@ export function generateResumeHTML(cv: CVTemplate): string {
         .map(
           (edu) => `
         <div class="education-item">
-          <div class="education-degree">${edu.degree}</div>
-          <div class="education-institution">${edu.institution}</div>
-          <div class="education-period">${edu.period} | ${edu.location}</div>
+          <div class="education-degree">${escapeHtml(edu.degree)}</div>
+          <div class="education-institution">${escapeHtml(edu.institution)}</div>
+          <div class="education-period">${escapeHtml(edu.period)} | ${escapeHtml(edu.location)}</div>
         </div>
       `
         )
@@ -274,8 +286,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
         .map(
           (skillGroup) => `
         <div class="skills-category">
-          <div class="skills-category-name">${skillGroup.category}:</div>
-          <div class="skills-items">${skillGroup.items.join(", ")}</div>
+          <div class="skills-category-name">${escapeHtml(skillGroup.category)}:</div>
+          <div class="skills-items">${skillGroup.items.map(escapeHtml).join(", ")}</div>
         </div>
       `
         )
@@ -289,9 +301,9 @@ export function generateResumeHTML(cv: CVTemplate): string {
         .map(
           (project) => `
         <div class="project-item">
-          <div class="project-title">${project.title}</div>
+          <div class="project-title">${escapeHtml(project.title)}</div>
           <ul class="project-description">
-            ${project.description.map((item) => `<li>${item}</li>`).join("\n")}
+            ${project.description.map((item) => `<li>${escapeHtml(item)}</li>`).join("\n")}
           </ul>
         </div>
       `
@@ -302,13 +314,13 @@ export function generateResumeHTML(cv: CVTemplate): string {
     <!-- Languages -->
     <div class="section">
       <h2 class="section-title">${cv.language === "pt" ? "Idiomas" : "Languages"}</h2>
-      ${cv.languages.map((lang) => `<div class="language-item">${lang.language}: ${lang.proficiency}</div>`).join("\n")}
+      ${cv.languages.map((lang) => `<div class="language-item">${escapeHtml(lang.language)}: ${escapeHtml(lang.proficiency)}</div>`).join("\n")}
     </div>
 
     <!-- Certifications -->
     <div class="section">
       <h2 class="section-title">${cv.language === "pt" ? "Certificações" : "Certifications"}</h2>
-      ${cv.certifications.map((cert) => `<div class="certification-item">• ${cert}</div>`).join("\n")}
+      ${cv.certifications.map((cert) => `<div class="certification-item">• ${escapeHtml(cert)}</div>`).join("\n")}
     </div>
   </div>
 </body>

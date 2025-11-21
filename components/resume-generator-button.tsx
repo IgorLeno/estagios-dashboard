@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 import { ResumeGeneratorDialog } from "./resume-generator-dialog"
 
 interface ResumeGeneratorButtonProps {
@@ -17,23 +16,18 @@ export function ResumeGeneratorButton({
   variant = "default",
   className,
 }: ResumeGeneratorButtonProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-
   // Disable if neither vagaId nor jobDescription provided
   const isDisabled = !vagaId && !jobDescription
 
   return (
-    <>
-      <Button variant={variant} onClick={() => setIsDialogOpen(true)} disabled={isDisabled} className={className}>
-        Generate Tailored Resume
-      </Button>
-
-      <ResumeGeneratorDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        vagaId={vagaId}
-        jobDescription={jobDescription}
-      />
-    </>
+    <ResumeGeneratorDialog
+      trigger={
+        <Button variant={variant} disabled={isDisabled} className={className}>
+          Generate Tailored Resume
+        </Button>
+      }
+      vagaId={vagaId}
+      jobDescription={jobDescription}
+    />
   )
 }
