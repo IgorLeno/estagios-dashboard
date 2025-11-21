@@ -1,6 +1,6 @@
 // __tests__/lib/ai/user-profile.test.ts
 import { describe, it, expect } from "vitest"
-import { USER_PROFILE, UserProfile } from "@/lib/ai/user-profile"
+import { USER_PROFILE } from "@/lib/ai/user-profile"
 
 describe("User Profile", () => {
   it("should have all required fields", () => {

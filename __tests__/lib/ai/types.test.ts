@@ -36,6 +36,7 @@ describe("JobDetailsSchema", () => {
   })
 
   it("should reject undefined empresa field", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { empresa, ...invalid } = validJob
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
@@ -131,6 +132,7 @@ describe("JobDetailsSchema", () => {
   })
 
   it("should provide default empty array when requisitos_obrigatorios is missing", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { requisitos_obrigatorios, ...jobWithoutRequisitos } = validJob
     const parsed = JobDetailsSchema.parse(jobWithoutRequisitos)
     expect(parsed.requisitos_obrigatorios).toEqual([])

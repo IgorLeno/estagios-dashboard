@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { mapJobDetailsToFormData, FormData } from "@/lib/utils/ai-mapper"
+import { mapJobDetailsToFormData } from "@/lib/utils/ai-mapper"
 import type { JobDetails } from "@/lib/ai/types"
 
 describe("AI Mapper with Analysis", () => {

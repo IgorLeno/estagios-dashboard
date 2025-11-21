@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { AiParserTab } from "@/components/tabs/ai-parser-tab"
 import type { FormData } from "@/lib/utils/ai-mapper"
