@@ -52,10 +52,10 @@ Replace the "Analyze with AI" button with "Gerar Análise" that generates compre
 
 ```typescript
 interface UserProfile {
-  skills: string[]        // Technical and soft skills
-  experience: string[]    // Projects, internships, relevant work
-  education: string       // Current degree program
-  goals: string          // Career objectives
+  skills: string[] // Technical and soft skills
+  experience: string[] // Projects, internships, relevant work
+  education: string // Current degree program
+  goals: string // Career objectives
 }
 ```
 
@@ -63,8 +63,8 @@ interface UserProfile {
 
 ```typescript
 interface JobAnalysisResponse {
-  data: JobDetails              // Structured fields (current)
-  analise_markdown: string      // Rich analysis (new)
+  data: JobDetails // Structured fields (current)
+  analise_markdown: string // Rich analysis (new)
 }
 ```
 
@@ -75,6 +75,7 @@ interface JobAnalysisResponse {
 **Model:** `gemini-2.0-flash-exp`
 
 **Key Features:**
+
 - Google Search grounding for company research
 - Stable model (no experimental quota issues)
 - Temperature: 0.1 (consistency)
@@ -85,14 +86,14 @@ interface JobAnalysisResponse {
 ```typescript
 const model = genAI.getGenerativeModel({
   model: "gemini-2.0-flash-exp",
-  tools: [{ googleSearch: {} }],  // Enable external search
+  tools: [{ googleSearch: {} }], // Enable external search
   generationConfig: {
     temperature: 0.1,
     maxOutputTokens: 8192,
     topP: 0.95,
     topK: 40,
   },
-  systemInstruction: ANALYSIS_SYSTEM_PROMPT
+  systemInstruction: ANALYSIS_SYSTEM_PROMPT,
 })
 ```
 
@@ -104,38 +105,47 @@ The generated markdown follows this template:
 # Análise da Vaga - [Cargo] @ [Empresa]
 
 ## 🏢 Sobre a Empresa
+
 [Company context, sector, size, culture from external sources]
 [Noteworthy points from LinkedIn, Glassdoor, official site]
 
 ## 💡 Oportunidades para se Destacar
+
 [How candidate's profile adds specific value]
 [Technical and cultural differentiators]
 [Areas where candidate excels]
 
 ## 🎯 Fit Técnico e Cultural
+
 [Detailed alignment with requirements]
 [Fit score (0-5 stars) with justification]
 [Gaps identified and how to address them]
 
 ## 🗣️ Preparação para Entrevista
+
 [3-5 intelligent questions to ask recruiter]
 [Technical topics to study before interview]
 [Red flags or points requiring attention]
 
 ## 📋 Requisitos e Responsabilidades
+
 **Requisitos Obrigatórios:**
+
 - [list]
 
 **Requisitos Desejáveis:**
+
 - [list]
 
 **Responsabilidades:**
+
 - [list]
 ```
 
 ### Prompt Engineering
 
 The system combines:
+
 - Job description (sanitized)
 - User profile (from `user-profile.ts`)
 - Instructions for 4-section markdown
@@ -171,7 +181,7 @@ function validateAnalysisMarkdown(markdown: string): boolean {
     /## 🗣️ Preparação para Entrevista/,
   ]
 
-  return requiredSections.every(regex => regex.test(markdown))
+  return requiredSections.every((regex) => regex.test(markdown))
 }
 ```
 
@@ -211,6 +221,7 @@ Existing rate limiter (10 req/min) remains sufficient.
 **Integration Tests:**
 
 Update `ai-parser-tab.test.tsx`:
+
 - Verify button text "Gerar Análise"
 - Test loading state
 - Confirm analysis passed to form data
@@ -218,6 +229,7 @@ Update `ai-parser-tab.test.tsx`:
 **Manual Testing:**
 
 Extend `app/test-ai/page.tsx`:
+
 - Add toggle: "Análise Completa" vs "Parsing Simples"
 - Display rendered markdown
 - Show token usage metrics

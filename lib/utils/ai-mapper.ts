@@ -22,10 +22,7 @@ export interface FormData {
  * @param apiData - Structured job details from AI
  * @param analiseMarkdown - Optional analysis markdown (if not provided, builds from data)
  */
-export function mapJobDetailsToFormData(
-  apiData: JobDetails,
-  analiseMarkdown?: string
-): Partial<FormData> {
+export function mapJobDetailsToFormData(apiData: JobDetails, analiseMarkdown?: string): Partial<FormData> {
   return {
     empresa: apiData.empresa,
     cargo: apiData.cargo,

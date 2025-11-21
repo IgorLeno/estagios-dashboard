@@ -13,6 +13,7 @@
 ## Task 1: Create User Profile Configuration
 
 **Files:**
+
 - Create: `lib/ai/user-profile.ts`
 - Test: `__tests__/lib/ai/user-profile.test.ts`
 
@@ -72,16 +73,7 @@ export interface UserProfile {
  * TODO: Move to database in Phase 2
  */
 export const USER_PROFILE: UserProfile = {
-  skills: [
-    "TypeScript",
-    "React",
-    "Next.js",
-    "Node.js",
-    "PostgreSQL",
-    "Git",
-    "Problem solving",
-    "Team collaboration",
-  ],
+  skills: ["TypeScript", "React", "Next.js", "Node.js", "PostgreSQL", "Git", "Problem solving", "Team collaboration"],
   experience: [
     "Desenvolvedor Full-Stack em projeto pessoal (estagios-dashboard)",
     "Experiência com Supabase e autenticação",
@@ -109,12 +101,13 @@ git commit -m "feat(ai): add user profile configuration for personalized analysi
 ## Task 2: Create Analysis Prompts
 
 **Files:**
+
 - Create: `lib/ai/analysis-prompts.ts`
 - Test: `__tests__/lib/ai/analysis-prompts.test.ts`
 
 **Step 1: Write the failing test**
 
-```typescript
+````typescript
 // __tests__/lib/ai/analysis-prompts.test.ts
 import { describe, it, expect } from "vitest"
 import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "@/lib/ai/analysis-prompts"
@@ -154,7 +147,7 @@ describe("Analysis Prompts", () => {
     expect(ANALYSIS_SYSTEM_PROMPT.length).toBeGreaterThan(50)
   })
 })
-```
+````
 
 **Step 2: Run test to verify it fails**
 
@@ -163,7 +156,7 @@ Expected: FAIL with "Cannot find module '@/lib/ai/analysis-prompts'"
 
 **Step 3: Write minimal implementation**
 
-```typescript
+````typescript
 // lib/ai/analysis-prompts.ts
 import type { UserProfile } from "./user-profile"
 
@@ -311,7 +304,7 @@ Você sempre:
 - Retorna JSON válido dentro de code fence markdown
 - Fornece insights acionáveis e práticos
 `.trim()
-```
+````
 
 **Step 4: Run test to verify it passes**
 
@@ -330,6 +323,7 @@ git commit -m "feat(ai): add analysis prompt generation with sanitization"
 ## Task 3: Create Validation Utilities
 
 **Files:**
+
 - Create: `lib/ai/validation.ts`
 - Test: `__tests__/lib/ai/validation.test.ts`
 
@@ -467,6 +461,7 @@ git commit -m "feat(ai): add analysis markdown validation"
 ## Task 4: Update Types for Analysis
 
 **Files:**
+
 - Modify: `lib/ai/types.ts:1-91`
 
 **Step 1: Write the failing test**
@@ -560,6 +555,7 @@ git commit -m "feat(ai): add JobAnalysisResponse type for combined parsing + ana
 ## Task 5: Update Config for Analysis Model
 
 **Files:**
+
 - Modify: `lib/ai/config.ts:1-77`
 
 **Step 1: No test needed (config change)**
@@ -623,6 +619,7 @@ git commit -m "feat(ai): add analysis model config with Google Search grounding"
 ## Task 6: Update Job Parser with Analysis Function
 
 **Files:**
+
 - Modify: `lib/ai/job-parser.ts:1-185`
 
 **Step 1: Write the failing test**
@@ -815,6 +812,7 @@ git commit -m "feat(ai): add parseJobWithAnalysis for rich markdown generation"
 ## Task 7: Update API Route to Use Analysis
 
 **Files:**
+
 - Modify: `app/api/ai/parse-job/route.ts:1-230`
 
 **Step 1: No test for API route (covered by integration tests)**
@@ -885,6 +883,7 @@ git commit -m "feat(api): update parse-job endpoint to return analysis markdown"
 ## Task 8: Update AI Mapper for Analysis
 
 **Files:**
+
 - Modify: `lib/utils/ai-mapper.ts:1-61`
 
 **Step 1: Write the failing test**
@@ -977,6 +976,7 @@ git commit -m "feat(mapper): support analysis markdown in form data mapping"
 ### Subtask 9a: Update AI Parser Tab
 
 **Files:**
+
 - Modify: `components/tabs/ai-parser-tab.tsx:1-159`
 
 **Step 1: Update button text and loading state**
@@ -1030,6 +1030,7 @@ git commit -m "feat(ui): update AI parser tab to 'Gerar Análise' with analysis 
 ### Subtask 9b: Update Manual Entry Tab
 
 **Files:**
+
 - Modify: `components/tabs/manual-entry-tab.tsx`
 
 **Step 1: Find and update label**
@@ -1071,6 +1072,7 @@ git commit -m "feat(ui): rename Observações to Análise with updated placehold
 ## Task 10: Update Test Interface
 
 **Files:**
+
 - Modify: `app/test-ai/page.tsx`
 
 **Step 1: Read current test page to understand structure**
@@ -1134,6 +1136,7 @@ Open: `http://localhost:3000/test-ai`
 Paste a real job description and click "Gerar Análise"
 
 Expected output:
+
 - Structured fields populated
 - Analysis markdown with 4 sections
 - No validation errors

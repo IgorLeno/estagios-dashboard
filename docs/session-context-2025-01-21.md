@@ -54,6 +54,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 **Branch:** `feature/ai-resume-generator`
 
 **Status:**
+
 - Dependencies installed (pnpm install completed)
 - Baseline tests verified (14 failures matching main branch - pre-existing issues)
 - Ready for implementation
@@ -65,6 +66,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 **Total Tasks:** 18 bite-sized tasks
 
 **Key Tasks:**
+
 1. Install Puppeteer dependency
 2. Create CV template types (`lib/ai/types.ts`)
 3. Create CV templates PT/EN (`lib/ai/cv-templates.ts`)
@@ -76,20 +78,22 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 9. Test API manually
 10. Create frontend components (Button + Dialog)
 11. Integrate into test AI page
-12-15. Write unit and integration tests
-16. Update documentation
-17. Run full test suite
-18. Final commit
+    12-15. Write unit and integration tests
+12. Update documentation
+13. Run full test suite
+14. Final commit
 
 **Committed:** `483a098` - "docs: add detailed implementation plan for AI resume generator"
 
 ## Files Created/Modified So Far
 
 ### Created:
+
 - `docs/plans/2025-01-21-tailored-resume-generator-design.md` (752 lines)
 - `docs/plans/2025-01-21-ai-resume-generator-implementation.md` (2437 lines)
 
 ### To Be Created (in implementation):
+
 - `lib/ai/cv-templates.ts`
 - `lib/ai/resume-prompts.ts`
 - `lib/ai/resume-html-template.ts`
@@ -103,6 +107,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 - `__tests__/app/api/ai/generate-resume/route.test.ts`
 
 ### To Be Modified:
+
 - `lib/ai/types.ts` (add CV template types)
 - `app/test-ai/page.tsx` (integrate button)
 - `CLAUDE.md` (add documentation section)
@@ -110,16 +115,19 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 ## CV Template Content (For Reference)
 
 **User's CV Files Located:**
+
 - `cv-igor-fernandes-modelo-pt.docx` (Portuguese template)
 - `cv-igor-fernandes-modelo-en.docx` (English template)
 - `saipem-cv-igor_fernandes.pdf` (PDF example for styling reference)
 
 **Personalizable Sections:**
+
 1. Professional Summary (3-4 sentences)
 2. Skills & Tools (categorized lists)
 3. Research Projects (titles + descriptions)
 
 **Static Sections (never modified):**
+
 - Header (name, contact, links)
 - Experience
 - Education
@@ -129,6 +137,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 ## Technical Stack
 
 **Existing Infrastructure:**
+
 - Gemini 2.5 Flash (via `@google/generative-ai`)
 - Zod validation
 - Next.js 16 App Router
@@ -136,6 +145,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 - Supabase for database
 
 **New Dependencies to Install:**
+
 - `puppeteer` (^21.0.0)
 - `@types/puppeteer` (^7.0.4)
 
@@ -150,6 +160,7 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 **Required Skill:** `superpowers:subagent-driven-development`
 
 **Process:**
+
 1. Dispatch fresh subagent for each task (Task 1-18)
 2. Code review between tasks
 3. Fast iteration with quality gates
@@ -164,21 +175,25 @@ Successfully completed brainstorming, design, and planning for AI-powered resume
 ## Important Context for Next Session
 
 ### Environment:
+
 - Currently in main directory: `/home/igor/Projetos/estagios-dash/estagios-dashboard`
 - Worktree ready at: `.worktrees/ai-resume-generator`
 - Branch: `feature/ai-resume-generator` (created, no commits yet)
 
 ### Baseline Test Status:
+
 - 14 failing tests (pre-existing, matches main branch)
 - 180 passing tests
 - Safe to proceed with implementation
 
 ### User Preference:
+
 - Language: Portuguese (pt-BR)
 - Wants episodic memory used to preserve context between sessions
 - Prefers subagent-driven development approach
 
 ### Critical Reminders:
+
 1. All implementation work should happen in worktree directory
 2. Follow plan tasks sequentially (1-18)
 3. Use TDD pattern (write test → run fail → implement → run pass → commit)
@@ -193,6 +208,7 @@ When user is ready to continue, I should:
 1. **Acknowledge context restored:** "Context restored from episodic memory. Ready to implement AI Resume Generator via subagent-driven development."
 
 2. **Verify working directory:**
+
    ```bash
    cd /home/igor/Projetos/estagios-dash/estagios-dashboard/.worktrees/ai-resume-generator
    ```
@@ -208,6 +224,7 @@ When user is ready to continue, I should:
 ## Success Criteria
 
 Implementation complete when:
+
 - ✅ All 18 tasks completed
 - ✅ New tests passing (15+ new tests)
 - ✅ API endpoint working (manual test)

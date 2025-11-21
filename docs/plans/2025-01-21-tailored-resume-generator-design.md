@@ -144,13 +144,13 @@ interface CVTemplate {
   summary: string
 
   skills: {
-    category: string  // e.g., "Programming Languages"
+    category: string // e.g., "Programming Languages"
     items: string[]
   }[]
 
   projects: {
     title: string
-    description: string[]  // 2-3 bullet points
+    description: string[] // 2-3 bullet points
   }[]
 }
 ```
@@ -158,6 +158,7 @@ interface CVTemplate {
 ### API Request/Response
 
 **Request:**
+
 ```typescript
 POST /api/ai/generate-resume
 
@@ -169,6 +170,7 @@ POST /api/ai/generate-resume
 ```
 
 **Response (Success):**
+
 ```typescript
 {
   success: true
@@ -191,6 +193,7 @@ POST /api/ai/generate-resume
 ```
 
 **Response (Error):**
+
 ```typescript
 {
   success: false
@@ -208,6 +211,7 @@ Each section gets a dedicated prompt with specific constraints:
 #### 1. Professional Summary
 
 **Input:**
+
 - Job requirements (from parsed JobDetails)
 - Original summary from CV template
 - User's skills and experience
@@ -215,6 +219,7 @@ Each section gets a dedicated prompt with specific constraints:
 **Output:** 3-4 sentences, 80-120 words
 
 **Instructions:**
+
 - Include top 5-7 keywords from job posting
 - Emphasize experience matching job requirements
 - Maintain professional tone
@@ -222,6 +227,7 @@ Each section gets a dedicated prompt with specific constraints:
 - Keep truthful (no fabrication)
 
 **Example Prompt:**
+
 ```
 You are a resume writing expert. Rewrite the professional summary to target this job:
 
@@ -247,6 +253,7 @@ Return JSON: { "summary": "..." }
 #### 2. Skills & Tools
 
 **Input:**
+
 - Job required skills
 - User's full skill list (from CV template)
 - User's project history (evidence)
@@ -254,6 +261,7 @@ Return JSON: { "summary": "..." }
 **Output:** Reordered + augmented skill list
 
 **Instructions:**
+
 - Reorder existing skills by relevance to job
 - Add job-specific skills ONLY if user has demonstrated experience in projects
 - Use project history as evidence for skill claims
@@ -261,6 +269,7 @@ Return JSON: { "summary": "..." }
 - Format: categorized (Languages, Frameworks, Tools, etc.)
 
 **Example Prompt:**
+
 ```
 Reorder and enhance the skills list for this job:
 
@@ -285,12 +294,14 @@ Return JSON: { "skills": [{ "category": "...", "items": [...] }] }
 #### 3. Research Projects
 
 **Input:**
+
 - Job responsibilities
 - User's projects (from CV template)
 
 **Output:** Rewritten project descriptions
 
 **Instructions:**
+
 - Keep all projects (don't remove any)
 - Rewrite descriptions to highlight job-relevant aspects
 - Use job keywords naturally
@@ -298,6 +309,7 @@ Return JSON: { "skills": [{ "category": "...", "items": [...] }] }
 - Format: 2-3 bullet points per project
 
 **Example Prompt:**
+
 ```
 Rewrite project descriptions to emphasize relevance to this job:
 
@@ -328,11 +340,13 @@ Return JSON: { "projects": [{ "title": "...", "description": [...] }] }
 ### Execution Strategy
 
 **Parallel Execution:**
+
 - Call all 3 prompts in parallel for speed
 - Use `Promise.all()` to wait for all sections
 - Total LLM time: ~3-5 seconds (vs. 9-15 if sequential)
 
 **Error Handling:**
+
 - If any section fails → use original content as fallback
 - Log which sections were personalized in metadata
 - Continue generation with partial personalization
@@ -344,10 +358,12 @@ Return JSON: { "projects": [{ "title": "...", "description": [...] }] }
 Recreate exact styling from `saipem-cv-igor_fernandes.pdf`:
 
 **Layout:**
+
 - Single column, A4 proportions (210mm × 297mm)
 - Margins: 20mm top/bottom, 20mm left/right
 
 **Typography:**
+
 - Font: Arial/Helvetica (sans-serif)
 - Header name: 24pt, bold
 - Section headings: 14pt, bold, uppercase
@@ -355,11 +371,13 @@ Recreate exact styling from `saipem-cv-igor_fernandes.pdf`:
 - Line height: 1.4
 
 **Spacing:**
+
 - Section gap: 16px
 - Subsection gap: 12px
 - List item gap: 6px
 
 **Sections:**
+
 - Header: Name, title, contact info, links
 - Professional Summary: Paragraph format
 - Experience: Company, title, period, bullets
@@ -370,6 +388,7 @@ Recreate exact styling from `saipem-cv-igor_fernandes.pdf`:
 - Certifications: List
 
 **Styling Approach:**
+
 - Inline CSS for Puppeteer compatibility
 - Print optimization with `@media print`
 - Page break control (`page-break-inside: avoid`)
@@ -379,52 +398,65 @@ Recreate exact styling from `saipem-cv-igor_fernandes.pdf`:
 ```html
 <!DOCTYPE html>
 <html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    /* Inline styles for Puppeteer */
-    @page { size: A4; margin: 20mm; }
-    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; }
-    .header { text-align: center; margin-bottom: 20px; }
-    .section { margin-bottom: 16px; page-break-inside: avoid; }
-    /* ... more styles */
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>{name}</h1>
-    <p>{title}</p>
-    <p>{contact info}</p>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* Inline styles for Puppeteer */
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 11pt;
+        line-height: 1.4;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .section {
+        margin-bottom: 16px;
+        page-break-inside: avoid;
+      }
+      /* ... more styles */
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>{name}</h1>
+      <p>{title}</p>
+      <p>{contact info}</p>
+    </div>
 
-  <div class="section">
-    <h2>Professional Summary</h2>
-    <p>{personalized_summary}</p>
-  </div>
+    <div class="section">
+      <h2>Professional Summary</h2>
+      <p>{personalized_summary}</p>
+    </div>
 
-  <!-- More sections -->
-</body>
+    <!-- More sections -->
+  </body>
 </html>
 ```
 
 ### PDF Generation (Puppeteer)
 
 ```typescript
-import puppeteer from 'puppeteer'
+import puppeteer from "puppeteer"
 
 async function generatePDF(htmlContent: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'] // Vercel compatibility
+    args: ["--no-sandbox", "--disable-setuid-sandbox"], // Vercel compatibility
   })
 
   const page = await browser.newPage()
-  await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+  await page.setContent(htmlContent, { waitUntil: "networkidle0" })
 
   const pdf = await page.pdf({
-    format: 'A4',
+    format: "A4",
     printBackground: true,
-    margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' }
+    margin: { top: "20mm", bottom: "20mm", left: "20mm", right: "20mm" },
   })
 
   await browser.close()
@@ -477,11 +509,12 @@ __tests__/
    - Clone template for modification
 
 4. **Personalize Sections (Parallel)**
+
    ```typescript
    const [summary, skills, projects] = await Promise.all([
      personalizeSummary(jobData, template),
      personalizeSkills(jobData, template),
-     personalizeProjects(jobData, template)
+     personalizeProjects(jobData, template),
    ])
    ```
 
@@ -505,20 +538,24 @@ __tests__/
 ### Error Handling
 
 **Input Errors (400):**
+
 - Missing vagaId AND jobDescription
 - Invalid language
 - Vaga not found
 
 **Timeout (408):**
+
 - LLM takes >60 seconds
 - Suggest retry
 
 **Quota Exceeded (429):**
+
 - Same handling as job parser
 - Fallback to alternative models
 - Return retry-after header
 
 **Server Errors (500):**
+
 - LLM failure
 - Puppeteer crash
 - JSON parsing error
@@ -527,6 +564,7 @@ __tests__/
 ### Performance
 
 **Expected Duration:**
+
 - LLM calls (parallel): 3-5 seconds
 - HTML generation: <100ms
 - PDF rendering: 2-3 seconds
@@ -535,6 +573,7 @@ __tests__/
 **Timeout:** 60 seconds (configurable)
 
 **Optimization:**
+
 - Reuse Puppeteer browser instance (if possible)
 - Cache CV templates in memory
 - Stream PDF response (don't load full buffer)
@@ -544,6 +583,7 @@ __tests__/
 ### Component: ResumeGeneratorButton
 
 **Props:**
+
 ```typescript
 interface ResumeGeneratorButtonProps {
   vagaId?: string
@@ -554,6 +594,7 @@ interface ResumeGeneratorButtonProps {
 ```
 
 **Behavior:**
+
 - Renders button: "Generate Tailored Resume"
 - Opens ResumeGeneratorDialog on click
 - Disabled if neither vagaId nor jobDescription provided
@@ -561,12 +602,14 @@ interface ResumeGeneratorButtonProps {
 ### Component: ResumeGeneratorDialog
 
 **States:**
+
 1. **Idle:** Language selection (PT/EN radio buttons)
 2. **Loading:** Progress indicator, estimated time (5-8s)
 3. **Success:** Download button, optional preview
 4. **Error:** Error message, retry button
 
 **UI Elements:**
+
 - Language toggle (PT/EN)
 - Generate button (primary action)
 - Loading spinner + progress text
@@ -574,11 +617,12 @@ interface ResumeGeneratorButtonProps {
 - ATS score badge (if calculated)
 
 **Download Logic:**
+
 ```typescript
 function downloadPDF(base64: string, filename: string) {
-  const blob = base64ToBlob(base64, 'application/pdf')
+  const blob = base64ToBlob(base64, "application/pdf")
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
+  const a = document.createElement("a")
   a.href = url
   a.download = filename
   a.click()
@@ -591,18 +635,17 @@ function downloadPDF(base64: string, filename: string) {
 **A) Test AI Page (`app/test-ai/page.tsx`)**
 
 After successful job parsing:
+
 ```tsx
-{parseResult && (
-  <ResumeGeneratorButton
-    jobDescription={jobDescription}
-    className="mt-4"
-  />
-)}
+{
+  parseResult && <ResumeGeneratorButton jobDescription={jobDescription} className="mt-4" />
+}
 ```
 
 **B) Vaga Details Page (`app/vaga/[id]/page.tsx`)**
 
 In page header or actions section:
+
 ```tsx
 <div className="flex gap-2">
   <Button variant="outline">Edit</Button>
@@ -615,6 +658,7 @@ In page header or actions section:
 ### Unit Tests
 
 **lib/ai/resume-generator.test.ts** (12-15 test cases)
+
 - Personalize summary with keywords
 - Reorder skills by relevance
 - Add skills only with evidence
@@ -624,6 +668,7 @@ In page header or actions section:
 - Validate JSON output
 
 **lib/ai/resume-html-template.test.ts** (8-10 test cases)
+
 - Generate valid HTML
 - Apply correct styling
 - Handle special characters
@@ -631,6 +676,7 @@ In page header or actions section:
 - Responsive layout
 
 **app/api/ai/generate-resume.test.ts** (10-12 test cases)
+
 - Validate request schema
 - Fetch vaga by ID
 - Return PDF buffer
@@ -655,6 +701,7 @@ In page header or actions section:
 ## Dependencies
 
 **New:**
+
 ```json
 {
   "dependencies": {
@@ -667,6 +714,7 @@ In page header or actions section:
 ```
 
 **Existing (reused):**
+
 - `@google/generative-ai` - LLM calls
 - `zod` - Validation
 - `@playwright/test` - Already installed (Puppeteer alternative)
@@ -676,15 +724,18 @@ In page header or actions section:
 ## Deployment Considerations
 
 **Vercel Compatibility:**
+
 - Puppeteer works on Vercel with `chromium` binary
 - No LibreOffice dependency needed
 - Serverless function timeout: 60 seconds (Pro plan)
 
 **Environment Variables:**
+
 - `GOOGLE_API_KEY` - Already configured
 - `AI_PARSING_TIMEOUT_MS` - Reuse existing config
 
 **Edge Cases:**
+
 - Large CVs (>2 pages): Ensure page breaks work
 - Special characters: Test UTF-8 encoding
 - Rate limits: Same handling as job parser
@@ -692,21 +743,25 @@ In page header or actions section:
 ## Future Enhancements
 
 **Phase 2: Resume Storage**
+
 - Save generated PDFs to Supabase Storage
 - Link to vaga_estagio table
 - Resume version history
 
 **Phase 3: ATS Scoring**
+
 - Calculate keyword match percentage
 - Suggest improvements
 - Highlight missing keywords
 
 **Phase 4: Custom Templates**
+
 - Allow users to upload custom CV templates
 - Template editor UI
 - Multi-template support
 
 **Phase 5: Batch Generation**
+
 - Generate resumes for multiple vagas at once
 - Queue system for background processing
 - Email delivery
@@ -724,17 +779,18 @@ In page header or actions section:
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| LLM hallucinates skills | High | Explicit prompt constraints, validation against project history |
-| PDF formatting breaks | Medium | Extensive testing, fallback to DOCX if needed |
-| Puppeteer timeout on Vercel | Medium | Optimize HTML rendering, increase timeout to 60s |
-| Quota exhaustion | Low | Reuse existing fallback chain, clear error messages |
-| HTML doesn't match CV styling | High | Extract exact styles from PDF, side-by-side comparison |
+| Risk                          | Impact | Mitigation                                                      |
+| ----------------------------- | ------ | --------------------------------------------------------------- |
+| LLM hallucinates skills       | High   | Explicit prompt constraints, validation against project history |
+| PDF formatting breaks         | Medium | Extensive testing, fallback to DOCX if needed                   |
+| Puppeteer timeout on Vercel   | Medium | Optimize HTML rendering, increase timeout to 60s                |
+| Quota exhaustion              | Low    | Reuse existing fallback chain, clear error messages             |
+| HTML doesn't match CV styling | High   | Extract exact styles from PDF, side-by-side comparison          |
 
 ## Conclusion
 
 This design provides a complete AI-powered resume generator that:
+
 - Integrates seamlessly with existing AI job parser
 - Maintains visual consistency with original CV templates
 - Optimizes for ATS without fabrication
@@ -747,6 +803,7 @@ The moderate smart enhancement strategy ensures resumes remain truthful while ma
 ---
 
 **Next Steps:**
+
 1. Create git worktree for isolated development
 2. Write detailed implementation plan
 3. Execute in batches with review checkpoints

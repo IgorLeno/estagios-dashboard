@@ -12,6 +12,7 @@
 ### Batch 2: Frontend Integration (Tasks 8-10)
 
 **Task 8: Update AI Mapper for Analysis** ✅
+
 - **File**: `lib/utils/ai-mapper.ts`
 - **Test File**: `__tests__/lib/utils/ai-mapper.test.ts` (NEW)
 - **Changes**:
@@ -22,6 +23,7 @@
 - **Commit**: `a9b7d15` - "feat(mapper): support analysis markdown in form data mapping"
 
 **Task 9a: Update AI Parser Tab Component** ✅
+
 - **File**: `components/tabs/ai-parser-tab.tsx`
 - **Changes**:
   - Button text: "Analyze with AI" → "Gerar Análise"
@@ -40,6 +42,7 @@
 - **Commit**: `f0c8252` - "feat(ui): update AI parser tab to 'Gerar Análise' with analysis support"
 
 **Task 9b: Update Manual Entry Tab Component** ✅
+
 - **File**: `components/tabs/manual-entry-tab.tsx`
 - **Changes**:
   - Label: "Observações" → "Análise"
@@ -48,6 +51,7 @@
 - **Commit**: `2278ff4` - "feat(ui): rename Observações to Análise with updated placeholder"
 
 **Task 10: Update Test Interface** ✅
+
 - **File**: `app/test-ai/page.tsx`
 - **Changes**:
   - Added "Análise Gerada" card (displays `analise` markdown when present)
@@ -62,11 +66,13 @@
 ### Task 11: Integration Test and Manual Validation
 
 **Step 1: Start dev server**
+
 ```bash
 pnpm dev
 ```
 
 **Step 2: Test interface validation**
+
 - Navigate to http://localhost:3000/test-ai
 - Paste example job description (pre-loaded on page)
 - Click "Gerar Análise"
@@ -83,6 +89,7 @@ pnpm dev
   - ✅ Token usage ~2000-4000 tokens total
 
 **Step 3: Main dashboard flow**
+
 1. Navigate to http://localhost:3000
 2. Click "Add Vaga" button
 3. Switch to "AI Parser" tab
@@ -94,6 +101,7 @@ pnpm dev
 9. **Expected**: Vaga saved with rich analysis in `observacoes` field
 
 **Step 4: Verification checklist**
+
 - [ ] Test interface generates analysis
 - [ ] Main dashboard saves vaga with analysis
 - [ ] Analysis contains all 4 required sections
@@ -102,10 +110,12 @@ pnpm dev
 - [ ] UI labels updated correctly ("Gerar Análise", "Análise")
 
 **Step 5: Create summary document**
+
 - File: `docs/plans/2025-01-20-ai-job-analysis-implementation-summary.md`
 - Content: What was built, tests passing, manual testing checklist, next steps
 
 **Step 6: Final commit**
+
 ```bash
 git add docs/plans/2025-01-20-ai-job-analysis-implementation-summary.md
 git commit -m "docs: add implementation summary for AI job analysis"
@@ -118,6 +128,7 @@ git commit -m "docs: add implementation summary for AI job analysis"
 **Full Plan:** `docs/plans/2025-01-20-ai-job-analysis-plan.md`
 
 **Total Tasks:** 11
+
 - ✅ Tasks 1-4: User Profile, Prompts, Validation, Types (completed in previous session)
 - ✅ Tasks 5-7: Config, Parser, API Route (completed in Batch 1 this session)
 - ✅ Tasks 8-10: Mapper, UI Components, Test Interface (completed in Batch 2 this session)
@@ -131,6 +142,7 @@ git commit -m "docs: add implementation summary for AI job analysis"
 **Working Tree:** Clean
 
 **Recent Commits (Batch 2):**
+
 ```
 6c80243 - feat(test): display analysis markdown and token usage in test interface
 2278ff4 - feat(ui): rename Observações to Análise with updated placeholder
@@ -139,6 +151,7 @@ a9b7d15 - feat(mapper): support analysis markdown in form data mapping
 ```
 
 **All Commits (Full Implementation):**
+
 ```
 6c80243 - feat(test): display analysis markdown and token usage in test interface
 2278ff4 - feat(ui): rename Observações to Análise with updated placeholder
@@ -161,11 +174,13 @@ bbdf02c - feat(ai): add user profile configuration for personalized analysis
 ## Files Modified (Complete List)
 
 ### Created This Session (Batch 2)
+
 ```
 __tests__/lib/utils/ai-mapper.test.ts
 ```
 
 ### Modified This Session (Batch 2)
+
 ```
 lib/utils/ai-mapper.ts
 components/tabs/ai-parser-tab.tsx
@@ -174,6 +189,7 @@ app/test-ai/page.tsx
 ```
 
 ### Created Previously (Batch 1 + Previous Session)
+
 ```
 lib/ai/user-profile.ts
 lib/ai/analysis-prompts.ts
@@ -184,6 +200,7 @@ __tests__/lib/ai/validation.test.ts
 ```
 
 ### Modified Previously (Batch 1)
+
 ```
 lib/ai/config.ts
 lib/ai/job-parser.ts
@@ -198,6 +215,7 @@ __tests__/lib/ai/types.test.ts
 ## Test Results
 
 ### Unit Tests Status
+
 ```bash
 # All mapper tests passing
 pnpm test __tests__/lib/utils/ai-mapper.test.ts
@@ -213,6 +231,7 @@ pnpm test __tests__/lib/ai/
 ```
 
 ### Known Test Failures (Pre-existing, Unrelated)
+
 ```
 ❌ __tests__/app/api/ai/parse-job/route.test.ts (3 failed)
    - Mock for parseJobWithAnalysis not updated (not part of this task)
@@ -222,6 +241,7 @@ pnpm test __tests__/lib/ai/
 ```
 
 ### TypeScript Errors (Pre-existing, Unrelated)
+
 ```
 ❌ config.test.ts - Model name assertion
 ❌ dashboard-content.tsx - Missing 'Inscricao' type
@@ -237,6 +257,7 @@ pnpm test __tests__/lib/ai/
 ### Data Flow (Complete)
 
 **User Flow:**
+
 1. User pastes job description in AI Parser tab
 2. Clicks "Gerar Análise" button
 3. Frontend calls `POST /api/ai/parse-job` with job description
@@ -254,6 +275,7 @@ pnpm test __tests__/lib/ai/
 12. Form auto-populates, user reviews, saves to database
 
 **Key Functions:**
+
 - `parseJobWithAnalysis()` - lib/ai/job-parser.ts:715
 - `mapJobDetailsToFormData()` - lib/utils/ai-mapper.ts:25
 - `buildObservacoes()` - lib/utils/ai-mapper.ts:40 (fallback)
@@ -262,18 +284,21 @@ pnpm test __tests__/lib/ai/
 ### Important Decisions
 
 **Google Search Limitation:**
+
 - ❌ **Not implemented** - requires `@google/genai` SDK migration
 - Current: `@google/generative-ai` v0.24.1 (legacy)
 - Impact: Analysis based only on job description text (no external company research)
 - TODO: Migrate to new SDK in future phase
 
 **Analysis Model:**
+
 - Model: `gemini-2.0-flash-exp`
 - Temperature: 0.1 (low for consistency)
 - No Google Search tool (limitation above)
 - Fallback: `buildObservacoes()` if validation fails
 
 **User Profile:**
+
 - Static config in `lib/ai/user-profile.ts`
 - Future: Move to database/Configurações page (Phase 2)
 
@@ -282,6 +307,7 @@ pnpm test __tests__/lib/ai/
 ## How to Resume (Quick Start)
 
 ### Option 1: Continue with Task 11 (Recommended)
+
 ```bash
 # Start dev server
 pnpm dev
@@ -294,6 +320,7 @@ pnpm dev
 ```
 
 ### Option 2: Review Implementation
+
 ```bash
 # Review recent changes
 git log --oneline -12
@@ -307,6 +334,7 @@ pnpm test
 ```
 
 ### Option 3: Check Documentation
+
 ```bash
 # Full plan
 cat docs/plans/2025-01-20-ai-job-analysis-plan.md
@@ -370,17 +398,20 @@ pnpm format
 ## Known Issues & Gotchas
 
 ### Issue 1: Google Search Not Working
+
 **Cause:** Legacy SDK doesn't support `googleSearch` tool
 **Impact:** Analysis based only on job description (no external company research)
 **Workaround:** Analysis still generated with 4 sections, just without external data
 **TODO:** Migrate to `@google/genai` SDK in future
 
 ### Issue 2: Route Tests Failing
+
 **Cause:** Mock for `parseJobWithAnalysis` not updated in route tests
 **Impact:** None - tests still run, just some fail
 **Fix:** Update mocks in `__tests__/app/api/ai/parse-job/route.test.ts` (not part of this task)
 
 ### Issue 3: TypeScript Errors (Pre-existing)
+
 **Files:** config.test.ts, dashboard-content.tsx, e2e/
 **Impact:** None - unrelated to this feature
 **Fix:** Separate cleanup task
@@ -400,6 +431,7 @@ pnpm format
 ## Contact Points for Questions
 
 If confused about:
+
 - **Architecture**: See "Architecture Summary" section above
 - **What's done**: See "What Was Completed This Session" section
 - **What's next**: See "What Remains To Do" section

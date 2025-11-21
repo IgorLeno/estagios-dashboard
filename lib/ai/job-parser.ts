@@ -1,4 +1,11 @@
-import { createGeminiClient, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN, GeminiModelType, createAnalysisModel, ANALYSIS_MODEL_CONFIG } from "./config"
+import {
+  createGeminiClient,
+  GEMINI_CONFIG,
+  MODEL_FALLBACK_CHAIN,
+  GeminiModelType,
+  createAnalysisModel,
+  ANALYSIS_MODEL_CONFIG,
+} from "./config"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
 import { JobDetails, JobDetailsSchema, JobAnalysisResponseSchema } from "./types"
 import { isQuotaError } from "./errors"

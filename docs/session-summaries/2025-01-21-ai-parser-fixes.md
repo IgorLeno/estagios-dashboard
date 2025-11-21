@@ -1,20 +1,25 @@
 # Session Summary: AI Job Parser Critical Fixes
+
 **Date:** 2025-01-21
 **Status:** ✅ Completed Successfully
 
 ## Context
+
 The AI job parser (Gemini-based) was failing with Zod validation errors when Gemini returned `null` for missing fields. Additionally, timeout issues occurred on longer analyses.
 
 ## Problems Fixed
 
 ### 1. Critical: Zod Validation Rejecting Null Values
+
 **Symptom:**
+
 ```
 ZodError: Expected string, received null (path: ["structured_data", "local"])
 ZodError: Expected 'Presencial' | 'Híbrido' | 'Remoto', received null (path: ["structured_data", "modalidade"])
 ```
 
 **Root Cause:**
+
 - Gemini API returns `null` for missing/unknown fields
 - Zod schema required all fields to be non-null strings/enums
 - This happened in both `parseJobWithGemini()` and `parseJobWithAnalysis()` functions
@@ -28,24 +33,32 @@ empresa: z.string().min(1, "Empresa é obrigatória")
 modalidade: z.enum(["Presencial", "Híbrido", "Remoto"])
 
 // After (accepts null → defaults):
-empresa: z.string().nullable().transform(v => v ?? "")
-modalidade: z.enum(["Presencial", "Híbrido", "Remoto"]).nullable().transform(v => v ?? "Presencial")
+empresa: z.string()
+  .nullable()
+  .transform((v) => v ?? "")
+modalidade: z.enum(["Presencial", "Híbrido", "Remoto"])
+  .nullable()
+  .transform((v) => v ?? "Presencial")
 ```
 
 **Transformation Rules:**
+
 - String fields (empresa, cargo, local): `null → ""`
 - Enum fields (modalidade, tipo_vaga, idioma_vaga): `null → default value`
 - Arrays: `null → []`
 - Optional fields: remain nullable
 
 ### 2. Secondary: Invalid JSON from Gemini (Unescaped Characters)
+
 **Symptom:**
+
 ```
 [Job Parser] ❌ Analysis error: Invalid JSON in code fence
 ```
 
 **Root Cause:**
 Gemini was generating JSON with literal newlines in markdown strings instead of escaped `\n`:
+
 ```json
 {
   "analise_markdown": "# Title
@@ -55,6 +68,7 @@ Some text"  // ❌ Literal newline breaks JSON
 
 **Solution Applied:**
 Added explicit escape instructions to `lib/ai/analysis-prompts.ts`:
+
 ```
 CRÍTICO - ESCAPE DE CARACTERES ESPECIAIS:
 - Use \\n para quebras de linha (não newlines literais)
@@ -64,7 +78,9 @@ CRÍTICO - ESCAPE DE CARACTERES ESPECIAIS:
 ```
 
 ### 3. Timeout Issues on Long Analyses
+
 **Symptom:**
+
 ```
 [AI Parser] Timeout: Parsing exceeded 30000ms limit
 POST /api/ai/parse-job 504 in 30.0s
@@ -72,12 +88,14 @@ POST /api/ai/parse-job 504 in 30.0s
 ```
 
 **Root Cause:**
+
 - Default timeout: 30 seconds (30000ms)
 - Complex analyses (7000+ tokens) taking 31-32 seconds
 - Timeout happening just before completion
 
 **Solution Applied:**
 Increased timeout in `lib/ai/config.ts` from 30s to 60s:
+
 ```typescript
 // Before:
 parsingTimeoutMs: Number.parseInt(process.env.AI_PARSING_TIMEOUT_MS || "30000", 10)
@@ -113,6 +131,7 @@ parsingTimeoutMs: Number.parseInt(process.env.AI_PARSING_TIMEOUT_MS || "60000", 
 ## Test Results
 
 ### Test 1: Incomplete Job Description
+
 ```bash
 Input: "Saipem, we believe that innovation thrives through diversity..."
 Result: ✅ SUCCESS
@@ -124,6 +143,7 @@ Result: ✅ SUCCESS
 ```
 
 ### Test 2: Complete Job Description with Analysis
+
 ```bash
 Input: Full job description (Nubank Data Science internship)
 Result: ✅ SUCCESS
@@ -134,6 +154,7 @@ Result: ✅ SUCCESS
 ```
 
 ### Test 3: Long Analysis (Priner)
+
 ```bash
 Before: ❌ Timeout at 30s (analysis took 31.7s, 7955 tokens)
 After: ✅ SUCCESS with 60s timeout
@@ -159,12 +180,14 @@ After: ✅ SUCCESS with 60s timeout
 ## Configuration
 
 **Current Settings:**
+
 - Model: `gemini-2.5-flash` (stable, newest flash model)
 - Timeout: 60 seconds (60000ms)
 - Max output tokens: 8192
 - Temperature: 0.1 (low for consistency)
 
 **Environment Variable Override:**
+
 ```bash
 # .env.local (optional)
 AI_PARSING_TIMEOUT_MS=90000  # For even longer analyses

@@ -9,6 +9,7 @@
 ## What We've Completed
 
 ### 1. Brainstorming (Complete ✅)
+
 - Used `superpowers:brainstorming` skill
 - Refined feature requirements through Q&A
 - Key decisions:
@@ -18,6 +19,7 @@
   - Um único botão "Gerar Análise" (not two-step)
 
 ### 2. Design Document (Complete ✅)
+
 - File: `docs/plans/2025-01-20-ai-job-analysis-design.md`
 - Committed: `0cf442e`
 - Covers:
@@ -29,6 +31,7 @@
   - Cost analysis (~3000 tokens per request)
 
 ### 3. Implementation Plan (Complete ✅)
+
 - File: `docs/plans/2025-01-20-ai-job-analysis-plan.md`
 - 11 tasks with TDD approach
 - Bite-sized steps (2-5 min each)
@@ -40,28 +43,36 @@
 ## Key Architectural Decisions
 
 ### User Profile
+
 - **Location:** `lib/ai/user-profile.ts`
 - **Type:** Static configuration (hardcoded)
 - **Future:** Phase 2 will move to database/Configurações
 
 ### Analysis Structure
+
 ```markdown
 # Análise da Vaga - [Cargo] @ [Empresa]
 
 ## 🏢 Sobre a Empresa
+
 ## 💡 Oportunidades para se Destacar
+
 ## 🎯 Fit Técnico e Cultural
+
 ## 🗣️ Preparação para Entrevista
+
 ## 📋 Requisitos e Responsabilidades
 ```
 
 ### Gemini Configuration
+
 - **Model:** `gemini-2.0-flash-exp`
 - **Tools:** `[{ googleSearch: {} }]` for external data
 - **Temperature:** 0.1 (consistency)
 - **Max Tokens:** 8192
 
 ### Data Flow
+
 1. User pastes job description
 2. Clicks "Gerar Análise"
 3. `parseJobWithAnalysis()` calls Gemini
@@ -74,6 +85,7 @@
 ## Files to Create (11 Tasks)
 
 ### New Files
+
 1. `lib/ai/user-profile.ts` - Static profile config
 2. `lib/ai/analysis-prompts.ts` - Prompt generation
 3. `lib/ai/validation.ts` - Markdown validation
@@ -84,6 +96,7 @@
 8. `__tests__/lib/utils/ai-mapper.test.ts`
 
 ### Files to Modify
+
 1. `lib/ai/types.ts` - Add `JobAnalysisResponse`
 2. `lib/ai/config.ts` - Add `createAnalysisModel()`
 3. `lib/ai/job-parser.ts` - Add `parseJobWithAnalysis()`
@@ -100,6 +113,7 @@
 **Use:** `superpowers:subagent-driven-development`
 
 **Process:**
+
 1. Dispatch fresh subagent for each task
 2. Subagent implements task following TDD
 3. Review code between tasks
@@ -107,6 +121,7 @@
 5. Move to next task
 
 **Task Sequence (11 tasks):**
+
 1. User Profile Configuration
 2. Analysis Prompts
 3. Validation Utilities
@@ -124,22 +139,26 @@
 ## Important Context
 
 ### Current AI Parser
+
 - **Location:** `lib/ai/job-parser.ts`
 - **Function:** `parseJobWithGemini()` (keep for backward compat)
 - **Model:** `gemini-2.5-flash` with fallback chain
 - **Returns:** `{ data, duration, model, tokenUsage }`
 
 ### New Analysis Function
+
 - **Function:** `parseJobWithAnalysis()`
 - **Model:** `gemini-2.0-flash-exp` with Google Search
 - **Returns:** `{ data, analise, duration, model, tokenUsage }`
 
 ### Form Data Structure
+
 - **Type:** `FormData` in `lib/utils/ai-mapper.ts`
 - **Field:** `observacoes: string` (stores analysis markdown)
 - **UI Label:** "Observações" → "Análise"
 
 ### Database
+
 - **Table:** `vagas_estagio`
 - **Column:** `observacoes` (text, nullable)
 - **No schema changes needed** ✅
@@ -149,15 +168,18 @@
 ## Testing Strategy
 
 ### Unit Tests (Vitest)
+
 - Test all new utilities
 - Mock Gemini API responses
 - Validate schemas and types
 
 ### Integration Tests
+
 - Test API endpoint with real calls
 - Verify full flow in test interface
 
 ### Manual Testing
+
 - Use `app/test-ai/page.tsx`
 - Test main dashboard flow
 - Verify analysis quality

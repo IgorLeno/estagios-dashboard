@@ -13,11 +13,13 @@
 ## Prerequisites
 
 **Environment:**
+
 - Working directory: `.worktrees/ai-resume-generator`
 - Branch: `feature/ai-resume-generator`
 - Dependencies: `@google/generative-ai`, `zod` (existing), `puppeteer` (to install)
 
 **Context Documents:**
+
 - Design: `docs/plans/2025-01-21-tailored-resume-generator-design.md`
 - Existing AI: `lib/ai/job-parser.ts`, `lib/ai/types.ts`, `lib/ai/config.ts`
 
@@ -26,6 +28,7 @@
 ## Task 1: Install Dependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 **Step 1: Install Puppeteer**
@@ -65,6 +68,7 @@ git commit -m "deps: add puppeteer for PDF generation"
 ## Task 2: Create CV Template Types
 
 **Files:**
+
 - Modify: `lib/ai/types.ts` (add to end of file)
 
 **Step 1: Add CV template interface**
@@ -162,14 +166,13 @@ export const PersonalizedSectionsSchema = z.object({
 /**
  * Request schema for resume generation API
  */
-export const GenerateResumeRequestSchema = z.object({
-  vagaId: z.string().uuid().optional(),
-  jobDescription: z.string().min(50).max(50000).optional(),
-  language: z.enum(["pt", "en"]),
-}).refine(
-  (data) => data.vagaId || data.jobDescription,
-  "Either vagaId or jobDescription must be provided"
-)
+export const GenerateResumeRequestSchema = z
+  .object({
+    vagaId: z.string().uuid().optional(),
+    jobDescription: z.string().min(50).max(50000).optional(),
+    language: z.enum(["pt", "en"]),
+  })
+  .refine((data) => data.vagaId || data.jobDescription, "Either vagaId or jobDescription must be provided")
 
 export type GenerateResumeRequest = z.infer<typeof GenerateResumeRequestSchema>
 
@@ -221,6 +224,7 @@ git commit -m "types: add CV template and resume generation types"
 ## Task 3: Create CV Templates (PT)
 
 **Files:**
+
 - Create: `lib/ai/cv-templates.ts`
 
 **Step 1: Create file with Portuguese CV template**
@@ -500,6 +504,7 @@ git commit -m "feat: add PT and EN CV templates"
 ## Task 4: Create Resume Prompts
 
 **Files:**
+
 - Create: `lib/ai/resume-prompts.ts`
 
 **Step 1: Create prompt templates file**
@@ -697,6 +702,7 @@ git commit -m "feat: add LLM prompts for resume personalization"
 ## Task 5: Create HTML/CSS Template
 
 **Files:**
+
 - Create: `lib/ai/resume-html-template.ts`
 
 **Step 1: Create HTML template generator**
@@ -1034,6 +1040,7 @@ git commit -m "feat: add HTML/CSS template for resume PDF generation"
 ## Task 6: Create Resume Generator Core Logic
 
 **Files:**
+
 - Create: `lib/ai/resume-generator.ts`
 
 **Step 1: Write the resume generator logic**
@@ -1042,12 +1049,7 @@ Create `lib/ai/resume-generator.ts`:
 
 ```typescript
 import { createGeminiClient, GEMINI_CONFIG } from "./config"
-import {
-  buildSummaryPrompt,
-  buildSkillsPrompt,
-  buildProjectsPrompt,
-  RESUME_SYSTEM_PROMPT,
-} from "./resume-prompts"
+import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt, RESUME_SYSTEM_PROMPT } from "./resume-prompts"
 import { getCVTemplate } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
@@ -1245,6 +1247,7 @@ git commit -m "feat: add resume personalization core logic"
 ## Task 7: Create PDF Generation Utility
 
 **Files:**
+
 - Create: `lib/ai/pdf-generator.ts`
 
 **Step 1: Write PDF generation logic**
@@ -1333,6 +1336,7 @@ git commit -m "feat: add Puppeteer PDF generation utility"
 ## Task 8: Create API Endpoint
 
 **Files:**
+
 - Create: `app/api/ai/generate-resume/route.ts`
 
 **Step 1: Write API route handler**
@@ -1516,6 +1520,7 @@ git commit -m "feat: add resume generation API endpoint"
 ## Task 9: Test API Endpoint Manually
 
 **Files:**
+
 - None (testing only)
 
 **Step 1: Start dev server**
@@ -1533,8 +1538,9 @@ curl http://localhost:3000/api/ai/generate-resume
 ```
 
 Expected output:
+
 ```json
-{"status":"ok","message":"Resume Generator API is running"}
+{ "status": "ok", "message": "Resume Generator API is running" }
 ```
 
 **Step 3: Test with job description (create test file)**
@@ -1570,6 +1576,7 @@ git commit -m "test: add manual API test script"
 ## Task 10: Create Frontend Button Component
 
 **Files:**
+
 - Create: `components/resume-generator-button.tsx`
 
 **Step 1: Create reusable button component**
@@ -1630,6 +1637,7 @@ git commit -m "feat: add resume generator button component"
 ## Task 11: Create Frontend Dialog Component
 
 **Files:**
+
 - Create: `components/resume-generator-dialog.tsx`
 
 **Step 1: Create dialog component with language selection**
@@ -1840,6 +1848,7 @@ git commit -m "feat: add resume generator dialog with language selection"
 ## Task 12: Integrate into Test AI Page
 
 **Files:**
+
 - Modify: `app/test-ai/page.tsx`
 
 **Step 1: Read current test AI page**
@@ -1879,6 +1888,7 @@ git commit -m "feat: integrate resume generator into test AI page"
 ## Task 13: Write Unit Tests for Resume Generator
 
 **Files:**
+
 - Create: `__tests__/lib/ai/resume-generator.test.ts`
 
 **Step 1: Create test file**
@@ -1995,6 +2005,7 @@ git commit -m "test: add unit tests for resume generator"
 ## Task 14: Write Unit Tests for PDF Generator
 
 **Files:**
+
 - Create: `__tests__/lib/ai/pdf-generator.test.ts`
 
 **Step 1: Create test file**
@@ -2051,6 +2062,7 @@ git commit -m "test: add unit tests for PDF generator utilities"
 ## Task 15: Write Integration Tests for API
 
 **Files:**
+
 - Create: `__tests__/app/api/ai/generate-resume/route.test.ts`
 
 **Step 1: Create API test file**
@@ -2156,13 +2168,14 @@ git commit -m "test: add integration tests for resume API endpoint"
 ## Task 16: Update Documentation
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 
 **Step 1: Add resume generator section to CLAUDE.md**
 
 Add after the "AI Job Parser" section:
 
-```markdown
+````markdown
 ## AI Resume Generator
 
 **Status:** ✅ Implemented
@@ -2209,9 +2222,9 @@ Generate tailored resume from vaga or job description.
 
 \`\`\`typescript
 {
-  vagaId?: string           // Option 1: From existing vaga
-  jobDescription?: string   // Option 2: From raw text
-  language: "pt" | "en"     // Required
+vagaId?: string // Option 1: From existing vaga
+jobDescription?: string // Option 2: From raw text
+language: "pt" | "en" // Required
 }
 \`\`\`
 
@@ -2219,17 +2232,17 @@ Generate tailored resume from vaga or job description.
 
 \`\`\`typescript
 {
-  success: true,
-  data: {
-    pdfBase64: string,        // Base64-encoded PDF
-    filename: string,         // e.g., "cv-igor-fernandes-saipem-pt.pdf"
-  },
-  metadata: {
-    duration: number,         // milliseconds
-    model: string,            // "gemini-2.5-flash"
-    tokenUsage: { ... },
-    personalizedSections: ["summary", "skills", "projects"]
-  }
+success: true,
+data: {
+pdfBase64: string, // Base64-encoded PDF
+filename: string, // e.g., "cv-igor-fernandes-saipem-pt.pdf"
+},
+metadata: {
+duration: number, // milliseconds
+model: string, // "gemini-2.5-flash"
+tokenUsage: { ... },
+personalizedSections: ["summary", "skills", "projects"]
+}
 }
 \`\`\`
 
@@ -2254,17 +2267,17 @@ import { ResumeGeneratorButton } from "@/components/resume-generator-button"
 
 \`\`\`typescript
 const response = await fetch("/api/ai/generate-resume", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    vagaId: "uuid-here",
-    language: "pt",
-  }),
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+vagaId: "uuid-here",
+language: "pt",
+}),
 })
 
 const result = await response.json()
 if (result.success) {
-  // Download PDF from result.data.pdfBase64
+// Download PDF from result.data.pdfBase64
 }
 \`\`\`
 
@@ -2300,13 +2313,17 @@ if (result.success) {
 **Manual Testing:**
 
 \`\`\`bash
+
 # Start dev server
+
 pnpm dev
 
 # Test health check
+
 curl http://localhost:3000/api/ai/generate-resume
 
 # Test generation (see test-resume-api.sh)
+
 ./test-resume-api.sh
 \`\`\`
 
@@ -2348,7 +2365,7 @@ curl http://localhost:3000/api/ai/generate-resume
 - Allow users to upload custom CV templates
 - Template editor UI
 - Multi-template support
-\`\`\`
+  \`\`\`
 
 **Step 2: Commit**
 
@@ -2356,12 +2373,14 @@ curl http://localhost:3000/api/ai/generate-resume
 git add CLAUDE.md
 git commit -m "docs: add AI Resume Generator section to CLAUDE.md"
 ```
+````
 
 ---
 
 ## Task 17: Run Full Test Suite
 
 **Files:**
+
 - None (testing only)
 
 **Step 1: Run all tests**
@@ -2389,6 +2408,7 @@ Expected: Build succeeds
 ## Task 18: Final Commit and Summary
 
 **Files:**
+
 - None (git operations only)
 
 **Step 1: Check git status**

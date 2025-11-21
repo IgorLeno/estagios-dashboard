@@ -15,16 +15,7 @@ export interface UserProfile {
  * TODO: Move to database in Phase 2
  */
 export const USER_PROFILE: UserProfile = {
-  skills: [
-    "TypeScript",
-    "React",
-    "Next.js",
-    "Node.js",
-    "PostgreSQL",
-    "Git",
-    "Problem solving",
-    "Team collaboration",
-  ],
+  skills: ["TypeScript", "React", "Next.js", "Node.js", "PostgreSQL", "Git", "Problem solving", "Team collaboration"],
   experience: [
     "Desenvolvedor Full-Stack em projeto pessoal (estagios-dashboard)",
     "Experiência com Supabase e autenticação",

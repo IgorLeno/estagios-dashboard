@@ -17,6 +17,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 ### What Was Built
 
 **Feature**: AI Job Analysis Generator
+
 - User pastes raw job description
 - Clicks button to generate analysis
 - AI produces rich markdown with 4 sections:
@@ -30,6 +31,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 ### Architecture
 
 **Data Flow**:
+
 1. User input → POST `/api/ai/parse-job` with job description
 2. API → `parseJobWithAnalysis()` with sanitized input + user profile
 3. Gemini API → Returns structured data + analysis markdown
@@ -39,6 +41,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 7. User → Reviews auto-filled form, saves to database
 
 **Key Components**:
+
 - Backend: `lib/ai/job-parser.ts`, `lib/ai/analysis-prompts.ts`, `lib/ai/validation.ts`
 - API: `app/api/ai/parse-job/route.ts`
 - Frontend: `components/tabs/ai-parser-tab.tsx`, `components/tabs/manual-entry-tab.tsx`
@@ -52,12 +55,14 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 ### Batch 1: Backend Implementation (Tasks 5-7)
 
 **Task 5**: Analysis Model Configuration ✅
+
 - File: `lib/ai/config.ts`
 - Added: `ANALYSIS_MODEL_CONFIG`, `createAnalysisModel()`
 - Model: `gemini-2.0-flash-exp`
 - **Issue**: Experimental model not supported in free tier (quota = 0)
 
 **Task 6**: Parser Extension ✅
+
 - File: `lib/ai/job-parser.ts`
 - Added: `parseJobWithAnalysis()` function
 - Combines job parsing + analysis generation
@@ -66,6 +71,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 - Tests: 16/16 passing
 
 **Task 7**: API Route Update ✅
+
 - File: `app/api/ai/parse-job/route.ts`
 - Updated: POST handler to call `parseJobWithAnalysis()`
 - Returns: `{ success, data, analise, metadata }`
@@ -74,6 +80,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 ### Batch 2: Frontend Integration (Tasks 8-10)
 
 **Task 8**: AI Mapper Update ✅
+
 - File: `lib/utils/ai-mapper.ts`
 - Added: Optional `analiseMarkdown` parameter to `mapJobDetailsToFormData()`
 - Maps analysis → `observacoes` field
@@ -81,6 +88,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 - Tests: 2/2 passing (`__tests__/lib/utils/ai-mapper.test.ts`)
 
 **Task 9a**: AI Parser Tab Component ✅
+
 - File: `components/tabs/ai-parser-tab.tsx`
 - Updated: Button text to "Gerar Análise" (but test interface still shows "Parse Job")
 - Updated: Loading state, success toast
@@ -88,12 +96,14 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 - Passes to mapper with analysis parameter
 
 **Task 9b**: Manual Entry Tab Component ✅
+
 - File: `components/tabs/manual-entry-tab.tsx`
 - Changed: Label "Observações" → "Análise"
 - Updated: Placeholder text to reflect analysis content
 - Increased: Textarea rows 3 → 8 for better visibility
 
 **Task 10**: Test Interface Update ✅
+
 - File: `app/test-ai/page.tsx`
 - Added: "Análise Gerada" card (displays analysis markdown)
 - Added: "Metadata" card (duration, model, token usage)
@@ -102,6 +112,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 ### Task 11: Integration Test and Validation (Partial)
 
 **What Was Tested**: ✅
+
 - Dev server starts without errors
 - Test interface loads correctly (`/test-ai`)
 - All UI elements present (textarea, button, pre-loaded example)
@@ -109,6 +120,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 - API endpoint compiles and executes
 
 **What Failed**: ❌
+
 - **API returns 500 error** - Gemini quota exceeded
 - **Error**: `gemini-2.0-flash-exp` has quota limit of 0 on free tier
 - Cannot test analysis generation without:
@@ -125,6 +137,7 @@ Successfully implemented AI-powered job analysis feature using Gemini 2.0 Flash 
 **Model**: `gemini-2.0-flash-exp` (configured in `lib/ai/config.ts:84`)
 
 **Error Message**:
+
 ```
 [429 Too Many Requests] You exceeded your current quota
 Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp
@@ -133,6 +146,7 @@ Please retry in 54.85397593s
 ```
 
 **Root Cause**:
+
 - Experimental models (`-exp` suffix) are NOT supported in Google AI free tier as of November 2025
 - Free tier quota for experimental models is **0 requests**
 - This changed from previous behavior (documented in CLAUDE.md as recent limitation)
@@ -156,6 +170,7 @@ export const ANALYSIS_MODEL_CONFIG = {
 ```
 
 **Alternative**: Use same model as job parser (already configured correctly):
+
 ```typescript
 export const ANALYSIS_MODEL_CONFIG = {
   model: GEMINI_CONFIG.model, // Reuse primary model config
@@ -201,6 +216,7 @@ pnpm test __tests__/lib/ai/user-profile.test.ts
 ### Integration Tests: ❌ Blocked
 
 **Test Interface** (`/test-ai`):
+
 - ✅ Loads correctly
 - ✅ Pre-loaded example text
 - ✅ Button clickable
@@ -208,6 +224,7 @@ pnpm test __tests__/lib/ai/user-profile.test.ts
 - ❌ Cannot verify analysis generation
 
 **Main Dashboard** (`/`):
+
 - ⏸️ Not tested (blocked by API issue)
 
 ### Known Pre-existing Test Failures
@@ -233,6 +250,7 @@ pnpm test __tests__/lib/ai/user-profile.test.ts
 ## Files Created
 
 ### New Files (This Implementation)
+
 ```
 lib/ai/user-profile.ts
 lib/ai/analysis-prompts.ts
@@ -249,6 +267,7 @@ docs/plans/2025-01-20-ai-job-analysis-implementation-summary.md (this file)
 ```
 
 ### Modified Files
+
 ```
 lib/ai/config.ts                        # Added analysis model config
 lib/ai/job-parser.ts                    # Added parseJobWithAnalysis()
@@ -270,6 +289,7 @@ __tests__/lib/ai/types.test.ts          # Added JobAnalysisResponse tests
 **Working Tree**: Clean
 
 **Commits** (12 total, unpushed):
+
 ```
 488e6d4 - docs: add quick resume guide for next session
 85a05ed - docs: add Batch 2 session resume for AI job analysis implementation
@@ -349,6 +369,7 @@ bbdf02c - feat(ai): add user profile configuration for personalized analysis
 ## Verification Checklist
 
 ### Code Complete
+
 - ✅ Backend implementation (Tasks 5-7)
 - ✅ Frontend integration (Tasks 8-10)
 - ✅ Unit tests written and passing
@@ -357,12 +378,14 @@ bbdf02c - feat(ai): add user profile configuration for personalized analysis
 - ✅ Fallback logic for invalid analysis
 
 ### Testing
+
 - ✅ Unit tests passing (mapper, parser, prompts, validation, types, user-profile)
 - ❌ Integration tests blocked (API quota issue)
 - ⏸️ Manual testing incomplete (requires model fix)
 - ⏸️ E2E tests not created (out of scope)
 
 ### Documentation
+
 - ✅ Implementation plan created
 - ✅ Session resumes documented
 - ✅ Code comments added
@@ -370,9 +393,10 @@ bbdf02c - feat(ai): add user profile configuration for personalized analysis
 - ✅ Implementation summary (this document)
 
 ### Critical Issues
+
 - ❌ **Experimental model quota exceeded** - Requires fix before testing
-- ⚠️  Google Search not implemented (documented limitation)
-- ⚠️  Test interface button text inconsistent (minor UX issue)
+- ⚠️ Google Search not implemented (documented limitation)
+- ⚠️ Test interface button text inconsistent (minor UX issue)
 
 ---
 
@@ -385,6 +409,7 @@ bbdf02c - feat(ai): add user profile configuration for personalized analysis
 All code is written, tested (unit level), and committed. The feature is functionally complete but cannot be validated end-to-end without switching to a stable Gemini model. Once the model is updated to `gemini-2.5-flash`, the feature should work as designed.
 
 **Estimated time to fix and complete testing**: 10-15 minutes
+
 - 2 min: Update model config
 - 1 min: Commit fix
 - 10 min: Manual testing

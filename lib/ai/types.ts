@@ -10,17 +10,51 @@ import { z } from "zod"
  * - Arrays: null → empty array []
  */
 export const JobDetailsSchema = z.object({
-  empresa: z.string().nullable().transform(v => v ?? ""),
-  cargo: z.string().nullable().transform(v => v ?? ""),
-  local: z.string().nullable().transform(v => v ?? ""),
-  modalidade: z.enum(["Presencial", "Híbrido", "Remoto"]).nullable().transform(v => v ?? "Presencial"),
-  tipo_vaga: z.enum(["Estágio", "Júnior", "Pleno", "Sênior"]).nullable().transform(v => v ?? "Estágio"),
-  requisitos_obrigatorios: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
-  requisitos_desejaveis: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
-  responsabilidades: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
-  beneficios: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
+  empresa: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
+  cargo: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
+  local: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
+  modalidade: z
+    .enum(["Presencial", "Híbrido", "Remoto"])
+    .nullable()
+    .transform((v) => v ?? "Presencial"),
+  tipo_vaga: z
+    .enum(["Estágio", "Júnior", "Pleno", "Sênior"])
+    .nullable()
+    .transform((v) => v ?? "Estágio"),
+  requisitos_obrigatorios: z
+    .array(z.string().min(1))
+    .nullable()
+    .transform((v) => v ?? [])
+    .default([]),
+  requisitos_desejaveis: z
+    .array(z.string().min(1))
+    .nullable()
+    .transform((v) => v ?? [])
+    .default([]),
+  responsabilidades: z
+    .array(z.string().min(1))
+    .nullable()
+    .transform((v) => v ?? [])
+    .default([]),
+  beneficios: z
+    .array(z.string().min(1))
+    .nullable()
+    .transform((v) => v ?? [])
+    .default([]),
   salario: z.string().max(100, "Salary information too long").nullable().optional(),
-  idioma_vaga: z.enum(["pt", "en"]).nullable().transform(v => v ?? "pt"),
+  idioma_vaga: z
+    .enum(["pt", "en"])
+    .nullable()
+    .transform((v) => v ?? "pt"),
   // ParsedVagaData compatibility fields (optional)
   requisitos_score: z.number().min(0).max(5).nullable().optional(),
   fit: z.number().min(0).max(5).nullable().optional(),

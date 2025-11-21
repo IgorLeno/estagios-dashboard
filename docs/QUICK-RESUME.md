@@ -39,11 +39,11 @@ Continue: Task 11 (Integration Test and Manual Validation)
 
 ## Files to Reference
 
-| Purpose | File |
-|---------|------|
-| **Full session context** | `docs/SESSION-RESUME-2025-01-20-BATCH2.md` |
-| **Implementation plan** | `docs/plans/2025-01-20-ai-job-analysis-plan.md` |
-| **Previous session** | `docs/SESSION-RESUME-2025-01-20.md` |
+| Purpose                  | File                                            |
+| ------------------------ | ----------------------------------------------- |
+| **Full session context** | `docs/SESSION-RESUME-2025-01-20-BATCH2.md`      |
+| **Implementation plan**  | `docs/plans/2025-01-20-ai-job-analysis-plan.md` |
+| **Previous session**     | `docs/SESSION-RESUME-2025-01-20.md`             |
 
 ---
 
@@ -69,6 +69,7 @@ pnpm dev
 **Feature:** AI Job Analysis with Gemini 2.0 Flash
 
 **What it does:**
+
 - User pastes job description
 - Clicks "Gerar Análise"
 - AI generates rich markdown analysis with 4 sections:
@@ -80,6 +81,7 @@ pnpm dev
 - User saves vaga with analysis
 
 **Key Files Changed:**
+
 - `lib/utils/ai-mapper.ts` - Added `analiseMarkdown` parameter
 - `components/tabs/ai-parser-tab.tsx` - "Gerar Análise" button
 - `components/tabs/manual-entry-tab.tsx` - "Análise" field
