@@ -81,7 +81,7 @@ export function validateAIConfig(): boolean {
  * TODO: Migrate to @google/genai to enable external company research
  */
 export const ANALYSIS_MODEL_CONFIG = {
-  model: "gemini-1.5-flash", // Experimental model for analysis
+  model: "gemini-2.5-flash", // Experimental model for analysis
   temperature: 0.1,
   maxOutputTokens: 8192,
   topP: 0.95,
