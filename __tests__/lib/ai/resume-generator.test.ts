@@ -11,11 +11,7 @@ const mockJobDetails: JobDetails = {
   tipo_vaga: "Estágio",
   requisitos_obrigatorios: ["Python", "Machine Learning", "TensorFlow"],
   requisitos_desejaveis: ["Docker", "Git"],
-  responsabilidades: [
-    "Desenvolver modelos de ML",
-    "Analisar dados experimentais",
-    "Implementar pipelines de dados",
-  ],
+  responsabilidades: ["Desenvolver modelos de ML", "Analisar dados experimentais", "Implementar pipelines de dados"],
   beneficios: ["Vale refeição", "Plano de saúde"],
   salario: "R$ 2.000/mês",
   idioma_vaga: "pt",
@@ -289,7 +285,8 @@ describe("generateTailoredResume", () => {
     mockGenerateContent
       .mockResolvedValueOnce({
         response: {
-          text: () => `Here is the summary:\n\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\`\nHope this helps!`,
+          text: () =>
+            `Here is the summary:\n\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\`\nHope this helps!`,
           usageMetadata: {
             promptTokenCount: 100,
             candidatesTokenCount: 50,

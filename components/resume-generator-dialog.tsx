@@ -45,12 +45,7 @@ interface ResumeGeneratorDialogProps {
   onSuccess?: (filename: string) => void
 }
 
-export function ResumeGeneratorDialog({
-  vagaId,
-  jobDescription,
-  trigger,
-  onSuccess,
-}: ResumeGeneratorDialogProps) {
+export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSuccess }: ResumeGeneratorDialogProps) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<GenerationState>("idle")
   const [language, setLanguage] = useState<"pt" | "en">("pt")
@@ -168,8 +163,8 @@ export function ResumeGeneratorDialog({
         <DialogHeader>
           <DialogTitle>Generate Tailored Resume</DialogTitle>
           <DialogDescription>
-            Create a personalized resume optimized for this job posting. Select your preferred language
-            and click generate.
+            Create a personalized resume optimized for this job posting. Select your preferred language and click
+            generate.
           </DialogDescription>
         </DialogHeader>
 

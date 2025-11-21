@@ -1,10 +1,5 @@
 import { createGeminiClient, GEMINI_CONFIG } from "./config"
-import {
-  buildSummaryPrompt,
-  buildSkillsPrompt,
-  buildProjectsPrompt,
-  RESUME_SYSTEM_PROMPT,
-} from "./resume-prompts"
+import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt, RESUME_SYSTEM_PROMPT } from "./resume-prompts"
 import { getCVTemplate } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
