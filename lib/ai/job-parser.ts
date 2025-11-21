@@ -18,7 +18,13 @@ export function extractJsonFromResponse(response: string): unknown {
     try {
       return JSON.parse(codeFenceMatch[1])
     } catch (error) {
-      throw new Error("Invalid JSON in code fence")
+      // Log the problematic JSON for debugging
+      const snippet = codeFenceMatch[1].substring(0, 500)
+      console.error("[Job Parser] Failed to parse JSON from code fence:")
+      console.error("First 500 chars:", snippet)
+
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      throw new Error(`Invalid JSON in code fence: ${errorMsg}`)
     }
   }
 

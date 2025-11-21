@@ -118,7 +118,13 @@ Retorne APENAS um objeto JSON válido dentro de code fence markdown:
 FORMATO FINAL:
 NÃO retorne o markdown formatado separadamente.
 Toda a análise markdown deve estar dentro do campo "analise_markdown" como string única.
-Use \\n para quebras de linha dentro do markdown.
+
+CRÍTICO - ESCAPE DE CARACTERES ESPECIAIS:
+- Use \\n para quebras de linha (não newlines literais)
+- Escape aspas duplas como \\"
+- Escape barras invertidas como \\\\
+- O JSON deve ser VÁLIDO quando parseado por JSON.parse()
+- Exemplo correto: "analise_markdown": "# Título\\n\\nTexto com \\"aspas\\""
 
 IMPORTANTE:
 - Use busca Google para encontrar informações reais sobre a empresa
