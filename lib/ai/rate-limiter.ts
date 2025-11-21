@@ -173,7 +173,7 @@ class RedisStorage implements RateLimitStorage {
 
     try {
       // Dynamic import para evitar erro se Redis não estiver instalado
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+       
       const redis = require("redis")
       this.client = redis.createClient({ url: RATE_LIMIT_CONFIG.redisUrl })
       await this.client.connect()
