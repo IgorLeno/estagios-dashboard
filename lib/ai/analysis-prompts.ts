@@ -99,16 +99,16 @@ Retorne APENAS um objeto JSON válido dentro de code fence markdown:
 \`\`\`json
 {
   "structured_data": {
-    "empresa": "Nome da Empresa",
-    "cargo": "Título da Vaga",
-    "local": "Cidade, Estado",
+    "empresa": "Nome da Empresa" ou "",
+    "cargo": "Título da Vaga" ou "",
+    "local": "Cidade, Estado" ou "",
     "modalidade": "Presencial" | "Híbrido" | "Remoto",
     "tipo_vaga": "Estágio" | "Júnior" | "Pleno" | "Sênior",
-    "requisitos_obrigatorios": ["skill1", "skill2"],
-    "requisitos_desejaveis": ["skill1", "skill2"],
-    "responsabilidades": ["atividade1", "atividade2"],
-    "beneficios": ["beneficio1", "beneficio2"],
-    "salario": "R$ 2000-3000" | null,
+    "requisitos_obrigatorios": ["skill1", "skill2"] ou [],
+    "requisitos_desejaveis": ["skill1", "skill2"] ou [],
+    "responsabilidades": ["atividade1", "atividade2"] ou [],
+    "beneficios": ["beneficio1", "beneficio2"] ou [],
+    "salario": "R$ 2000-3000" ou null,
     "idioma_vaga": "pt" | "en"
   },
   "analise_markdown": "# Análise da Vaga - [Cargo] @ [Empresa]\\n\\n## 🏢 Sobre a Empresa\\n..."
@@ -125,6 +125,13 @@ IMPORTANTE:
 - A análise deve ser personalizada com base no perfil do candidato
 - Seja específico e prático nas recomendações
 - Justifique o score de fit com exemplos concretos
+- Se informações estiverem faltando na descrição:
+  * Strings (empresa, cargo, local): use "" (string vazia)
+  * Arrays: use [] (array vazio)
+  * Salário: use null
+  * Modalidade: use "Presencial" como padrão
+  * Tipo da Vaga: use "Estágio" como padrão
+  * Idioma: use "pt" como padrão
 - Retorne SOMENTE o JSON, sem texto antes ou depois
 `.trim()
 }

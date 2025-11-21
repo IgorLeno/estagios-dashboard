@@ -71,10 +71,16 @@ CAMPOS A EXTRAIR:
 
 REGRAS CRÍTICAS:
 - Extraia EXATAMENTE como escrito na descrição original
-- Se uma informação não estiver presente, use [] (array vazio) ou null
+- Se uma informação não estiver presente:
+  * Strings (empresa, cargo, local): use "" (string vazia)
+  * Arrays: use [] (array vazio)
+  * Salário: use null
+  * Modalidade: use "Presencial" como padrão se não especificado
+  * Tipo da Vaga: use "Estágio" como padrão se não especificado
+  * Idioma: use "pt" como padrão
 - Os campos modalidade e tipo_vaga DEVEM usar EXATAMENTE um dos valores permitidos
 - Preserve palavras-chave originais (importante para ATS - Applicant Tracking Systems)
-- Não invente informações - se não está na descrição, deixe vazio
+- Não invente informações - se não está na descrição, use os valores padrão acima
 
 FORMATO DE SAÍDA:
 
@@ -82,16 +88,16 @@ Retorne APENAS um objeto JSON válido dentro de um code fence, seguindo este for
 
 \`\`\`json
 {
-  "empresa": "Nome da Empresa",
-  "cargo": "Título da Vaga",
-  "local": "Cidade, Estado",
+  "empresa": "Nome da Empresa" ou "",
+  "cargo": "Título da Vaga" ou "",
+  "local": "Cidade, Estado" ou "",
   "modalidade": "Presencial" | "Híbrido" | "Remoto",
   "tipo_vaga": "Estágio" | "Júnior" | "Pleno" | "Sênior",
-  "requisitos_obrigatorios": ["skill1", "skill2"],
-  "requisitos_desejaveis": ["skill1", "skill2"],
-  "responsabilidades": ["atividade1", "atividade2"],
-  "beneficios": ["beneficio1", "beneficio2"],
-  "salario": "R$ 2000-3000" | null,
+  "requisitos_obrigatorios": ["skill1", "skill2"] ou [],
+  "requisitos_desejaveis": ["skill1", "skill2"] ou [],
+  "responsabilidades": ["atividade1", "atividade2"] ou [],
+  "beneficios": ["beneficio1", "beneficio2"] ou [],
+  "salario": "R$ 2000-3000" ou null,
   "idioma_vaga": "pt" | "en"
 }
 \`\`\`

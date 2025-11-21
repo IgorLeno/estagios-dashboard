@@ -3,25 +3,30 @@ import { z } from "zod"
 /**
  * Schema de validação para dados extraídos de vagas
  * Compatível com ParsedVagaData do markdown-parser.ts
+ *
+ * IMPORTANT: Accepts null from LLM and transforms to safe defaults
+ * - String fields: null → empty string ""
+ * - Enum fields: null → default value (Presencial, Estágio, pt)
+ * - Arrays: null → empty array []
  */
 export const JobDetailsSchema = z.object({
-  empresa: z.string().min(1, "Empresa é obrigatória"),
-  cargo: z.string().min(1, "Cargo é obrigatório"),
-  local: z.string().min(1, "Local é obrigatório"),
-  modalidade: z.enum(["Presencial", "Híbrido", "Remoto"]),
-  tipo_vaga: z.enum(["Estágio", "Júnior", "Pleno", "Sênior"]),
-  requisitos_obrigatorios: z.array(z.string().min(1, "Requisito não pode ser vazio")).min(0).default([]),
-  requisitos_desejaveis: z.array(z.string().min(1, "Requisito não pode ser vazio")).min(0).default([]),
-  responsabilidades: z.array(z.string().min(1, "Responsabilidade não pode ser vazia")).min(0).default([]),
-  beneficios: z.array(z.string().min(1, "Benefício não pode ser vazio")).min(0).default([]),
+  empresa: z.string().nullable().transform(v => v ?? ""),
+  cargo: z.string().nullable().transform(v => v ?? ""),
+  local: z.string().nullable().transform(v => v ?? ""),
+  modalidade: z.enum(["Presencial", "Híbrido", "Remoto"]).nullable().transform(v => v ?? "Presencial"),
+  tipo_vaga: z.enum(["Estágio", "Júnior", "Pleno", "Sênior"]).nullable().transform(v => v ?? "Estágio"),
+  requisitos_obrigatorios: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
+  requisitos_desejaveis: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
+  responsabilidades: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
+  beneficios: z.array(z.string().min(1)).nullable().transform(v => v ?? []).default([]),
   salario: z.string().max(100, "Salary information too long").nullable().optional(),
-  idioma_vaga: z.enum(["pt", "en"]),
+  idioma_vaga: z.enum(["pt", "en"]).nullable().transform(v => v ?? "pt"),
   // ParsedVagaData compatibility fields (optional)
-  requisitos_score: z.number().min(0).max(5).optional(),
-  fit: z.number().min(0).max(5).optional(),
-  etapa: z.string().optional(),
-  status: z.enum(["Pendente", "Avançado", "Melou", "Contratado"]).optional(),
-  observacoes: z.string().optional(),
+  requisitos_score: z.number().min(0).max(5).nullable().optional(),
+  fit: z.number().min(0).max(5).nullable().optional(),
+  etapa: z.string().nullable().optional(),
+  status: z.enum(["Pendente", "Avançado", "Melou", "Contratado"]).nullable().optional(),
+  observacoes: z.string().nullable().optional(),
 })
 
 export type JobDetails = z.infer<typeof JobDetailsSchema>
