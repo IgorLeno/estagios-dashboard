@@ -870,3 +870,189 @@ pnpm test -- ai
 **Gemini docs:** https://ai.google.dev/gemini-api/docs
 **Pricing:** https://ai.google.dev/pricing
 **SDK:** https://github.com/google/generative-ai-js
+
+## AI Resume Generator
+
+**Status:** ✅ Implemented
+**Design Document:** `docs/plans/2025-01-21-tailored-resume-generator-design.md`
+**Implementation Plan:** `docs/plans/2025-01-21-ai-resume-generator-implementation.md`
+
+### Overview
+
+The AI Resume Generator personalizes CV content to match job descriptions using Gemini 2.5 Flash. It tailors three sections—Professional Summary, Skills & Tools, and Research Projects—while maintaining exact formatting from CV templates.
+
+**What it does:**
+
+- Personalizes CV summary with job keywords
+- Reorders skills by relevance to job requirements
+- Rewrites project descriptions to emphasize job-relevant work
+- Generates professional PDF matching original CV design
+- Supports Portuguese and English
+
+**What it doesn't do:**
+
+- Fabricate skills or experience (moderate smart enhancement only)
+- Store resumes in database (future phase)
+- Calculate ATS scores (future phase)
+
+### Architecture
+
+**Components:**
+
+1. **CV Templates** (`lib/ai/cv-templates.ts`) - PT/EN CV content as TypeScript objects
+2. **Resume Generator** (`lib/ai/resume-generator.ts`) - LLM personalization logic
+3. **Resume Prompts** (`lib/ai/resume-prompts.ts`) - LLM prompt templates
+4. **PDF Generator** (`lib/ai/pdf-generator.ts`) - Puppeteer PDF rendering
+5. **HTML Template** (`lib/ai/resume-html-template.ts`) - HTML/CSS matching CV design
+6. **API Endpoint** (`app/api/ai/generate-resume/route.ts`) - REST API
+7. **Frontend Components** - `ResumeGeneratorButton`, `ResumeGeneratorDialog`
+
+### API Endpoints
+
+#### POST /api/ai/generate-resume
+
+Generate tailored resume from vaga or job description.
+
+**Request:**
+
+```typescript
+{
+  vagaId?: string           // Option 1: From existing vaga
+  jobDescription?: string   // Option 2: From raw text
+  language: "pt" | "en"     // Required
+}
+```
+
+**Response (success):**
+
+```typescript
+{
+  success: true,
+  data: {
+    pdfBase64: string,        // Base64-encoded PDF
+    filename: string,         // e.g., "cv-igor-fernandes-saipem-pt.pdf"
+  },
+  metadata: {
+    duration: number,         // milliseconds
+    model: string,            // "gemini-2.5-flash"
+    tokenUsage: { ... },
+    personalizedSections: ["summary", "skills", "projects"]
+  }
+}
+```
+
+#### GET /api/ai/generate-resume
+
+Health check endpoint.
+
+### Usage Patterns
+
+#### Client-side (React component)
+
+```typescript
+import { ResumeGeneratorButton } from "@/components/resume-generator-button"
+
+// In component
+<ResumeGeneratorButton vagaId={vaga.id} />
+// or
+<ResumeGeneratorButton jobDescription={description} />
+```
+
+#### API call (fetch)
+
+```typescript
+const response = await fetch("/api/ai/generate-resume", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    vagaId: "uuid-here",
+    language: "pt",
+  }),
+})
+
+const result = await response.json()
+if (result.success) {
+  // Download PDF from result.data.pdfBase64
+}
+```
+
+### Configuration
+
+**Model:** `gemini-2.5-flash` (same as job parser)
+**Temperature:** `0.3` (slightly higher for creativity)
+**Timeout:** 60 seconds
+**Token Limit:** 4096 per section
+
+### Personalization Strategy
+
+**Moderate Smart Enhancement:**
+
+- Summary: Include top 5-7 job keywords, 80-120 words
+- Skills: Reorder by relevance, add ONLY if projects demonstrate them
+- Projects: Rewrite descriptions to emphasize job-relevant aspects
+- **No fabrication:** All claims must be backed by existing CV content
+
+### Integration Points
+
+1. **Test AI Page** (`app/test-ai/page.tsx`) - Generate after parsing job
+2. **Vaga Details Page** (future) - Generate for any existing vaga
+
+### Testing
+
+**Unit Tests:**
+
+- `__tests__/lib/ai/resume-generator.test.ts` - Core logic
+- `__tests__/lib/ai/pdf-generator.test.ts` - PDF utilities
+- `__tests__/app/api/ai/generate-resume/route.test.ts` - API endpoint
+
+**Manual Testing:**
+
+```bash
+# Start dev server
+pnpm dev
+
+# Test health check
+curl http://localhost:3000/api/ai/generate-resume
+
+# Test generation (see test-resume-api.sh)
+./test-resume-api.sh
+```
+
+### Troubleshooting
+
+**Puppeteer errors on Vercel:**
+
+- Ensure `--no-sandbox` and `--disable-setuid-sandbox` args are set
+- Check Vercel function timeout (60s limit)
+
+**PDF not matching CV design:**
+
+- Verify HTML template matches `saipem-cv-igor_fernandes.pdf`
+- Check inline CSS styles
+- Test with `page.pdf({ printBackground: true })`
+
+**LLM fabricating skills:**
+
+- Review prompts in `resume-prompts.ts`
+- Ensure "ONLY if projects demonstrate" constraint is clear
+- Lower temperature if needed
+
+### Future Enhancements
+
+**Phase 2: ATS Scoring**
+
+- Calculate keyword match percentage
+- Highlight missing keywords
+- Suggest improvements
+
+**Phase 3: Resume Storage**
+
+- Save generated PDFs to Supabase Storage
+- Link to `vagas_estagio` table
+- Version history
+
+**Phase 4: Custom Templates**
+
+- Allow users to upload custom CV templates
+- Template editor UI
+- Multi-template support
