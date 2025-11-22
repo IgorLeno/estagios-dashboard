@@ -43,29 +43,29 @@ export function DadosVagaTab({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cargo">Cargo *</Label>
+              <Label htmlFor="cargo">Cargo</Label>
               <Input
                 id="cargo"
                 value={formData.cargo}
                 onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                required
+                placeholder="Indefinido (se não preenchido)"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="local">Local *</Label>
+              <Label htmlFor="local">Local</Label>
               <Input
                 id="local"
                 value={formData.local}
                 onChange={(e) => setFormData({ ...formData, local: e.target.value })}
-                required
+                placeholder="Indefinido (se não preenchido)"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="modalidade">Modalidade *</Label>
+              <Label htmlFor="modalidade">Modalidade</Label>
               <Select
                 value={formData.modalidade}
                 onValueChange={(value) =>
@@ -73,7 +73,7 @@ export function DadosVagaTab({
                 }
               >
                 <SelectTrigger id="modalidade">
-                  <SelectValue />
+                  <SelectValue placeholder="Presencial (padrão)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Presencial">Presencial</SelectItem>
@@ -125,7 +125,7 @@ export function DadosVagaTab({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Status *</Label>
+            <Label htmlFor="status">Status</Label>
             <Select
               value={formData.status}
               onValueChange={(value) =>
@@ -133,7 +133,7 @@ export function DadosVagaTab({
               }
             >
               <SelectTrigger id="status">
-                <SelectValue />
+                <SelectValue placeholder="Pendente (padrão)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Pendente">Pendente</SelectItem>

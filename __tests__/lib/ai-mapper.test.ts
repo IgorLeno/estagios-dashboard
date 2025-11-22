@@ -45,8 +45,10 @@ describe("mapJobDetailsToFormData", () => {
       requisitos_desejaveis: [],
       responsabilidades: [],
       beneficios: [],
-      salario: null,
+      salario: "Indefinido",
       idioma_vaga: "pt",
+      status: "Pendente",
+      etapa: "Indefinido",
     }
 
     const result = mapJobDetailsToFormData(apiData)
@@ -71,8 +73,10 @@ describe("buildObservacoes", () => {
       requisitos_desejaveis: ["GraphQL"],
       responsabilidades: ["Code", "Review"],
       beneficios: ["VR", "VT"],
-      salario: null,
+      salario: "Indefinido",
       idioma_vaga: "pt",
+      status: "Pendente",
+      etapa: "Indefinido",
     }
 
     const result = buildObservacoes(apiData)
@@ -99,8 +103,10 @@ describe("buildObservacoes", () => {
       requisitos_desejaveis: [],
       responsabilidades: [],
       beneficios: [],
-      salario: null,
+      salario: "Indefinido",
       idioma_vaga: "pt",
+      status: "Pendente",
+      etapa: "Indefinido",
     }
 
     const result = buildObservacoes(apiData)

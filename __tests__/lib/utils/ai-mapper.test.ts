@@ -15,6 +15,8 @@ describe("AI Mapper with Analysis", () => {
     beneficios: ["VR", "VT"],
     salario: "R$ 2000",
     idioma_vaga: "pt",
+    status: "Pendente",
+    etapa: "Indefinido",
   }
 
   const analiseMarkdown = "# Análise\n\n## 🏢 Sobre a Empresa\nInfo..."

@@ -15,6 +15,8 @@ const mockJobDetails: JobDetails = {
   beneficios: ["Vale refeição", "Plano de saúde"],
   salario: "R$ 2.000/mês",
   idioma_vaga: "pt",
+  status: "Pendente",
+  etapa: "Indefinido",
 }
 
 // Mock personalized sections responses
