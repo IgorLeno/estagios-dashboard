@@ -161,13 +161,19 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       return
     }
 
+    const description = (lastAnalyzedDescription || jobDescription)?.trim()
+    if (!description) {
+      toast.error("Descrição da vaga necessária")
+      return
+    }
+
     setGeneratingResume(true)
     try {
       const response = await fetch("/api/ai/generate-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobDescription: lastAnalyzedDescription || jobDescription,
+          jobDescription: description,
           language: "pt",
         }),
       })
