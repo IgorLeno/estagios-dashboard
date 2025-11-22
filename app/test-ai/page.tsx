@@ -196,9 +196,15 @@ export default function TestAIPage() {
                   <span className="text-destructive ml-2">(mínimo: 50 caracteres)</span>
                 )}
               </p>
-              <Button onClick={handleParse} disabled={isLoading} aria-disabled={isLoading}>
-                {isLoading ? "Parsing..." : "Parse Job"}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleParse} disabled={isLoading} aria-disabled={isLoading}>
+                  {isLoading ? "Parsing..." : "Parse Job"}
+                </Button>
+                <ResumeGeneratorButton
+                  jobDescription={jobDescription.length >= 50 ? jobDescription : undefined}
+                  variant="outline"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -307,11 +313,6 @@ export default function TestAIPage() {
                     )}
                   </CardContent>
                 </Card>
-
-                {/* Resume Generator Button */}
-                <div className="mt-4">
-                  <ResumeGeneratorButton jobDescription={jobDescription} className="w-full" />
-                </div>
 
                 {/* Analysis Markdown */}
                 {(result as any).analise && (
