@@ -12,14 +12,17 @@ import { z } from "zod"
 export const JobDetailsSchema = z.object({
   empresa: z
     .string()
+    .min(1, "Empresa é obrigatória")
     .nullable()
     .transform((v) => v ?? ""),
   cargo: z
     .string()
+    .min(1, "Cargo é obrigatório")
     .nullable()
     .transform((v) => v ?? ""),
   local: z
     .string()
+    .min(1, "Local é obrigatório")
     .nullable()
     .transform((v) => v ?? ""),
   modalidade: z
@@ -31,22 +34,22 @@ export const JobDetailsSchema = z.object({
     .nullable()
     .transform((v) => v ?? "Estágio"),
   requisitos_obrigatorios: z
-    .array(z.string().min(1))
+    .array(z.string().min(1, "Item não pode ser vazio"))
     .nullable()
     .transform((v) => v ?? [])
     .default([]),
   requisitos_desejaveis: z
-    .array(z.string().min(1))
+    .array(z.string().min(1, "Item não pode ser vazio"))
     .nullable()
     .transform((v) => v ?? [])
     .default([]),
   responsabilidades: z
-    .array(z.string().min(1))
+    .array(z.string().min(1, "Item não pode ser vazio"))
     .nullable()
     .transform((v) => v ?? [])
     .default([]),
   beneficios: z
-    .array(z.string().min(1))
+    .array(z.string().min(1, "Item não pode ser vazio"))
     .nullable()
     .transform((v) => v ?? [])
     .default([]),

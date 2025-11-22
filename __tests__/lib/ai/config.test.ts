@@ -72,7 +72,9 @@ describe("AI Config", () => {
     })
 
     it("should contain expected model entries", () => {
-      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-1.5-flash")
+      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.5-flash")
+      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.0-flash-001")
+      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.5-pro")
     })
 
     it("should have all entries as strings", () => {
@@ -84,7 +86,7 @@ describe("AI Config", () => {
 
   describe("GEMINI_CONFIG", () => {
     it("should have correct model name", () => {
-      expect(GEMINI_CONFIG.model).toBe("gemini-1.5-flash")
+      expect(GEMINI_CONFIG.model).toBe("gemini-2.5-flash")
     })
 
     it("should have low temperature for consistency", () => {

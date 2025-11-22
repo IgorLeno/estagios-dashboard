@@ -5,12 +5,12 @@ import { NextRequest } from "next/server"
 // Mock das dependências
 vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(),
-  GEMINI_CONFIG: { model: "gemini-1.5-flash" },
+  GEMINI_CONFIG: { model: "gemini-2.5-flash" },
   AI_TIMEOUT_CONFIG: { parsingTimeoutMs: 30000 },
 }))
 
 vi.mock("@/lib/ai/job-parser", () => ({
-  parseJobWithGemini: vi.fn(),
+  parseJobWithAnalysis: vi.fn(),
 }))
 
 vi.mock("@/lib/ai/rate-limiter", () => ({
@@ -41,7 +41,7 @@ vi.mock("@/lib/ai/utils", () => {
 })
 
 import { validateAIConfig } from "@/lib/ai/config"
-import { parseJobWithGemini } from "@/lib/ai/job-parser"
+import { parseJobWithAnalysis } from "@/lib/ai/job-parser"
 import { checkRateLimit, consumeRequest, consumeTokens } from "@/lib/ai/rate-limiter"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
 
@@ -59,7 +59,7 @@ describe("POST /api/ai/parse-job", () => {
       limit: { requests: 10, tokens: 1000000 },
     })
 
-    vi.mocked(parseJobWithGemini).mockResolvedValue({
+    vi.mocked(parseJobWithAnalysis).mockResolvedValue({
       data: {
         empresa: "Test Corp",
         cargo: "Software Engineer",
@@ -73,8 +73,9 @@ describe("POST /api/ai/parse-job", () => {
         salario: "R$ 5.000",
         idioma_vaga: "pt" as const,
       },
+      analise: "# Análise da Vaga\n\nConteúdo da análise...",
       duration: 2500,
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       tokenUsage: { inputTokens: 500, outputTokens: 300, totalTokens: 800 },
     })
 
@@ -194,7 +195,7 @@ describe("POST /api/ai/parse-job", () => {
 
     // Mock API failure
     const apiError = new Error("Gemini API unavailable")
-    vi.mocked(parseJobWithGemini).mockRejectedValue(apiError)
+    vi.mocked(parseJobWithAnalysis).mockRejectedValue(apiError)
     vi.mocked(withTimeout).mockRejectedValue(apiError)
 
     const request = new NextRequest("http://localhost:3000/api/ai/parse-job", {
@@ -241,12 +242,13 @@ describe("POST /api/ai/parse-job", () => {
         salario: null,
         idioma_vaga: "pt" as const,
       },
+      analise: "# Análise\n\nConteúdo...",
       duration: 1000,
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       tokenUsage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
     }
 
-    vi.mocked(parseJobWithGemini).mockResolvedValue(parsedData)
+    vi.mocked(parseJobWithAnalysis).mockResolvedValue(parsedData)
     vi.mocked(withTimeout).mockResolvedValue(parsedData)
 
     const request = new NextRequest("http://localhost:3000/api/ai/parse-job", {
@@ -276,7 +278,7 @@ describe("GET /api/ai/parse-job", () => {
 
     expect(response.status).toBe(200)
     expect(data.status).toBe("ok")
-    expect(data.model).toBe("gemini-1.5-flash")
+    expect(data.model).toBe("gemini-2.5-flash")
   })
 
   it("should return 500 when config is invalid", async () => {
