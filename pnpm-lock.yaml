@@ -195,9 +195,6 @@ importers:
       '@types/node':
         specifier: ^22.12.0
         version: 22.12.0
-      '@types/puppeteer':
-        specifier: ^7.0.4
-        version: 7.0.4(typescript@5.0.2)
       '@types/react':
         specifier: ^19
         version: 19.0.0
@@ -1906,10 +1903,6 @@ packages:
 
   '@types/phoenix@1.6.6':
     resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
-
-  '@types/puppeteer@7.0.4':
-    resolution: {integrity: sha512-ja78vquZc8y+GM2al07GZqWDKQskQXygCDiu0e3uO0DMRKqE0MjrFBFmTulfPYzLB6WnL7Kl2tFPy0WXSpPomg==}
-    deprecated: This is a stub types definition. puppeteer provides its own type definitions, so you do not need this installed.
 
   '@types/react-dom@19.0.0':
     resolution: {integrity: sha512-1KfiQKsH1o00p9m5ag12axHQSb3FOU9H20UTrujVSkNhuCrRHiQWFqgEnTNK5ZNfnzZv8UWrnXVqCmCF9fgY3w==}
@@ -5923,18 +5916,6 @@ snapshots:
       undici-types: 6.20.0
 
   '@types/phoenix@1.6.6': {}
-
-  '@types/puppeteer@7.0.4(typescript@5.0.2)':
-    dependencies:
-      puppeteer: 24.31.0(typescript@5.0.2)
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bufferutil
-      - react-native-b4a
-      - supports-color
-      - typescript
-      - utf-8-validate
 
   '@types/react-dom@19.0.0':
     dependencies:
