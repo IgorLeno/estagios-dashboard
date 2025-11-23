@@ -299,9 +299,7 @@ export function AiParserTab({ formData, setFormData, onComplete }: AiParserTabPr
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-sm text-slate-700">Currículo Personalizado</h3>
-                    <p className="text-xs text-slate-500 mt-1">
-                      PDF gerado e pronto para download
-                    </p>
+                    <p className="text-xs text-slate-500 mt-1">PDF gerado e pronto para download</p>
                   </div>
                   <Button onClick={handleDownloadResume} size="sm">
                     <FileText className="mr-2 h-4 w-4" />

@@ -27,15 +27,11 @@ export function buildSummaryPrompt(jobDetails: JobDetails, originalSummary: stri
   // Handle undefined/Indefinido values
   const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
   const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0
-      ? jobDetails.requisitos_obrigatorios.join(", ")
-      : "Not specified"
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
   const requisitosDesejaveis =
     jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
   const responsabilidades =
-    jobDetails.responsabilidades.length > 0
-      ? jobDetails.responsabilidades.slice(0, 5).join("; ")
-      : "Not specified"
+    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
 
   return `Rewrite the professional summary to target this job opportunity.
 
@@ -80,9 +76,7 @@ export function buildSkillsPrompt(
 ): string {
   // Handle undefined/empty arrays
   const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0
-      ? jobDetails.requisitos_obrigatorios.join(", ")
-      : "Not specified"
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
   const requisitosDesejaveis =
     jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
 
@@ -133,13 +127,9 @@ export function buildProjectsPrompt(
   // Handle undefined/Indefinido values
   const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
   const responsabilidades =
-    jobDetails.responsabilidades.length > 0
-      ? jobDetails.responsabilidades.slice(0, 5).join("; ")
-      : "Not specified"
+    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
   const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0
-      ? jobDetails.requisitos_obrigatorios.join(", ")
-      : "Not specified"
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
 
   return `Rewrite project descriptions to emphasize relevance to this job opportunity.
 
