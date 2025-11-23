@@ -69,6 +69,21 @@ jobs:
         run: pnpm format:check
         continue-on-error: true
 
+      - name: Generate Format Check Summary
+        if: always()
+        run: |
+          echo "## 💅 Format Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.format.outcome }}" = "success" ]; then
+            echo "✅ All files are properly formatted" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Formatting issues found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Run \`pnpm format\` to fix formatting issues" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
       - name: Run unit tests
         id: vitest
         run: pnpm test:coverage --reporter=json --reporter=default --outputFile=test-results.json
@@ -122,21 +137,28 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ -f playwright-report/results.json ] && jq empty playwright-report/results.json 2>/dev/null; then
-            TOTAL=$(jq '[.suites[].specs[]] | length' playwright-report/results.json)
-            PASSED=$(jq '[.suites[].specs[] | select(.ok == true)] | length' playwright-report/results.json)
-            FAILED=$(jq '[.suites[].specs[] | select(.ok == false)] | length' playwright-report/results.json)
+            # Parse Playwright JSON report structure
+            # Structure: { suites: [{ specs: [{ tests: [{ status, title, ... }] }] }] }
+            TOTAL=$(jq '[.suites[]?.specs[]?.tests[]?] | length' playwright-report/results.json)
+            PASSED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "expected" or .status == "passed")] | length' playwright-report/results.json)
+            FAILED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "unexpected" or .status == "failed")] | length' playwright-report/results.json)
+            SKIPPED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "skipped")] | length' playwright-report/results.json)
 
             echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
             echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
             echo "| Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
             echo "| Passed | $PASSED ✅ |" >> $GITHUB_STEP_SUMMARY
             echo "| Failed | $FAILED ❌ |" >> $GITHUB_STEP_SUMMARY
+            echo "| Skipped | $SKIPPED ⏭️ |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
             if [ "$FAILED" -gt 0 ]; then
               echo "<details><summary>❌ Failed E2E Tests ($FAILED)</summary>" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              jq -r '.suites[].specs[] | select(.ok == false) | "- `\(.title)` in `\(.file)`"' playwright-report/results.json >> $GITHUB_STEP_SUMMARY
+
+              # Extract failed test details
+              jq -r '.suites[]? | .specs[]? as $spec | .file as $file | $spec.tests[]? | select(.status == "unexpected" or .status == "failed") | "### ❌ \($spec.title)\n- **File**: `\($file)`\n- **Duration**: \(.results[0].duration / 1000)s\n- **Error**: \(.results[0].error.message // "No error message")\n"' playwright-report/results.json >> $GITHUB_STEP_SUMMARY
+
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "[View full Playwright report in artifacts](../artifacts)" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
@@ -144,6 +166,12 @@ jobs:
             fi
           else
             echo "⚠️ Could not parse E2E test results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.e2e.outcome }}" = "success" ]; then
+              echo "✅ E2E tests passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ E2E tests failed - check logs for details" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
 
       - name: Upload Playwright Report

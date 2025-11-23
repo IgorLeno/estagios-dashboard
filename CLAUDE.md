@@ -114,11 +114,21 @@ Each CI run generates a consolidated summary with:
 
 **Technical Details:**
 
-- Vitest JSON reporter: `--reporter=json --reporter=default --outputFile=test-results.json`
-- ESLint JSON output: `--format json --output-file lint-results.json`
-- Playwright JSON reporter: Built-in reporter writes to `playwright-report/results.json`
-- Parsing: Uses `jq` (pre-installed on ubuntu-latest) to extract stats
-- Display: GitHub Actions `$GITHUB_STEP_SUMMARY` markdown
+- **Lint Check**: ESLint JSON output (`--format json --output-file lint-results.json`)
+- **Format Check**: Prettier exit code + summary message
+- **Unit Tests**: Vitest JSON reporter (`--reporter=json --reporter=default --outputFile=test-results.json`)
+- **E2E Tests**: Playwright JSON reporter (`["json", { outputFile: "playwright-report/results.json" }]`)
+- **Parsing**: Uses `jq` (pre-installed on ubuntu-latest) to extract stats from JSON files
+- **Display**: GitHub Actions `$GITHUB_STEP_SUMMARY` markdown with collapsible sections
+
+**E2E Test Report Format:**
+
+The Playwright JSON reporter generates detailed failure information:
+- Test title, file path, duration
+- Full error messages and stack traces
+- Status values: `"expected"`/`"passed"` (pass), `"unexpected"`/`"failed"` (fail), `"skipped"` (skip)
+
+**Complete documentation:** See `docs/ci-test-reporting.md` for full parsing logic, JSON schemas, and troubleshooting
 
 **Required GitHub Secrets:**
 - `NEXT_PUBLIC_SUPABASE_URL`
