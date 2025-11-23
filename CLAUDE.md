@@ -86,15 +86,44 @@ pnpm test -- <pattern> # Run specific test file (e.g., pnpm test -- markdown-par
 
 ## CI/CD
 
-GitHub Actions workflow runs on push/PR to main and develop branches:
+GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR to main and develop branches with enhanced test reporting:
 
-1. Linting (ESLint)
-2. Formatting check (Prettier)
-3. Unit tests with coverage
-4. Build verification
-5. Coverage upload to Codecov
+**CI Pipeline Phases:**
 
-Requires GitHub secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+1. **Linting** (ESLint with JSON output)
+2. **Formatting** check (Prettier)
+3. **Unit tests** with coverage (Vitest)
+4. **E2E tests** (Playwright)
+5. **Build** verification
+6. **Coverage** upload to Codecov
+
+**Enhanced Test Reporting:**
+
+- **Native GitHub Summaries:** Structured reports appear in the "Summary" tab of each CI run
+- **At-a-Glance Status:** Top-level table shows pass/fail for all phases
+- **Failed Test Details:** Collapsible sections show exact test names for failures
+- **JSON Artifacts:** Test reports uploaded as artifacts (7-day retention)
+
+**Report Format:**
+
+Each CI run generates a consolidated summary with:
+- Phase-specific stats (total/passed/failed counts)
+- Detailed failed test lists (when failures occur)
+- Links to artifacts for deep debugging
+- Emoji indicators for quick visual scanning (✅/❌/⚠️)
+
+**Technical Details:**
+
+- Vitest JSON reporter: `--reporter=json --reporter=default --outputFile=test-results.json`
+- ESLint JSON output: `--format json --output-file lint-results.json`
+- Playwright JSON reporter: Built-in reporter writes to `playwright-report/results.json`
+- Parsing: Uses `jq` (pre-installed on ubuntu-latest) to extract stats
+- Display: GitHub Actions `$GITHUB_STEP_SUMMARY` markdown
+
+**Required GitHub Secrets:**
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `CODECOV_TOKEN` (optional, for coverage reports)
 
 ## Architecture
 

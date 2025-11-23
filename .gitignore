@@ -30,6 +30,10 @@ next-env.d.ts
 # test coverage
 /coverage
 
+# test reports (CI artifacts)
+test-results.json
+lint-results.json
+
 # playwright
 /test-results/
 /playwright-report/
