@@ -14,7 +14,7 @@ import { StatusCard } from "@/components/status-card"
 import { Sidebar } from "@/components/sidebar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { safeOpenSupabaseStorageUrl } from "@/lib/url-utils"
+import { downloadPdf } from "@/lib/url-utils"
 import { toSafeNumber } from "@/lib/utils"
 
 export default function VagaDetailPage() {
@@ -126,7 +126,7 @@ export default function VagaDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)}
+                          onClick={() => downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Download
@@ -168,7 +168,7 @@ export default function VagaDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => safeOpenSupabaseStorageUrl(vaga.arquivo_cv_url)}
+                          onClick={() => downloadPdf(vaga.arquivo_cv_url, `curriculo-${vaga.empresa}.pdf`)}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Download

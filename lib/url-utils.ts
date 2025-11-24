@@ -110,6 +110,61 @@ export function safeOpenUrl(urlString: string | null | undefined, allowedOrigins
 }
 
 /**
+ * Verifica se uma string é um data URI (Base64)
+ * @param urlString - String a ser verificada
+ * @returns true se for um data URI
+ */
+export function isDataUri(urlString: string | null | undefined): boolean {
+  if (!urlString || typeof urlString !== "string") {
+    return false
+  }
+  return urlString.startsWith("data:")
+}
+
+/**
+ * Faz download de um PDF a partir de um data URI
+ * @param dataUri - Data URI contendo o PDF em Base64
+ * @param filename - Nome do arquivo para download
+ * @returns true se o download foi iniciado com sucesso
+ */
+export function downloadPdfFromDataUri(dataUri: string, filename: string = "document.pdf"): boolean {
+  try {
+    if (!isDataUri(dataUri)) {
+      console.error("String fornecida não é um data URI válido")
+      return false
+    }
+
+    // Cria elemento anchor temporário para download
+    const link = document.createElement("a")
+    link.href = dataUri
+    link.download = filename
+    link.style.display = "none"
+
+    // Adiciona ao DOM temporariamente
+    document.body.appendChild(link)
+
+    // Simula clique para iniciar download
+    link.click()
+
+    // Remove elemento após download
+    setTimeout(() => {
+      try {
+        if (link.parentNode) {
+          document.body.removeChild(link)
+        }
+      } catch (removeError) {
+        // Ignora erros ao remover elemento
+      }
+    }, 0)
+
+    return true
+  } catch (error) {
+    console.error("Erro ao fazer download do PDF:", error)
+    return false
+  }
+}
+
+/**
  * Abre uma URL do Supabase Storage de forma segura
  * Valida especificamente se a URL é do Supabase Storage antes de abrir
  * @param urlString - A URL a ser aberta
@@ -122,4 +177,34 @@ export function safeOpenSupabaseStorageUrl(urlString: string | null | undefined)
   }
 
   return safeOpenUrl(urlString)
+}
+
+/**
+ * Faz download de um PDF de forma inteligente
+ * Detecta automaticamente se é data URI ou URL do Supabase Storage
+ * @param urlOrDataUri - URL do Supabase Storage ou data URI
+ * @param filename - Nome do arquivo (usado apenas para data URIs)
+ * @returns true se a operação foi bem-sucedida
+ */
+export function downloadPdf(
+  urlOrDataUri: string | null | undefined,
+  filename: string = "document.pdf"
+): boolean {
+  if (!urlOrDataUri) {
+    console.error("URL ou data URI não fornecido")
+    return false
+  }
+
+  // Se for data URI, faz download direto
+  if (isDataUri(urlOrDataUri)) {
+    return downloadPdfFromDataUri(urlOrDataUri, filename)
+  }
+
+  // Se for URL do Supabase Storage, abre em nova aba
+  if (isSupabaseStorageUrl(urlOrDataUri)) {
+    return safeOpenSupabaseStorageUrl(urlOrDataUri)
+  }
+
+  console.error("URL inválida: não é nem data URI nem URL do Supabase Storage:", urlOrDataUri)
+  return false
 }

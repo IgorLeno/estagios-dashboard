@@ -52,7 +52,7 @@ export default function TestAIPage() {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => {
       controller.abort()
-    }, 30000) // 30 seconds
+    }, 120000) // 120 seconds (2 minutes) - matches backend timeout
 
     try {
       const response = await fetch("/api/ai/parse-job", {
@@ -142,9 +142,9 @@ export default function TestAIPage() {
       let errorMessage: string
 
       if (error instanceof Error && error.name === "AbortError") {
-        errorMessage = "Request timed out after 30 seconds"
+        errorMessage = "Request timed out after 120 seconds"
         toast.error("Tempo esgotado", {
-          description: "A requisição demorou mais de 30 segundos. Tente novamente.",
+          description: "A requisição demorou mais de 2 minutos. Tente novamente.",
         })
       } else {
         errorMessage = error instanceof Error ? error.message : "Unknown error"

@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 import { StarRating } from "@/components/ui/star-rating"
 import { cn, toSafeNumber, getStatusVariant } from "@/lib/utils"
-import { safeOpenSupabaseStorageUrl } from "@/lib/url-utils"
+import { downloadPdf } from "@/lib/url-utils"
 
 interface VagaTableRowProps {
   vaga: VagaEstagio
@@ -144,7 +144,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                           className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
                           onClick={(e) => {
                             e.stopPropagation()
-                            safeOpenSupabaseStorageUrl(vaga.arquivo_analise_url)
+                            downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
                           }}
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -230,7 +230,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                         className="w-full"
                         onClick={(e) => {
                           e.stopPropagation()
-                          safeOpenSupabaseStorageUrl(vaga.arquivo_cv_url)
+                          downloadPdf(vaga.arquivo_cv_url, `curriculo-${vaga.empresa}.pdf`)
                         }}
                       >
                         <Download className="h-4 w-4 mr-2" />

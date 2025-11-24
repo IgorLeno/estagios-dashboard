@@ -327,6 +327,31 @@ Note: These settings are permissive for rapid development. Tighten for productio
 
 ## Deployment
 
+### Vercel Configuration
+
+**Required Plan:** Vercel Pro ($20/month) for AI features (Job Parser and Resume Generator require 120s timeout)
+
+**Function Timeouts:** Configured in `vercel.json`:
+- `/api/ai/parse-job`: 120 seconds (2 minutes)
+- `/api/ai/generate-resume`: 120 seconds (2 minutes)
+
+**Serverless Chromium:** PDF generation uses `@sparticuz/chromium` for Vercel compatibility
+- Automatically detects serverless environment
+- Falls back to local `puppeteer` for development
+
+**Important Limitations:**
+- **Hobby (Free) Plan:** Max 10s timeout (insufficient for AI features)
+- **Pro Plan:** Max 300s timeout (sufficient for current implementation)
+- Cold start adds 2-5 seconds to first request
+- Memory limit: 1GB (Hobby), 3GB (Pro)
+
+**Troubleshooting:** See `docs/VERCEL_DEPLOYMENT.md` for:
+- Deployment checklist
+- Common issues (timeouts, Puppeteer, rate limits)
+- Cost calculator
+- Alternative architectures
+
+**Original Deployment:**
 - Auto-deployed to Vercel from v0.app
 - Repository syncs automatically with v0.app deployments
 - Continue building at: https://v0.app/chat/liFhxJ03Obw

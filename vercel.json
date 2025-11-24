@@ -1,4 +1,12 @@
 {
+  "functions": {
+    "app/api/ai/parse-job/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/ai/generate-resume/route.ts": {
+      "maxDuration": 120
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/cleanup-test-data",
