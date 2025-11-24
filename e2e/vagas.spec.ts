@@ -40,15 +40,20 @@ test.describe("Gerenciamento de Vagas", () => {
     await dialog.getByLabel(/fit requisitos/i).fill("4.5")
     await dialog.getByLabel(/fit perfil/i).fill("4")
 
-    // Observações
-    await dialog.getByLabel(/observações/i).fill("Teste E2E automatizado")
+    // Análise
+    await dialog.getByLabel(/análise/i).fill("Teste E2E automatizado")
+
+    // Navigate to "Currículo" tab before saving
+    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
     // Salvar
-    const saveButton = dialog.getByRole("button", { name: /^salvar$/i })
+    const saveButton = dialog.getByRole("button", { name: /salvar vaga/i })
     await saveButton.click()
 
     // Aguardar toast de sucesso aparecer
-    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
 
     // Aguardar modal fechar (indica que a operação foi concluída)
     await expect(dialog).not.toBeVisible({ timeout: 10000 })
@@ -72,8 +77,13 @@ test.describe("Gerenciamento de Vagas", () => {
     await dadosTab.click()
     await expect(dadosTab).toHaveAttribute("data-state", "active")
 
+    // Navigate to "Currículo" tab before attempting to save
+    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+
     // Tentar salvar sem preencher campos obrigatórios
-    await dialog.getByRole("button", { name: /^salvar$/i }).click()
+    await dialog.getByRole("button", { name: /salvar vaga/i }).click()
 
     // Modal não deve fechar devido à validação HTML5
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -103,10 +113,16 @@ test.describe("Gerenciamento de Vagas", () => {
     await addDialog.getByLabel(/^local/i).fill("Test City")
     await addDialog.getByLabel(/modalidade/i).click()
     await page.getByRole("option", { name: "Presencial" }).click()
-    await addDialog.getByRole("button", { name: /^salvar$/i }).click()
+
+    // Navigate to "Currículo" tab before saving
+    const curriculoTab = addDialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+
+    await addDialog.getByRole("button", { name: /salvar vaga/i }).click()
 
     // Aguardar toast de sucesso
-    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(addDialog).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
@@ -168,10 +184,16 @@ test.describe("Gerenciamento de Vagas", () => {
     await addDialog.getByLabel(/^local/i).fill("Delete City")
     await addDialog.getByLabel(/modalidade/i).click()
     await page.getByRole("option", { name: "Remoto" }).click()
-    await addDialog.getByRole("button", { name: /^salvar$/i }).click()
+
+    // Navigate to "Currículo" tab before saving
+    const curriculoTab = addDialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+
+    await addDialog.getByRole("button", { name: /salvar vaga/i }).click()
 
     // Aguardar toast de sucesso
-    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(addDialog).not.toBeVisible({ timeout: 10000 })
 
     // Aguardar vaga aparecer
@@ -233,13 +255,18 @@ test.describe("Gerenciamento de Vagas", () => {
     await dialog.getByLabel(/status/i).click()
     await page.getByRole("option", { name: "Avançado" }).click()
 
-    await dialog.getByLabel(/observações/i).fill("Teste completo de todos os campos disponíveis no formulário")
+    await dialog.getByLabel(/análise/i).fill("Teste completo de todos os campos disponíveis no formulário")
+
+    // Navigate to "Currículo" tab before saving
+    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
     // Salvar
-    await dialog.getByRole("button", { name: /^salvar$/i }).click()
+    await dialog.getByRole("button", { name: /salvar vaga/i }).click()
 
     // Aguardar toast de sucesso
-    await expect(page.getByText(/vaga adicionada com sucesso/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
     await expect(dialog).not.toBeVisible({ timeout: 10000 })
 
     // Verificar na tabela
