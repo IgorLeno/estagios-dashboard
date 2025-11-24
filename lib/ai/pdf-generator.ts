@@ -37,11 +37,7 @@ export async function generateResumePDF(cv: CVTemplate): Promise<Buffer> {
     const puppeteerLocal = await import("puppeteer")
     browser = await puppeteerLocal.default.launch({
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     })
   }
 

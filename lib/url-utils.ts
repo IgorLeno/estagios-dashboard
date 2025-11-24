@@ -186,10 +186,7 @@ export function safeOpenSupabaseStorageUrl(urlString: string | null | undefined)
  * @param filename - Nome do arquivo (usado apenas para data URIs)
  * @returns true se a operação foi bem-sucedida
  */
-export function downloadPdf(
-  urlOrDataUri: string | null | undefined,
-  filename: string = "document.pdf"
-): boolean {
+export function downloadPdf(urlOrDataUri: string | null | undefined, filename: string = "document.pdf"): boolean {
   if (!urlOrDataUri) {
     console.error("URL ou data URI não fornecido")
     return false

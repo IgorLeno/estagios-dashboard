@@ -27,11 +27,11 @@ Configured in `vercel.json`:
 
 ### Pricing Tier Limitations
 
-| Plan | Max Function Duration | Price |
-|------|----------------------|-------|
-| **Hobby (Free)** | 10 seconds | Free |
-| **Pro** | 300 seconds (5 min) | $20/month |
-| **Enterprise** | 900 seconds (15 min) | Custom |
+| Plan             | Max Function Duration | Price     |
+| ---------------- | --------------------- | --------- |
+| **Hobby (Free)** | 10 seconds            | Free      |
+| **Pro**          | 300 seconds (5 min)   | $20/month |
+| **Enterprise**   | 900 seconds (15 min)  | Custom    |
 
 **Current Configuration:** Requires **Pro plan** for AI features (Job Parser and Resume Generator take 30-120 seconds).
 
@@ -47,6 +47,7 @@ NEXT_PUBLIC_SHOW_TEST_DATA=false
 ```
 
 **Production Safety:**
+
 - Always set `NEXT_PUBLIC_SHOW_TEST_DATA=false` in production
 - Never commit API keys to version control
 
@@ -66,6 +67,7 @@ if (process.env.VERCEL === "1") {
 ```
 
 **How it works:**
+
 1. Detects Vercel environment via `VERCEL=1` env var
 2. Uses `@sparticuz/chromium` for serverless Chrome binary
 3. Falls back to local `puppeteer` for development
@@ -81,17 +83,20 @@ if (process.env.VERCEL === "1") {
 ### Issue 1: Function Timeout (504 Gateway Timeout)
 
 **Symptoms:**
+
 ```
 POST /api/ai/parse-job
 Status: 504 Gateway Timeout
 ```
 
 **Causes:**
+
 1. Function exceeds 10s on Hobby plan
 2. Function exceeds configured `maxDuration`
 3. Cold start adds 2-5 seconds
 
 **Solutions:**
+
 - Upgrade to Pro plan for 120s timeout
 - Optimize LLM prompts to reduce token count
 - Implement client-side retry with exponential backoff
@@ -99,6 +104,7 @@ Status: 504 Gateway Timeout
 ### Issue 2: Chrome Not Found (Puppeteer)
 
 **Symptoms:**
+
 ```
 Error: Could not find Chrome (ver. 142.0.7444.175)
 ```
@@ -110,16 +116,19 @@ Error: Could not find Chrome (ver. 142.0.7444.175)
 ### Issue 3: Rate Limits (429 Too Many Requests)
 
 **Symptoms:**
+
 ```
 POST /api/ai/parse-job
 Status: 429 Too Many Requests
 ```
 
 **Cause:** Gemini API free tier limits exceeded:
+
 - 15 requests/minute
 - 1M tokens/day
 
 **Solutions:**
+
 - Wait for rate limit window to reset (shown in error response)
 - Upgrade to Gemini paid tier (https://ai.google.dev/pricing)
 - Implement client-side rate limiting
@@ -127,6 +136,7 @@ Status: 429 Too Many Requests
 ### Issue 4: Memory Limit Exceeded
 
 **Symptoms:**
+
 ```
 Error: JavaScript heap out of memory
 ```
@@ -134,6 +144,7 @@ Error: JavaScript heap out of memory
 **Cause:** Puppeteer rendering large PDFs exceeds 1GB memory limit (Hobby) or 3GB (Pro)
 
 **Solutions:**
+
 - Reduce PDF complexity (fewer images, simpler layouts)
 - Use external PDF rendering service (see Alternatives)
 - Upgrade to Enterprise plan (10GB memory)
@@ -143,6 +154,7 @@ Error: JavaScript heap out of memory
 ### Function Logs
 
 Access logs in Vercel Dashboard:
+
 1. Go to Deployments → Select deployment
 2. Click "View Function Logs"
 3. Filter by function path (e.g., `/api/ai/parse-job`)
@@ -150,6 +162,7 @@ Access logs in Vercel Dashboard:
 ### Performance Metrics
 
 Key metrics to monitor:
+
 - **Duration:** Target <60s for Pro plan
 - **Memory:** Target <1GB for Hobby, <3GB for Pro
 - **Cold Start:** Typically 2-5s, optimize by reducing bundle size
@@ -169,16 +182,19 @@ NODE_ENV=development
 ### Option 1: External PDF Service
 
 Replace Puppeteer with external API:
+
 - **PDFShift** (https://pdfshift.io) - $10/month for 500 PDFs
 - **HTML to PDF API** (https://htmlpdfapi.com) - $9/month for 1000 PDFs
 - **CloudConvert** (https://cloudconvert.com) - Pay-as-you-go
 
 **Pros:**
+
 - No Puppeteer bundle (~50MB smaller)
 - No memory concerns
 - Faster cold starts
 
 **Cons:**
+
 - External dependency
 - Additional API key to manage
 - Potential latency
@@ -186,22 +202,26 @@ Replace Puppeteer with external API:
 ### Option 2: Hybrid Approach
 
 Use Vercel for API routes, external hosting for PDF generation:
+
 - Deploy Next.js app to Vercel
 - Deploy Puppeteer worker to Railway/Render ($5/month)
 - Call worker via internal API
 
 **Pros:**
+
 - Keep AI features on Vercel
 - Offload heavy PDF work
 - Lower Vercel tier needed
 
 **Cons:**
+
 - More complex architecture
 - Additional hosting cost
 
 ### Option 3: Downgrade to Hobby + Reduce Features
 
 If budget is tight:
+
 1. Remove Resume Generator (PDF) feature
 2. Keep Job Parser (lightweight, <10s)
 3. Stay on Hobby plan
@@ -213,6 +233,7 @@ If budget is tight:
 ### Scenario 1: Low Usage (Hobby Plan)
 
 **Assumptions:**
+
 - 100 job parses/month
 - No resume generation (requires Pro)
 - Average 2s per request
@@ -222,11 +243,13 @@ If budget is tight:
 ### Scenario 2: Moderate Usage (Pro Plan)
 
 **Assumptions:**
+
 - 500 job parses/month
 - 100 resumes generated/month
 - Average 30s per request
 
 **Cost:**
+
 - Vercel Pro: $20/month
 - Gemini (within free tier): $0/month
 - **Total:** $20/month
@@ -234,11 +257,13 @@ If budget is tight:
 ### Scenario 3: High Usage (Pro Plan + Paid Gemini)
 
 **Assumptions:**
+
 - 2000 job parses/month
 - 500 resumes generated/month
 - Exceeds Gemini free tier (1M tokens/day)
 
 **Cost:**
+
 - Vercel Pro: $20/month
 - Gemini Tier 1 (~3M tokens/month): ~$15/month
 - **Total:** $35/month
@@ -290,9 +315,11 @@ curl -X POST https://your-deployment.vercel.app/api/ai/parse-job \
 ## Support
 
 For Vercel-specific issues:
+
 - Vercel Documentation: https://vercel.com/docs
 - Vercel Support: https://vercel.com/support
 
 For application-specific issues:
+
 - GitHub Issues: https://github.com/your-repo/issues
 - Project Documentation: `/docs/README.md`
