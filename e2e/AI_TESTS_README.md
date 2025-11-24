@@ -165,11 +165,11 @@ GOOGLE_API_KEY=your_gemini_key    # Required for AI features
 
 ## Test Coverage Summary
 
-| Feature | Tests | Coverage |
-|---------|-------|----------|
-| AI Job Parser | 6 | Happy path, validation, re-parse, errors, state |
-| AI Resume Generator | 6 | Happy path, refresh, download, errors, save, validation |
-| **TOTAL** | **12** | **Complete E2E coverage** |
+| Feature             | Tests  | Coverage                                                |
+| ------------------- | ------ | ------------------------------------------------------- |
+| AI Job Parser       | 6      | Happy path, validation, re-parse, errors, state         |
+| AI Resume Generator | 6      | Happy path, refresh, download, errors, save, validation |
+| **TOTAL**           | **12** | **Complete E2E coverage**                               |
 
 ## Next Steps
 
@@ -191,16 +191,19 @@ If tests fail:
 ## Architecture Notes
 
 **Dialog Structure:**
+
 - 3 tabs: Descrição → Dados da Vaga → Currículo
 - Tab 1: Job description input + "Preencher Dados"
 - Tab 2: Form fields + "Refazer Análise"
 - Tab 3: Resume preview + "Gerar/Refazer/Baixar" + "Salvar Vaga"
 
 **API Endpoints:**
+
 - `POST /api/ai/parse-job` - Parse job description
 - `POST /api/ai/generate-resume` - Generate personalized resume
 
 **Key Components:**
+
 - `AddVagaDialog` - Main dialog orchestrating all tabs
 - `DescricaoTab` - Job description input
 - `DadosVagaTab` - Form fields

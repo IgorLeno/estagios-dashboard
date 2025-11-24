@@ -11,6 +11,7 @@ The GitHub Actions CI/CD pipeline generates comprehensive, human-readable test r
 ### 1. 🔍 Lint Check
 
 **Format:**
+
 ```
 ## 🔍 Lint Check
 
@@ -21,6 +22,7 @@ The GitHub Actions CI/CD pipeline generates comprehensive, human-readable test r
 ```
 
 **With Issues:**
+
 ```
 <details><summary>Issues Found (0 errors, 36 warnings)</summary>
 
@@ -36,6 +38,7 @@ The GitHub Actions CI/CD pipeline generates comprehensive, human-readable test r
 ### 2. 💅 Format Check
 
 **Format:**
+
 ```
 ## 💅 Format Check
 
@@ -43,6 +46,7 @@ The GitHub Actions CI/CD pipeline generates comprehensive, human-readable test r
 ```
 
 **Or when failing:**
+
 ```
 ❌ Formatting issues found
 
@@ -56,6 +60,7 @@ Run `pnpm format` to fix formatting issues
 ### 3. 🧪 Unit Tests
 
 **Format:**
+
 ```
 ## 🧪 Unit Tests
 
@@ -67,6 +72,7 @@ Run `pnpm format` to fix formatting issues
 ```
 
 **With Failures:**
+
 ```
 <details><summary>❌ Failed Tests (13)</summary>
 
@@ -79,6 +85,7 @@ Run `pnpm format` to fix formatting issues
 **Data Source:** `test-results.json` (Vitest JSON reporter)
 
 **JSON Structure:**
+
 ```json
 {
   "numTotalTests": 214,
@@ -103,6 +110,7 @@ Run `pnpm format` to fix formatting issues
 ### 4. 🎭 E2E Tests
 
 **Format:**
+
 ```
 ## 🎭 E2E Tests
 
@@ -115,6 +123,7 @@ Run `pnpm format` to fix formatting issues
 ```
 
 **With Failures:**
+
 ```
 <details><summary>❌ Failed E2E Tests (2)</summary>
 
@@ -136,6 +145,7 @@ Run `pnpm format` to fix formatting issues
 **Data Source:** `playwright-report/results.json` (Playwright JSON reporter)
 
 **JSON Structure:**
+
 ```json
 {
   "suites": [
@@ -185,6 +195,7 @@ Run `pnpm format` to fix formatting issues
 ```
 
 **Status Values:**
+
 - `"expected"` / `"passed"` = Test passed
 - `"unexpected"` / `"failed"` = Test failed
 - `"skipped"` = Test skipped
@@ -194,6 +205,7 @@ Run `pnpm format` to fix formatting issues
 ### 5. 📊 CI Pipeline Results
 
 **Consolidated Summary:**
+
 ```
 # 📊 CI Pipeline Results
 
@@ -215,6 +227,7 @@ Run `pnpm format` to fix formatting issues
 ### Playwright JSON Reporter
 
 **Configuration** (`playwright.config.ts`):
+
 ```typescript
 reporter: [
   ["html", { outputFolder: "playwright-report" }],
@@ -224,6 +237,7 @@ reporter: [
 ```
 
 **Parsing Logic** (`.github/workflows/ci.yml`):
+
 ```bash
 # Count tests
 TOTAL=$(jq '[.suites[]?.specs[]?.tests[]?] | length' results.json)
@@ -240,12 +254,15 @@ jq -r '.suites[]? | .specs[]? as $spec | .file as $file |
 ### Error Handling
 
 **If JSON parsing fails:**
+
 ```
 ⚠️ Could not parse E2E test results
 
 ✅ E2E tests passed
 ```
+
 or
+
 ```
 ⚠️ Could not parse E2E test results
 
@@ -259,6 +276,7 @@ or
 ## Artifacts
 
 **Uploaded to GitHub Actions:**
+
 1. **playwright-report/** (30 days retention)
    - HTML report with screenshots/videos
    - JSON results file
@@ -274,6 +292,7 @@ or
 ## Testing Locally
 
 **Generate sample report:**
+
 ```bash
 # Run tests
 pnpm lint --format json --output-file lint-results.json
@@ -287,6 +306,7 @@ cat playwright-report/results.json | jq .
 ```
 
 **Parse manually:**
+
 ```bash
 # E2E test counts
 jq '[.suites[]?.specs[]?.tests[]?] | length' playwright-report/results.json
@@ -305,19 +325,23 @@ jq -r '.suites[]? | .specs[]? as $spec | $spec.tests[]? | select(.status == "une
 **Cause:** JSON reporter not configured in `playwright.config.ts`
 
 **Fix:** Ensure reporter array includes:
+
 ```typescript
-["json", { outputFile: "playwright-report/results.json" }]
+;["json", { outputFile: "playwright-report/results.json" }]
 ```
 
 ### "Could not parse E2E test results"
 
 **Cause 1:** Invalid JSON file
+
 - **Fix:** Check `jq empty results.json` succeeds
 
 **Cause 2:** Wrong jq query for Playwright structure
+
 - **Fix:** Verify JSON structure matches expectations (suites → specs → tests)
 
 **Cause 3:** Results file doesn't exist
+
 - **Fix:** Verify tests ran and completed (not interrupted mid-run)
 
 ### Failed tests not showing details
@@ -325,6 +349,7 @@ jq -r '.suites[]? | .specs[]? as $spec | $spec.tests[]? | select(.status == "une
 **Cause:** Status field mismatch (expected "expected"/"unexpected" but got different values)
 
 **Fix:** Check actual status values in JSON:
+
 ```bash
 jq '[.suites[]?.specs[]?.tests[]?.status] | unique' results.json
 ```

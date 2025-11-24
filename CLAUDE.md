@@ -107,6 +107,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR to main and
 **Report Format:**
 
 Each CI run generates a consolidated summary with:
+
 - Phase-specific stats (total/passed/failed counts)
 - Detailed failed test lists (when failures occur)
 - Links to artifacts for deep debugging
@@ -124,6 +125,7 @@ Each CI run generates a consolidated summary with:
 **E2E Test Report Format:**
 
 The Playwright JSON reporter generates results with the following structure:
+
 ```json
 {
   "suites": [
@@ -147,18 +149,21 @@ The Playwright JSON reporter generates results with the following structure:
 ```
 
 **Parsing Logic (supports both flat and nested structures):**
+
 - **Total tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty] | length'`
 - **Passed tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == true)] | length'`
 - **Failed tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == false)] | length'`
 - **Skipped tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.tests[]?.status == "skipped")] | length'`
 
 The queries use `?` for safe navigation and `// empty` to handle both:
+
 - **Flat structure**: `.suites[].specs[]` (older Playwright versions)
 - **Nested structure**: `.suites[].suites[].specs[]` (newer Playwright versions with describe blocks)
 
 **Complete documentation:** See `docs/ci-test-reporting.md` for full parsing logic, JSON schemas, and troubleshooting
 
 **Required GitHub Secrets:**
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `CODECOV_TOKEN` (optional, for coverage reports)

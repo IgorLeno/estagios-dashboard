@@ -64,12 +64,14 @@ Enhance existing CI workflow to provide **at-a-glance failure visibility** throu
 #### Changes to Existing Steps
 
 **Before:**
+
 ```yaml
 - name: Run unit tests
   run: pnpm test:coverage
 ```
 
 **After:**
+
 ```yaml
 - name: Run unit tests
   id: vitest
@@ -78,6 +80,7 @@ Enhance existing CI workflow to provide **at-a-glance failure visibility** throu
 ```
 
 **Key changes:**
+
 - Add `id:` for step reference
 - Add dual reporters (JSON file + console output)
 - Add `continue-on-error: true` to run all phases even if one fails
@@ -232,13 +235,13 @@ Enhance existing CI workflow to provide **at-a-glance failure visibility** throu
 ```markdown
 # 📊 CI Pipeline Results
 
-| Phase | Status |
-|-------|--------|
-| Lint | ✅ Pass |
-| Format | ✅ Pass |
+| Phase      | Status  |
+| ---------- | ------- |
+| Lint       | ✅ Pass |
+| Format     | ✅ Pass |
 | Unit Tests | ❌ Fail |
-| E2E Tests | ✅ Pass |
-| Build | ✅ Pass |
+| E2E Tests  | ✅ Pass |
+| Build      | ✅ Pass |
 ```
 
 **Phase-specific summaries with collapsible details:**
@@ -247,10 +250,10 @@ Enhance existing CI workflow to provide **at-a-glance failure visibility** throu
 ## 🧪 Unit Tests
 
 | Metric | Count |
-|--------|-------|
-| Total | 48 |
+| ------ | ----- |
+| Total  | 48    |
 | Passed | 45 ✅ |
-| Failed | 3 ❌ |
+| Failed | 3 ❌  |
 
 <details>
 <summary>❌ Failed Tests (3)</summary>
@@ -299,6 +302,7 @@ Enhance existing CI workflow to provide **at-a-glance failure visibility** throu
 ## Maintenance
 
 **No ongoing maintenance required:**
+
 - No custom scripts to update
 - Uses pre-installed tools (`jq`)
 - JSON formats stable across Vitest/Playwright versions
