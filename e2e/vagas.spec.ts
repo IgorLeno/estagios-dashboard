@@ -22,6 +22,11 @@ test.describe("Gerenciamento de Vagas", () => {
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
 
+    // Navigate to "Dados da Vaga" tab (dialog opens on "Descrição" tab by default)
+    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
+
     // Preencher formulário - usar scope do dialog para evitar conflito com campo de busca
     await dialog.getByLabel(/^empresa/i).fill(empresaName)
     await dialog.getByLabel(/^cargo/i).fill(cargoName)
@@ -59,10 +64,16 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.waitForLoadState("networkidle")
 
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
-    await expect(page.getByRole("dialog")).toBeVisible()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
+
+    // Navigate to "Dados da Vaga" tab
+    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
 
     // Tentar salvar sem preencher campos obrigatórios
-    await page.getByRole("button", { name: /^salvar$/i }).click()
+    await dialog.getByRole("button", { name: /^salvar$/i }).click()
 
     // Modal não deve fechar devido à validação HTML5
     await expect(page.getByRole("dialog")).toBeVisible()
@@ -81,6 +92,11 @@ test.describe("Gerenciamento de Vagas", () => {
 
     const addDialog = page.getByRole("dialog")
     await expect(addDialog).toBeVisible()
+
+    // Navigate to "Dados da Vaga" tab
+    const dadosTab = addDialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
 
     await addDialog.getByLabel(/^empresa/i).fill(empresaName)
     await addDialog.getByLabel(/^cargo/i).fill("Test Position")
@@ -142,6 +158,11 @@ test.describe("Gerenciamento de Vagas", () => {
     const addDialog = page.getByRole("dialog")
     await expect(addDialog).toBeVisible()
 
+    // Navigate to "Dados da Vaga" tab
+    const dadosTab = addDialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
+
     await addDialog.getByLabel(/^empresa/i).fill(empresaName)
     await addDialog.getByLabel(/^cargo/i).fill("Delete Position")
     await addDialog.getByLabel(/^local/i).fill("Delete City")
@@ -192,6 +213,11 @@ test.describe("Gerenciamento de Vagas", () => {
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
+
+    // Navigate to "Dados da Vaga" tab
+    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
 
     // Preencher todos os campos
     await dialog.getByLabel(/^empresa/i).fill(empresaName)
