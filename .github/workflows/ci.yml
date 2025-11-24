@@ -138,11 +138,11 @@ jobs:
 
           if [ -f playwright-report/results.json ] && jq empty playwright-report/results.json 2>/dev/null; then
             # Parse Playwright JSON report structure
-            # Structure: { suites: [{ specs: [{ tests: [{ status, title, ... }] }] }] }
-            TOTAL=$(jq '[.suites[]?.specs[]?.tests[]?] | length' playwright-report/results.json)
-            PASSED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "expected" or .status == "passed")] | length' playwright-report/results.json)
-            FAILED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "unexpected" or .status == "failed")] | length' playwright-report/results.json)
-            SKIPPED=$(jq '[.suites[]?.specs[]?.tests[]? | select(.status == "skipped")] | length' playwright-report/results.json)
+            # Structure: { suites: [{ file: "...", specs: [{ title: "...", ok: true/false, ... }] }] }
+            TOTAL=$(jq '[.suites[].specs[]] | length' playwright-report/results.json)
+            PASSED=$(jq '[.suites[].specs[] | select(.ok == true)] | length' playwright-report/results.json)
+            FAILED=$(jq '[.suites[].specs[] | select(.ok == false)] | length' playwright-report/results.json)
+            SKIPPED=$(jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length' playwright-report/results.json)
 
             echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
             echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
@@ -153,14 +153,12 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
 
             if [ "$FAILED" -gt 0 ]; then
-              echo "<details><summary>❌ Failed E2E Tests ($FAILED)</summary>" >> $GITHUB_STEP_SUMMARY
+              echo "<details><summary>▶ ❌ Failed Tests ($FAILED)</summary>" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
 
-              # Extract failed test details
-              jq -r '.suites[]? | .specs[]? as $spec | .file as $file | $spec.tests[]? | select(.status == "unexpected" or .status == "failed") | "### ❌ \($spec.title)\n- **File**: `\($file)`\n- **Duration**: \(.results[0].duration / 1000)s\n- **Error**: \(.results[0].error.message // "No error message")\n"' playwright-report/results.json >> $GITHUB_STEP_SUMMARY
+              # Group failed tests by file
+              jq -r '.suites[] | select(.specs | any(.ok == false)) | .file as $file | "### \($file)\n" + ([.specs[] | select(.ok == false) | "- \(.title)"] | join("\n")) + "\n"' playwright-report/results.json >> $GITHUB_STEP_SUMMARY
 
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "[View full Playwright report in artifacts](../artifacts)" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "</details>" >> $GITHUB_STEP_SUMMARY
             fi

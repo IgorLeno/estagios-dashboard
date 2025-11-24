@@ -123,10 +123,34 @@ Each CI run generates a consolidated summary with:
 
 **E2E Test Report Format:**
 
-The Playwright JSON reporter generates detailed failure information:
-- Test title, file path, duration
-- Full error messages and stack traces
-- Status values: `"expected"`/`"passed"` (pass), `"unexpected"`/`"failed"` (fail), `"skipped"` (skip)
+The Playwright JSON reporter generates results with the following structure:
+```json
+{
+  "suites": [
+    {
+      "file": "e2e/dashboard.spec.ts",
+      "specs": [
+        {
+          "title": "should load dashboard page",
+          "ok": true,  // true = passed, false = failed
+          "tests": [
+            {
+              "status": "expected",  // "expected" (pass), "unexpected"/"failed" (fail), "skipped"
+              "results": [{ "duration": 2345, "error": {...} }]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Parsing Logic:**
+- **Total tests**: Count all `specs` across all `suites` → `jq '[.suites[].specs[]] | length'`
+- **Passed tests**: Count `specs` where `ok == true` → `jq '[.suites[].specs[] | select(.ok == true)] | length'`
+- **Failed tests**: Count `specs` where `ok == false` → `jq '[.suites[].specs[] | select(.ok == false)] | length'`
+- **Skipped tests**: Count `tests` where `status == "skipped"` → `jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length'`
 
 **Complete documentation:** See `docs/ci-test-reporting.md` for full parsing logic, JSON schemas, and troubleshooting
 
