@@ -39,7 +39,7 @@ describe("AddVagaDialog", () => {
   it("should render dialog when open", () => {
     render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
-    expect(screen.getByText(/add new job/i)).toBeInTheDocument()
+    expect(screen.getByText(/adicionar nova vaga/i)).toBeInTheDocument()
   })
 
   it("should default to AI Parser tab", () => {
@@ -47,7 +47,7 @@ describe("AddVagaDialog", () => {
 
     // AI Parser tab should be active (has textarea)
     expect(screen.getByRole("textbox")).toBeInTheDocument()
-    expect(screen.getByText(/analyze with ai/i)).toBeInTheDocument()
+    expect(screen.getByText(/preencher dados/i)).toBeInTheDocument()
   })
 
   it("should allow switching to manual tab", async () => {
@@ -59,7 +59,7 @@ describe("AddVagaDialog", () => {
     expect(screen.getByRole("textbox")).toBeInTheDocument()
 
     // Click Manual Entry tab trigger with userEvent for better simulation
-    const manualTabTrigger = screen.getByText("Manual Entry")
+    const manualTabTrigger = screen.getByText(/dados da vaga/i)
     await user.click(manualTabTrigger)
 
     // Wait for TabsContent to render
@@ -70,7 +70,8 @@ describe("AddVagaDialog", () => {
       { timeout: 2000 }
     )
 
-    expect(screen.getByText(/salvar vaga/i)).toBeInTheDocument()
+    // Verify we're on the manual tab by checking for form fields
+    expect(screen.getByLabelText(/cargo/i)).toBeInTheDocument()
   })
 
   it("should allow switching to upload tab", async () => {
@@ -78,13 +79,13 @@ describe("AddVagaDialog", () => {
 
     render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
-    const uploadTabTrigger = screen.getByText("Upload .md")
+    const uploadTabTrigger = screen.getByText(/currículo/i)
     await user.click(uploadTabTrigger)
 
-    // Wait for upload section to appear
+    // Wait for resume section to appear
     await waitFor(
       () => {
-        expect(screen.getByText(/upload a markdown analysis file/i)).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /gerar currículo/i })).toBeInTheDocument()
       },
       { timeout: 2000 }
     )
@@ -96,7 +97,7 @@ describe("AddVagaDialog", () => {
     render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
     // Switch to manual tab
-    const manualTab = screen.getByText("Manual Entry")
+    const manualTab = screen.getByText(/dados da vaga/i)
     await user.click(manualTab)
 
     // Wait for manual tab content to render
@@ -113,7 +114,7 @@ describe("AddVagaDialog", () => {
     await user.type(empresaInput, "Google")
 
     // Switch to AI Parser tab
-    const aiTab = screen.getByText("AI Parser")
+    const aiTab = screen.getByText(/descrição/i)
     await user.click(aiTab)
 
     // Wait for AI Parser content

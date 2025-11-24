@@ -38,7 +38,7 @@ describe("AiParserTab", () => {
     render(<AiParserTab formData={mockFormData} setFormData={mockSetFormData} onComplete={mockOnComplete} />)
 
     expect(screen.getByRole("textbox")).toBeInTheDocument()
-    expect(screen.getByText(/analyze with ai/i)).toBeInTheDocument()
+    expect(screen.getByText(/gerar análise/i)).toBeInTheDocument()
   })
 
   it("should disable button when input < 50 chars", () => {
@@ -47,7 +47,7 @@ describe("AiParserTab", () => {
     const textarea = screen.getByRole("textbox")
     fireEvent.change(textarea, { target: { value: "short" } })
 
-    const button = screen.getByText(/analyze with ai/i)
+    const button = screen.getByText(/gerar análise/i)
     expect(button).toBeDisabled()
   })
 
@@ -58,7 +58,7 @@ describe("AiParserTab", () => {
     const longText = "a".repeat(50)
     fireEvent.change(textarea, { target: { value: longText } })
 
-    const button = screen.getByText(/analyze with ai/i)
+    const button = screen.getByText(/gerar análise/i)
     expect(button).not.toBeDisabled()
   })
 
@@ -104,7 +104,7 @@ describe("AiParserTab", () => {
     const longText = "a".repeat(100)
     fireEvent.change(textarea, { target: { value: longText } })
 
-    const button = screen.getByText(/analyze with ai/i)
+    const button = screen.getByText(/gerar análise/i)
     fireEvent.click(button)
 
     // Let promises settle
@@ -138,7 +138,7 @@ describe("AiParserTab", () => {
     const longText = "a".repeat(100)
     fireEvent.change(textarea, { target: { value: longText } })
 
-    const button = screen.getByText(/analyze with ai/i)
+    const button = screen.getByText(/gerar análise/i)
     fireEvent.click(button)
 
     await waitFor(() => {
@@ -157,7 +157,7 @@ describe("AiParserTab", () => {
     const longText = "a".repeat(100)
     fireEvent.change(textarea, { target: { value: longText } })
 
-    const button = screen.getByText(/analyze with ai/i)
+    const button = screen.getByText(/gerar análise/i)
     fireEvent.click(button)
 
     await waitFor(() => {

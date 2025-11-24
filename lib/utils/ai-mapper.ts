@@ -30,7 +30,7 @@ export function mapJobDetailsToFormData(apiData: JobDetails, analiseMarkdown?: s
     modalidade: apiData.modalidade,
     requisitos: apiData.requisitos_score?.toString() || "",
     fit: apiData.fit?.toString() || "",
-    etapa: apiData.etapa || "",
+    etapa: apiData.etapa && apiData.etapa !== "Indefinido" ? apiData.etapa : "",
     status: apiData.status || "Pendente",
     observacoes: analiseMarkdown || buildObservacoes(apiData),
   }
