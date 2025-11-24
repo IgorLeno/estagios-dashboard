@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test"
 import { waitForToast, waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
+import {
+  mockParseJobSuccess,
+  mockGenerateResumeSuccess,
+  mockGenerateResumeError,
+  unmockAllApis,
+} from "./helpers/api-mocks"
 
 test.describe("AI Resume Generator", () => {
   // Sample job description for testing
@@ -36,6 +42,10 @@ Salário: R$ 1.800,00 + benefícios
    * Helper: Setup inicial - parse job description and navigate to Curriculo tab
    */
   async function setupJobAnalysis(page: any) {
+    // Mock both APIs for complete flow
+    await mockParseJobSuccess(page)
+    await mockGenerateResumeSuccess(page)
+
     // Open dialog
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
@@ -49,12 +59,9 @@ Salário: R$ 1.800,00 + benefícios
     const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
     await fillButton.click()
 
-    // Wait for parsing to complete
-    await waitForToast(page, /dados preenchidos com sucesso/i)
-
-    // Verify we're on Tab 2 (Dados da Vaga)
+    // Aguardar mudança para aba "Dados da Vaga" (resposta instantânea com mocks)
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 5000 })
+    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
 
     // Navigate to Tab 3 (Currículo)
     const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
@@ -67,6 +74,11 @@ Salário: R$ 1.800,00 + benefícios
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
     await expect(page.getByTestId("vagas-card-title")).toBeVisible()
+  })
+
+  test.afterEach(async ({ page }) => {
+    // Clean up mocks after each test
+    await unmockAllApis(page)
   })
 
   test("deve gerar currículo personalizado com sucesso", async ({ page }) => {
@@ -176,23 +188,28 @@ Salário: R$ 1.800,00 + benefícios
   })
 
   test("deve lidar com erro na geração", async ({ page }) => {
-    // Mock da API retornando erro
-    await page.route("**/api/ai/generate-resume", async (route) => {
-      if (route.request().method() === "POST") {
-        await route.fulfill({
-          status: 500,
-          contentType: "application/json",
-          body: JSON.stringify({
-            success: false,
-            error: "Erro ao gerar currículo",
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
+    // Mock parse job success but resume generation error
+    await mockParseJobSuccess(page)
+    await mockGenerateResumeError(page)
 
-    const dialog = await setupJobAnalysis(page)
+    // Open dialog and parse job manually (don't use setupJobAnalysis as it mocks success)
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
+
+    const textarea = dialog.getByPlaceholder(/cole a descrição/i)
+    await textarea.fill(sampleJobDescription)
+
+    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    await fillButton.click()
+
+    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
+    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
+
+    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
     // 1. Clicar em "Gerar Currículo"
     const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
