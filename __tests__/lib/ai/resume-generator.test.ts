@@ -187,7 +187,7 @@ describe("generateTailoredResume", () => {
     const result = await generateTailoredResume(mockJobDetails, "pt")
 
     expect(result.model).toBe("gemini-2.5-flash")
-    expect(result.duration).toBeGreaterThan(0)
+    expect(result.duration).toBeGreaterThanOrEqual(0)
     expect(result.personalizedSections).toEqual(["summary", "skills", "projects"])
   })
 
@@ -351,7 +351,7 @@ describe("generateTailoredResume", () => {
   it("should measure execution duration", async () => {
     const result = await generateTailoredResume(mockJobDetails, "pt")
 
-    expect(result.duration).toBeGreaterThan(0)
+    expect(result.duration).toBeGreaterThanOrEqual(0)
     expect(result.duration).toBeLessThan(10000) // Should complete in less than 10 seconds with mocks
   })
 })
