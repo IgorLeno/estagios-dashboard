@@ -146,11 +146,15 @@ The Playwright JSON reporter generates results with the following structure:
 }
 ```
 
-**Parsing Logic:**
-- **Total tests**: Count all `specs` across all `suites` → `jq '[.suites[].specs[]] | length'`
-- **Passed tests**: Count `specs` where `ok == true` → `jq '[.suites[].specs[] | select(.ok == true)] | length'`
-- **Failed tests**: Count `specs` where `ok == false` → `jq '[.suites[].specs[] | select(.ok == false)] | length'`
-- **Skipped tests**: Count `tests` where `status == "skipped"` → `jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length'`
+**Parsing Logic (supports both flat and nested structures):**
+- **Total tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty] | length'`
+- **Passed tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == true)] | length'`
+- **Failed tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == false)] | length'`
+- **Skipped tests**: `jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.tests[]?.status == "skipped")] | length'`
+
+The queries use `?` for safe navigation and `// empty` to handle both:
+- **Flat structure**: `.suites[].specs[]` (older Playwright versions)
+- **Nested structure**: `.suites[].suites[].specs[]` (newer Playwright versions with describe blocks)
 
 **Complete documentation:** See `docs/ci-test-reporting.md` for full parsing logic, JSON schemas, and troubleshooting
 

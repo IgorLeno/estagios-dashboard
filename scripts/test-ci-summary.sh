@@ -14,11 +14,13 @@ echo "" >> "$OUTPUT_FILE"
 
 if [ -f playwright-report/results.json ] && jq empty playwright-report/results.json 2>/dev/null; then
   # Parse Playwright JSON report structure
-  # Structure: { suites: [{ file: "...", specs: [{ title: "...", ok: true/false, ... }] }] }
-  TOTAL=$(jq '[.suites[].specs[]] | length' playwright-report/results.json)
-  PASSED=$(jq '[.suites[].specs[] | select(.ok == true)] | length' playwright-report/results.json)
-  FAILED=$(jq '[.suites[].specs[] | select(.ok == false)] | length' playwright-report/results.json)
-  SKIPPED=$(jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length' playwright-report/results.json)
+  # Supports both flat and nested structures:
+  # - Flat: { suites: [{ specs: [...] }] }
+  # - Nested: { suites: [{ suites: [{ specs: [...] }] }] }
+  TOTAL=$(jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty] | length' playwright-report/results.json)
+  PASSED=$(jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == true)] | length' playwright-report/results.json)
+  FAILED=$(jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.ok == false)] | length' playwright-report/results.json)
+  SKIPPED=$(jq '[.suites[].specs[]?, .suites[].suites[]?.specs[]? // empty | select(.tests[]?.status == "skipped")] | length' playwright-report/results.json)
 
   echo "| Metric | Count |" >> "$OUTPUT_FILE"
   echo "|--------|-------|" >> "$OUTPUT_FILE"
@@ -32,8 +34,12 @@ if [ -f playwright-report/results.json ] && jq empty playwright-report/results.j
     echo "<details><summary>▶ ❌ Failed Tests ($FAILED)</summary>" >> "$OUTPUT_FILE"
     echo "" >> "$OUTPUT_FILE"
 
-    # Group failed tests by file
-    jq -r '.suites[] | select(.specs | any(.ok == false)) | .file as $file | "### \($file)\n" + ([.specs[] | select(.ok == false) | "- \(.title)"] | join("\n")) + "\n"' playwright-report/results.json >> "$OUTPUT_FILE"
+    # Group failed tests by file (supports both flat and nested structures)
+    # Flat structure: .suites[].specs[]
+    jq -r '.suites[] | select(.specs | any(.ok == false)) | .file as $file | "### \($file)\n" + ([.specs[] | select(.ok == false) | "- \(.title)"] | join("\n")) + "\n"' playwright-report/results.json >> "$OUTPUT_FILE" 2>/dev/null || true
+
+    # Nested structure: .suites[].suites[].specs[]
+    jq -r '.suites[] | .suites[]? // empty | select(.specs | any(.ok == false)) | .title as $suite | "### \($suite)\n" + ([.specs[] | select(.ok == false) | "- \(.title)"] | join("\n")) + "\n"' playwright-report/results.json >> "$OUTPUT_FILE" 2>/dev/null || true
 
     echo "" >> "$OUTPUT_FILE"
     echo "</details>" >> "$OUTPUT_FILE"
