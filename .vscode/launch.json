@@ -1,8 +1,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-    
-  
     {
       "name": "Debug AI Parser (Firefox)",
       "type": "firefox",
@@ -20,21 +18,14 @@
           "path": "${workspaceFolder}/"
         }
       ],
-      "skipFiles": [
-        "**/node_modules/**",
-        "**/_next/**",
-        "**/webpack/**"
-      ],
+      "skipFiles": ["**/node_modules/**", "**/_next/**", "**/webpack/**"],
       "reloadOnChange": {
         "watch": [
           "${workspaceFolder}/components/**/*.{ts,tsx}",
           "${workspaceFolder}/lib/ai/*.{ts,tsx}",
           "${workspaceFolder}/app/api/**/*.{ts,tsx}"
         ],
-        "ignore": [
-          "${workspaceFolder}/node_modules/**",
-          "${workspaceFolder}/.next/**"
-        ],
+        "ignore": ["${workspaceFolder}/node_modules/**", "${workspaceFolder}/.next/**"],
         "debounce": 500
       },
       "clearConsoleOnReload": true,
