@@ -22,7 +22,7 @@ export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
 export const GEMINI_CONFIG = {
   model: "gemini-2.5-flash", // Using newest stable flash model
   temperature: 0.1, // Baixa para consistência
-  maxOutputTokens: 8192,
+  maxOutputTokens: 65536, // Full capacity of gemini-2.5-flash to prevent truncation
   topP: 0.95,
   topK: 40,
 } as const
@@ -82,9 +82,9 @@ export function validateAIConfig(): boolean {
  * TODO: Migrate to @google/genai to enable external company research
  */
 export const ANALYSIS_MODEL_CONFIG = {
-  model: "gemini-2.5-flash", // Experimental model for analysis
+  model: "gemini-2.5-flash", // Stable flash model for analysis
   temperature: 0.1,
-  maxOutputTokens: 8192,
+  maxOutputTokens: 65536, // Full capacity to prevent JSON truncation on long analyses
   topP: 0.95,
   topK: 40,
 } as const

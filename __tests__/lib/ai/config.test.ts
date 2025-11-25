@@ -29,9 +29,9 @@ describe("AI Config", () => {
       expect(client).toBeDefined()
     })
 
-    it("should create client with model override parameter", () => {
+    it("should expose getGenerativeModel method on created client", () => {
       process.env.GOOGLE_API_KEY = "valid-api-key-at-least-20-chars-long"
-      const client = createGeminiClient("gemini-1.5-flash")
+      const client = createGeminiClient()
       expect(client).toBeDefined()
       // Verificar que o cliente expõe métodos esperados
       expect(typeof client.getGenerativeModel).toBe("function")

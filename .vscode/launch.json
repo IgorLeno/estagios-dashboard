@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+  
+    {
+      "name": "Debug AI Parser (Firefox)",
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "pathMappings": [
+        {
+          "url": "http://localhost:3000",
+          "path": "${workspaceFolder}"
+        },
+        {
+          "url": "webpack:///./",
+          "path": "${workspaceFolder}/"
+        }
+      ],
+      "skipFiles": [
+        "**/node_modules/**",
+        "**/_next/**",
+        "**/webpack/**"
+      ],
+      "reloadOnChange": {
+        "watch": [
+          "${workspaceFolder}/components/**/*.{ts,tsx}",
+          "${workspaceFolder}/lib/ai/*.{ts,tsx}",
+          "${workspaceFolder}/app/api/**/*.{ts,tsx}"
+        ],
+        "ignore": [
+          "${workspaceFolder}/node_modules/**",
+          "${workspaceFolder}/.next/**"
+        ],
+        "debounce": 500
+      },
+      "clearConsoleOnReload": true,
+      "timeout": 30000,
+      "showConsoleCallLocation": true
+    }
+  ]
+}
