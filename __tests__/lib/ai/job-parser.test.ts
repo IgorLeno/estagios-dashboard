@@ -103,6 +103,64 @@ describe("extractJsonFromResponse", () => {
       emoji: "🚀",
     })
   })
+
+  it("should repair JSON with literal newlines in strings", () => {
+    // Simulate LLM output with unescaped newlines
+    const response = `\`\`\`json
+{
+  "text": "Line 1
+Line 2
+Line 3"
+}
+\`\`\``
+    const result = extractJsonFromResponse(response)
+    // After repair and parsing, the result should have actual newlines (not escaped)
+    expect(result).toEqual({
+      text: "Line 1\nLine 2\nLine 3",
+    })
+  })
+
+  it("should handle JSON with escaped sequences correctly", () => {
+    // Ensure repair doesn't break already-escaped content
+    const response = `\`\`\`json
+{
+  "path": "C:\\\\Users\\\\file.txt",
+  "text": "Line 1\\nLine 2"
+}
+\`\`\``
+    const result = extractJsonFromResponse(response)
+    expect(result.path).toContain("\\")
+    expect(result.text).toContain("\n")
+  })
+
+  it("should repair JSON with both newlines and quotes", () => {
+    // Real-world scenario: markdown analysis with unescaped content
+    const response = `\`\`\`json
+{
+  "analise": "# Title
+Text with quotes."
+}
+\`\`\``
+    const result = extractJsonFromResponse(response)
+    // After parsing, should have actual newlines
+    expect(result.analise).toContain("\n")
+    expect(result.analise).toContain("# Title")
+  })
+
+  it("should handle already valid JSON without modification", () => {
+    const response = `\`\`\`json
+{
+  "text": "Already\\nEscaped\\nProperly",
+  "quote": "With \\"quotes\\""
+}
+\`\`\``
+    const result = extractJsonFromResponse(response)
+    // After parsing, escaped sequences become actual characters
+    expect(result).toEqual({
+      text: "Already\nEscaped\nProperly",
+      quote: 'With "quotes"',
+    })
+  })
 })
 
 // Mock the Gemini API

@@ -14,6 +14,43 @@ import { USER_PROFILE } from "./user-profile"
 import { validateAnalysisMarkdown } from "./validation"
 
 /**
+ * Repairs common JSON syntax errors from LLM responses
+ * Specifically handles unescaped newlines and quotes in string values
+ */
+function repairJsonString(jsonStr: string): string {
+  // Check if already valid before attempting repair
+  try {
+    JSON.parse(jsonStr)
+    // Already valid - no repair needed
+    return jsonStr
+  } catch (parseError) {
+    // Invalid - needs repair
+    const errorMsg = parseError instanceof Error ? parseError.message : String(parseError)
+    console.log(`[Job Parser] JSON parse error: ${errorMsg}`)
+    console.log("[Job Parser] Attempting to repair JSON syntax errors...")
+  }
+
+  // Simplified approach: Use regex to find and fix string values
+  // This handles the most common LLM errors: unescaped newlines in JSON strings
+  let repaired = jsonStr
+
+  // Replace literal newlines within string values with escaped newlines
+  // Pattern: Matches content between quotes that contains newlines
+  repaired = repaired.replace(/"([^"\\]*(?:\\.[^"\\]*)*?)"/gs, (match, content) => {
+    // Escape any literal newlines, carriage returns, tabs
+    let escaped = content
+      .replace(/\n/g, "\\n")
+      .replace(/\r/g, "\\r")
+      .replace(/\t/g, "\\t")
+
+    return `"${escaped}"`
+  })
+
+  console.log("[Job Parser] JSON repair completed")
+  return repaired
+}
+
+/**
  * Detects if JSON appears to be truncated
  * Checks for incomplete structures that indicate early termination
  */
@@ -153,14 +190,24 @@ export function extractJsonFromResponse(response: string): unknown {
       console.error("First 500 chars:", snippet)
       console.error("Last 200 chars:", jsonStr.substring(jsonStr.length - 200))
 
-      // Try salvage on parse error too
-      const salvaged = salvagePartialJson(jsonStr)
-      if (salvaged) {
-        return salvaged
-      }
+      // Try to repair JSON syntax errors (unescaped newlines, quotes, etc.)
+      try {
+        const repaired = repairJsonString(jsonStr)
+        const result = JSON.parse(repaired)
+        console.log("[Job Parser] ✅ Successfully repaired and parsed JSON")
+        return result
+      } catch (repairError) {
+        console.error("[Job Parser] Repair also failed")
 
-      const errorMsg = error instanceof Error ? error.message : String(error)
-      throw new Error(`Invalid JSON in code fence: ${errorMsg}`)
+        // Try salvage as last resort
+        const salvaged = salvagePartialJson(jsonStr)
+        if (salvaged) {
+          return salvaged
+        }
+
+        const errorMsg = error instanceof Error ? error.message : String(error)
+        throw new Error(`Invalid JSON in code fence: ${errorMsg}`)
+      }
     }
   }
 
@@ -221,8 +268,16 @@ export function extractJsonFromResponse(response: string): unknown {
     try {
       return JSON.parse(jsonText)
     } catch (error) {
-      const parseError = error instanceof Error ? error.message : String(error)
-      throw new Error(`Invalid JSON format: ${parseError}`)
+      // Try to repair JSON syntax errors
+      try {
+        const repaired = repairJsonString(jsonText)
+        const result = JSON.parse(repaired)
+        console.log("[Job Parser] ✅ Successfully repaired and parsed direct JSON")
+        return result
+      } catch (repairError) {
+        const parseError = error instanceof Error ? error.message : String(error)
+        throw new Error(`Invalid JSON format: ${parseError}`)
+      }
     }
   }
 

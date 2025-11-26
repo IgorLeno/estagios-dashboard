@@ -119,12 +119,27 @@ FORMATO FINAL:
 NÃO retorne o markdown formatado separadamente.
 Toda a análise markdown deve estar dentro do campo "analise_markdown" como string única.
 
-CRÍTICO - ESCAPE DE CARACTERES ESPECIAIS:
-- Use \\n para quebras de linha (não newlines literais)
-- Escape aspas duplas como \\"
-- Escape barras invertidas como \\\\
-- O JSON deve ser VÁLIDO quando parseado por JSON.parse()
-- Exemplo correto: "analise_markdown": "# Título\\n\\nTexto com \\"aspas\\""
+🚨 CRÍTICO - ESCAPE DE CARACTERES ESPECIAIS 🚨:
+
+OBRIGATÓRIO para o campo "analise_markdown":
+1. SUBSTITUIR todas quebras de linha por \\n (backslash + n)
+   ❌ ERRADO: "texto\n" (newline literal)
+   ✅ CORRETO: "texto\\n"
+
+2. ESCAPAR todas aspas duplas com backslash
+   ❌ ERRADO: "texto com "aspas""
+   ✅ CORRETO: "texto com \\"aspas\\""
+
+3. ESCAPAR todas barras invertidas
+   ❌ ERRADO: "caminho\arquivo"
+   ✅ CORRETO: "caminho\\arquivo"
+
+4. O JSON DEVE SER 100% VÁLIDO quando testado com JSON.parse()
+
+Exemplo COMPLETO correto:
+"analise_markdown": "# Análise da Vaga\\n\\n## 🏢 Sobre a Empresa\\nTexto com \\"aspas\\" e quebras de linha."
+
+⚠️  SE O JSON NÃO FOR VÁLIDO, A RESPOSTA SERÁ REJEITADA.
 
 IMPORTANTE:
 - Use busca Google para encontrar informações reais sobre a empresa
