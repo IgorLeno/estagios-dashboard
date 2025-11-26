@@ -7,14 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sparkles, RotateCcw, Save, Info, AlertCircle } from "lucide-react"
+import { Sparkles, RotateCcw, Save, Info, LogIn } from "lucide-react"
 import { toast } from "sonner"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { PromptsConfig } from "@/lib/types"
-
-interface ConfiguracoesPromptsProps {
-  // No props needed - API route gets user from auth
-}
+import { useRouter } from "next/navigation"
 
 export function ConfiguracoesPrompts() {
   const [config, setConfig] = useState<Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> | null>(null)
@@ -22,6 +19,7 @@ export function ConfiguracoesPrompts() {
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [isReadOnly, setIsReadOnly] = useState(false) // True se usuário não está autenticado
+  const router = useRouter()
 
   // Load config on mount
   useEffect(() => {
@@ -165,11 +163,18 @@ export function ConfiguracoesPrompts() {
         <CardContent className="space-y-6">
           {/* Read-only mode warning */}
           {isReadOnly && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Você está visualizando as configurações padrão. Faça login em <strong>/admin/login</strong> para salvar
-                configurações personalizadas.
+            <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertTitle>Visualizando configurações padrão</AlertTitle>
+              <AlertDescription className="flex items-center justify-between gap-4">
+                <span>
+                  Você está visualizando as configurações padrão do sistema. Para personalizar e salvar suas próprias
+                  configurações, faça login.
+                </span>
+                <Button variant="outline" size="sm" onClick={() => router.push("/admin/login")} className="ml-auto shrink-0">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Fazer Login
+                </Button>
               </AlertDescription>
             </Alert>
           )}

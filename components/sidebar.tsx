@@ -1,7 +1,13 @@
 "use client"
 
-import { Briefcase, Star, Activity } from "lucide-react"
+import { Briefcase, Star, Activity, LogOut, LogIn } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
+import { useEffect, useState } from "react"
+import type { User } from "@supabase/supabase-js"
 
 interface SidebarProps {
   activeTab?: string
@@ -16,6 +22,48 @@ const menuItems = [
 ]
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
+
+  // Check user auth status
+  useEffect(() => {
+    async function checkUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+    checkUser()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      toast.success("Logout realizado com sucesso")
+      router.push("/admin/login")
+      router.refresh()
+    } catch (error) {
+      toast.error("Erro ao fazer logout")
+      console.error("Logout error:", error)
+    }
+  }
+
+  const handleLogin = () => {
+    router.push("/admin/login")
+  }
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col py-6 z-50 border-r border-sidebar-border shadow-xl">
       {/* Logo/Brand */}
@@ -60,6 +108,39 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* Auth section at bottom */}
+      <div className="px-3 mt-auto pt-4 border-t border-sidebar-border/50">
+        {loading ? (
+          <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Carregando...</div>
+        ) : user ? (
+          <div className="space-y-2">
+            <div className="px-3 py-1">
+              <p className="text-xs text-sidebar-foreground/60">Logado como</p>
+              <p className="text-sm text-sidebar-foreground font-medium truncate">{user.email}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-primary/10 hover:text-sidebar-accent"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogin}
+            className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-primary/10 hover:text-sidebar-accent"
+          >
+            <LogIn className="h-4 w-4" />
+            Fazer Login
+          </Button>
+        )}
+      </div>
     </aside>
   )
 }

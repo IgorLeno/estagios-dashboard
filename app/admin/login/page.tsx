@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { AlertCircle, Loader2, Shield } from "lucide-react"
+import { AlertCircle, Loader2, LogIn } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "sonner"
 
 export default function Page() {
   const [email, setEmail] = useState("")
@@ -22,20 +23,46 @@ export default function Page() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
-    setIsLoading(true)
     setError(null)
 
+    // Validação client-side
+    if (!email.includes("@")) {
+      setError("Email inválido")
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Senha deve ter pelo menos 6 caracteres")
+      return
+    }
+
+    const supabase = createClient()
+    setIsLoading(true)
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error) throw error
-      router.push("/admin/dashboard")
+
+      if (signInError) {
+        // Mensagens mais amigáveis
+        if (signInError.message.includes("Invalid login credentials")) {
+          throw new Error("Email ou senha incorretos")
+        }
+        if (signInError.message.includes("Email not confirmed")) {
+          throw new Error("Verifique seu email para confirmar a conta")
+        }
+        throw signInError
+      }
+
+      toast.success("Login realizado com sucesso!")
+      router.push("/") // Redireciona para dashboard principal
       router.refresh()
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Erro ao fazer login")
+      const errorMessage = error instanceof Error ? error.message : "Erro ao fazer login"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -47,14 +74,14 @@ export default function Page() {
         <div className="flex flex-col gap-6">
           <div className="flex justify-center mb-2">
             <div className="rounded-full bg-primary/10 p-3">
-              <Shield className="h-8 w-8 text-primary" />
+              <LogIn className="h-8 w-8 text-primary" />
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Acesso Administrativo</CardTitle>
-              <CardDescription>Entre com suas credenciais para acessar o painel</CardDescription>
+              <CardTitle className="text-2xl">Login</CardTitle>
+              <CardDescription>Entre com suas credenciais para acessar suas configurações</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin}>

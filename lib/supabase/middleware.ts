@@ -29,8 +29,21 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith("/admin") && !user) {
+  // Redirecionar usuários logados que tentam acessar login/sign-up para o dashboard
+  if (user && (request.nextUrl.pathname === "/admin/login" || request.nextUrl.pathname === "/admin/sign-up")) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/"
+    return NextResponse.redirect(url)
+  }
+
+  // Proteger rotas admin (exceto login e sign-up) para usuários não autenticados
+  if (
+    request.nextUrl.pathname.startsWith("/admin") &&
+    !user &&
+    request.nextUrl.pathname !== "/admin/login" &&
+    request.nextUrl.pathname !== "/admin/sign-up" &&
+    request.nextUrl.pathname !== "/admin/sign-up-success"
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = "/admin/login"
     return NextResponse.redirect(url)
