@@ -1139,6 +1139,160 @@ curl http://localhost:3000/api/ai/generate-resume
 - Ensure "ONLY if projects demonstrate" constraint is clear
 - Lower temperature if needed
 
+## AI Prompts Configuration
+
+**Status:** ✅ Implemented
+**Migration:** `migrations/001_create_prompts_config.sql`
+
+### Overview
+
+Sistema de configuração de prompts personalizáveis para features de IA (Job Parser e Resume Generator). Permite que usuários ajustem os prompts enviados ao Gemini para personalizar o comportamento da análise de vagas e geração de currículos.
+
+### Architecture
+
+**Database Schema:**
+
+- Tabela: `prompts_config`
+- RLS habilitado com políticas por usuário
+- Configuração global padrão (user_id = NULL)
+- Trigger `updated_at` automático
+
+**Key Files:**
+
+1. `lib/types.ts` - Interface `PromptsConfig` e `DEFAULT_PROMPTS_CONFIG`
+2. `lib/supabase/prompts.ts` - CRUD functions
+3. `lib/ai/config.ts` - `loadUserAIConfig()` e `getGenerationConfig()`
+4. `components/configuracoes-prompts.tsx` - UI de edição
+5. `components/configuracoes-page.tsx` - Integração na aba Configurações
+6. `migrations/001_create_prompts_config.sql` - Schema SQL
+
+### Configuration Fields
+
+**Model Settings:**
+
+- `modelo_gemini` - Nome do modelo (ex: "gemini-2.5-flash", "gemini-2.5-pro")
+- `temperatura` - 0.0 (determinístico) a 1.0 (criativo)
+- `max_tokens` - Máximo de tokens por resposta (512-32768)
+- `top_p` - Opcional (0.0-1.0)
+- `top_k` - Opcional (1-100)
+
+**Editable Prompts:**
+
+1. **Dossiê** (`dossie_prompt`) - Perfil do candidato para análise de fit
+2. **Análise** (`analise_prompt`) - Prompt para análise de compatibilidade vaga/candidato
+3. **Currículo** (`curriculo_prompt`) - Prompt para personalização do currículo
+
+### UI Components
+
+**ConfiguracoesPage:**
+
+- Tabs internas: "Geral" e "Prompts de IA"
+- Tab "Prompts de IA" renderiza `<ConfiguracoesPrompts />`
+
+**ConfiguracoesPrompts:**
+
+- 4 tabs: Modelo, Dossiê, Análise, Currículo
+- Textareas com font-mono para edição de prompts
+- Botões "Restaurar Padrão" e "Salvar Alterações"
+- Indicador de última modificação
+- Toast notifications para feedback
+
+### Usage Pattern
+
+**Loading user config:**
+
+```typescript
+import { loadUserAIConfig, getGenerationConfig } from "@/lib/ai/config"
+
+// In API route or server component
+const config = await loadUserAIConfig(userId) // Falls back to defaults if no custom config
+
+// Use in Gemini API
+const genAI = createGeminiClient()
+const model = genAI.getGenerativeModel({
+  model: config.modelo_gemini,
+  generationConfig: getGenerationConfig(config),
+  systemInstruction: config.curriculo_prompt, // Or dossie_prompt, analise_prompt
+})
+```
+
+**Saving user config:**
+
+```typescript
+import { savePromptsConfig } from "@/lib/supabase/prompts"
+
+await savePromptsConfig(
+  {
+    modelo_gemini: "gemini-2.5-flash",
+    temperatura: 0.3,
+    max_tokens: 4096,
+    top_p: 0.95,
+    top_k: 40,
+    dossie_prompt: "...",
+    analise_prompt: "...",
+    curriculo_prompt: "...",
+  },
+  userId
+)
+```
+
+**Resetting to defaults:**
+
+```typescript
+import { resetPromptsConfig } from "@/lib/supabase/prompts"
+
+await resetPromptsConfig(userId) // Deletes custom config, falls back to global defaults
+```
+
+### Default Prompts
+
+**Dossiê:** Perfil completo do candidato (Igor Leno de Souza Fernandes, Eng. Química UNESP)
+
+**Análise:** Instruções para calcular fit de requisitos e perfil (0-5 estrelas)
+
+**Currículo:** Regras anti-invenção críticas para personalização de CV:
+
+- ✅ Permitido: Reescrever resumo, reordenar skills, adaptar descrições de projetos
+- ❌ Proibido: Inventar skills, mudar títulos de projetos, fabricar experiências
+
+### Migration
+
+Execute a migration SQL para criar a tabela:
+
+```bash
+# Via Supabase Dashboard
+# Ou via CLI (se configurado)
+psql < migrations/001_create_prompts_config.sql
+```
+
+A migration cria:
+
+- Tabela `prompts_config` com constraints
+- Índice em `user_id`
+- Trigger `updated_at`
+- Políticas RLS
+- Registro padrão global (user_id = NULL)
+
+### Troubleshooting
+
+**Config not loading:**
+
+- Verifique que a migration foi executada
+- Confirme que existe registro padrão (user_id = NULL)
+- Check logs do servidor para erros de Supabase
+
+**RLS blocking queries:**
+
+- Verifique políticas RLS na tabela
+- Confirme que `auth.uid()` retorna o user_id correto
+- Teste queries diretamente no Supabase Dashboard
+
+**Prompt changes not reflecting:**
+
+- Verifique que `loadUserAIConfig()` está sendo chamado antes de usar o Gemini
+- Confirme que o `systemInstruction` do model está usando o prompt correto
+- Cache pode estar sendo usado - restart do servidor pode ajudar
+
 ### Future Enhancements
 
 **Phase 2: ATS Scoring**

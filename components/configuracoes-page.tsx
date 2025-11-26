@@ -2,84 +2,63 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTheme } from "next-themes"
-import { Clock, Calendar, Palette } from "lucide-react"
+import { Palette } from "lucide-react"
+import { ConfiguracoesPrompts } from "@/components/configuracoes-prompts"
 
 export function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div className="max-w-2xl space-y-6">
-      {/* Theme Settings Card */}
-      <Card className="glass-card-intense hover-lift">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Palette className="h-6 w-6 text-primary" />
-            </div>
-            <span className="text-foreground">Aparência</span>
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">Personalize a aparência do dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">Tema</h3>
-              <p className="text-sm text-muted-foreground">Escolha entre tema claro, escuro ou automático</p>
-            </div>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger className="w-[140px] bg-background border-border">
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="light">Claro</SelectItem>
-                <SelectItem value="dark">Escuro</SelectItem>
-                <SelectItem value="system">Sistema</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="max-w-4xl space-y-6">
+      <Tabs defaultValue="geral" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="prompts">Prompts de IA</TabsTrigger>
+        </TabsList>
 
-      {/* Date System Info Card */}
-      <Card className="glass-card-intense hover-lift">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-primary" />
-            </div>
-            <span className="text-foreground">Sistema de Datas</span>
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Informações sobre o funcionamento do rastreamento de candidaturas
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="p-4 bg-muted/50 rounded-lg border border-border">
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Início do Dia</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  O sistema utiliza o calendário padrão onde cada dia começa à <strong>meia-noite (00:00)</strong> e
-                  termina às <strong>23:59</strong>. Todas as candidaturas são registradas com a data do calendário em
-                  que foram criadas.
-                </p>
+        {/* Tab: Geral */}
+        <TabsContent value="geral" className="space-y-6 mt-6">
+          {/* Theme Settings Card */}
+          <Card className="glass-card-intense hover-lift">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Palette className="h-6 w-6 text-primary" />
+                </div>
+                <span className="text-foreground">Aparência</span>
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Personalize a aparência do dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Tema</h3>
+                  <p className="text-sm text-muted-foreground">Escolha entre tema claro, escuro ou automático</p>
+                </div>
+                <Select value={theme} onValueChange={setTheme}>
+                  <SelectTrigger className="w-[140px] bg-background border-border">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="light">Claro</SelectItem>
+                    <SelectItem value="dark">Escuro</SelectItem>
+                    <SelectItem value="system">Sistema</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="p-4 bg-muted/50 rounded-lg border border-border">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-foreground">Rastreamento Automático</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                As candidaturas são automaticamente organizadas por data de inscrição, permitindo visualizar seu
-                progresso diário e histórico de forma clara e consistente.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Tab: Prompts de IA */}
+        <TabsContent value="prompts" className="mt-6">
+          <ConfiguracoesPrompts />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

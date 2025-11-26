@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { getPromptsConfig } from "@/lib/supabase/prompts"
+import type { PromptsConfig } from "@/lib/types"
 
 /**
  * Model fallback chain for resilience
@@ -107,4 +109,28 @@ export function createAnalysisModel() {
     // Note: tools with googleSearch requires @google/genai SDK
     // Current implementation uses @google/generative-ai (legacy)
   })
+}
+
+/**
+ * Load user-specific AI configuration from Supabase
+ * Falls back to default config if user has no custom configuration
+ *
+ * @param userId - Optional user ID. If not provided, uses global defaults
+ * @returns PromptsConfig with user's customizations or defaults
+ */
+export async function loadUserAIConfig(userId?: string): Promise<PromptsConfig> {
+  return await getPromptsConfig(userId)
+}
+
+/**
+ * Get Gemini generation config from PromptsConfig
+ * Extracts only the fields needed for Gemini API
+ */
+export function getGenerationConfig(config: PromptsConfig) {
+  return {
+    temperature: config.temperatura,
+    maxOutputTokens: config.max_tokens,
+    topP: config.top_p,
+    topK: config.top_k,
+  }
 }
