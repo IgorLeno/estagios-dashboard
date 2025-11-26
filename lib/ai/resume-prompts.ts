@@ -41,7 +41,12 @@ If job requirements ask for skills not in the CV, DO NOT add them - just emphasi
 /**
  * Build prompt for personalizing professional summary
  */
-export function buildSummaryPrompt(jobDetails: JobDetails, originalSummary: string, userSkills: string[]): string {
+export function buildSummaryPrompt(
+  jobDetails: JobDetails,
+  originalSummary: string,
+  userSkills: string[],
+  language: "pt" | "en"
+): string {
   const topKeywords = extractTopKeywords(jobDetails, 7)
 
   // Handle undefined/Indefinido values
@@ -53,7 +58,14 @@ export function buildSummaryPrompt(jobDetails: JobDetails, originalSummary: stri
   const responsabilidades =
     jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
 
-  return `Rewrite the professional summary to target this job opportunity.
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
+      : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
+
+  return `${languageInstruction}
+
+Rewrite the professional summary to target this job opportunity.
 
 JOB DETAILS:
 Company: ${jobDetails.empresa}
@@ -92,7 +104,8 @@ Return JSON format:
 export function buildSkillsPrompt(
   jobDetails: JobDetails,
   currentSkills: Array<{ category: string; items: string[] }>,
-  projects: Array<{ title: string; description: string[] }>
+  projects: Array<{ title: string; description: string[] }>,
+  language: "pt" | "en"
 ): string {
   // Handle undefined/empty arrays
   const requisitosObrigatorios =
@@ -103,7 +116,14 @@ export function buildSkillsPrompt(
   // Extract all skill items for validation
   const allSkillItems = currentSkills.flatMap((cat) => cat.items)
 
-  return `⚠️  CRITICAL: REORDER ONLY - DO NOT ADD NEW SKILLS
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
+      : "⚠️ MANDATORY: Keep category and skill names EXACTLY as they are (they may be in Portuguese or English). DO NOT translate tool, software, or technology names."
+
+  return `${languageInstruction}
+
+⚠️  CRITICAL: REORDER ONLY - DO NOT ADD NEW SKILLS
 
 JOB REQUIRED SKILLS:
 ${requisitosObrigatorios}
@@ -149,7 +169,8 @@ Return JSON format:
  */
 export function buildProjectsPrompt(
   jobDetails: JobDetails,
-  currentProjects: Array<{ title: string; description: string[] }>
+  currentProjects: Array<{ title: string; description: string[] }>,
+  language: "pt" | "en"
 ): string {
   const jobKeywords = extractTopKeywords(jobDetails, 10)
 
@@ -163,7 +184,14 @@ export function buildProjectsPrompt(
   // Extract exact project titles for validation
   const projectTitles = currentProjects.map((p) => p.title)
 
-  return `⚠️  CRITICAL: KEEP TITLES AND DATES UNCHANGED - REWRITE DESCRIPTIONS ONLY
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: As DESCRIÇÕES dos projetos DEVEM estar em PORTUGUÊS BRASILEIRO. Mantenha os títulos EXATAMENTE como estão (não traduza datas ou nomes técnicos nos títulos)."
+      : "⚠️ MANDATORY: Project DESCRIPTIONS MUST be in ENGLISH. Keep titles EXACTLY as they are (do not translate dates or technical names in titles)."
+
+  return `${languageInstruction}
+
+⚠️  CRITICAL: KEEP TITLES AND DATES UNCHANGED - REWRITE DESCRIPTIONS ONLY
 
 JOB DETAILS:
 Position: ${cargo}

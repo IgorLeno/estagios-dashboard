@@ -26,7 +26,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
   <style>
     @page {
       size: A4;
-      margin: 20mm;
+      margin: 15mm;
     }
 
     * {
@@ -37,8 +37,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 11pt;
-      line-height: 1.4;
+      font-size: 10pt;
+      line-height: 1.3;
       color: #333;
       background: white;
     }
@@ -51,31 +51,30 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Header */
     .header {
-      text-align: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #333;
+      text-align: left;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #000;
     }
 
     .header h1 {
-      font-size: 24pt;
+      font-size: 20pt;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       color: #000;
     }
 
     .header .title {
-      font-size: 14pt;
+      font-size: 12pt;
       color: #555;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .header .contact {
-      font-size: 10pt;
+      font-size: 9pt;
       color: #333;
-      margin-bottom: 5px;
-      text-align: left;
-      line-height: 1.5;
+      margin-bottom: 4px;
+      line-height: 1.4;
     }
 
     .header .contact a {
@@ -85,123 +84,132 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Section */
     .section {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       page-break-inside: avoid;
     }
 
     .section-title {
-      font-size: 14pt;
+      font-size: 12pt;
       font-weight: bold;
       text-transform: uppercase;
       color: #000;
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #ccc;
+      margin-bottom: 6px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #000;
     }
 
     /* Summary */
     .summary {
       text-align: justify;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
+      font-size: 10pt;
     }
 
     /* Experience */
     .experience-item {
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .experience-header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .experience-title {
       font-weight: bold;
-      font-size: 11pt;
+      font-size: 10pt;
     }
 
     .experience-company {
-      font-size: 11pt;
+      font-size: 10pt;
       color: #555;
     }
 
     .experience-period {
-      font-size: 10pt;
+      font-size: 9pt;
       color: #777;
       font-style: italic;
     }
 
     .experience-location {
-      font-size: 10pt;
+      font-size: 9pt;
       color: #777;
     }
 
     .experience-description {
-      margin-left: 15px;
-      margin-top: 4px;
+      margin-left: 12px;
+      margin-top: 3px;
     }
 
     .experience-description li {
-      margin-bottom: 3px;
+      margin-bottom: 2px;
+      font-size: 10pt;
     }
 
     /* Education */
     .education-item {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .education-degree {
       font-weight: bold;
+      font-size: 10pt;
     }
 
     .education-institution {
       color: #555;
+      font-size: 10pt;
     }
 
     .education-period {
-      font-size: 10pt;
+      font-size: 9pt;
       color: #777;
       font-style: italic;
     }
 
     /* Skills */
     .skills-category {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .skills-category-name {
       font-weight: bold;
       margin-bottom: 2px;
+      font-size: 10pt;
     }
 
     .skills-items {
-      margin-left: 15px;
+      margin-left: 12px;
+      font-size: 10pt;
     }
 
     /* Projects */
     .project-item {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .project-title {
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
+      font-size: 10pt;
     }
 
     .project-description {
-      margin-left: 15px;
+      margin-left: 12px;
     }
 
     .project-description li {
       margin-bottom: 2px;
+      font-size: 10pt;
     }
 
     /* Languages & Certifications */
     .language-item,
     .certification-item {
-      margin-bottom: 4px;
-      margin-left: 15px;
+      margin-bottom: 3px;
+      margin-left: 12px;
+      font-size: 10pt;
     }
 
     /* Print optimization */

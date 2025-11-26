@@ -11,12 +11,13 @@ import type { JobDetails, CVTemplate, PersonalizedSections } from "./types"
 async function personalizeSummary(
   jobDetails: JobDetails,
   cv: CVTemplate,
-  model: any
+  model: any,
+  language: "pt" | "en"
 ): Promise<{ summary: string; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
   const allSkills = cv.skills.flatMap((group) => group.items)
-  const prompt = buildSummaryPrompt(jobDetails, cv.summary, allSkills)
+  const prompt = buildSummaryPrompt(jobDetails, cv.summary, allSkills, language)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -37,11 +38,12 @@ async function personalizeSummary(
 async function personalizeSkills(
   jobDetails: JobDetails,
   cv: CVTemplate,
-  model: any
+  model: any,
+  language: "pt" | "en"
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects)
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects, language)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -76,11 +78,12 @@ async function personalizeSkills(
 async function personalizeProjects(
   jobDetails: JobDetails,
   cv: CVTemplate,
-  model: any
+  model: any,
+  language: "pt" | "en"
 ): Promise<{ projects: PersonalizedSections["projects"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildProjectsPrompt(jobDetails, cv.projects)
+  const prompt = buildProjectsPrompt(jobDetails, cv.projects, language)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -178,9 +181,9 @@ export async function generateTailoredResume(
 
   // Personalize 3 sections in parallel
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
-    personalizeSummary(jobDetails, baseCv, model),
-    personalizeSkills(jobDetails, baseCv, model),
-    personalizeProjects(jobDetails, baseCv, model),
+    personalizeSummary(jobDetails, baseCv, model, language),
+    personalizeSkills(jobDetails, baseCv, model, language),
+    personalizeProjects(jobDetails, baseCv, model, language),
   ])
 
   // Merge personalized sections into CV

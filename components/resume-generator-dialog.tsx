@@ -48,8 +48,9 @@ interface ResumeGeneratorDialogProps {
 export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSuccess }: ResumeGeneratorDialogProps) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<GenerationState>("idle")
-  const [language, setLanguage] = useState<"pt" | "en">("pt")
-  const [result, setResult] = useState<GenerateResumeResponse["data"] | null>(null)
+  const [language, setLanguage] = useState<"pt" | "en" | "both">("pt")
+  const [resultPt, setResultPt] = useState<GenerateResumeResponse["data"] | null>(null)
+  const [resultEn, setResultEn] = useState<GenerateResumeResponse["data"] | null>(null)
   const [metadata, setMetadata] = useState<GenerateResumeResponse["metadata"] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -61,35 +62,85 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
 
     setState("loading")
     setError(null)
-    setResult(null)
+    setResultPt(null)
+    setResultEn(null)
     setMetadata(null)
 
     try {
-      const requestBody = {
-        ...(vagaId ? { vagaId } : { jobDescription }),
-        language,
-      }
+      if (language === "both") {
+        // Generate both PT and EN resumes in parallel
+        const [responsePt, responseEn] = await Promise.all([
+          fetch("/api/ai/generate-resume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...(vagaId ? { vagaId } : { jobDescription }),
+              language: "pt",
+            }),
+          }),
+          fetch("/api/ai/generate-resume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...(vagaId ? { vagaId } : { jobDescription }),
+              language: "en",
+            }),
+          }),
+        ])
 
-      const response = await fetch("/api/ai/generate-resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      })
+        const dataPt: GenerateResumeResponse = await responsePt.json()
+        const dataEn: GenerateResumeResponse = await responseEn.json()
 
-      const data: GenerateResumeResponse = await response.json()
+        if (!responsePt.ok || !dataPt.success) {
+          throw new Error(dataPt.error || "Failed to generate Portuguese resume")
+        }
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to generate resume")
-      }
+        if (!responseEn.ok || !dataEn.success) {
+          throw new Error(dataEn.error || "Failed to generate English resume")
+        }
 
-      if (data.data) {
-        setResult(data.data)
-        setMetadata(data.metadata || null)
-        setState("success")
-        toast.success("Resume generated successfully!")
-        onSuccess?.(data.data.filename)
+        if (dataPt.data && dataEn.data) {
+          setResultPt(dataPt.data)
+          setResultEn(dataEn.data)
+          setMetadata(dataPt.metadata || null)
+          setState("success")
+          toast.success("Resumes generated successfully!")
+          onSuccess?.(dataPt.data.filename)
+        } else {
+          throw new Error("No data returned from API")
+        }
       } else {
-        throw new Error("No data returned from API")
+        // Generate single resume (PT or EN)
+        const requestBody = {
+          ...(vagaId ? { vagaId } : { jobDescription }),
+          language,
+        }
+
+        const response = await fetch("/api/ai/generate-resume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        })
+
+        const data: GenerateResumeResponse = await response.json()
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Failed to generate resume")
+        }
+
+        if (data.data) {
+          if (language === "pt") {
+            setResultPt(data.data)
+          } else {
+            setResultEn(data.data)
+          }
+          setMetadata(data.metadata || null)
+          setState("success")
+          toast.success("Resume generated successfully!")
+          onSuccess?.(data.data.filename)
+        } else {
+          throw new Error("No data returned from API")
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred"
@@ -99,15 +150,10 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
     }
   }
 
-  const handleDownload = () => {
-    if (!result?.pdfBase64 || !result?.filename) {
-      toast.error("No PDF available to download")
-      return
-    }
-
+  const handleDownload = (pdfBase64: string, filename: string) => {
     try {
       // Convert base64 to blob
-      const byteCharacters = atob(result.pdfBase64)
+      const byteCharacters = atob(pdfBase64)
       const byteNumbers = new Array(byteCharacters.length)
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i)
@@ -119,7 +165,7 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = result.filename
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -135,7 +181,8 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
   const handleReset = () => {
     setState("idle")
     setError(null)
-    setResult(null)
+    setResultPt(null)
+    setResultEn(null)
     setMetadata(null)
   }
 
@@ -173,11 +220,11 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
           {state === "idle" && (
             <div className="space-y-3">
               <Label>Resume Language</Label>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setLanguage("pt")}
-                  className={`flex-1 rounded-lg border-2 p-4 text-center transition-all ${
+                  className={`rounded-lg border-2 p-3 text-center transition-all ${
                     language === "pt"
                       ? "border-primary bg-primary/10 font-medium"
                       : "border-border hover:border-primary/50"
@@ -189,7 +236,7 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
                 <button
                   type="button"
                   onClick={() => setLanguage("en")}
-                  className={`flex-1 rounded-lg border-2 p-4 text-center transition-all ${
+                  className={`rounded-lg border-2 p-3 text-center transition-all ${
                     language === "en"
                       ? "border-primary bg-primary/10 font-medium"
                       : "border-border hover:border-primary/50"
@@ -197,6 +244,18 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
                 >
                   <div className="text-sm font-medium">English</div>
                   <div className="text-xs text-muted-foreground">EN-US</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage("both")}
+                  className={`rounded-lg border-2 p-3 text-center transition-all ${
+                    language === "both"
+                      ? "border-primary bg-primary/10 font-medium"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="text-sm font-medium">Ambos</div>
+                  <div className="text-xs text-muted-foreground">PT + EN</div>
                 </button>
               </div>
             </div>
@@ -208,28 +267,29 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
               <div className="text-center">
                 <p className="text-sm font-medium">Generating your resume...</p>
-                <p className="text-xs text-muted-foreground mt-1">This usually takes 5-8 seconds</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === "both" ? "This may take 10-15 seconds" : "This usually takes 5-8 seconds"}
+                </p>
               </div>
             </div>
           )}
 
           {/* Success State */}
-          {state === "success" && result && (
+          {state === "success" && (resultPt || resultEn) && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-green-900">Resume generated successfully!</p>
-                  <p className="text-xs text-green-700 mt-1">{result.filename}</p>
+                  <p className="text-xs text-green-700 mt-1">
+                    {resultPt && resultEn
+                      ? "2 resumes ready to download"
+                      : resultPt
+                        ? resultPt.filename
+                        : resultEn?.filename}
+                  </p>
                 </div>
               </div>
-
-              {result.atsScore && (
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <span className="text-sm text-muted-foreground">ATS Optimization Score</span>
-                  <Badge variant="default">{result.atsScore}%</Badge>
-                </div>
-              )}
 
               {metadata && (
                 <div className="space-y-2 rounded-lg border p-3 text-xs text-muted-foreground">
@@ -287,10 +347,40 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
               <Button variant="outline" className="flex-1" onClick={handleReset}>
                 Generate Another
               </Button>
-              <Button className="flex-1" onClick={handleDownload}>
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
+              {resultPt && resultEn ? (
+                <>
+                  <Button
+                    className="flex-1"
+                    onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PT
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download EN
+                  </Button>
+                </>
+              ) : resultPt ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              ) : resultEn ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              ) : null}
             </>
           )}
 
