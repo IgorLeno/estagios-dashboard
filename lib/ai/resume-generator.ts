@@ -50,6 +50,20 @@ async function personalizeSkills(
   const jsonData = extractJsonFromResponse(text)
   const validated = PersonalizedSectionsSchema.pick({ skills: true }).parse(jsonData)
 
+  // CRITICAL VALIDATION: Check for fabricated skills
+  const originalSkills = cv.skills.flatMap((cat) => cat.items)
+  const returnedSkills = validated.skills.flatMap((cat) => cat.items)
+
+  const fabricatedSkills = returnedSkills.filter((skill) => !originalSkills.includes(skill))
+
+  if (fabricatedSkills.length > 0) {
+    console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
+    throw new Error(
+      `LLM fabricated skills not in original CV: ${fabricatedSkills.join(", ")}. ` +
+        `Only these skills are allowed: ${originalSkills.join(", ")}`
+    )
+  }
+
   const duration = Date.now() - startTime
   const tokenUsage = extractTokenUsage(response)
 
@@ -74,6 +88,28 @@ async function personalizeProjects(
 
   const jsonData = extractJsonFromResponse(text)
   const validated = PersonalizedSectionsSchema.pick({ projects: true }).parse(jsonData)
+
+  // CRITICAL VALIDATION: Check for changed project titles
+  const originalTitles = cv.projects.map((p) => p.title)
+  const returnedTitles = validated.projects.map((p) => p.title)
+
+  const changedTitles = returnedTitles.filter((title) => !originalTitles.includes(title))
+
+  if (changedTitles.length > 0) {
+    console.error("[Resume Generator] ❌ PROJECT TITLES CHANGED:", changedTitles)
+    throw new Error(
+      `LLM changed project titles. Changed: ${changedTitles.join(", ")}. ` +
+        `Required titles: ${originalTitles.join(", ")}`
+    )
+  }
+
+  // Check for missing projects
+  if (validated.projects.length !== cv.projects.length) {
+    console.error(
+      `[Resume Generator] ❌ PROJECT COUNT MISMATCH: Expected ${cv.projects.length}, got ${validated.projects.length}`
+    )
+    throw new Error(`LLM removed projects. Must include all ${cv.projects.length} projects.`)
+  }
 
   const duration = Date.now() - startTime
   const tokenUsage = extractTokenUsage(response)

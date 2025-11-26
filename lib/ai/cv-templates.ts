@@ -1,222 +1,202 @@
 import type { CVTemplate } from "./types"
 
 /**
+ * ============================================
+ * FIXED SECTIONS - DO NOT MODIFY
+ * ============================================
+ * These sections MUST remain exactly as shown in saipem-cv-igor_fernandes.pdf
+ * LLM personalization is FORBIDDEN for these fields
+ */
+
+/**
  * Portuguese CV Template
- * Base template for Brazilian Portuguese resumes
+ * Based on saipem-cv-igor_fernandes.pdf (EXACT match)
  */
 export const CV_TEMPLATE_PT: CVTemplate = {
   language: "pt",
 
+  // FIXED: Never modify header
   header: {
-    name: "Igor Fernandes",
-    title: "Engenheiro Químico | Pesquisador em Machine Learning e Processos Químicos",
-    email: "igor.fernandes@example.com",
-    phone: "+55 (13) 99999-9999",
-    location: "Santos, São Paulo, Brasil",
-    links: [
-      { label: "LinkedIn", url: "https://linkedin.com/in/igorfernandes" },
-      { label: "GitHub", url: "https://github.com/igorfernandes" },
-      { label: "Lattes", url: "http://lattes.cnpq.br/1234567890" },
-    ],
+    name: "IGOR LENO DE SOUZA FERNANDES",
+    title: "", // Not used in original template
+    email: "igorleno.fernandes@gmail.com",
+    phone: "+55 (13) 98157-4198",
+    location: "Bertioga/SP (CEP: 11260-342)",
+    links: [{ label: "LinkedIn", url: "linkedin.com/in/igor-leno-de-souza-fernandes" }],
   },
 
+  // PERSONALIZABLE: LLM can rewrite this section (80-120 words)
   summary:
-    "Engenheiro Químico com sólida formação em processos industriais e crescente especialização em Machine Learning aplicado à engenharia. Experiência em pesquisa científica com foco em simulação de processos, análise de dados e otimização de sistemas químicos. Habilidade em Python, desenvolvimento de modelos preditivos e automação de processos. Busco oportunidades para aplicar conhecimentos técnicos em projetos inovadores que integrem engenharia química e ciência de dados.",
+    "Estudante de Engenharia Química (UNESP) em fase de conclusão, com perfil analítico e interesse em Qualidade, Gestão Ambiental (QHSE) e Controle Técnico. Possuo experiência acadêmica em pesquisa, modelagem de processos e análise de dados, com domínio de ferramentas de gestão (Excel Avançado, MS Office) e análise (Python, SQL) para administração de bancos de dados, acompanhamento de indicadores e elaboração de relatórios técnicos. Busco oportunidade de estágio inicial para aplicar conhecimentos e contribuir ativamente em projetos de Controle de Qualidade, monitoramento de registros e planos de melhoria.",
 
-  experience: [
-    {
-      title: "Pesquisador de Iniciação Científica",
-      company: "Universidade Federal de São Paulo (UNIFESP)",
-      period: "Mar 2023 - Presente",
-      location: "Santos, SP",
-      description: [
-        "Desenvolvimento de modelos de Machine Learning para predição de propriedades termodinâmicas de sistemas químicos",
-        "Análise de grandes volumes de dados experimentais utilizando Python (pandas, scikit-learn, TensorFlow)",
-        "Simulação de processos químicos em Python e validação experimental",
-        "Elaboração de artigos científicos e apresentação de resultados em congressos",
-      ],
-    },
-  ],
+  // FIXED: Never modify experience section
+  experience: [],
 
+  // FIXED: Never modify education
   education: [
     {
       degree: "Bacharelado em Engenharia Química",
-      institution: "Universidade Federal de São Paulo (UNIFESP)",
-      period: "2021 - 2025 (Previsão)",
-      location: "Santos, SP",
+      institution: 'Universidade Estadual Paulista "Júlio de Mesquita Filho" (UNESP)',
+      period: "Previsão de conclusão: 12/2026",
+      location: "",
+    },
+    {
+      degree: "Ensino Médio",
+      institution: "Colégio Metodista Bertioga",
+      period: "2011-2013",
+      location: "",
     },
   ],
 
+  // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
     {
-      category: "Linguagens de Programação",
-      items: ["Python", "MATLAB", "SQL", "JavaScript"],
+      category: "Gestão e Documentação",
+      items: [
+        "Elaboração de relatórios técnicos",
+        "Controle de prazos e gestão de registros de projetos",
+        "Comunicação técnica",
+      ],
     },
     {
-      category: "Machine Learning & Data Science",
-      items: ["scikit-learn", "TensorFlow", "PyTorch", "pandas", "NumPy", "Matplotlib", "Seaborn"],
+      category: "MS Office & Ferramentas de Análise de Dados",
+      items: ["Microsoft Excel (Avançado)", "PowerPoint", "Word", "Outlook", "Power BI"],
     },
     {
-      category: "Engenharia Química",
-      items: ["ASPEN Plus", "HYSYS", "ChemCAD", "Termodinâmica", "Fenômenos de Transporte", "Reatores Químicos"],
+      category: "Análise Técnica & Banco de Dados",
+      items: ["SQL", "Python (Pandas, NumPy)"],
     },
     {
-      category: "Ferramentas & Tecnologias",
-      items: ["Git", "Docker", "Jupyter Notebook", "VS Code", "Linux"],
+      category: "Software de Engenharia & Modelagem",
+      items: ["Aspen Plus", "MOPAC", "CREST", "Avogadro"],
     },
     {
-      category: "Soft Skills",
-      items: ["Resolução de Problemas", "Trabalho em Equipe", "Comunicação Técnica", "Pesquisa Científica"],
+      category: "Desenvolvimento & Automação",
+      items: ["VBA (para automação do Excel)", "R", "Git"],
     },
   ],
 
+  // PERSONALIZABLE: LLM can rewrite descriptions (NEVER change titles or dates)
   projects: [
     {
-      title: "Predição de Propriedades Termodinâmicas com ML",
+      title: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
       description: [
-        "Desenvolvimento de modelo de regressão para prever viscosidade de misturas químicas usando Random Forest e redes neurais",
-        "Redução de erro de predição em 35% comparado a modelos clássicos",
-        "Dataset com 5000+ pontos experimentais processados e analisados em Python",
+        "Desenvolvimento de pipeline em Python para automatizar geração e controle de dados, resultando em treinamento de modelos e elaboração de relatórios analíticos",
       ],
     },
     {
-      title: "Simulação de Reator Químico em Python",
+      title: "Modelagem de Equilíbrio Líquido-Vapor para Produção de Biodiesel (2022-2023)",
       description: [
-        "Implementação de modelo cinético para reator de polimerização em Python",
-        "Validação experimental com erro médio < 5%",
-        "Automação de análise de sensibilidade paramétrica",
-      ],
-    },
-    {
-      title: "Dashboard de Análise de Processos",
-      description: [
-        "Desenvolvimento de aplicação web para visualização de dados de processo químico usando Python (Streamlit)",
-        "Interface interativa para análise de tendências e detecção de anomalias",
-        "Integração com banco de dados SQL para histórico de dados",
+        "Análise de eficiência de processo industrial (foco ambiental) através de modelagem molecular e simulação físico-química para otimização de desempenho",
       ],
     },
   ],
 
-  languages: [
-    { language: "Português", proficiency: "Nativo" },
-    { language: "Inglês", proficiency: "Avançado (Leitura/Escrita: Fluente, Conversação: Intermediário)" },
-    { language: "Espanhol", proficiency: "Intermediário" },
-  ],
+  // FIXED: Never modify languages
+  languages: [{ language: "Inglês Avançado", proficiency: "Leitura, Escrita e Conversação" }],
 
+  // FIXED: Never modify certifications
   certifications: [
-    "Python para Data Science - Coursera (2023)",
-    "Machine Learning Specialization - Stanford Online (2024)",
-    "Segurança em Processos Químicos - UNIFESP (2023)",
+    "Deep Learning Specialization (Coursera, 2024)",
+    "Power BI Impressionador 1.0 (Hashtag Treinamentos, 2023)",
+    "SQL Impressionador (Hashtag Treinamentos, 2023)",
+    "Google Data Analytics (Coursera, 2023)",
   ],
 }
 
 /**
  * English CV Template
- * Base template for international English resumes
+ * Based on saipem-cv-igor_fernandes.pdf (EXACT match)
  */
 export const CV_TEMPLATE_EN: CVTemplate = {
   language: "en",
 
+  // FIXED: Never modify header
   header: {
-    name: "Igor Fernandes",
-    title: "Chemical Engineer | Machine Learning & Chemical Process Researcher",
-    email: "igor.fernandes@example.com",
-    phone: "+55 (13) 99999-9999",
-    location: "Santos, São Paulo, Brazil",
-    links: [
-      { label: "LinkedIn", url: "https://linkedin.com/in/igorfernandes" },
-      { label: "GitHub", url: "https://github.com/igorfernandes" },
-      { label: "Research Profile", url: "http://lattes.cnpq.br/1234567890" },
-    ],
+    name: "IGOR LENO DE SOUZA FERNANDES",
+    title: "", // Not used in original template
+    email: "igorleno.fernandes@gmail.com",
+    phone: "+55 (13) 98157-4198",
+    location: "Bertioga/SP (ZIP: 11260-342)",
+    links: [{ label: "LinkedIn", url: "linkedin.com/in/igor-leno-de-souza-fernandes" }],
   },
 
+  // PERSONALIZABLE: LLM can rewrite this section (80-120 words)
   summary:
-    "Chemical Engineer with strong foundation in industrial processes and growing specialization in Machine Learning applied to engineering. Research experience focused on process simulation, data analysis, and chemical systems optimization. Proficient in Python, predictive modeling, and process automation. Seeking opportunities to apply technical knowledge in innovative projects that integrate chemical engineering and data science.",
+    "Chemical Engineering student (UNESP) nearing completion, with a strong analytical profile and keen interest in Quality, Environmental Management (QHSE), and Technical Control. I have academic experience in research, process modeling, and data analysis, with proficiency in management tools (Advanced Excel, MS Office) and analysis tools (Python, SQL) for database administration, indicator monitoring, and technical report preparation. Seeking an initial internship opportunity to apply my knowledge and actively contribute to Quality Control projects, records monitoring, and improvement plans.",
 
-  experience: [
-    {
-      title: "Undergraduate Research Assistant",
-      company: "Federal University of São Paulo (UNIFESP)",
-      period: "Mar 2023 - Present",
-      location: "Santos, SP, Brazil",
-      description: [
-        "Developed Machine Learning models for predicting thermodynamic properties of chemical systems",
-        "Analyzed large experimental datasets using Python (pandas, scikit-learn, TensorFlow)",
-        "Performed chemical process simulations in Python with experimental validation",
-        "Authored scientific papers and presented results at conferences",
-      ],
-    },
-  ],
+  // FIXED: Never modify experience section
+  experience: [],
 
+  // FIXED: Never modify education
   education: [
     {
-      degree: "Bachelor of Science in Chemical Engineering",
-      institution: "Federal University of São Paulo (UNIFESP)",
-      period: "2021 - 2025 (Expected)",
-      location: "Santos, SP, Brazil",
+      degree: "B.S. in Chemical Engineering",
+      institution: 'São Paulo State University "Júlio de Mesquita Filho" (UNESP)',
+      period: "Expected graduation: 12/2026",
+      location: "",
+    },
+    {
+      degree: "High School Diploma",
+      institution: "Colégio Metodista Bertioga",
+      period: "2011-2013",
+      location: "",
     },
   ],
 
+  // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
     {
-      category: "Programming Languages",
-      items: ["Python", "MATLAB", "SQL", "JavaScript"],
+      category: "Management and Documentation",
+      items: [
+        "Preparation of technical reports",
+        "Deadline control and project records management",
+        "Technical communication",
+      ],
     },
     {
-      category: "Machine Learning & Data Science",
-      items: ["scikit-learn", "TensorFlow", "PyTorch", "pandas", "NumPy", "Matplotlib", "Seaborn"],
+      category: "MS Office & Data Analysis Tools",
+      items: ["Microsoft Excel (Advanced)", "PowerPoint", "Word", "Outlook", "Power BI"],
     },
     {
-      category: "Chemical Engineering",
-      items: ["ASPEN Plus", "HYSYS", "ChemCAD", "Thermodynamics", "Transport Phenomena", "Chemical Reactors"],
+      category: "Technical Analysis & Database",
+      items: ["SQL", "Python (Pandas, NumPy)"],
     },
     {
-      category: "Tools & Technologies",
-      items: ["Git", "Docker", "Jupyter Notebook", "VS Code", "Linux"],
+      category: "Engineering & Modeling Software",
+      items: ["Aspen Plus", "MOPAC", "CREST", "Avogadro"],
     },
     {
-      category: "Soft Skills",
-      items: ["Problem Solving", "Teamwork", "Technical Communication", "Scientific Research"],
+      category: "Development & Automation",
+      items: ["VBA (for Excel automation)", "R", "Git"],
     },
   ],
 
+  // PERSONALIZABLE: LLM can rewrite descriptions (NEVER change titles or dates)
   projects: [
     {
-      title: "Thermodynamic Property Prediction with ML",
+      title: "Automated Thermodynamic Data Pipeline for Machine Learning (2023-2025)",
       description: [
-        "Developed regression model to predict viscosity of chemical mixtures using Random Forest and neural networks",
-        "Achieved 35% reduction in prediction error compared to classical models",
-        "Processed and analyzed dataset with 5000+ experimental data points in Python",
+        "Developed a Python pipeline to automate data generation and control, resulting in model training and analytical report preparation",
       ],
     },
     {
-      title: "Chemical Reactor Simulation in Python",
+      title: "Liquid-Vapor Equilibrium Modeling for Biodiesel Production (2022-2023)",
       description: [
-        "Implemented kinetic model for polymerization reactor in Python",
-        "Experimental validation with average error < 5%",
-        "Automated parametric sensitivity analysis",
-      ],
-    },
-    {
-      title: "Process Analysis Dashboard",
-      description: [
-        "Built web application for chemical process data visualization using Python (Streamlit)",
-        "Interactive interface for trend analysis and anomaly detection",
-        "SQL database integration for historical data tracking",
+        "Analysis of industrial process efficiency (environmental focus) through molecular modeling and physicochemical simulation for performance optimization",
       ],
     },
   ],
 
-  languages: [
-    { language: "Portuguese", proficiency: "Native" },
-    { language: "English", proficiency: "Advanced (Reading/Writing: Fluent, Speaking: Intermediate)" },
-    { language: "Spanish", proficiency: "Intermediate" },
-  ],
+  // FIXED: Never modify languages
+  languages: [{ language: "Advanced English", proficiency: "Reading, Writing, and Speaking" }],
 
+  // FIXED: Never modify certifications
   certifications: [
-    "Python for Data Science - Coursera (2023)",
-    "Machine Learning Specialization - Stanford Online (2024)",
-    "Chemical Process Safety - UNIFESP (2023)",
+    "Deep Learning Specialization (Coursera, 2024)",
+    "Power BI Impressionador 1.0 (Hashtag Treinamentos, 2023)",
+    "SQL Impressionador (Hashtag Treinamentos, 2023)",
+    "Google Data Analytics (Coursera, 2023)",
   ],
 }
 

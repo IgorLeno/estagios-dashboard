@@ -3,20 +3,40 @@ import type { CVTemplate } from "./types"
 
 /**
  * System instruction for resume personalization
+ *
+ * CRITICAL: This system enforces ZERO FABRICATION TOLERANCE
+ * Any invented information will cause rejection and regeneration
  */
 export const RESUME_SYSTEM_PROMPT = `You are a professional resume writer specializing in ATS (Applicant Tracking System) optimization.
 
 Your role is to personalize resume sections to match job requirements while maintaining complete honesty and accuracy.
 
-CRITICAL RULES:
-1. NEVER fabricate skills, experience, or achievements
-2. ONLY add skills if the candidate's projects/experience genuinely demonstrate them
-3. Reorder and emphasize existing content, don't invent new content
-4. Use job keywords naturally - no keyword stuffing
-5. Maintain professional, concise language
-6. Return ONLY valid JSON, no markdown code fences
+⚠️  CRITICAL RULES - ZERO TOLERANCE FOR VIOLATIONS:
+1. NEVER fabricate skills, tools, certifications, or experience
+2. NEVER add new skills to the skills list (ONLY reorder existing ones)
+3. NEVER change project titles or dates (ONLY rewrite descriptions)
+4. NEVER invent metrics or achievements not in the original CV
+5. ONLY reorder and emphasize existing content - NO invention allowed
+6. Use job keywords naturally in rewrites - no keyword stuffing
+7. Maintain professional, concise language
+8. Return ONLY valid JSON, no markdown code fences
 
-Your output will be validated against strict schemas. Follow the format exactly.`
+WHAT YOU CAN DO:
+✅ Rewrite summary to include job keywords (80-120 words)
+✅ Reorder skills within categories by relevance to job
+✅ Rewrite project descriptions to emphasize job-relevant aspects
+
+WHAT YOU CANNOT DO:
+❌ Add skills/tools not in original skills list
+❌ Add certifications not in original certifications list
+❌ Change project titles or dates
+❌ Invent new projects or experiences
+❌ Add metrics/numbers not in original CV
+❌ Change contact information
+
+VALIDATION:
+Your output will be validated against strict schemas. Any fabricated content will be rejected.
+If job requirements ask for skills not in the CV, DO NOT add them - just emphasize related existing skills.`
 
 /**
  * Build prompt for personalizing professional summary
@@ -80,7 +100,10 @@ export function buildSkillsPrompt(
   const requisitosDesejaveis =
     jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
 
-  return `Reorder and enhance the skills list to match this job opportunity.
+  // Extract all skill items for validation
+  const allSkillItems = currentSkills.flatMap((cat) => cat.items)
+
+  return `⚠️  CRITICAL: REORDER ONLY - DO NOT ADD NEW SKILLS
 
 JOB REQUIRED SKILLS:
 ${requisitosObrigatorios}
@@ -88,27 +111,33 @@ ${requisitosObrigatorios}
 JOB DESIRED SKILLS:
 ${requisitosDesejaveis}
 
-USER'S CURRENT SKILLS:
+USER'S CURRENT SKILLS (COMPLETE LIST):
 ${JSON.stringify(currentSkills, null, 2)}
 
-USER'S PROJECTS (as evidence):
-${projects.map((p) => `- ${p.title}: ${p.description.join("; ")}`).join("\n")}
+ALLOWED SKILLS (you MUST use ONLY these exact items):
+${allSkillItems.join(", ")}
 
-INSTRUCTIONS:
-- If job skills are "Not specified", keep original skill order
-- Otherwise, reorder skills within each category by relevance to job
-- Add job-required skills ONLY if projects demonstrate them
-- Use project descriptions as evidence for skill claims
-- Keep all original skills (don't remove any)
-- Maintain category structure (Programming Languages, Frameworks, Tools, etc.)
-- If adding a skill, ensure there's clear evidence in projects
+INSTRUCTIONS - READ CAREFULLY:
+1. If job skills are "Not specified", return the EXACT original skill structure
+2. Otherwise, reorder skills within each category by relevance to job
+3. ❌ FORBIDDEN: Adding new skills (e.g., TensorFlow, Docker, MATLAB, JavaScript)
+4. ❌ FORBIDDEN: Changing skill names (must match exactly from allowed list)
+5. ✅ ALLOWED: Changing the ORDER of skills within categories
+6. ✅ ALLOWED: Moving most relevant skills to the top of their category
+7. Keep all original skills (don't remove any)
+8. Maintain category structure exactly as provided
+9. Use ONLY items from the "ALLOWED SKILLS" list above
+
+VALIDATION CHECK:
+Before returning, verify that EVERY skill in your output appears in the "ALLOWED SKILLS" list.
+If you find ANY skill not in that list, REMOVE IT immediately.
 
 Return JSON format:
 {
   "skills": [
     {
-      "category": "Programming Languages",
-      "items": ["Python", "JavaScript", ...]
+      "category": "Exact category name from input",
+      "items": ["Skill1", "Skill2", ...]  // ONLY from ALLOWED SKILLS list
     },
     ...
   ]
@@ -131,38 +160,50 @@ export function buildProjectsPrompt(
   const requisitosObrigatorios =
     jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
 
-  return `Rewrite project descriptions to emphasize relevance to this job opportunity.
+  // Extract exact project titles for validation
+  const projectTitles = currentProjects.map((p) => p.title)
+
+  return `⚠️  CRITICAL: KEEP TITLES AND DATES UNCHANGED - REWRITE DESCRIPTIONS ONLY
 
 JOB DETAILS:
 Position: ${cargo}
 Responsibilities: ${responsabilidades}
 Required Skills: ${requisitosObrigatorios}
 
-CURRENT PROJECTS:
+CURRENT PROJECTS (with exact titles you MUST preserve):
 ${JSON.stringify(currentProjects, null, 2)}
+
+REQUIRED PROJECT TITLES (copy these EXACTLY):
+${projectTitles.map((t, i) => `${i + 1}. "${t}"`).join("\n")}
 
 JOB KEYWORDS TO EMPHASIZE:
 ${jobKeywords.length > 0 ? jobKeywords.join(", ") : "Use general professional keywords"}
 
-INSTRUCTIONS:
-- Keep ALL projects (don't remove any)
-- Keep project titles unchanged
-- If job details are incomplete ("Not specified"), write general professional descriptions
-- Otherwise, rewrite descriptions (2-3 bullet points each) to highlight job-relevant aspects
-- Use available job keywords naturally in descriptions
-- Emphasize technologies/methodologies matching available job requirements
-- Focus on outcomes and impact
-- Stay truthful - only reframe existing work, don't invent new projects
+INSTRUCTIONS - READ CAREFULLY:
+1. Keep ALL projects (don't remove any)
+2. ❌ FORBIDDEN: Changing project titles (must copy EXACTLY from "REQUIRED PROJECT TITLES")
+3. ❌ FORBIDDEN: Changing dates in titles (e.g., keep "(2023-2025)" exactly)
+4. ❌ FORBIDDEN: Adding new projects or inventing metrics
+5. ✅ ALLOWED: Rewriting descriptions (2-3 bullet points each)
+6. If job details are incomplete ("Not specified"), write general professional descriptions
+7. Otherwise, rewrite descriptions to highlight job-relevant aspects
+8. Use available job keywords naturally in descriptions
+9. Emphasize technologies/methodologies matching available job requirements
+10. Focus on outcomes and impact
+11. Stay truthful - only reframe existing work, don't invent achievements
+
+VALIDATION CHECK:
+Before returning, verify that EVERY project title in your output matches EXACTLY (character-by-character, including dates and parentheses) with the "REQUIRED PROJECT TITLES" list above.
 
 Return JSON format:
 {
   "projects": [
     {
-      "title": "Original Project Title",
+      "title": "EXACT title from REQUIRED PROJECT TITLES (with dates)",
       "description": [
-        "Rewritten bullet point 1",
-        "Rewritten bullet point 2",
-        "Rewritten bullet point 3"
+        "Rewritten bullet point emphasizing job-relevant aspects",
+        "Another rewritten point with job keywords",
+        "Third point focusing on relevant outcomes"
       ]
     },
     ...
