@@ -38,10 +38,7 @@ function repairJsonString(jsonStr: string): string {
   // Pattern: Matches content between quotes that contains newlines
   repaired = repaired.replace(/"([^"\\]*(?:\\.[^"\\]*)*?)"/gs, (match, content) => {
     // Escape any literal newlines, carriage returns, tabs
-    let escaped = content
-      .replace(/\n/g, "\\n")
-      .replace(/\r/g, "\\r")
-      .replace(/\t/g, "\\t")
+    let escaped = content.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
 
     return `"${escaped}"`
   })
