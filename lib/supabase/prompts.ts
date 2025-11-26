@@ -66,6 +66,8 @@ export async function savePromptsConfig(
 ): Promise<PromptsConfig> {
   const supabase = await createClient()
 
+  console.log(`[Prompts] Saving config for user: ${userId || "global (null)"}`)
+
   // Check if user already has a config
   const { data: existingConfig } = await supabase
     .from("prompts_config")
@@ -75,6 +77,7 @@ export async function savePromptsConfig(
 
   if (existingConfig) {
     // Update existing config
+    console.log(`[Prompts] Config exists (id: ${existingConfig.id}), updating...`)
     const { data, error } = await supabase
       .from("prompts_config")
       .update({
@@ -97,9 +100,11 @@ export async function savePromptsConfig(
       throw new Error(`Failed to update prompts config: ${error.message}`)
     }
 
+    console.log(`[Prompts] ✅ Config updated successfully`)
     return data as PromptsConfig
   } else {
     // Insert new config
+    console.log("[Prompts] Config doesn't exist, inserting...")
     const { data, error } = await supabase
       .from("prompts_config")
       .insert({
@@ -121,6 +126,7 @@ export async function savePromptsConfig(
       throw new Error(`Failed to save prompts config: ${error.message}`)
     }
 
+    console.log(`[Prompts] ✅ Config inserted successfully (id: ${data.id})`)
     return data as PromptsConfig
   }
 }

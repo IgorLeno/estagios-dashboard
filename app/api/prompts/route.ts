@@ -104,7 +104,8 @@ export async function POST(request: NextRequest) {
       curriculo_prompt: body.curriculo_prompt,
     }
 
-    await savePromptsConfig(config)
+    console.log(`[API /api/prompts POST] User authenticated: ${user.id}`)
+    await savePromptsConfig(config, user.id)
 
     // Retornar config atualizada
     const updatedConfig = await getPromptsConfig(user.id)
