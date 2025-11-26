@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sparkles, RotateCcw, Save, Info } from "lucide-react"
+import { Sparkles, RotateCcw, Save, Info, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { PromptsConfig } from "@/lib/types"
 
 interface ConfiguracoesPromptsProps {
@@ -20,6 +21,7 @@ export function ConfiguracoesPrompts() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const [isReadOnly, setIsReadOnly] = useState(false) // True se usuário não está autenticado
 
   // Load config on mount
   useEffect(() => {
@@ -49,6 +51,7 @@ export function ConfiguracoesPrompts() {
           curriculo_prompt: data.curriculo_prompt,
         })
         setLastSaved(data.updated_at)
+        setIsReadOnly(result.isReadOnly || false)
       }
     } catch (error) {
       console.error("[ConfiguracoesPrompts] Error loading config:", error)
@@ -60,6 +63,12 @@ export function ConfiguracoesPrompts() {
 
   async function handleSave() {
     if (!config) return
+
+    // Verificar se está em modo read-only
+    if (isReadOnly) {
+      toast.error("Faça login para salvar configurações personalizadas")
+      return
+    }
 
     // Validação básica
     if (!config.dossie_prompt.trim() || !config.analise_prompt.trim() || !config.curriculo_prompt.trim()) {
@@ -105,6 +114,12 @@ export function ConfiguracoesPrompts() {
   }
 
   async function handleReset() {
+    // Verificar se está em modo read-only
+    if (isReadOnly) {
+      toast.error("Faça login para restaurar configurações")
+      return
+    }
+
     if (!window.confirm("Tem certeza que deseja restaurar as configurações padrão?")) {
       return
     }
@@ -148,8 +163,19 @@ export function ConfiguracoesPrompts() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Read-only mode warning */}
+          {isReadOnly && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Você está visualizando as configurações padrão. Faça login em <strong>/admin/login</strong> para salvar
+                configurações personalizadas.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Last saved indicator */}
-          {lastSaved && (
+          {lastSaved && !isReadOnly && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Info className="h-4 w-4" />
               <span>Última modificação: {new Date(lastSaved).toLocaleString("pt-BR")}</span>
@@ -306,12 +332,12 @@ export function ConfiguracoesPrompts() {
 
           {/* Action buttons */}
           <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={handleReset} disabled={saving} className="gap-2">
+            <Button variant="outline" onClick={handleReset} disabled={saving || isReadOnly} className="gap-2">
               <RotateCcw className="h-4 w-4" />
               Restaurar Padrão
             </Button>
 
-            <Button onClick={handleSave} disabled={saving} className="gap-2">
+            <Button onClick={handleSave} disabled={saving || isReadOnly} className="gap-2">
               <Save className="h-4 w-4" />
               {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>

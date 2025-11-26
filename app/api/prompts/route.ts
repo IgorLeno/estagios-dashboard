@@ -5,28 +5,28 @@ import type { PromptsConfig } from "@/lib/types"
 
 /**
  * GET /api/prompts
- * Retorna configuração de prompts do usuário autenticado
+ * Retorna configuração de prompts
+ * - Se autenticado: retorna config customizada do usuário (ou default se não tiver)
+ * - Se não autenticado: retorna config default global (read-only)
  */
 export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Verificar autenticação
+    // Verificar autenticação (opcional para GET)
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Buscar config do usuário
-    const config = await getPromptsConfig(user.id)
+    // Buscar config - se usuário autenticado, passa user.id, senão passa undefined
+    // getPromptsConfig já faz fallback para config global se userId não fornecido
+    const config = await getPromptsConfig(user?.id)
 
     return NextResponse.json({
       success: true,
       data: config,
+      isReadOnly: !user, // Flag para UI indicar que não pode salvar
     })
   } catch (error) {
     console.error("Error fetching prompts config:", error)
