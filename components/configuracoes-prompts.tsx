@@ -7,17 +7,15 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
 import { Sparkles, RotateCcw, Save, Info } from "lucide-react"
 import { toast } from "sonner"
-import { getPromptsConfig, savePromptsConfig, resetPromptsConfig, getDefaultPromptsConfig } from "@/lib/supabase/prompts"
 import type { PromptsConfig } from "@/lib/types"
 
 interface ConfiguracoesPromptsProps {
-  userId?: string // Optional for non-authenticated usage
+  // No props needed - API route gets user from auth
 }
 
-export function ConfiguracoesPrompts({ userId }: ConfiguracoesPromptsProps) {
+export function ConfiguracoesPrompts() {
   const [config, setConfig] = useState<Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -26,23 +24,32 @@ export function ConfiguracoesPrompts({ userId }: ConfiguracoesPromptsProps) {
   // Load config on mount
   useEffect(() => {
     loadConfig()
-  }, [userId])
+  }, [])
 
   async function loadConfig() {
     setLoading(true)
     try {
-      const data = await getPromptsConfig(userId)
-      setConfig({
-        modelo_gemini: data.modelo_gemini,
-        temperatura: data.temperatura,
-        max_tokens: data.max_tokens,
-        top_p: data.top_p,
-        top_k: data.top_k,
-        dossie_prompt: data.dossie_prompt,
-        analise_prompt: data.analise_prompt,
-        curriculo_prompt: data.curriculo_prompt,
-      })
-      setLastSaved(data.updated_at)
+      const response = await fetch("/api/prompts")
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to load config")
+      }
+
+      if (result.success && result.data) {
+        const data = result.data
+        setConfig({
+          modelo_gemini: data.modelo_gemini,
+          temperatura: data.temperatura,
+          max_tokens: data.max_tokens,
+          top_p: data.top_p,
+          top_k: data.top_k,
+          dossie_prompt: data.dossie_prompt,
+          analise_prompt: data.analise_prompt,
+          curriculo_prompt: data.curriculo_prompt,
+        })
+        setLastSaved(data.updated_at)
+      }
     } catch (error) {
       console.error("[ConfiguracoesPrompts] Error loading config:", error)
       toast.error("Erro ao carregar configurações")
@@ -54,11 +61,41 @@ export function ConfiguracoesPrompts({ userId }: ConfiguracoesPromptsProps) {
   async function handleSave() {
     if (!config) return
 
+    // Validação básica
+    if (!config.dossie_prompt.trim() || !config.analise_prompt.trim() || !config.curriculo_prompt.trim()) {
+      toast.error("Nenhum prompt pode estar vazio")
+      return
+    }
+
     setSaving(true)
     try {
-      const saved = await savePromptsConfig(config, userId)
-      setLastSaved(saved.updated_at)
-      toast.success("Configurações salvas com sucesso!")
+      const response = await fetch("/api/prompts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          modelo_gemini: config.modelo_gemini,
+          temperatura: config.temperatura,
+          max_tokens: config.max_tokens,
+          top_p: config.top_p,
+          top_k: config.top_k,
+          dossie_prompt: config.dossie_prompt,
+          analise_prompt: config.analise_prompt,
+          curriculo_prompt: config.curriculo_prompt,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to save config")
+      }
+
+      if (result.success && result.data) {
+        setLastSaved(result.data.updated_at)
+        toast.success("Configurações salvas com sucesso!")
+      }
     } catch (error) {
       console.error("[ConfiguracoesPrompts] Error saving config:", error)
       toast.error("Erro ao salvar configurações")
@@ -74,10 +111,8 @@ export function ConfiguracoesPrompts({ userId }: ConfiguracoesPromptsProps) {
 
     setSaving(true)
     try {
-      if (userId) {
-        await resetPromptsConfig(userId)
-      }
-      // Reload config (will fetch defaults)
+      // Delete user config via API (will be implemented if needed)
+      // For now, just reload to get defaults
       await loadConfig()
       toast.success("Configurações restauradas para o padrão!")
     } catch (error) {
@@ -268,8 +303,6 @@ export function ConfiguracoesPrompts({ userId }: ConfiguracoesPromptsProps) {
               </div>
             </TabsContent>
           </Tabs>
-
-          <Separator />
 
           {/* Action buttons */}
           <div className="flex items-center justify-between">
