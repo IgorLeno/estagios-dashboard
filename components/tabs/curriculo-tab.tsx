@@ -64,6 +64,15 @@ export function CurriculoTab({
 
   // Generate HTML preview
   async function handleGeneratePreview() {
+    console.log("[CurriculoTab] Starting preview generation")
+    console.log("[CurriculoTab] Selected language:", resumeLanguage)
+    console.log("[CurriculoTab] Input data:", {
+      hasVagaId: !!vagaId,
+      vagaId,
+      hasJobDescription: !!jobDescription,
+      jobDescriptionLength: jobDescription?.length,
+    })
+
     setIsGenerating(true)
 
     try {
@@ -71,21 +80,39 @@ export function CurriculoTab({
       if (resumeLanguage === "pt" || resumeLanguage === "both") {
         console.log("[CurriculoTab] Generating PT preview...")
 
+        const payload = {
+          vagaId,
+          jobDescription,
+          language: "pt",
+        }
+        console.log("[CurriculoTab] PT payload:", payload)
+
         const response = await fetch("/api/ai/generate-resume-html", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            vagaId,
-            jobDescription,
-            language: "pt",
-          }),
+          body: JSON.stringify(payload),
         })
 
+        console.log("[CurriculoTab] PT response status:", response.status)
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("[CurriculoTab] PT response not OK:", errorText)
+          throw new Error(`API returned ${response.status}: ${errorText}`)
+        }
+
         const result = await response.json()
+        console.log("[CurriculoTab] PT result:", {
+          success: result.success,
+          hasData: !!result.data,
+          hasHtml: !!result.data?.html,
+          htmlLength: result.data?.html?.length,
+          error: result.error,
+        })
 
         if (result.success && result.data?.html) {
           setHtmlPreviewPt(result.data.html)
-          console.log("[CurriculoTab] PT preview generated, length:", result.data.html.length)
+          console.log("[CurriculoTab] ✅ PT preview generated successfully")
         } else {
           throw new Error(result.error || "Failed to generate PT preview")
         }
@@ -95,31 +122,51 @@ export function CurriculoTab({
       if (resumeLanguage === "en" || resumeLanguage === "both") {
         console.log("[CurriculoTab] Generating EN preview...")
 
+        const payload = {
+          vagaId,
+          jobDescription,
+          language: "en",
+        }
+        console.log("[CurriculoTab] EN payload:", payload)
+
         const response = await fetch("/api/ai/generate-resume-html", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            vagaId,
-            jobDescription,
-            language: "en",
-          }),
+          body: JSON.stringify(payload),
         })
 
-        const result = await response.json()
+        console.log("[CurriculoTab] EN response status:", response.status)
 
-        if (result.success && result.html) {
-          setHtmlPreviewEn(result.html)
-          console.log("[CurriculoTab] EN preview generated, length:", result.html.length)
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("[CurriculoTab] EN response not OK:", errorText)
+          throw new Error(`API returned ${response.status}: ${errorText}`)
+        }
+
+        const result = await response.json()
+        console.log("[CurriculoTab] EN result:", {
+          success: result.success,
+          hasData: !!result.data,
+          hasHtml: !!result.data?.html,
+          htmlLength: result.data?.html?.length,
+          error: result.error,
+        })
+
+        if (result.success && result.data?.html) {
+          setHtmlPreviewEn(result.data.html)
+          console.log("[CurriculoTab] ✅ EN preview generated successfully")
         } else {
           throw new Error(result.error || "Failed to generate EN preview")
         }
       }
 
-      toast.success(resumeLanguage === "both" ? "2 previews gerados com sucesso!" : "Preview gerado com sucesso!")
+      const message = resumeLanguage === "both" ? "2 previews gerados com sucesso!" : "Preview gerado com sucesso!"
+      toast.success(message)
+      console.log("[CurriculoTab] ✅ All previews generated successfully")
     } catch (error) {
       console.error("[CurriculoTab] Error generating preview:", error)
       const errorMessage = error instanceof Error ? error.message : "Erro ao gerar preview"
-      toast.error(errorMessage)
+      toast.error(`Erro ao gerar preview: ${errorMessage}`)
     } finally {
       setIsGenerating(false)
     }
