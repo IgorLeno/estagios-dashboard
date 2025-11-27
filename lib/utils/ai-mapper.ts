@@ -23,13 +23,25 @@ export interface FormData {
  * @param analiseMarkdown - Optional analysis markdown (if not provided, builds from data)
  */
 export function mapJobDetailsToFormData(apiData: JobDetails, analiseMarkdown?: string): Partial<FormData> {
+  // Log incoming data for debugging
+  if (process.env.NODE_ENV === "development") {
+    console.log("[ai-mapper] Mapping API data to form:", {
+      requisitos_score: apiData.requisitos_score,
+      fit: apiData.fit,
+    })
+  }
+
   return {
     empresa: apiData.empresa,
     cargo: apiData.cargo,
     local: apiData.local,
     modalidade: apiData.modalidade,
-    requisitos: apiData.requisitos_score?.toString() || "",
-    fit: apiData.fit?.toString() || "",
+    requisitos: apiData.requisitos_score !== undefined && apiData.requisitos_score !== null
+      ? apiData.requisitos_score.toString()
+      : "",
+    fit: apiData.fit !== undefined && apiData.fit !== null
+      ? apiData.fit.toString()
+      : "",
     etapa: apiData.etapa && apiData.etapa !== "Indefinido" ? apiData.etapa : "",
     status: apiData.status || "Pendente",
     observacoes: analiseMarkdown || buildObservacoes(apiData),

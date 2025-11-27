@@ -58,12 +58,12 @@ export function DescricaoTab({ description, setDescription, analyzing, onFillJob
         {analyzing ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Preenchendo Dados...
+            Realizando Análise...
           </>
         ) : (
           <>
             <Sparkles className="mr-2 h-4 w-4" />
-            Preencher Dados
+            Realizar Análise
           </>
         )}
       </Button>

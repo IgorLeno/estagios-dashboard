@@ -312,6 +312,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               jobAnalysisData={jobAnalysisData}
               onRefreshAnalysis={handleRefreshAnalysis}
               refreshing={refreshing}
+              onNextTab={() => setActiveTab("curriculo")}
             />
           </TabsContent>
 

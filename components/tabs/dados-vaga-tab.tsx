@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { RotateCcw } from "lucide-react"
+import { RotateCcw, ChevronRight } from "lucide-react"
 import type { FormData } from "@/lib/utils/ai-mapper"
 import type { JobDetails } from "@/lib/ai/types"
 
@@ -15,6 +15,7 @@ interface DadosVagaTabProps {
   jobAnalysisData: JobDetails | null
   onRefreshAnalysis: () => Promise<void>
   refreshing: boolean
+  onNextTab: () => void
 }
 
 export function DadosVagaTab({
@@ -23,6 +24,7 @@ export function DadosVagaTab({
   jobAnalysisData,
   onRefreshAnalysis,
   refreshing,
+  onNextTab,
 }: DadosVagaTabProps) {
   return (
     <div className="space-y-4">
@@ -220,6 +222,14 @@ export function DadosVagaTab({
           )}
         </Button>
       )}
+
+      {/* Footer with navigation button */}
+      <div className="flex justify-end pt-4 border-t">
+        <Button onClick={onNextTab}>
+          Próximo
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }

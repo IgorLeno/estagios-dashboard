@@ -74,8 +74,24 @@ ESTRUTURA DA ANÁLISE (markdown):
 
 ## 🎯 Fit Técnico e Cultural
 [Análise detalhada de alinhamento com requisitos obrigatórios]
-[Score de fit justificado (0-5 estrelas) com base em match de skills]
+[Score de fit de requisitos (requisitos_score: 0-5 estrelas) baseado em match técnico]
+[Score de fit de perfil (fit: 0-5 estrelas) baseado em alinhamento cultural e soft skills]
 [Gaps identificados e sugestões práticas para endereçar antes da entrevista]
+
+**CÁLCULO DOS SCORES (0-5 estrelas):**
+- **requisitos_score**: Avalie match técnico do candidato com requisitos obrigatórios da vaga
+  * 5.0 = Match perfeito (90-100% dos requisitos obrigatórios)
+  * 4.0-4.5 = Match muito bom (70-89% dos requisitos)
+  * 3.0-3.5 = Match médio (50-69% dos requisitos)
+  * 2.0-2.5 = Match baixo (30-49% dos requisitos)
+  * 0.0-1.5 = Match muito baixo (<30% dos requisitos)
+
+- **fit**: Avalie fit de perfil/cultural do candidato com a vaga e empresa
+  * 5.0 = Fit perfeito (experiência, objetivos e cultura altamente alinhados)
+  * 4.0-4.5 = Fit muito bom (alinhamento forte com pequenos gaps)
+  * 3.0-3.5 = Fit médio (alinhamento razoável com gaps moderados)
+  * 2.0-2.5 = Fit baixo (alinhamento fraco)
+  * 0.0-1.5 = Fit muito baixo (desalinhamento significativo)
 
 ## 🗣️ Preparação para Entrevista
 [3-5 perguntas inteligentes para fazer ao recrutador/gestor]
@@ -109,7 +125,11 @@ Retorne APENAS um objeto JSON válido dentro de code fence markdown:
     "responsabilidades": ["atividade1", "atividade2"] ou [],
     "beneficios": ["beneficio1", "beneficio2"] ou [],
     "salario": "R$ 2000-3000" ou null,
-    "idioma_vaga": "pt" | "en"
+    "idioma_vaga": "pt" | "en",
+    "requisitos_score": 4.5,
+    "fit": 4.0,
+    "etapa": "Indefinido",
+    "status": "Pendente"
   },
   "analise_markdown": "# Análise da Vaga - [Cargo] @ [Empresa]\\n\\n## 🏢 Sobre a Empresa\\n..."
 }
@@ -145,14 +165,18 @@ IMPORTANTE:
 - Use busca Google para encontrar informações reais sobre a empresa
 - A análise deve ser personalizada com base no perfil do candidato
 - Seja específico e prático nas recomendações
-- Justifique o score de fit com exemplos concretos
+- **OBRIGATÓRIO: Calcule requisitos_score e fit com base nas escalas acima**
+- Justifique os scores de fit na seção "🎯 Fit Técnico e Cultural" com exemplos concretos
 - Se informações estiverem faltando na descrição:
   * Strings (empresa, cargo, local): use "" (string vazia)
   * Arrays: use [] (array vazio)
   * Salário: use null
+  * requisitos_score e fit: SEMPRE calcule baseado nas escalas (NUNCA null)
   * Modalidade: use "Presencial" como padrão
   * Tipo da Vaga: use "Estágio" como padrão
   * Idioma: use "pt" como padrão
+  * etapa: use "Indefinido" como padrão
+  * status: use "Pendente" como padrão
 - Retorne SOMENTE o JSON, sem texto antes ou depois
 `.trim()
 }
