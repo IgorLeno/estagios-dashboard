@@ -75,6 +75,66 @@ export async function generateResumePDF(cv: CVTemplate): Promise<Buffer> {
 }
 
 /**
+ * Generate PDF from raw HTML string using Puppeteer
+ * Used for preview functionality where user can edit HTML before generating PDF
+ */
+export async function generatePDFFromHTML(html: string): Promise<Buffer> {
+  console.log("[PDF Generator] Launching Puppeteer for HTML conversion...")
+
+  const isServerless = isServerlessEnvironment()
+
+  let browser
+
+  if (isServerless) {
+    console.log("[PDF Generator] Detected serverless environment, using @sparticuz/chromium")
+    const puppeteerCore = await import("puppeteer-core")
+    const chromium = await import("@sparticuz/chromium")
+
+    browser = await puppeteerCore.default.launch({
+      args: chromium.default.args,
+      executablePath: await chromium.default.executablePath(),
+      headless: true,
+    })
+  } else {
+    console.log("[PDF Generator] Using local Puppeteer")
+    const puppeteerLocal = await import("puppeteer")
+    browser = await puppeteerLocal.default.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    })
+  }
+
+  try {
+    const page = await browser.newPage()
+
+    // Set content and wait for rendering
+    await page.setContent(html, {
+      waitUntil: "networkidle0",
+    })
+
+    console.log("[PDF Generator] Rendering PDF from HTML...")
+
+    // Generate PDF
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "20mm",
+        bottom: "20mm",
+        left: "20mm",
+        right: "20mm",
+      },
+    })
+
+    console.log("[PDF Generator] ✅ PDF generated successfully from HTML")
+
+    return Buffer.from(pdf)
+  } finally {
+    await browser.close()
+  }
+}
+
+/**
  * Generate filename for resume PDF
  */
 export function generateResumeFilename(empresa: string, language: "pt" | "en"): string {

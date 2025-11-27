@@ -14,8 +14,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 
 type GenerationState = "idle" | "loading" | "success" | "error"
+type Step = "form" | "preview" | "pdf"
 
 interface GenerateResumeResponse {
   success: boolean
@@ -47,12 +49,162 @@ interface ResumeGeneratorDialogProps {
 
 export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSuccess }: ResumeGeneratorDialogProps) {
   const [open, setOpen] = useState(false)
+  const [step, setStep] = useState<Step>("form")
   const [state, setState] = useState<GenerationState>("idle")
   const [language, setLanguage] = useState<"pt" | "en" | "both">("pt")
+  const [htmlPreviewPt, setHtmlPreviewPt] = useState<string>("")
+  const [htmlPreviewEn, setHtmlPreviewEn] = useState<string>("")
   const [resultPt, setResultPt] = useState<GenerateResumeResponse["data"] | null>(null)
   const [resultEn, setResultEn] = useState<GenerateResumeResponse["data"] | null>(null)
   const [metadata, setMetadata] = useState<GenerateResumeResponse["metadata"] | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const handleGeneratePreview = async () => {
+    if (!vagaId && !jobDescription) {
+      toast.error("No job data provided")
+      return
+    }
+
+    setState("loading")
+    setError(null)
+
+    try {
+      if (language === "both") {
+        // Gerar HTML PT + EN em paralelo
+        const [responsePt, responseEn] = await Promise.all([
+          fetch("/api/ai/generate-resume-html", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...(vagaId ? { vagaId } : { jobDescription }),
+              language: "pt",
+            }),
+          }),
+          fetch("/api/ai/generate-resume-html", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...(vagaId ? { vagaId } : { jobDescription }),
+              language: "en",
+            }),
+          }),
+        ])
+
+        const dataPt = await responsePt.json()
+        const dataEn = await responseEn.json()
+
+        if (!responsePt.ok || !dataPt.success) {
+          throw new Error(dataPt.error || "Failed to generate PT preview")
+        }
+
+        if (!responseEn.ok || !dataEn.success) {
+          throw new Error(dataEn.error || "Failed to generate EN preview")
+        }
+
+        setHtmlPreviewPt(dataPt.data.html)
+        setHtmlPreviewEn(dataEn.data.html)
+        setMetadata(dataPt.metadata || null)
+        setStep("preview")
+        setState("idle")
+        toast.success("Preview gerado com sucesso!")
+      } else {
+        // Gerar HTML único (PT ou EN)
+        const response = await fetch("/api/ai/generate-resume-html", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(vagaId ? { vagaId } : { jobDescription }),
+            language,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Failed to generate preview")
+        }
+
+        if (language === "pt") {
+          setHtmlPreviewPt(data.data.html)
+        } else {
+          setHtmlPreviewEn(data.data.html)
+        }
+
+        setMetadata(data.metadata || null)
+        setStep("preview")
+        setState("idle")
+        toast.success("Preview gerado com sucesso!")
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error"
+      setError(errorMessage)
+      setState("idle")
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleGeneratePdf = async () => {
+    setState("loading")
+    setError(null)
+
+    try {
+      const requests = []
+
+      if (htmlPreviewPt) {
+        requests.push(
+          fetch("/api/pdf/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              html: htmlPreviewPt,
+              filename: `cv-igor-fernandes-pt.pdf`,
+            }),
+          })
+        )
+      }
+
+      if (htmlPreviewEn) {
+        requests.push(
+          fetch("/api/pdf/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              html: htmlPreviewEn,
+              filename: `cv-igor-fernandes-en.pdf`,
+            }),
+          })
+        )
+      }
+
+      const responses = await Promise.all(requests)
+      const results = await Promise.all(responses.map((r) => r.json()))
+
+      // Processar resultados
+      if (htmlPreviewPt && results[0]) {
+        if (!results[0].success) {
+          throw new Error("Failed to generate PT PDF")
+        }
+        setResultPt(results[0].data)
+      }
+
+      if (htmlPreviewEn) {
+        const idx = htmlPreviewPt ? 1 : 0
+        if (!results[idx].success) {
+          throw new Error("Failed to generate EN PDF")
+        }
+        setResultEn(results[idx].data)
+      }
+
+      setStep("pdf")
+      setState("idle")
+      toast.success("PDF gerado com sucesso!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error"
+      setError(errorMessage)
+      setState("idle")
+      toast.error(errorMessage)
+    }
+  }
 
   const handleGenerate = async () => {
     if (!vagaId && !jobDescription) {
@@ -179,10 +331,13 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
   }
 
   const handleReset = () => {
+    setStep("form")
     setState("idle")
     setError(null)
     setResultPt(null)
     setResultEn(null)
+    setHtmlPreviewPt("")
+    setHtmlPreviewEn("")
     setMetadata(null)
   }
 
@@ -217,7 +372,7 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
 
         <div className="space-y-6 py-4">
           {/* Language Selection */}
-          {state === "idle" && (
+          {state === "idle" && step === "form" && (
             <div className="space-y-3">
               <Label>Resume Language</Label>
               <div className="grid grid-cols-3 gap-3">
@@ -274,8 +429,42 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
             </div>
           )}
 
+          {/* Preview State */}
+          {step === "preview" && state === "idle" && (
+            <div className="space-y-4">
+              <Label>Preview do Currículo</Label>
+              <p className="text-xs text-muted-foreground">
+                Você pode editar o HTML abaixo antes de gerar o PDF final.
+              </p>
+
+              {htmlPreviewPt && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Português</Label>
+                  <Textarea
+                    value={htmlPreviewPt}
+                    onChange={(e) => setHtmlPreviewPt(e.target.value)}
+                    rows={25}
+                    className="font-mono text-xs"
+                  />
+                </div>
+              )}
+
+              {htmlPreviewEn && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Inglês</Label>
+                  <Textarea
+                    value={htmlPreviewEn}
+                    onChange={(e) => setHtmlPreviewEn(e.target.value)}
+                    rows={25}
+                    className="font-mono text-xs"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Success State */}
-          {state === "success" && (resultPt || resultEn) && (
+          {step === "pdf" && (resultPt || resultEn) && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -324,14 +513,26 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
 
         {/* Actions */}
         <div className="flex gap-2">
-          {state === "idle" && (
+          {state === "idle" && step === "form" && (
             <>
               <Button variant="outline" className="flex-1" onClick={() => handleClose(false)}>
                 Cancel
               </Button>
-              <Button className="flex-1" onClick={handleGenerate}>
+              <Button className="flex-1" onClick={handleGeneratePreview}>
                 <FileText className="mr-2 h-4 w-4" />
-                Generate
+                Gerar Preview
+              </Button>
+            </>
+          )}
+
+          {state === "idle" && step === "preview" && (
+            <>
+              <Button variant="outline" onClick={() => setStep("form")}>
+                Voltar
+              </Button>
+              <Button onClick={handleGeneratePdf}>
+                <FileText className="mr-2 h-4 w-4" />
+                Gerar PDF
               </Button>
             </>
           )}
@@ -342,7 +543,7 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
             </Button>
           )}
 
-          {state === "success" && (
+          {step === "pdf" && (
             <>
               <Button variant="outline" className="flex-1" onClick={handleReset}>
                 Generate Another
