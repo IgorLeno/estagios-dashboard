@@ -329,6 +329,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               onRefreshResume={handleRefreshResume}
               onDownloadPDF={handleDownloadPDF}
               onSaveVaga={handleSaveVaga}
+              jobDescription={lastAnalyzedDescription || jobDescription}
+              vagaId={undefined}
             />
           </TabsContent>
         </Tabs>

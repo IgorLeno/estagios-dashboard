@@ -16,6 +16,7 @@ interface DadosVagaTabProps {
   onRefreshAnalysis: () => Promise<void>
   refreshing: boolean
   onNextTab: () => void
+  onCancel?: () => void
 }
 
 export function DadosVagaTab({
@@ -25,6 +26,7 @@ export function DadosVagaTab({
   onRefreshAnalysis,
   refreshing,
   onNextTab,
+  onCancel,
 }: DadosVagaTabProps) {
   return (
     <div className="space-y-4">
@@ -206,26 +208,33 @@ export function DadosVagaTab({
         </div>
       )}
 
-      {/* Refazer análise button */}
+      {/* Refazer análise button - positioned at top of form section */}
       {jobAnalysisData && (
-        <Button onClick={onRefreshAnalysis} variant="outline" className="w-full" disabled={refreshing}>
-          {refreshing ? (
-            <>
-              <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-              Refazendo Análise...
-            </>
-          ) : (
-            <>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Refazer Análise
-            </>
-          )}
-        </Button>
+        <div className="flex justify-end pt-2">
+          <Button onClick={onRefreshAnalysis} variant="outline" size="sm" disabled={refreshing}>
+            {refreshing ? (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                Refazendo Análise...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Refazer Análise
+              </>
+            )}
+          </Button>
+        </div>
       )}
 
-      {/* Footer with navigation button */}
-      <div className="flex justify-end pt-4 border-t">
-        <Button onClick={onNextTab}>
+      {/* Footer with Cancelar and Próximo buttons side-by-side */}
+      <div className="flex flex-row justify-between items-center gap-3 pt-4 border-t mt-6">
+        {onCancel && (
+          <Button variant="outline" onClick={onCancel} type="button">
+            Cancelar
+          </Button>
+        )}
+        <Button onClick={onNextTab} type="button" className={!onCancel ? "ml-auto" : ""}>
           Próximo
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
