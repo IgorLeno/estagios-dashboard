@@ -98,7 +98,20 @@ export function htmlToMarkdown(html: string): string {
 
   try {
     console.log("[MarkdownConverter] Converting HTML to Markdown")
-    let markdown = turndownService.turndown(html)
+
+    // ✅ PRÉ-PROCESSAMENTO: Remover estrutura HTML e CSS
+    // Remove tags estruturais (<html>, <head>, <style>, etc.) para que
+    // o preview Markdown mostre apenas o conteúdo relevante ao usuário
+    const cleanedHtml = html
+      .replace(/<style[\s\S]*?<\/style>/gi, "") // Remove blocos <style>...</style>
+      .replace(/<!DOCTYPE[\s\S]*?>/gi, "") // Remove <!DOCTYPE ...>
+      .replace(/<html[\s\S]*?>/gi, "") // Remove tag <html>
+      .replace(/<\/html>/gi, "") // Remove tag </html>
+      .replace(/<head[\s\S]*?<\/head>/gi, "") // Remove <head>...</head>
+      .replace(/<body[\s\S]*?>/gi, "") // Remove tag <body>
+      .replace(/<\/body>/gi, "") // Remove tag </body>
+
+    let markdown = turndownService.turndown(cleanedHtml)
 
     // ✅ PÓS-PROCESSAMENTO: Limpeza e formatação visual
     markdown = cleanupMarkdown(markdown)
