@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import type { JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse } from "@/lib/ai/types"
 import { toast } from "sonner"
+import { htmlToMarkdown, markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
 
 interface CurriculoTabProps {
   resumeContent: string
@@ -46,20 +47,20 @@ export function CurriculoTab({
   console.log("[CurriculoTab] Rendering", { jobAnalysisData, resumePdfBase64, vagaId })
 
   const [resumeLanguage, setResumeLanguage] = useState<"pt" | "en" | "both">("pt")
-  const [htmlPreviewPt, setHtmlPreviewPt] = useState("")
-  const [htmlPreviewEn, setHtmlPreviewEn] = useState("")
+  const [markdownPreviewPt, setMarkdownPreviewPt] = useState("")
+  const [markdownPreviewEn, setMarkdownPreviewEn] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
   const [pdfBase64Pt, setPdfBase64Pt] = useState<string | null>(null)
   const [pdfBase64En, setPdfBase64En] = useState<string | null>(null)
 
-  const hasPreview = !!(htmlPreviewPt || htmlPreviewEn)
+  const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 
   console.log("[CurriculoTab] States:", {
     resumeLanguage,
     hasPreview,
-    htmlPreviewPtLength: htmlPreviewPt?.length,
-    htmlPreviewEnLength: htmlPreviewEn?.length,
+    markdownPreviewPtLength: markdownPreviewPt?.length,
+    markdownPreviewEnLength: markdownPreviewEn?.length,
   })
 
   // Generate HTML preview
@@ -111,8 +112,10 @@ export function CurriculoTab({
         })
 
         if (result.success && result.data?.html) {
-          setHtmlPreviewPt(result.data.html)
-          console.log("[CurriculoTab] ✅ PT preview generated successfully")
+          // Convert HTML to Markdown for better editing experience
+          const markdown = htmlToMarkdown(result.data.html)
+          setMarkdownPreviewPt(markdown)
+          console.log("[CurriculoTab] ✅ PT preview generated and converted to Markdown")
         } else {
           throw new Error(result.error || "Failed to generate PT preview")
         }
@@ -153,8 +156,10 @@ export function CurriculoTab({
         })
 
         if (result.success && result.data?.html) {
-          setHtmlPreviewEn(result.data.html)
-          console.log("[CurriculoTab] ✅ EN preview generated successfully")
+          // Convert HTML to Markdown for better editing experience
+          const markdown = htmlToMarkdown(result.data.html)
+          setMarkdownPreviewEn(markdown)
+          console.log("[CurriculoTab] ✅ EN preview generated and converted to Markdown")
         } else {
           throw new Error(result.error || "Failed to generate EN preview")
         }
@@ -172,60 +177,78 @@ export function CurriculoTab({
     }
   }
 
-  // Convert HTML to PDF
+  // Convert Markdown to PDF
   async function handleConvertToPdf() {
     setIsConverting(true)
 
     try {
       // Convert PT
-      if (htmlPreviewPt) {
-        console.log("[CurriculoTab] Converting PT to PDF...")
+      if (markdownPreviewPt) {
+        console.log("[CurriculoTab] Converting PT Markdown to PDF...")
 
-        const response = await fetch("/api/ai/generate-resume", {
+        // Step 1: Markdown → HTML
+        const htmlContent = await markdownToHtml(markdownPreviewPt)
+        console.log("[CurriculoTab] PT Markdown converted to HTML")
+
+        // Step 2: Wrap with CSS
+        const fullHtml = wrapMarkdownAsHTML(htmlContent)
+        console.log("[CurriculoTab] PT HTML wrapped with CSS")
+
+        // Step 3: Send to PDF generator
+        const response = await fetch("/api/ai/html-to-pdf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            jobDescription,
-            language: "pt",
+            html: fullHtml,
+            filename: `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-pt.pdf`,
           }),
         })
 
         if (!response.ok) {
-          const errorData: GenerateResumeErrorResponse = await response.json()
+          const errorData = await response.json()
           throw new Error(errorData.error || `API error: ${response.status}`)
         }
 
-        const result: GenerateResumeResponse = await response.json()
+        const result = await response.json()
 
-        if (result.success) {
+        if (result.success && result.data?.pdfBase64) {
           setPdfBase64Pt(result.data.pdfBase64)
-          console.log("[CurriculoTab] PT PDF generated")
+          console.log("[CurriculoTab] PT PDF generated from Markdown")
         }
       }
 
       // Convert EN
-      if (htmlPreviewEn) {
-        console.log("[CurriculoTab] Converting EN to PDF...")
+      if (markdownPreviewEn) {
+        console.log("[CurriculoTab] Converting EN Markdown to PDF...")
 
-        const response = await fetch("/api/ai/generate-resume", {
+        // Step 1: Markdown → HTML
+        const htmlContent = await markdownToHtml(markdownPreviewEn)
+        console.log("[CurriculoTab] EN Markdown converted to HTML")
+
+        // Step 2: Wrap with CSS
+        const fullHtml = wrapMarkdownAsHTML(htmlContent)
+        console.log("[CurriculoTab] EN HTML wrapped with CSS")
+
+        // Step 3: Send to PDF generator
+        const response = await fetch("/api/ai/html-to-pdf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            jobDescription,
-            language: "en",
+            html: fullHtml,
+            filename: `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-en.pdf`,
           }),
         })
 
         if (!response.ok) {
-          const errorData: GenerateResumeErrorResponse = await response.json()
+          const errorData = await response.json()
           throw new Error(errorData.error || `API error: ${response.status}`)
         }
 
-        const result: GenerateResumeResponse = await response.json()
+        const result = await response.json()
 
-        if (result.success) {
+        if (result.success && result.data?.pdfBase64) {
           setPdfBase64En(result.data.pdfBase64)
-          console.log("[CurriculoTab] EN PDF generated")
+          console.log("[CurriculoTab] EN PDF generated from Markdown")
         }
       }
 
@@ -316,33 +339,36 @@ export function CurriculoTab({
           <Alert>
             <Info className="h-4 w-4" />
             <AlertTitle>Preview Gerado</AlertTitle>
-            <AlertDescription>Revise e edite o HTML abaixo antes de gerar o PDF final.</AlertDescription>
+            <AlertDescription>
+              Revise e edite o Markdown abaixo antes de gerar o PDF final. O Markdown é convertido
+              automaticamente para HTML com formatação adequada.
+            </AlertDescription>
           </Alert>
 
           {/* PT preview */}
-          {htmlPreviewPt && (
+          {markdownPreviewPt && (
             <div className="space-y-2">
               <Label>Preview - Português</Label>
               <Textarea
-                value={htmlPreviewPt}
-                onChange={(e) => setHtmlPreviewPt(e.target.value)}
+                value={markdownPreviewPt}
+                onChange={(e) => setMarkdownPreviewPt(e.target.value)}
                 rows={25}
                 className="font-mono text-xs resize-none"
-                placeholder="HTML do currículo em português..."
+                placeholder="Currículo em Markdown (português)..."
               />
             </div>
           )}
 
           {/* EN preview */}
-          {htmlPreviewEn && (
+          {markdownPreviewEn && (
             <div className="space-y-2">
               <Label>Preview - English</Label>
               <Textarea
-                value={htmlPreviewEn}
-                onChange={(e) => setHtmlPreviewEn(e.target.value)}
+                value={markdownPreviewEn}
+                onChange={(e) => setMarkdownPreviewEn(e.target.value)}
                 rows={25}
                 className="font-mono text-xs resize-none"
-                placeholder="Resume HTML in English..."
+                placeholder="Resume in Markdown (English)..."
               />
             </div>
           )}
@@ -352,8 +378,8 @@ export function CurriculoTab({
             <Button
               variant="outline"
               onClick={() => {
-                setHtmlPreviewPt("")
-                setHtmlPreviewEn("")
+                setMarkdownPreviewPt("")
+                setMarkdownPreviewEn("")
                 setPdfBase64Pt(null)
                 setPdfBase64En(null)
               }}

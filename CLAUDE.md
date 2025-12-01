@@ -988,7 +988,8 @@ The AI Resume Generator personalizes CV content to match job descriptions using 
 - Personalizes CV summary with job keywords
 - Reorders skills by relevance to job requirements
 - Rewrites project descriptions to emphasize job-relevant work
-- Generates professional PDF matching original CV design
+- Generates editable Markdown preview for user review
+- Converts Markdown to professional PDF with consistent formatting
 - Supports Portuguese and English
 
 **What it doesn't do:**
@@ -996,6 +997,34 @@ The AI Resume Generator personalizes CV content to match job descriptions using 
 - Fabricate skills or experience (moderate smart enhancement only)
 - Store resumes in database (future phase)
 - Calculate ATS scores (future phase)
+
+### Markdown Preview System
+
+**Status:** ✅ Implemented (2025-12-01)
+
+The resume generator now provides a Markdown-based editing workflow for better user experience:
+
+**Flow:**
+
+1. API generates HTML resume → `POST /api/ai/generate-resume-html`
+2. HTML converted to Markdown → `htmlToMarkdown()` with custom rules
+3. User edits Markdown in textarea (visual, easy to understand)
+4. Markdown converted back to HTML → `markdownToHtml()`
+5. HTML wrapped with CSS → `wrapMarkdownAsHTML()`
+6. PDF generated from final HTML → `POST /api/ai/html-to-pdf`
+
+**Benefits:**
+
+- Markdown is visually similar to final PDF (headings, lists, formatting)
+- Easier to edit than raw HTML
+- No HTML tags visible to confuse users
+- Consistent formatting maintained through conversion
+
+**Key Files:**
+
+- `lib/ai/markdown-converter.ts` - Conversion utilities (HTML↔Markdown)
+- `app/api/ai/html-to-pdf/route.ts` - PDF generation from HTML
+- `components/tabs/curriculo-tab.tsx` - UI with Markdown textareas
 
 ### Architecture
 
