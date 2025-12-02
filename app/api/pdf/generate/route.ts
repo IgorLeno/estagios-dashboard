@@ -6,10 +6,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { html, filename } = await req.json()
 
     if (!html || typeof html !== "string") {
-      return NextResponse.json(
-        { success: false, error: "HTML content is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "HTML content is required" }, { status: 400 })
     }
 
     // Gerar PDF usando Puppeteer (já existe em lib/ai/pdf-generator.ts)
@@ -27,10 +24,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     })
   } catch (error) {
     console.error("[PDF Generator] Error:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to generate PDF" },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: "Failed to generate PDF" }, { status: 500 })
   }
 }
 

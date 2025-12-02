@@ -15,10 +15,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { vagaId, jobDescription, language } = body
 
     if (!language || !["pt", "en"].includes(language)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid language" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "Invalid language" }, { status: 400 })
     }
 
     // Get job details (igual ao endpoint original)
@@ -26,17 +23,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (vagaId) {
       const supabase = await createClient()
-      const { data: vaga, error } = await supabase
-        .from("vagas_estagio")
-        .select("*")
-        .eq("id", vagaId)
-        .single()
+      const { data: vaga, error } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
       if (error || !vaga) {
-        return NextResponse.json(
-          { success: false, error: "Vaga not found" },
-          { status: 404 }
-        )
+        return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
       }
 
       jobDetails = JobDetailsSchema.parse({
@@ -88,10 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error)
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
 }
 

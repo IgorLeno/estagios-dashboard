@@ -226,11 +226,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
     <!-- Header -->
     <div class="header">
       <h1>${escapeHtml(cv.header.name)}</h1>
-      ${
-        cv.header.title
-          ? `<div class="title">${escapeHtml(cv.header.title)}</div>`
-          : ""
-      }
+      ${cv.header.title ? `<div class="title">${escapeHtml(cv.header.title)}</div>` : ""}
       <div class="contact">
         Email: ${escapeHtml(cv.header.email)}<br>
         Phone: ${escapeHtml(cv.header.phone)}<br>

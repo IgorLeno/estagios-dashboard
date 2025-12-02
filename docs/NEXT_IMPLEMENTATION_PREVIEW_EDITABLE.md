@@ -81,10 +81,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { html, filename } = await req.json()
 
     if (!html || typeof html !== "string") {
-      return NextResponse.json(
-        { success: false, error: "HTML content is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "HTML content is required" }, { status: 400 })
     }
 
     // Gerar PDF usando Puppeteer (já existe em lib/ai/pdf-generator.ts)
@@ -102,10 +99,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     })
   } catch (error) {
     console.error("[PDF Generator] Error:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to generate PDF" },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: "Failed to generate PDF" }, { status: 500 })
   }
 }
 
@@ -118,6 +112,7 @@ export async function GET(): Promise<NextResponse> {
 ```
 
 **Validação:**
+
 - Testar com: `curl -X POST http://localhost:3000/api/pdf/generate -H "Content-Type: application/json" -d '{"html":"<html>...</html>","filename":"test.pdf"}'`
 
 ---
@@ -294,59 +289,61 @@ const handleGeneratePdf = async () => {
 **Step 1: Form (já existe, trocar botão):**
 
 ```tsx
-{state === "idle" && step === "form" && (
-  <Button className="flex-1" onClick={handleGeneratePreview}>
-    <FileText className="mr-2 h-4 w-4" />
-    Gerar Preview
-  </Button>
-)}
+{
+  state === "idle" && step === "form" && (
+    <Button className="flex-1" onClick={handleGeneratePreview}>
+      <FileText className="mr-2 h-4 w-4" />
+      Gerar Preview
+    </Button>
+  )
+}
 ```
 
 **Step 2: Preview (NOVO):**
 
 ```tsx
-{step === "preview" && (
-  <div className="space-y-4">
-    <Label>Preview do Currículo</Label>
-    <p className="text-xs text-muted-foreground">
-      Você pode editar o HTML abaixo antes de gerar o PDF final.
-    </p>
+{
+  step === "preview" && (
+    <div className="space-y-4">
+      <Label>Preview do Currículo</Label>
+      <p className="text-xs text-muted-foreground">Você pode editar o HTML abaixo antes de gerar o PDF final.</p>
 
-    {htmlPreviewPt && (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Português</Label>
-        <Textarea
-          value={htmlPreviewPt}
-          onChange={(e) => setHtmlPreviewPt(e.target.value)}
-          rows={25}
-          className="font-mono text-xs"
-        />
+      {htmlPreviewPt && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Português</Label>
+          <Textarea
+            value={htmlPreviewPt}
+            onChange={(e) => setHtmlPreviewPt(e.target.value)}
+            rows={25}
+            className="font-mono text-xs"
+          />
+        </div>
+      )}
+
+      {htmlPreviewEn && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Inglês</Label>
+          <Textarea
+            value={htmlPreviewEn}
+            onChange={(e) => setHtmlPreviewEn(e.target.value)}
+            rows={25}
+            className="font-mono text-xs"
+          />
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setStep("form")}>
+          Voltar
+        </Button>
+        <Button onClick={handleGeneratePdf}>
+          <FileText className="mr-2 h-4 w-4" />
+          Gerar PDF
+        </Button>
       </div>
-    )}
-
-    {htmlPreviewEn && (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Inglês</Label>
-        <Textarea
-          value={htmlPreviewEn}
-          onChange={(e) => setHtmlPreviewEn(e.target.value)}
-          rows={25}
-          className="font-mono text-xs"
-        />
-      </div>
-    )}
-
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={() => setStep("form")}>
-        Voltar
-      </Button>
-      <Button onClick={handleGeneratePdf}>
-        <FileText className="mr-2 h-4 w-4" />
-        Gerar PDF
-      </Button>
     </div>
-  </div>
-)}
+  )
+}
 ```
 
 **Step 3: PDF (já existe, ajustar condição):**
@@ -385,10 +382,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { vagaId, jobDescription, language } = body
 
     if (!language || !["pt", "en"].includes(language)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid language" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "Invalid language" }, { status: 400 })
     }
 
     // Get job details (igual ao endpoint original)
@@ -396,17 +390,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (vagaId) {
       const supabase = await createClient()
-      const { data: vaga, error } = await supabase
-        .from("vagas_estagio")
-        .select("*")
-        .eq("id", vagaId)
-        .single()
+      const { data: vaga, error } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
       if (error || !vaga) {
-        return NextResponse.json(
-          { success: false, error: "Vaga not found" },
-          { status: 404 }
-        )
+        return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
       }
 
       jobDetails = JobDetailsSchema.parse({
@@ -458,10 +445,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error)
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
 }
 
@@ -573,6 +557,7 @@ const handleReset = () => {
 ## 📊 CRITÉRIOS DE ACEITAÇÃO
 
 ### UX/Fluxo ✅
+
 - [ ] Passo 1: Formulário + seletor de idioma
 - [ ] Passo 2: Preview editável em textarea (HTML visível)
 - [ ] Passo 3: Botão "Gerar PDF"
@@ -582,6 +567,7 @@ const handleReset = () => {
 - [ ] Botão "Voltar" retorna ao formulário
 
 ### Técnico ✅
+
 - [ ] TypeScript sem erros
 - [ ] Endpoint `/api/ai/generate-resume-html` funcional
 - [ ] Endpoint `/api/pdf/generate` funcional

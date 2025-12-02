@@ -19,6 +19,7 @@ Next.js 16 dashboard for tracking internship applications. Built with React 19, 
 ## Visual Design System
 
 **Color Palette:**
+
 - Background: `#E0E0E0` - `--background: 224 224 224`
 - Cards: `#FFFFFF` - `--card: 255 255 255`
 - Primary: `#7B3FED` (purple) - `--primary: 123 63 237`
@@ -42,6 +43,7 @@ pnpm test:coverage    # Generate coverage
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`):
+
 1. Linting (ESLint JSON)
 2. Formatting (Prettier)
 3. Unit tests (Vitest JSON)
@@ -101,6 +103,7 @@ NEXT_PUBLIC_SHOW_TEST_DATA=true
 ### Path Aliases
 
 Uses `@/*` for root-level imports:
+
 ```typescript
 import { createClient } from "@/lib/supabase/client"
 import { VagaEstagio } from "@/lib/types"
@@ -117,6 +120,7 @@ import { VagaEstagio } from "@/lib/types"
 **Vercel Pro Required** ($20/month) for AI features (120s timeout needed)
 
 **Function Timeouts** (`vercel.json`):
+
 - `/api/ai/parse-job`: 120s
 - `/api/ai/generate-resume`: 120s
 
@@ -127,6 +131,7 @@ See `docs/VERCEL_DEPLOYMENT.md` for troubleshooting.
 ## Development Workflow Plugins
 
 **Superpowers** (6 skills):
+
 - `brainstorming` → `/superpowers:brainstorm`
 - `writing-plans` → `/superpowers:write-plan`
 - `executing-plans` → `/superpowers:execute-plan`
@@ -163,6 +168,7 @@ await waitFor(() => expect(result.current.value).toBe(expected))
 Uses **Gemini 2.5 Flash** to extract structured data from job descriptions.
 
 **Environment:**
+
 ```env
 GOOGLE_API_KEY=your_gemini_api_key
 ```
@@ -193,11 +199,13 @@ app/test-ai/page.tsx            # Test interface
 **POST /api/ai/parse-job**
 
 Request:
+
 ```json
 { "jobDescription": "string (min 50 chars)" }
 ```
 
 Response (success):
+
 ```json
 {
   "success": true,
@@ -253,6 +261,7 @@ Personalizes CV using **Gemini 2.5 Flash** (summary, skills, projects). Generate
 4. HTML → PDF → `POST /api/ai/html-to-pdf`
 
 **Key Files:**
+
 - `lib/ai/cv-templates.ts` - PT/EN CV content
 - `lib/ai/resume-generator.ts` - LLM personalization
 - `lib/ai/markdown-converter.ts` - HTML↔Markdown conversion
@@ -264,6 +273,7 @@ Personalizes CV using **Gemini 2.5 Flash** (summary, skills, projects). Generate
 **POST /api/ai/generate-resume**
 
 Request:
+
 ```json
 {
   "vagaId": "uuid" | "jobDescription": "text",
@@ -272,6 +282,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -302,6 +313,7 @@ Customizable prompts for Job Parser and Resume Generator.
 **Database**: `prompts_config` table (RLS enabled, global defaults + user overrides)
 
 **Key Files:**
+
 - `lib/types.ts` - `PromptsConfig`, `DEFAULT_PROMPTS_CONFIG`
 - `lib/supabase/prompts.ts` - CRUD functions
 - `lib/ai/config.ts` - `loadUserAIConfig()`, `getGenerationConfig()`
@@ -311,12 +323,14 @@ Customizable prompts for Job Parser and Resume Generator.
 ### Configuration Fields
 
 **Model Settings:**
+
 - `modelo_gemini`: "gemini-2.5-flash" | "gemini-2.5-pro"
 - `temperatura`: 0.0-1.0
 - `max_tokens`: 512-32768
 - `top_p`, `top_k`: Optional
 
 **Editable Prompts:**
+
 1. `dossie_prompt` - Candidate profile
 2. `analise_prompt` - Job/candidate fit analysis
 3. `curriculo_prompt` - CV personalization rules
@@ -330,7 +344,7 @@ const config = await loadUserAIConfig(userId)
 const model = genAI.getGenerativeModel({
   model: config.modelo_gemini,
   generationConfig: getGenerationConfig(config),
-  systemInstruction: config.curriculo_prompt
+  systemInstruction: config.curriculo_prompt,
 })
 ```
 

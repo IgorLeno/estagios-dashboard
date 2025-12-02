@@ -11,11 +11,7 @@ export async function getPromptsConfig(userId?: string): Promise<PromptsConfig> 
 
   // Try to fetch user-specific config
   if (userId) {
-    const { data, error } = await supabase
-      .from("prompts_config")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle()
+    const { data, error } = await supabase.from("prompts_config").select("*").eq("user_id", userId).maybeSingle()
 
     if (error) {
       console.error("[Prompts] Error fetching user config:", error)

@@ -171,7 +171,12 @@ export function ConfiguracoesPrompts() {
                   Você está visualizando as configurações padrão do sistema. Para personalizar e salvar suas próprias
                   configurações, faça login.
                 </span>
-                <Button variant="outline" size="sm" onClick={() => router.push("/admin/login")} className="ml-auto shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/admin/login")}
+                  className="ml-auto shrink-0"
+                >
                   <LogIn className="mr-2 h-4 w-4" />
                   Fazer Login
                 </Button>
@@ -207,9 +212,7 @@ export function ConfiguracoesPrompts() {
                     placeholder="gemini-2.5-flash"
                     className="bg-background"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Exemplos: gemini-2.5-flash, gemini-2.5-pro
-                  </p>
+                  <p className="text-xs text-muted-foreground">Exemplos: gemini-2.5-flash, gemini-2.5-pro</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

@@ -5,15 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-  Loader2,
-  Eye,
-  RefreshCw,
-  FileText,
-  Info,
-  CheckCircle,
-  Download,
-} from "lucide-react"
+import { Loader2, Eye, RefreshCw, FileText, Info, CheckCircle, Download } from "lucide-react"
 import type { JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse } from "@/lib/ai/types"
 import { toast } from "sonner"
 import { htmlToMarkdown, markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
@@ -340,8 +332,8 @@ export function CurriculoTab({
             <Info className="h-4 w-4" />
             <AlertTitle>Preview Gerado</AlertTitle>
             <AlertDescription>
-              Revise e edite o Markdown abaixo antes de gerar o PDF final. O Markdown é convertido
-              automaticamente para HTML com formatação adequada.
+              Revise e edite o Markdown abaixo antes de gerar o PDF final. O Markdown é convertido automaticamente para
+              HTML com formatação adequada.
             </AlertDescription>
           </Alert>
 

@@ -550,34 +550,22 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
               </Button>
               {resultPt && resultEn ? (
                 <>
-                  <Button
-                    className="flex-1"
-                    onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}
-                  >
+                  <Button className="flex-1" onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}>
                     <Download className="mr-2 h-4 w-4" />
                     Download PT
                   </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}
-                  >
+                  <Button className="flex-1" onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}>
                     <Download className="mr-2 h-4 w-4" />
                     Download EN
                   </Button>
                 </>
               ) : resultPt ? (
-                <Button
-                  className="flex-1"
-                  onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}
-                >
+                <Button className="flex-1" onClick={() => handleDownload(resultPt.pdfBase64, resultPt.filename)}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
               ) : resultEn ? (
-                <Button
-                  className="flex-1"
-                  onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}
-                >
+                <Button className="flex-1" onClick={() => handleDownload(resultEn.pdfBase64, resultEn.filename)}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>

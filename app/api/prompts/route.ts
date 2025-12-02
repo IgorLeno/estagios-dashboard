@@ -78,17 +78,11 @@ export async function POST(request: NextRequest) {
 
     // Validação de ranges
     if (body.temperatura < 0 || body.temperatura > 1) {
-      return NextResponse.json(
-        { success: false, error: "temperatura must be between 0.0 and 1.0" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "temperatura must be between 0.0 and 1.0" }, { status: 400 })
     }
 
     if (body.max_tokens < 512 || body.max_tokens > 32768) {
-      return NextResponse.json(
-        { success: false, error: "max_tokens must be between 512 and 32768" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "max_tokens must be between 512 and 32768" }, { status: 400 })
     }
 
     // Salvar config
