@@ -173,7 +173,7 @@ Uses **Gemini 2.5 Flash** to extract structured data from job descriptions.
 GOOGLE_API_KEY=your_gemini_api_key
 ```
 
-Get key at: https://aistudio.google.com/app/apikey
+Get key at: <https://aistudio.google.com/app/apikey>
 
 **Free Tier**: 15 req/min, 1M tokens/day
 
@@ -181,9 +181,9 @@ Get key at: https://aistudio.google.com/app/apikey
 
 **Rate Limiter**: 10 req/min (buffer below Gemini's 15 req/min limit)
 
-### Architecture
+### Job Parser Architecture
 
-```
+```text
 lib/ai/
 ├── types.ts          # Interfaces + Zod schemas
 ├── config.ts         # Gemini client setup
@@ -194,9 +194,9 @@ app/api/ai/parse-job/route.ts  # REST API (POST, GET)
 app/test-ai/page.tsx            # Test interface
 ```
 
-### API Endpoints
+### Job Parser API Endpoints
 
-**POST /api/ai/parse-job**
+#### POST /api/ai/parse-job
 
 Request:
 
@@ -228,7 +228,7 @@ Response (success):
 
 **GET /api/ai/parse-job**: Health check
 
-### Usage
+### Job Parser Usage
 
 ```typescript
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
@@ -237,15 +237,15 @@ const { data, duration, model } = await parseJobWithGemini(jobDescription)
 console.log(`Parsed with ${model} in ${duration}ms`)
 ```
 
-### Testing
+### Testing Job Parser
 
-Manual: http://localhost:3000/test-ai
+Manual: <http://localhost:3000/test-ai>
 Automated: `pnpm test -- ai`
 
-### Troubleshooting
+### Troubleshooting Job Parser
 
 **429 Error**: Wait 1 min, system auto-tries fallback models
-**Monitor usage**: https://ai.dev/usage?tab=rate-limit
+**Monitor usage**: <https://ai.dev/usage?tab=rate-limit>
 
 ## AI Resume Generator
 
@@ -268,9 +268,9 @@ Personalizes CV using **Gemini 2.5 Flash** (summary, skills, projects). Generate
 - `app/api/ai/generate-resume/route.ts` - REST API
 - `app/api/ai/html-to-pdf/route.ts` - PDF generation
 
-### API Endpoints
+### Resume Generator API Endpoints
 
-**POST /api/ai/generate-resume**
+#### POST /api/ai/generate-resume
 
 Request:
 
@@ -299,9 +299,9 @@ Response:
 - **Timeout**: 60s
 - **Strategy**: Moderate enhancement (no fabrication)
 
-### Testing
+### Testing Resume Generator
 
-Manual: http://localhost:3000/test-ai
+Manual: <http://localhost:3000/test-ai>
 Unit: `__tests__/lib/ai/resume-generator.test.ts`
 
 ## AI Prompts Configuration
@@ -335,7 +335,7 @@ Customizable prompts for Job Parser and Resume Generator.
 2. `analise_prompt` - Job/candidate fit analysis
 3. `curriculo_prompt` - CV personalization rules
 
-### Usage
+### Usage Example
 
 ```typescript
 import { loadUserAIConfig, getGenerationConfig } from "@/lib/ai/config"
@@ -356,7 +356,7 @@ psql < migrations/001_create_prompts_config.sql
 
 Creates table, indexes, triggers, RLS policies, global defaults (user_id = NULL).
 
-### Troubleshooting
+### Troubleshooting Prompts Config
 
 - **Config not loading**: Check migration executed, verify global defaults exist
 - **RLS blocking**: Verify policies, check `auth.uid()` returns correct user_id
