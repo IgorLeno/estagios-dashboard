@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { VagaEstagio } from "@/lib/types"
 import { TableCell, TableRow } from "@/components/ui/table"
@@ -14,7 +13,6 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
-  Upload,
   FileText,
   Trash2,
   Download,
@@ -36,85 +34,68 @@ interface VagaTableRowProps {
 
 export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelete }: VagaTableRowProps) {
   const router = useRouter()
-  const [lastClickTime, setLastClickTime] = useState(0)
-
-  // Gerenciar clique simples vs duplo clique
-  function handleRowClick() {
-    const now = Date.now()
-    const timeSinceLastClick = now - lastClickTime
-
-    if (timeSinceLastClick < 300) {
-      // Duplo clique - navegar para detalhes
-      router.push(`/vaga/${vaga.id}`)
-    } else {
-      // Clique simples - expandir/recolher
-      onToggleExpand()
-    }
-
-    setLastClickTime(now)
-  }
 
   return (
     <>
       {/* Linha principal */}
       <TableRow
-        className={cn(
-          "border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
-          isExpanded && "bg-muted/30"
-        )}
-        onClick={handleRowClick}
+        className={cn("border-b border-border hover:bg-muted/50 transition-colors", isExpanded && "bg-muted/30")}
       >
         <TableCell className="font-medium text-foreground">
-          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex items-center gap-2 w-full text-left hover:text-primary transition-colors"
+          >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             ) : (
               <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             )}
             {vaga.empresa}
-          </div>
+          </button>
         </TableCell>
         <TableCell className="text-foreground">{vaga.cargo}</TableCell>
         <TableCell className="text-muted-foreground">{vaga.local}</TableCell>
         <TableCell>
           <Badge variant="outline">{vaga.modalidade}</Badge>
         </TableCell>
-        <TableCell onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-testid="vaga-actions-button"
-                aria-label="Ações da vaga"
-                title="Ações da vaga"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/vaga/${vaga.id}`)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Ver Detalhes
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(vaga)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Análise
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <FileText className="h-4 w-4 mr-2" />
-                Upload CV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(vaga)} className="text-red-600">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <TableCell>
+          <div className="flex items-center gap-2 justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/vaga/${vaga.id}`)}
+              className="text-muted-foreground hover:text-primary"
+              title="Ver detalhes da vaga"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Ver Detalhes
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid="vaga-actions-button"
+                  aria-label="Ações da vaga"
+                  title="Ações da vaga"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(vaga)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(vaga)} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </TableCell>
       </TableRow>
 
