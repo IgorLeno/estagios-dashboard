@@ -21,6 +21,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { StarRating } from "@/components/ui/star-rating"
+import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { cn, toSafeNumber, getStatusVariant } from "@/lib/utils"
 import { downloadPdf } from "@/lib/url-utils"
 
