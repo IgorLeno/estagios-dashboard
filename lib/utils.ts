@@ -113,18 +113,21 @@ export function getStatusVariant(status: string): "default" | "secondary" | "des
  * Retorna classes Tailwind customizadas para badges de status
  * Cores fixas com máximo contraste visual
  *
- * @param status - Status da vaga (Pendente, Em Andamento, Finalizada)
+ * @param status - Status da vaga (Pendente, Avançado, Melou, Contratado)
  * @returns String de classes Tailwind para aplicar no Badge
  *
  * @example
  * getStatusBadgeClasses("Pendente") // "bg-yellow-100 text-yellow-800 border-yellow-300"
- * getStatusBadgeClasses("Em Andamento") // "bg-blue-100 text-blue-800 border-blue-300"
+ * getStatusBadgeClasses("Avançado") // "bg-blue-100 text-blue-800 border-blue-300"
+ * getStatusBadgeClasses("Melou") // "bg-red-100 text-red-800 border-red-300"
+ * getStatusBadgeClasses("Contratado") // "bg-green-100 text-green-800 border-green-300"
  */
 export function getStatusBadgeClasses(status: string): string {
   const statusClassMap: Record<string, string> = {
     Pendente: "bg-yellow-100 text-yellow-800 border-yellow-300",
-    "Em Andamento": "bg-blue-100 text-blue-800 border-blue-300",
-    Finalizada: "bg-green-100 text-green-800 border-green-300",
+    Avançado: "bg-blue-100 text-blue-800 border-blue-300",
+    Melou: "bg-red-100 text-red-800 border-red-300",
+    Contratado: "bg-green-100 text-green-800 border-green-300",
   }
 
   return statusClassMap[status] || "bg-gray-100 text-gray-800 border-gray-300"
