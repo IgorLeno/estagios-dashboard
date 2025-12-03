@@ -208,43 +208,44 @@
     animation: shimmer 2s infinite;
   }
 
-  /* Markdown Preview Styles - Beautiful GitHub/Notion-like formatting */
+  /* Markdown Preview Styles - Maximum Contrast for Web Readability */
   .markdown-preview {
     line-height: 1.7;
-    color: hsl(var(--foreground));
+    color: #1a1a1a; /* Almost black for maximum contrast */
+    font-size: 14px;
   }
 
   .markdown-preview .markdown-h1 {
     font-size: 1.875rem; /* 30px */
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: #000000; /* Pure black */
     margin-top: 1.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid hsl(var(--primary));
+    border-bottom: 3px solid #2563eb; /* Vibrant blue */
   }
 
   .markdown-preview .markdown-h2 {
     font-size: 1.5rem; /* 24px */
     font-weight: 600;
-    color: hsl(var(--foreground));
+    color: #1a1a1a;
     margin-top: 1.25rem;
     margin-bottom: 0.75rem;
     padding-bottom: 0.375rem;
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 2px solid #cbd5e1;
   }
 
   .markdown-preview .markdown-h3 {
     font-size: 1.25rem; /* 20px */
     font-weight: 600;
-    color: hsl(var(--foreground));
+    color: #374151;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
   }
 
   .markdown-preview .markdown-p {
     margin-bottom: 1rem;
-    color: hsl(var(--foreground));
+    color: #1a1a1a;
   }
 
   .markdown-preview .markdown-ul {
@@ -258,30 +259,29 @@
     position: relative;
     padding-left: 1.5rem;
     margin-bottom: 0.5rem;
-    color: hsl(var(--foreground));
+    color: #1a1a1a;
   }
 
   .markdown-preview .markdown-li::before {
     content: "•";
     position: absolute;
     left: 0.5rem;
-    color: hsl(var(--primary));
-    font-weight: bold;
+    color: #2563eb; /* Vibrant blue bullet */
+    font-weight: 700;
   }
 
   .markdown-preview .markdown-strong {
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: #000000; /* Pure black for bold text */
   }
 
   .markdown-preview .markdown-em {
     font-style: italic;
-    color: hsl(var(--foreground));
-    opacity: 0.8;
+    color: #475569;
   }
 
   .markdown-preview .markdown-link {
-    color: hsl(var(--primary));
+    color: #2563eb; /* Vibrant blue */
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.2s;
@@ -289,17 +289,69 @@
   }
 
   .markdown-preview .markdown-link:hover {
-    border-bottom-color: hsl(var(--primary));
+    border-bottom-color: #2563eb;
   }
 
   .markdown-preview .markdown-code {
-    background-color: hsl(var(--muted));
-    color: hsl(var(--foreground));
+    background-color: #f1f5f9;
+    color: #1e293b;
     padding: 0.125rem 0.375rem;
     border-radius: 0.25rem;
     font-family: ui-monospace, "Courier New", monospace;
     font-size: 0.875rem;
     font-weight: 500;
+  }
+
+  /* Dark mode markdown styles */
+  .dark .markdown-preview {
+    color: #f5f5f5; /* Almost white for dark mode */
+  }
+
+  .dark .markdown-preview .markdown-h1 {
+    color: #ffffff;
+    border-bottom-color: #3b82f6;
+  }
+
+  .dark .markdown-preview .markdown-h2 {
+    color: #f5f5f5;
+    border-bottom-color: #475569;
+  }
+
+  .dark .markdown-preview .markdown-h3 {
+    color: #e2e8f0;
+  }
+
+  .dark .markdown-preview .markdown-p {
+    color: #f5f5f5;
+  }
+
+  .dark .markdown-preview .markdown-li {
+    color: #f5f5f5;
+  }
+
+  .dark .markdown-preview .markdown-li::before {
+    color: #60a5fa;
+  }
+
+  .dark .markdown-preview .markdown-strong {
+    color: #ffffff;
+  }
+
+  .dark .markdown-preview .markdown-em {
+    color: #cbd5e1;
+  }
+
+  .dark .markdown-preview .markdown-link {
+    color: #60a5fa;
+  }
+
+  .dark .markdown-preview .markdown-link:hover {
+    border-bottom-color: #60a5fa;
+  }
+
+  .dark .markdown-preview .markdown-code {
+    background-color: #1e293b;
+    color: #e2e8f0;
   }
 
   /* Editable markdown textarea styles */

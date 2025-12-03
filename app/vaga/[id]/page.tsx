@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Edit2, FileText, Download, RefreshCw, Star, User, MapPin, Building2 } from "lucide-react"
+import { ArrowLeft, Edit2, FileText, Download, RefreshCw, Star, User, MapPin, Building2, Save } from "lucide-react"
 import { EditVagaDialog } from "@/components/edit-vaga-dialog"
 import { ResumeGeneratorDialog } from "@/components/resume-generator-dialog"
 import { Sidebar } from "@/components/sidebar"
@@ -31,6 +30,8 @@ export default function VagaDetailPage() {
   const [isEditingMarkdown, setIsEditingMarkdown] = useState(false)
   const [curriculoMarkdown, setCurriculoMarkdown] = useState<string>("")
   const [hasGeneratedResume, setHasGeneratedResume] = useState(false)
+  const [isSavingCurriculo, setIsSavingCurriculo] = useState(false)
+  const [isEditingCurriculo, setIsEditingCurriculo] = useState(false)
 
   useEffect(() => {
     loadVaga()
@@ -81,6 +82,35 @@ export default function VagaDetailPage() {
     }
   }
 
+  async function handleSaveCurriculo() {
+    if (!vaga || !curriculoMarkdown) return
+
+    try {
+      setIsSavingCurriculo(true)
+
+      // Update vaga with new curriculum markdown
+      const response = await fetch(`/api/vagas/${vaga.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          markdown_preview_pt: curriculoMarkdown,
+          updated_at: new Date().toISOString()
+        }),
+      })
+
+      if (!response.ok) throw new Error("Failed to save curriculum")
+
+      toast.success("Currículo salvo com sucesso!")
+      setIsEditingCurriculo(false)
+      loadVaga()
+    } catch (error) {
+      console.error("Error saving curriculum:", error)
+      toast.error("Erro ao salvar currículo")
+    } finally {
+      setIsSavingCurriculo(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center ml-64">
@@ -128,144 +158,147 @@ export default function VagaDetailPage() {
             </div>
           </div>
 
-          {/* 3 Cards Layout - Responsivo */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* CARD 1: Informações Gerais da Vaga */}
-            <Card className="h-fit">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  Informações Gerais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
-                    Empresa
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">{vaga.empresa}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    Cargo
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">{vaga.cargo}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    Local
-                  </p>
-                  <p className="text-sm text-foreground">{vaga.local}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium">Modalidade</p>
-                  <Badge variant="outline" className="bg-muted border-border">
-                    {vaga.modalidade}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium">Status</p>
-                  <Badge variant={getStatusVariant(vaga.status)} className="text-sm">
-                    {vaga.status}
-                  </Badge>
-                  {vaga.etapa && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Etapa: <span className="text-foreground font-medium">{vaga.etapa}</span>
+          {/* CARD 1: Informações Gerais + Fit Scores */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Informações da Vaga
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Coluna 1: Informações Gerais */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold text-foreground mb-4">Informações Gerais</h3>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      Empresa
                     </p>
-                  )}
+                    <p className="text-sm font-semibold text-foreground">{vaga.empresa}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      Cargo
+                    </p>
+                    <p className="text-sm font-semibold text-foreground">{vaga.cargo}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Local
+                    </p>
+                    <p className="text-sm text-foreground">{vaga.local}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium">Modalidade</p>
+                    <Badge variant="outline" className="bg-muted border-border">
+                      {vaga.modalidade}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium">Status</p>
+                    <Badge variant={getStatusVariant(vaga.status)} className="text-sm">
+                      {vaga.status}
+                    </Badge>
+                    {vaga.etapa && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Etapa: <span className="text-foreground font-medium">{vaga.etapa}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* CARD 2: Análise Gerada pela IA */}
-            <Card className="h-fit">
-              <CardHeader>
+                {/* Coluna 2: Fit Scores */}
+                <div className="space-y-6">
+                  <h3 className="text-base font-semibold text-foreground mb-4">Fit com a Vaga</h3>
+
+                  {/* Fit Requisitos */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-foreground">Fit Requisitos</p>
+                    <div className="flex items-center gap-3">
+                      <StarRating value={requisitos} readonly size="md" />
+                      <span className="text-2xl font-bold text-foreground">{requisitos.toFixed(1)}</span>
+                    </div>
+                  </div>
+
+                  {/* Fit Perfil */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-foreground">Fit Perfil</p>
+                    <div className="flex items-center gap-3">
+                      <StarRating value={perfil} readonly size="md" />
+                      <span className="text-2xl font-bold text-foreground">{perfil.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CARD 2: Análise da Vaga (Full Width) */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-primary" />
                   Análise da Vaga
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Fit Stars */}
-                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2 font-medium">Fit Requisitos</p>
-                    <div className="flex items-center gap-2">
-                      <StarRating value={requisitos} readonly size="md" />
-                      <span className="text-lg font-bold text-foreground">{requisitos.toFixed(1)}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2 font-medium">Fit Perfil</p>
-                    <div className="flex items-center gap-2">
-                      <StarRating value={perfil} readonly size="md" />
-                      <span className="text-lg font-bold text-foreground">{perfil.toFixed(1)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium text-foreground">Descrição Completa da Vaga</p>
-                    {!isEditingMarkdown && vaga.observacoes && (
-                      <Button variant="ghost" size="sm" onClick={() => setIsEditingMarkdown(true)}>
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Editar
-                      </Button>
-                    )}
-                  </div>
-
-                  {vaga.observacoes ? (
-                    isEditingMarkdown ? (
-                      <div className="space-y-3">
-                        <MarkdownPreview
-                          content={markdownContent}
-                          editable={true}
-                          onChange={setMarkdownContent}
-                          className="min-h-[300px]"
-                        />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={handleSaveMarkdown}>
-                            Salvar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setMarkdownContent(vaga.observacoes || "")
-                              setIsEditingMarkdown(false)
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <MarkdownPreview content={markdownContent} className="max-h-[400px] overflow-y-auto" />
-                    )
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic py-4">Nenhuma análise disponível para esta vaga.</p>
-                  )}
-                </div>
-
-                {/* Responsabilidades */}
-                {vaga.arquivo_analise_url && (
-                  <div>
-                    <Button variant="outline" size="sm" onClick={() => downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Baixar Análise Completa (.md)
-                    </Button>
-                  </div>
+                {!isEditingMarkdown && vaga.observacoes && (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingMarkdown(true)}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {vaga.observacoes ? (
+                isEditingMarkdown ? (
+                  <div className="space-y-3">
+                    <MarkdownPreview
+                      content={markdownContent}
+                      editable={true}
+                      onChange={setMarkdownContent}
+                      className="min-h-[300px]"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveMarkdown}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setMarkdownContent(vaga.observacoes || "")
+                          setIsEditingMarkdown(false)
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <MarkdownPreview content={markdownContent} editable={false} className="max-h-[500px] overflow-y-auto" />
+                )
+              ) : (
+                <p className="text-sm text-muted-foreground italic py-4">Nenhuma análise disponível para esta vaga.</p>
+              )}
 
-          {/* CARD 3: Currículo Personalizado (Full Width Below) */}
+              {vaga.arquivo_analise_url && !isEditingMarkdown && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <Button variant="outline" size="sm" onClick={() => downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar Análise Completa (.md)
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* CARD 3: Currículo Personalizado (Full Width) */}
           <Card className="w-full">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -289,6 +322,7 @@ export default function VagaDetailPage() {
                     }}
                     onMarkdownGenerated={(markdown) => {
                       setCurriculoMarkdown(markdown)
+                      setIsEditingCurriculo(false)
                     }}
                   />
                   {vaga.arquivo_cv_url && (
@@ -305,48 +339,60 @@ export default function VagaDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {hasGeneratedResume && vaga.arquivo_cv_url ? (
+              {curriculoMarkdown || hasGeneratedResume ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-                    <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">curriculo-{vaga.empresa}.pdf</p>
-                      <p className="text-xs text-muted-foreground">Currículo personalizado para esta vaga</p>
-                    </div>
-                  </div>
-
-                  {curriculoMarkdown ? (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Preview do Currículo</Label>
-                      <MarkdownPreview content={curriculoMarkdown} className="max-h-[500px] overflow-y-auto" />
+                  {/* Editable Markdown Preview */}
+                  {isEditingCurriculo ? (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Editar Currículo</Label>
+                      <MarkdownPreview
+                        content={curriculoMarkdown}
+                        editable={true}
+                        onChange={setCurriculoMarkdown}
+                        className="min-h-[400px]"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleSaveCurriculo} disabled={isSavingCurriculo}>
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSavingCurriculo ? "Salvando..." : "Salvar Alterações"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditingCurriculo(false)
+                            // Reset to original if needed
+                            loadVaga()
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <Tabs defaultValue="info" className="w-full">
-                      <TabsList className="grid w-full max-w-md grid-cols-2">
-                        <TabsTrigger value="info">Informações</TabsTrigger>
-                        <TabsTrigger value="preview">Preview</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="info" className="mt-4">
-                        <div className="space-y-2 text-sm">
-                          <p className="text-foreground">
-                            <span className="font-medium">Gerado para:</span> {vaga.empresa} - {vaga.cargo}
-                          </p>
-                          <p className="text-foreground">
-                            <span className="font-medium">Fit Requisitos:</span> {requisitos.toFixed(1)}/5.0
-                          </p>
-                          <p className="text-foreground">
-                            <span className="font-medium">Fit Perfil:</span> {perfil.toFixed(1)}/5.0
-                          </p>
+                    <>
+                      {curriculoMarkdown && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">Preview do Currículo</Label>
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditingCurriculo(true)}>
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Editar
+                            </Button>
+                          </div>
+                          <MarkdownPreview content={curriculoMarkdown} editable={false} className="max-h-[500px] overflow-y-auto" />
                         </div>
-                      </TabsContent>
-                      <TabsContent value="preview" className="mt-4">
-                        <div className="bg-muted/30 rounded-lg p-6 border border-border">
-                          <p className="text-sm text-muted-foreground text-center">
-                            Preview disponível ao regenerar currículo
-                          </p>
+                      )}
+                      {!curriculoMarkdown && vaga.arquivo_cv_url && (
+                        <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                          <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">curriculo-{vaga.empresa}.pdf</p>
+                            <p className="text-xs text-muted-foreground">Currículo personalizado para esta vaga</p>
+                          </div>
                         </div>
-                      </TabsContent>
-                    </Tabs>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (
@@ -368,6 +414,7 @@ export default function VagaDetailPage() {
                     }}
                     onMarkdownGenerated={(markdown) => {
                       setCurriculoMarkdown(markdown)
+                      setIsEditingCurriculo(false)
                     }}
                   />
                 </div>
