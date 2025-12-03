@@ -7,6 +7,7 @@ import type { VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Edit2, FileText, Download, RefreshCw, Star, User, MapPin, Building2 } from "lucide-react"
 import { EditVagaDialog } from "@/components/edit-vaga-dialog"
@@ -28,6 +29,8 @@ export default function VagaDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [markdownContent, setMarkdownContent] = useState("")
   const [isEditingMarkdown, setIsEditingMarkdown] = useState(false)
+  const [curriculoMarkdown, setCurriculoMarkdown] = useState<string>("")
+  const [hasGeneratedResume, setHasGeneratedResume] = useState(false)
 
   useEffect(() => {
     loadVaga()
@@ -44,6 +47,11 @@ export default function VagaDetailPage() {
       // Se houver arquivo de análise, carregar conteúdo para preview
       if (data?.observacoes) {
         setMarkdownContent(data.observacoes)
+      }
+
+      // Se houver arquivo CV, marcar que tem currículo gerado
+      if (data?.arquivo_cv_url) {
+        setHasGeneratedResume(true)
       }
     } catch (error) {
       console.error("Erro ao carregar vaga:", error)
@@ -120,10 +128,10 @@ export default function VagaDetailPage() {
             </div>
           </div>
 
-          {/* 3 Cards Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 3 Cards Layout - Responsivo */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* CARD 1: Informações Gerais da Vaga */}
-            <Card className="glass-card-intense">
+            <Card className="h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
@@ -173,7 +181,7 @@ export default function VagaDetailPage() {
             </Card>
 
             {/* CARD 2: Análise Gerada pela IA */}
-            <Card className="glass-card-intense lg:col-span-2">
+            <Card className="h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-primary" />
@@ -258,7 +266,7 @@ export default function VagaDetailPage() {
           </div>
 
           {/* CARD 3: Currículo Personalizado (Full Width Below) */}
-          <Card className="glass-card-intense mt-6">
+          <Card className="w-full">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -276,7 +284,11 @@ export default function VagaDetailPage() {
                     }
                     onSuccess={(filename) => {
                       toast.success(`Currículo gerado: ${filename}`)
+                      setHasGeneratedResume(true)
                       loadVaga()
+                    }}
+                    onMarkdownGenerated={(markdown) => {
+                      setCurriculoMarkdown(markdown)
                     }}
                   />
                   {vaga.arquivo_cv_url && (
@@ -293,7 +305,7 @@ export default function VagaDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {vaga.arquivo_cv_url ? (
+              {hasGeneratedResume && vaga.arquivo_cv_url ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
                     <FileText className="h-5 w-5 text-primary flex-shrink-0" />
@@ -303,32 +315,39 @@ export default function VagaDetailPage() {
                     </div>
                   </div>
 
-                  <Tabs defaultValue="preview" className="w-full">
-                    <TabsList className="grid w-full max-w-md grid-cols-2">
-                      <TabsTrigger value="preview">Preview</TabsTrigger>
-                      <TabsTrigger value="info">Informações</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="preview" className="mt-4">
-                      <div className="bg-muted/30 rounded-lg p-6 border border-border">
-                        <p className="text-sm text-muted-foreground text-center">
-                          Preview do PDF disponível após fazer download
-                        </p>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="info" className="mt-4">
-                      <div className="space-y-2 text-sm">
-                        <p className="text-foreground">
-                          <span className="font-medium">Gerado para:</span> {vaga.empresa} - {vaga.cargo}
-                        </p>
-                        <p className="text-foreground">
-                          <span className="font-medium">Fit Requisitos:</span> {requisitos.toFixed(1)}/5.0
-                        </p>
-                        <p className="text-foreground">
-                          <span className="font-medium">Fit Perfil:</span> {perfil.toFixed(1)}/5.0
-                        </p>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
+                  {curriculoMarkdown ? (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Preview do Currículo</Label>
+                      <MarkdownPreview content={curriculoMarkdown} className="max-h-[500px] overflow-y-auto" />
+                    </div>
+                  ) : (
+                    <Tabs defaultValue="info" className="w-full">
+                      <TabsList className="grid w-full max-w-md grid-cols-2">
+                        <TabsTrigger value="info">Informações</TabsTrigger>
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="info" className="mt-4">
+                        <div className="space-y-2 text-sm">
+                          <p className="text-foreground">
+                            <span className="font-medium">Gerado para:</span> {vaga.empresa} - {vaga.cargo}
+                          </p>
+                          <p className="text-foreground">
+                            <span className="font-medium">Fit Requisitos:</span> {requisitos.toFixed(1)}/5.0
+                          </p>
+                          <p className="text-foreground">
+                            <span className="font-medium">Fit Perfil:</span> {perfil.toFixed(1)}/5.0
+                          </p>
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="preview" className="mt-4">
+                        <div className="bg-muted/30 rounded-lg p-6 border border-border">
+                          <p className="text-sm text-muted-foreground text-center">
+                            Preview disponível ao regenerar currículo
+                          </p>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -344,7 +363,11 @@ export default function VagaDetailPage() {
                     }
                     onSuccess={(filename) => {
                       toast.success(`Currículo gerado: ${filename}`)
+                      setHasGeneratedResume(true)
                       loadVaga()
+                    }}
+                    onMarkdownGenerated={(markdown) => {
+                      setCurriculoMarkdown(markdown)
                     }}
                   />
                 </div>

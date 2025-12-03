@@ -103,13 +103,18 @@ export function htmlToMarkdown(html: string): string {
     // Remove tags estruturais (<html>, <head>, <style>, etc.) para que
     // o preview Markdown mostre apenas o conteúdo relevante ao usuário
     const cleanedHtml = html
-      .replace(/<style[\s\S]*?<\/style>/gi, "") // Remove blocos <style>...</style>
-      .replace(/<!DOCTYPE[\s\S]*?>/gi, "") // Remove <!DOCTYPE ...>
-      .replace(/<html[\s\S]*?>/gi, "") // Remove tag <html>
+      .replace(/<!DOCTYPE[^>]*>/gi, "") // Remove <!DOCTYPE ...>
+      .replace(/<\?xml[^>]*>/gi, "") // Remove <?xml ...>
+      .replace(/<html[^>]*>/gi, "") // Remove tag <html ...>
       .replace(/<\/html>/gi, "") // Remove tag </html>
       .replace(/<head[\s\S]*?<\/head>/gi, "") // Remove <head>...</head>
-      .replace(/<body[\s\S]*?>/gi, "") // Remove tag <body>
+      .replace(/<style[\s\S]*?<\/style>/gi, "") // Remove blocos <style>...</style>
+      .replace(/<script[\s\S]*?<\/script>/gi, "") // Remove blocos <script>...</script>
+      .replace(/<body[^>]*>/gi, "") // Remove tag <body ...>
       .replace(/<\/body>/gi, "") // Remove tag </body>
+      .replace(/<meta[^>]*>/gi, "") // Remove tags <meta ...>
+      .replace(/<link[^>]*>/gi, "") // Remove tags <link ...>
+      .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "") // Remove <title>...</title>
 
     let markdown = turndownService.turndown(cleanedHtml)
 

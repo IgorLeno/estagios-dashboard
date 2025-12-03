@@ -14,7 +14,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { MarkdownPreview } from "@/components/ui/markdown-preview"
+import { htmlToMarkdown } from "@/lib/ai/markdown-converter"
 
 type GenerationState = "idle" | "loading" | "success" | "error"
 type Step = "form" | "preview" | "pdf"
@@ -45,15 +46,26 @@ interface ResumeGeneratorDialogProps {
   jobDescription?: string
   trigger?: React.ReactNode
   onSuccess?: (filename: string) => void
+  onMarkdownGenerated?: (markdown: string) => void
 }
 
-export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSuccess }: ResumeGeneratorDialogProps) {
+export function ResumeGeneratorDialog({
+  vagaId,
+  jobDescription,
+  trigger,
+  onSuccess,
+  onMarkdownGenerated,
+}: ResumeGeneratorDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("form")
   const [state, setState] = useState<GenerationState>("idle")
   const [language, setLanguage] = useState<"pt" | "en" | "both">("pt")
   const [htmlPreviewPt, setHtmlPreviewPt] = useState<string>("")
   const [htmlPreviewEn, setHtmlPreviewEn] = useState<string>("")
+  const [markdownPt, setMarkdownPt] = useState<string>("")
+  const [markdownEn, setMarkdownEn] = useState<string>("")
+  const [isEditingPt, setIsEditingPt] = useState(false)
+  const [isEditingEn, setIsEditingEn] = useState(false)
   const [resultPt, setResultPt] = useState<GenerateResumeResponse["data"] | null>(null)
   const [resultEn, setResultEn] = useState<GenerateResumeResponse["data"] | null>(null)
   const [metadata, setMetadata] = useState<GenerateResumeResponse["metadata"] | null>(null)
@@ -103,9 +115,15 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
 
         setHtmlPreviewPt(dataPt.data.html)
         setHtmlPreviewEn(dataEn.data.html)
+        const mdPt = htmlToMarkdown(dataPt.data.html)
+        const mdEn = htmlToMarkdown(dataEn.data.html)
+        setMarkdownPt(mdPt)
+        setMarkdownEn(mdEn)
         setMetadata(dataPt.metadata || null)
         setStep("preview")
         setState("idle")
+        // Notificar parent sobre markdown gerado (para preview no Cartão 3)
+        onMarkdownGenerated?.(mdPt || mdEn)
         toast.success("Preview gerado com sucesso!")
       } else {
         // Gerar HTML único (PT ou EN)
@@ -124,15 +142,22 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
           throw new Error(data.error || "Failed to generate preview")
         }
 
+        let md = ""
         if (language === "pt") {
           setHtmlPreviewPt(data.data.html)
+          md = htmlToMarkdown(data.data.html)
+          setMarkdownPt(md)
         } else {
           setHtmlPreviewEn(data.data.html)
+          md = htmlToMarkdown(data.data.html)
+          setMarkdownEn(md)
         }
 
         setMetadata(data.metadata || null)
         setStep("preview")
         setState("idle")
+        // Notificar parent sobre markdown gerado (para preview no Cartão 3)
+        onMarkdownGenerated?.(md)
         toast.success("Preview gerado com sucesso!")
       }
     } catch (err) {
@@ -338,6 +363,10 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
     setResultEn(null)
     setHtmlPreviewPt("")
     setHtmlPreviewEn("")
+    setMarkdownPt("")
+    setMarkdownEn("")
+    setIsEditingPt(false)
+    setIsEditingEn(false)
     setMetadata(null)
   }
 
@@ -432,31 +461,46 @@ export function ResumeGeneratorDialog({ vagaId, jobDescription, trigger, onSucce
           {/* Preview State */}
           {step === "preview" && state === "idle" && (
             <div className="space-y-4">
-              <Label>Preview do Currículo</Label>
+              <div className="flex items-center justify-between">
+                <Label>Preview do Currículo</Label>
+                <Badge variant="secondary" className="text-xs">
+                  {language === "both" ? "2 previews" : language === "pt" ? "Português" : "English"}
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Você pode editar o HTML abaixo antes de gerar o PDF final.
+                Você pode editar o conteúdo abaixo antes de gerar o PDF final.
               </p>
 
-              {htmlPreviewPt && (
+              {markdownPt && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Português</Label>
-                  <Textarea
-                    value={htmlPreviewPt}
-                    onChange={(e) => setHtmlPreviewPt(e.target.value)}
-                    rows={25}
-                    className="font-mono text-xs"
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">🇧🇷 Português</Label>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditingPt(!isEditingPt)}>
+                      {isEditingPt ? "Visualizar" : "Editar"}
+                    </Button>
+                  </div>
+                  <MarkdownPreview
+                    content={markdownPt}
+                    editable={isEditingPt}
+                    onChange={setMarkdownPt}
+                    className={isEditingPt ? "min-h-[400px]" : "max-h-[400px] overflow-y-auto"}
                   />
                 </div>
               )}
 
-              {htmlPreviewEn && (
+              {markdownEn && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Inglês</Label>
-                  <Textarea
-                    value={htmlPreviewEn}
-                    onChange={(e) => setHtmlPreviewEn(e.target.value)}
-                    rows={25}
-                    className="font-mono text-xs"
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">🇺🇸 English</Label>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditingEn(!isEditingEn)}>
+                      {isEditingEn ? "Visualizar" : "Editar"}
+                    </Button>
+                  </div>
+                  <MarkdownPreview
+                    content={markdownEn}
+                    editable={isEditingEn}
+                    onChange={setMarkdownEn}
+                    className={isEditingEn ? "min-h-[400px]" : "max-h-[400px] overflow-y-auto"}
                   />
                 </div>
               )}
