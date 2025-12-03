@@ -17,7 +17,7 @@ import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
-import { toSafeNumber, getStatusVariant } from "@/lib/utils"
+import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function VagaDetailPage() {
@@ -200,7 +200,7 @@ export default function VagaDetailPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1 font-medium">Status</p>
-                    <Badge variant={getStatusVariant(vaga.status)} className="text-sm">
+                    <Badge className={`${getStatusBadgeClasses(vaga.status)} text-sm font-semibold border`}>
                       {vaga.status}
                     </Badge>
                     {vaga.etapa && (

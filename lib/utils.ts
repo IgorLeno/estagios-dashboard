@@ -110,6 +110,27 @@ export function getStatusVariant(status: string): "default" | "secondary" | "des
 }
 
 /**
+ * Retorna classes Tailwind customizadas para badges de status
+ * Cores fixas com máximo contraste visual
+ *
+ * @param status - Status da vaga (Pendente, Em Andamento, Finalizada)
+ * @returns String de classes Tailwind para aplicar no Badge
+ *
+ * @example
+ * getStatusBadgeClasses("Pendente") // "bg-yellow-100 text-yellow-800 border-yellow-300"
+ * getStatusBadgeClasses("Em Andamento") // "bg-blue-100 text-blue-800 border-blue-300"
+ */
+export function getStatusBadgeClasses(status: string): string {
+  const statusClassMap: Record<string, string> = {
+    Pendente: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    "Em Andamento": "bg-blue-100 text-blue-800 border-blue-300",
+    Finalizada: "bg-green-100 text-green-800 border-green-300",
+  }
+
+  return statusClassMap[status] || "bg-gray-100 text-gray-800 border-gray-300"
+}
+
+/**
  * Normaliza valores de fit (requisitos/perfil) para escala 0-5 com incrementos de 0.5
  * Converte automaticamente valores legados (0-100) para nova escala (0-5)
  *
