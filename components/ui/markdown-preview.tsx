@@ -41,6 +41,7 @@ export function MarkdownPreview({ content, editable = false, onChange, className
         "markdown-preview prose prose-sm max-w-none",
         "p-6 rounded-lg border border-border bg-card",
         "text-foreground break-words overflow-wrap-anywhere",
+        "overflow-x-hidden overflow-y-auto",
         className
       )}
       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(content) }}

@@ -120,7 +120,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                         <MarkdownPreview
                           content={vaga.observacoes}
                           editable={false}
-                          className="max-h-[400px] overflow-y-auto !max-w-full break-words"
+                          className="max-h-[400px] !max-w-full break-words"
                         />
                       </div>
                       {/* Se houver link para análise completa */}

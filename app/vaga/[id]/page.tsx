@@ -281,7 +281,7 @@ export default function VagaDetailPage() {
                     </div>
                   </div>
                 ) : (
-                  <MarkdownPreview content={markdownContent} editable={false} className="max-h-[500px] overflow-y-auto" />
+                  <MarkdownPreview content={markdownContent} editable={false} className="max-h-[500px]" />
                 )
               ) : (
                 <p className="text-sm text-muted-foreground italic py-4">Nenhuma análise disponível para esta vaga.</p>
@@ -380,7 +380,7 @@ export default function VagaDetailPage() {
                               Editar
                             </Button>
                           </div>
-                          <MarkdownPreview content={curriculoMarkdown} editable={false} className="max-h-[500px] overflow-y-auto" />
+                          <MarkdownPreview content={curriculoMarkdown} editable={false} className="max-h-[500px]" />
                         </div>
                       )}
                       {!curriculoMarkdown && vaga.arquivo_cv_url && (

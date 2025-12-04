@@ -483,7 +483,7 @@ export function ResumeGeneratorDialog({
                     content={markdownPt}
                     editable={isEditingPt}
                     onChange={setMarkdownPt}
-                    className={isEditingPt ? "min-h-[400px]" : "max-h-[400px] overflow-y-auto"}
+                    className={isEditingPt ? "min-h-[400px]" : "max-h-[400px]"}
                   />
                 </div>
               )}
@@ -500,7 +500,7 @@ export function ResumeGeneratorDialog({
                     content={markdownEn}
                     editable={isEditingEn}
                     onChange={setMarkdownEn}
-                    className={isEditingEn ? "min-h-[400px]" : "max-h-[400px] overflow-y-auto"}
+                    className={isEditingEn ? "min-h-[400px]" : "max-h-[400px]"}
                   />
                 </div>
               )}
