@@ -13,6 +13,7 @@
 ## Task 1: Import MarkdownPreview Component
 
 **Files:**
+
 - Modify: `components/vaga-table-row.tsx:1-26` (imports section)
 
 **Step 1: Add MarkdownPreview import**
@@ -44,6 +45,7 @@ git commit -m "feat: import MarkdownPreview component in vaga-table-row"
 ## Task 2: Replace Plain Text with MarkdownPreview
 
 **Files:**
+
 - Modify: `components/vaga-table-row.tsx:116-138` (observacoes rendering section)
 
 **Step 1: Replace the plain text paragraph with MarkdownPreview**
@@ -51,64 +53,65 @@ git commit -m "feat: import MarkdownPreview component in vaga-table-row"
 **Current code (lines 116-138):**
 
 ```tsx
-{vaga.observacoes ? (
-  <div className="prose prose-sm max-w-none">
-    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{vaga.observacoes}</p>
+{
+  vaga.observacoes ? (
+    <div className="prose prose-sm max-w-none">
+      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{vaga.observacoes}</p>
 
-    {/* Se houver link para análise completa */}
-    {vaga.arquivo_analise_url && (
-      <Button
-        variant="link"
-        size="sm"
-        className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
-        onClick={(e) => {
-          e.stopPropagation()
-          downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
-        }}
-      >
-        <ExternalLink className="h-4 w-4" />
-        Ver análise completa
-      </Button>
-    )}
-  </div>
-) : (
-  <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
-)}
+      {/* Se houver link para análise completa */}
+      {vaga.arquivo_analise_url && (
+        <Button
+          variant="link"
+          size="sm"
+          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
+          onClick={(e) => {
+            e.stopPropagation()
+            downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
+          }}
+        >
+          <ExternalLink className="h-4 w-4" />
+          Ver análise completa
+        </Button>
+      )}
+    </div>
+  ) : (
+    <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
+  )
+}
 ```
 
 **New code:**
 
 ```tsx
-{vaga.observacoes ? (
-  <div className="space-y-3">
-    <MarkdownPreview
-      content={vaga.observacoes}
-      editable={false}
-      className="max-h-[400px] overflow-y-auto"
-    />
+{
+  vaga.observacoes ? (
+    <div className="space-y-3">
+      <MarkdownPreview content={vaga.observacoes} editable={false} className="max-h-[400px] overflow-y-auto" />
 
-    {/* Se houver link para análise completa */}
-    {vaga.arquivo_analise_url && (
-      <Button
-        variant="link"
-        size="sm"
-        className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
-        onClick={(e) => {
-          e.stopPropagation()
-          downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
-        }}
-      >
-        <ExternalLink className="h-4 w-4" />
-        Ver análise completa
-      </Button>
-    )}
-  </div>
-) : (
-  <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
-)}
+      {/* Se houver link para análise completa */}
+      {vaga.arquivo_analise_url && (
+        <Button
+          variant="link"
+          size="sm"
+          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
+          onClick={(e) => {
+            e.stopPropagation()
+            downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
+          }}
+        >
+          <ExternalLink className="h-4 w-4" />
+          Ver análise completa
+        </Button>
+      )}
+    </div>
+  ) : (
+    <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
+  )
+}
 ```
 
 **Changes:**
+
 1. Removed `prose prose-sm max-w-none` classes from outer div (MarkdownPreview has its own prose styles)
 2. Changed outer div to use `space-y-3` for consistent spacing
 3. Replaced `<p>` tag with `<MarkdownPreview>` component
@@ -126,6 +129,7 @@ Run: `pnpm dev`
 Navigate to: `http://localhost:3000`
 Action: Expand a vaga row that has `observacoes` content
 Expected:
+
 - Markdown content renders with proper formatting (headings, lists, bold text)
 - Visual appearance matches the detail page styling
 - Scrollbar appears if content exceeds 400px height
@@ -148,6 +152,7 @@ git commit -m "feat: render observacoes with MarkdownPreview in table row
 ## Task 3: Verify Styling Consistency
 
 **Files:**
+
 - Verify: `app/globals.css:211-355` (markdown-preview styles)
 - Verify: `components/ui/markdown-preview.tsx` (component implementation)
 
@@ -156,6 +161,7 @@ git commit -m "feat: render observacoes with MarkdownPreview in table row
 **Action:** Visually compare expanded table row with detail page (`/vaga/[id]`)
 
 **Verify these elements render identically:**
+
 - H1 titles (`# Title`) → Purple color, larger font
 - H2 sections (`## Section`) → Bold, proper spacing
 - H3 subtitles (`### Subtitle`) → Medium weight
@@ -169,6 +175,7 @@ git commit -m "feat: render observacoes with MarkdownPreview in table row
 **Step 2: Test responsive behavior**
 
 **Actions:**
+
 1. Expand multiple rows to check card stacking on mobile
 2. Verify scroll works smoothly when content exceeds 400px
 3. Check that card doesn't overflow on smaller screens
@@ -201,6 +208,7 @@ Expected: Build succeeds without errors or warnings
 **Step 4: Verify build output**
 
 Check console output for:
+
 - No TypeScript errors
 - No unused imports warnings
 - No accessibility warnings
@@ -277,6 +285,7 @@ Expected: Clear, descriptive commit messages for this feature
 Check if `CLAUDE.md` needs updates to document this pattern for future reference.
 
 **Files to check:**
+
 - `components/CLAUDE.md` - Document MarkdownPreview usage in table rows
 
 If update needed, add example:

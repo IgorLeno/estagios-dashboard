@@ -94,7 +94,7 @@ export default function VagaDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           markdown_preview_pt: curriculoMarkdown,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         }),
       })
 
@@ -289,7 +289,11 @@ export default function VagaDetailPage() {
 
               {vaga.arquivo_analise_url && !isEditingMarkdown && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <Button variant="outline" size="sm" onClick={() => downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Baixar Análise Completa (.md)
                   </Button>
