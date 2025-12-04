@@ -115,13 +115,14 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                 </CardHeader>
                 <CardContent>
                   {vaga.observacoes ? (
-                    <div className="space-y-3">
-                      <MarkdownPreview
-                        content={vaga.observacoes}
-                        editable={false}
-                        className="max-h-[400px] overflow-y-auto overflow-x-hidden"
-                      />
-
+                    <div className="space-y-3 w-full">
+                      <div className="w-full overflow-hidden">
+                        <MarkdownPreview
+                          content={vaga.observacoes}
+                          editable={false}
+                          className="max-h-[400px] overflow-y-auto !max-w-full break-words"
+                        />
+                      </div>
                       {/* Se houver link para análise completa */}
                       {vaga.arquivo_analise_url && (
                         <Button

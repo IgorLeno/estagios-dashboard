@@ -213,6 +213,8 @@
     line-height: 1.7;
     color: #1a1a1a; /* Almost black for maximum contrast */
     font-size: 14px;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-h1 {
@@ -223,6 +225,8 @@
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 3px solid #2563eb; /* Vibrant blue */
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-h2 {
@@ -233,6 +237,8 @@
     margin-bottom: 0.75rem;
     padding-bottom: 0.375rem;
     border-bottom: 2px solid #cbd5e1;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-h3 {
@@ -241,11 +247,15 @@
     color: #374151;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-p {
     margin-bottom: 1rem;
     color: #1a1a1a;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-ul {
@@ -260,6 +270,8 @@
     padding-left: 1.5rem;
     margin-bottom: 0.5rem;
     color: #1a1a1a;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .markdown-preview .markdown-li::before {
