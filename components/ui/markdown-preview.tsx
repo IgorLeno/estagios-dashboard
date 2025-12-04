@@ -20,16 +20,15 @@ export function MarkdownPreview({ content, editable = false, onChange, className
       <textarea
         value={content}
         onChange={(e) => onChange?.(e.target.value)}
+        aria-label="Markdown content"
+        placeholder="Digite seu conteúdo em Markdown aqui..."
         className={cn(
           "w-full min-h-[500px] p-4 rounded-lg border border-border",
           "bg-card text-foreground font-mono text-sm leading-relaxed",
           "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-          "markdown-preview-editable",
+          "resize-y markdown-preview-editable",
           className
         )}
-        style={{
-          resize: "vertical",
-        }}
       />
     )
   }
