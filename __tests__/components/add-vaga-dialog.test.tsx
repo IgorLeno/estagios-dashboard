@@ -47,7 +47,7 @@ describe("AddVagaDialog", () => {
 
     // AI Parser tab should be active (has textarea)
     expect(screen.getByRole("textbox")).toBeInTheDocument()
-    expect(screen.getByText(/preencher dados/i)).toBeInTheDocument()
+    expect(screen.getByText(/realizar análise/i)).toBeInTheDocument()
   })
 
   it("should allow switching to manual tab", async () => {
