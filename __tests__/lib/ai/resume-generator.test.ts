@@ -105,18 +105,42 @@ vi.mock("@/lib/ai/cv-templates", () => ({
     education: [],
     skills: [
       {
-        category: "Linguagens de Programação",
-        items: ["Python", "MATLAB", "SQL"],
+        category: "Machine Learning & Data Science",
+        items: ["TensorFlow", "PyTorch", "scikit-learn", "pandas", "NumPy"],
       },
       {
-        category: "Machine Learning & Data Science",
-        items: ["scikit-learn", "TensorFlow", "pandas"],
+        category: "Linguagens de Programação",
+        items: ["Python", "MATLAB", "SQL", "JavaScript"],
+      },
+      {
+        category: "Ferramentas & Tecnologias",
+        items: ["Docker", "Git", "Jupyter Notebook", "VS Code", "Linux"],
       },
     ],
     projects: [
       {
         title: "Predição de Propriedades Termodinâmicas com ML",
-        description: ["Desenvolvimento de modelo de regressão", "Redução de erro em 35%"],
+        description: [
+          "Desenvolvimento de modelo de Machine Learning usando TensorFlow e Python para prever viscosidade de misturas químicas",
+          "Redução de erro de predição em 35% através de Random Forest e redes neurais",
+          "Processamento de dataset com 5000+ pontos experimentais usando pandas e NumPy",
+        ],
+      },
+      {
+        title: "Simulação de Reator Químico em Python",
+        description: [
+          "Implementação de modelo cinético para reator de polimerização usando Python e bibliotecas científicas",
+          "Validação experimental com erro médio < 5% através de análise estatística",
+          "Automação de análise de sensibilidade paramétrica com scripts Python",
+        ],
+      },
+      {
+        title: "Dashboard de Análise de Processos",
+        description: [
+          "Desenvolvimento de aplicação web usando Python (Streamlit) para visualização de dados de processo químico",
+          "Interface interativa para análise de tendências usando Machine Learning",
+          "Integração com Docker e Git para deploy e versionamento",
+        ],
       },
     ],
     languages: [],
