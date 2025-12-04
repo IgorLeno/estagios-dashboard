@@ -82,10 +82,10 @@ describe("AddVagaDialog", () => {
     const uploadTabTrigger = screen.getByText(/currículo/i)
     await user.click(uploadTabTrigger)
 
-    // Wait for resume section to appear
+    // Wait for CurriculoTab to render (without jobAnalysisData, shows language selector and "Gerar Preview" button)
     await waitFor(
       () => {
-        expect(screen.getByRole("button", { name: /gerar currículo/i })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /gerar preview/i })).toBeInTheDocument()
       },
       { timeout: 2000 }
     )
