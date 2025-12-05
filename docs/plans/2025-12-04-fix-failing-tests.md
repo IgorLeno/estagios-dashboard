@@ -9,6 +9,7 @@
 **Tech Stack:** Vitest, Playwright, React Testing Library v16+, TypeScript
 
 **Testing Status:**
+
 - Unit Tests: 204/218 passing (14 failures)
 - E2E Tests: 15/28 passing (13 failures)
 - Target: 100% passing (0 failures)
@@ -18,16 +19,19 @@
 ## ROOT CAUSES SUMMARY
 
 ### Root Cause #1: Button Text Mismatch
+
 **Issue:** Tests search for button "preencher dados" but actual button text is "Gerar Análise"
 **Affected:** 14 tests (2 unit + 12 E2E)
 **Decision:** Update tests to match current implementation (implementation is correct)
 
 ### Root Cause #2: Resume Generator Mock Data Contains Fabricated Skills
+
 **Issue:** Test mocks include skills NOT in original CV template (PyTorch, NumPy, JavaScript, etc.), but implementation has strict anti-fabrication validation
 **Affected:** 12 unit tests in resume-generator.test.ts
 **Decision:** Update test mocks to use ONLY skills from actual CV template
 
 ### Root Cause #3: Navigation Test Selector Mismatch
+
 **Issue:** Test searches for `/sistema.*datas|rastreamento|meia.*noite/i` but actual page content doesn't match
 **Affected:** 1 E2E test
 **Decision:** Update test selector to match actual configurações page content
@@ -39,16 +43,19 @@
 ### Task 1.1: Fix "should default to AI Parser tab" test
 
 **Files:**
+
 - Modify: `__tests__/components/add-vaga-dialog.test.tsx:45-51`
 
 **Step 1: Update button text expectation**
 
 Change line 50 from:
+
 ```typescript
 expect(screen.getByText(/preencher dados/i)).toBeInTheDocument()
 ```
 
 To:
+
 ```typescript
 expect(screen.getByText(/gerar análise/i)).toBeInTheDocument()
 ```
@@ -73,11 +80,13 @@ git commit -m "test: fix AddVagaDialog default tab button text assertion"
 ### Task 1.2: Fix "should allow switching to upload tab" test
 
 **Files:**
+
 - Modify: `__tests__/components/add-vaga-dialog.test.tsx:77-92`
 
 **Step 1: Update button text expectation**
 
 Change line 88 from:
+
 ```typescript
 expect(screen.getByRole("button", { name: /gerar currículo/i })).toBeInTheDocument()
 ```
@@ -91,6 +100,7 @@ The test is timing out trying to find the button. The issue is likely that the t
 Actually, looking at the components, the CurriculoTab requires `jobAnalysisData` to show the "Gerar Currículo" button. The test needs to be updated to check for the correct initial state (no analysis data).
 
 Change line 86-91 to:
+
 ```typescript
 // Wait for CurriculoTab to render
 await waitFor(
@@ -125,11 +135,13 @@ git commit -m "test: fix AddVagaDialog upload tab assertion for initial state"
 ### Task 2.1: Update mock CV template to include all test skills
 
 **Files:**
+
 - Modify: `__tests__/lib/ai/resume-generator.test.ts:91-125`
 
 **Step 1: Identify skills in mockSkillsResponse**
 
 From line 28-43, test expects:
+
 - TensorFlow, PyTorch, scikit-learn, pandas, NumPy (ML category)
 - Python, MATLAB, SQL, JavaScript (Programming category)
 - Docker, Git, Jupyter Notebook, VS Code, Linux (Tools category)
@@ -137,6 +149,7 @@ From line 28-43, test expects:
 **Step 2: Update getCVTemplate mock to include ALL these skills**
 
 Replace lines 106-115 with:
+
 ```typescript
 skills: [
   {
@@ -157,6 +170,7 @@ skills: [
 **Step 3: Update mock projects to match mockProjectsResponse**
 
 Replace lines 116-121 with:
+
 ```typescript
 projects: [
   {
@@ -208,16 +222,19 @@ git commit -m "test: fix resume generator mocks to align with anti-fabrication v
 ### Task 3.1: Update button text in all AI Parser E2E tests
 
 **Files:**
+
 - Modify: `e2e/ai-parser.spec.ts`
 
 **Step 1: Update "deve parsear descrição de vaga com sucesso" (line 72)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -225,11 +242,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 2: Update "deve validar tamanho mínimo da descrição" (line 105)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -237,11 +256,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 3: Update "deve permitir refazer análise" (line 131)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -249,11 +270,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 4: Update "deve lidar com erro de rate limit" (line 172)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -261,11 +284,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 5: Update "deve lidar com erro de rede/timeout" (line 206)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -273,11 +298,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 6: Update "deve alternar entre tabs sem perder dados" (line 238)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -304,16 +331,19 @@ git commit -m "test(e2e): fix AI parser button text to match implementation"
 ### Task 4.1: Update button text in setupJobAnalysis helper
 
 **Files:**
+
 - Modify: `e2e/resume-generator.spec.ts:59`
 
 **Step 1: Update button selector in setupJobAnalysis**
 
 Change line 59 from:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -321,11 +351,13 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 **Step 2: Update button selector in "deve lidar com erro na geração" (line 188)**
 
 Change:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
 ```
 
 To:
+
 ```typescript
 const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ```
@@ -352,11 +384,13 @@ git commit -m "test(e2e): fix resume generator button text to match implementati
 ### Task 5.1: Fix "deve navegar entre abas" test
 
 **Files:**
+
 - Modify: `e2e/navigation.spec.ts:24`
 
 **Step 1: Investigate actual configurações page content**
 
 Run dev server and manually check:
+
 ```bash
 pnpm dev
 # Navigate to http://localhost:3000 → Configurações → Check visible text
@@ -365,16 +399,19 @@ pnpm dev
 **Step 2: Update test selector based on actual content**
 
 Option A - If page has "Configurações" heading:
+
 ```typescript
 await expect(page.getByRole("heading", { name: /configurações/i })).toBeVisible({ timeout: 5000 })
 ```
 
 Option B - If page has specific settings text:
+
 ```typescript
 await expect(page.getByText(/hora de início|configurações/i)).toBeVisible({ timeout: 5000 })
 ```
 
 Option C - Use more generic approach:
+
 ```typescript
 // Verify URL changed
 await expect(page).toHaveURL(/\/configuracoes/)
@@ -410,6 +447,7 @@ pnpm test --run
 ```
 
 **Expected Output:**
+
 ```
 Test Files  20 passed (20)
 Tests  218 passed (218)
@@ -432,6 +470,7 @@ pnpm test:e2e
 ```
 
 **Expected Output:**
+
 ```
 27 passed
 1 skipped
@@ -506,6 +545,7 @@ Fixed 27 failing tests by aligning test expectations with current implementation
 ## Coverage Gaps
 
 None identified. Current test suite covers:
+
 - API routes (parse-job, generate-resume)
 - Component interactions (dialogs, tabs)
 - Utility functions (markdown parser, date utils, AI mappers)
@@ -519,6 +559,7 @@ None identified. Current test suite covers:
 ### Recommendation 1: Add test comments explaining validations
 
 **Files:**
+
 - `__tests__/lib/ai/resume-generator.test.ts`
 - `e2e/ai-parser.spec.ts`
 
@@ -530,7 +571,7 @@ Add comments explaining why tests use specific skills/button text:
 const mockSkillsResponse = {
   skills: [
     // Must match getCVTemplate() mock
-  ]
+  ],
 }
 ```
 
@@ -545,6 +586,7 @@ const fillButton = dialog.getByRole("button", { name: /gerar análise/i })
 ### Recommendation 2: Create test utility for common selectors
 
 **Files:**
+
 - Create: `e2e/test-utils.ts`
 
 ```typescript
@@ -563,8 +605,9 @@ export const SELECTORS = {
 ```
 
 Then update tests to use:
+
 ```typescript
-import { SELECTORS } from './test-utils'
+import { SELECTORS } from "./test-utils"
 
 const fillButton = dialog.getByRole("button", { name: SELECTORS.buttons.generateAnalysis })
 ```
@@ -593,6 +636,7 @@ This centralizes button text and makes future updates easier.
 ## Plan Complete
 
 **Files Modified:**
+
 - `__tests__/components/add-vaga-dialog.test.tsx` (2 assertions)
 - `__tests__/lib/ai/resume-generator.test.ts` (mock data)
 - `e2e/ai-parser.spec.ts` (6 button selectors)
@@ -600,6 +644,7 @@ This centralizes button text and makes future updates easier.
 - `e2e/navigation.spec.ts` (1 selector)
 
 **Expected Result:**
+
 - 0 unit test failures
 - 0 E2E test failures
 - All CI checks passing

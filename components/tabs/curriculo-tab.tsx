@@ -308,9 +308,20 @@ export function CurriculoTab({
         </div>
       </div>
 
+      {/* Warning if no job analysis data */}
+      {!hasPreview && !jobAnalysisData && (
+        <Alert variant="destructive">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Análise da vaga necessária</AlertTitle>
+          <AlertDescription>
+            Para gerar um currículo personalizado, primeiro realize a análise da vaga na aba "Descrição da Vaga".
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Generate preview button - show if no preview */}
       {!hasPreview && (
-        <Button onClick={handleGeneratePreview} disabled={isGenerating} className="w-full" size="lg">
+        <Button onClick={handleGeneratePreview} disabled={!jobAnalysisData || isGenerating} className="w-full" size="lg">
           {isGenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

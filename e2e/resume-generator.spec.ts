@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test"
-import { waitForToast, waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
+import { waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
 import {
   mockParseJobSuccess,
-  mockGenerateResumeSuccess,
-  mockGenerateResumeError,
+  mockGenerateResumeHtmlSuccess,
+  mockGenerateResumeHtmlError,
+  mockHtmlToPdfSuccess,
   unmockAllApis,
 } from "./helpers/api-mocks"
 
@@ -40,11 +41,13 @@ Salário: R$ 1.800,00 + benefícios
 
   /**
    * Helper: Setup inicial - parse job description and navigate to Curriculo tab
+   * Uses NEW API flow: /api/ai/generate-resume-html + /api/ai/html-to-pdf
    */
   async function setupJobAnalysis(page: any) {
-    // Mock both APIs for complete flow
+    // Mock ALL APIs for complete new flow
     await mockParseJobSuccess(page)
-    await mockGenerateResumeSuccess(page)
+    await mockGenerateResumeHtmlSuccess(page)
+    await mockHtmlToPdfSuccess(page)
 
     // Open dialog
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
@@ -84,27 +87,34 @@ Salário: R$ 1.800,00 + benefícios
   test("deve gerar currículo personalizado com sucesso", async ({ page }) => {
     const dialog = await setupJobAnalysis(page)
 
-    // 1. Verificar que preview está vazio inicialmente
-    await expect(dialog.getByText(/clique em.*gerar.*preview/i)).toBeVisible()
-
-    // 2. Clicar em "Gerar Preview"
+    // 1. Verify "Gerar Preview" button is visible and enabled (jobAnalysisData exists)
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    await expect(generateButton).toBeVisible()
     await expect(generateButton).toBeEnabled()
+
+    // 2. Click "Gerar Preview"
     await generateButton.click()
 
     // 3. With mocks, response is instant - verify preview appears
-    await expect(dialog.getByText(/currículo personalizado/i)).toBeVisible({ timeout: 10000 })
-    await expect(dialog.getByText(/pdf gerado e pronto para download/i)).toBeVisible()
+    // NEW: Check for "Preview Gerado" alert text (AlertTitle is a div, not heading)
+    const previewAlert = dialog.getByText(/preview gerado/i)
+    await expect(previewAlert).toBeVisible({ timeout: 10000 })
 
-    // 4. Verificar que filename é exibido
-    const filenamePattern = /cv-.*\.pdf/i
-    await expect(dialog.locator("span.font-mono").filter({ hasText: filenamePattern })).toBeVisible()
+    // 4. Verify Markdown textarea is visible (editable)
+    const markdownTextarea = dialog.locator("textarea").first()
+    await expect(markdownTextarea).toBeVisible()
 
-    // 5. Verificar que botões ficaram habilitados
-    const downloadButton = dialog.getByRole("button", { name: /baixar pdf/i })
-    const refazerButton = dialog.getByRole("button", { name: /refazer/i })
-    await expect(downloadButton).toBeEnabled()
-    await expect(refazerButton).toBeEnabled()
+    // 5. Verify action buttons are visible
+    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i })
+    const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
+    await expect(regenerarButton).toBeVisible()
+    await expect(regenerarButton).toBeEnabled()
+    await expect(gerarPdfButton).toBeVisible()
+    await expect(gerarPdfButton).toBeEnabled()
+
+    // 6. NO PDF section yet (separate step)
+    const pdfSection = dialog.locator("text=/pdfs gerados/i")
+    await expect(pdfSection).not.toBeVisible()
 
     await page.keyboard.press("Escape")
   })
@@ -112,34 +122,31 @@ Salário: R$ 1.800,00 + benefícios
   test("deve permitir regenerar currículo", async ({ page }) => {
     const dialog = await setupJobAnalysis(page)
 
-    // 1. Gerar currículo (fluxo completo)
+    // 1. Generate preview first (fluxo completo)
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
-    await expect(dialog.getByText(/currículo personalizado/i)).toBeVisible({ timeout: 10000 })
+    const previewAlert = dialog.getByText(/preview gerado/i)
+    await expect(previewAlert).toBeVisible({ timeout: 10000 })
 
-    // Salvar filename inicial
-    const initialFilenameElement = dialog.locator("span.font-mono").first()
-    const initialFilename = await initialFilenameElement.textContent()
+    // Verify Markdown textarea has content
+    const markdownTextarea = dialog.locator("textarea").first()
+    await expect(markdownTextarea).toBeVisible()
+    await expect(markdownTextarea).not.toHaveValue("")
 
-    // 2. Clicar em "Refazer"
-    const refazerButton = dialog.getByRole("button", { name: /refazer/i })
-    await expect(refazerButton).toBeEnabled()
+    // 2. Click "Regenerar" (clears preview, no confirmation dialog in current implementation)
+    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i })
+    await expect(regenerarButton).toBeEnabled()
+    await regenerarButton.click()
 
-    // Setup dialog listener BEFORE clicking (confirmar)
-    page.on("dialog", async (dialog) => {
-      expect(dialog.message()).toMatch(/deseja gerar um novo currículo/i)
-      await dialog.accept()
-    })
+    // 3. Verify preview was cleared (back to initial state)
+    await expect(previewAlert).not.toBeVisible()
+    await expect(markdownTextarea).not.toBeVisible()
 
-    await refazerButton.click()
-
-    // 3. With mocks, regeneration is instant - verify preview is still visible
-    await expect(dialog.getByText(/currículo personalizado/i)).toBeVisible()
-
-    // Note: Filenames may be identical for same job description, which is expected
-    // The important part is that the generation flow completed successfully
+    // 4. Verify "Gerar Preview" button is visible again
+    await expect(generateButton).toBeVisible()
+    await expect(generateButton).toBeEnabled()
 
     await page.keyboard.press("Escape")
   })
@@ -147,34 +154,50 @@ Salário: R$ 1.800,00 + benefícios
   test("deve baixar PDF do currículo", async ({ page }) => {
     const dialog = await setupJobAnalysis(page)
 
-    // 1. Gerar currículo (fluxo completo)
+    // Step 1: Generate preview (Markdown)
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
-    await expect(dialog.getByText(/currículo personalizado/i)).toBeVisible({ timeout: 10000 })
+    const previewAlert = dialog.getByText(/preview gerado/i)
+    await expect(previewAlert).toBeVisible({ timeout: 10000 })
 
-    // 2. Setup listener de download
+    // Verify Markdown textarea exists
+    const markdownTextarea = dialog.locator("textarea").first()
+    await expect(markdownTextarea).toBeVisible()
+
+    // Step 2: Generate PDF (NEW: separate step)
+    const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
+    await expect(gerarPdfButton).toBeVisible()
+    await expect(gerarPdfButton).toBeEnabled()
+    await gerarPdfButton.click()
+
+    // Step 3: Wait for PDF section to appear
+    const pdfSection = dialog.getByText(/pdfs gerados/i)
+    await expect(pdfSection).toBeVisible({ timeout: 10000 })
+
+    // Step 4: Verify file card with download button appears
+    const fileCard = dialog.locator(".bg-slate-50").filter({ hasText: /cv-igor-fernandes.*\.pdf/i })
+    await expect(fileCard).toBeVisible()
+
+    // Step 5: Setup download listener and click download button
     const downloadPromise = page.waitForEvent("download")
 
-    // 3. Clicar em "Baixar PDF"
-    const downloadButton = dialog.getByRole("button", { name: /baixar pdf/i })
+    const downloadButton = fileCard.getByRole("button") // Download icon button inside card
     await expect(downloadButton).toBeEnabled()
     await downloadButton.click()
 
-    // 4. Aguardar download iniciar
+    // Step 6: Verify download started
     const download = await downloadPromise
-
-    // 5. Verificar que arquivo .pdf foi baixado
     expect(download.suggestedFilename()).toMatch(/\.pdf$/)
 
     await page.keyboard.press("Escape")
   })
 
   test("deve lidar com erro na geração", async ({ page }) => {
-    // Mock parse job success but resume generation error
+    // Mock parse job success but resume HTML generation error (NEW API)
     await mockParseJobSuccess(page)
-    await mockGenerateResumeError(page)
+    await mockGenerateResumeHtmlError(page)
 
     // Open dialog and parse job manually (don't use setupJobAnalysis as it mocks success)
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
@@ -195,21 +218,32 @@ Salário: R$ 1.800,00 + benefícios
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // 1. Clicar em "Gerar Preview"
+    // 1. Click "Gerar Preview"
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    await expect(generateButton).toBeEnabled()
     await generateButton.click()
 
-    // 2. With mocks, error response is instant - wait for preview to remain empty
-    await page.waitForTimeout(1000)
+    // 2. With mocks, error response is instant - wait for state to stabilize
+    await page.waitForTimeout(2000)
 
-    // 3. Verificar que preview continua vazio
-    await expect(dialog.getByText(/clique em.*gerar.*preview/i)).toBeVisible()
+    // 3. Verify preview was NOT generated (no Alert, no textarea) - main assertion
+    const previewAlert = dialog.getByText(/preview gerado/i)
+    await expect(previewAlert).not.toBeVisible()
 
-    // 4. Verificar que botões de download/refazer estão desabilitados
-    const downloadButton = dialog.getByRole("button", { name: /baixar pdf/i })
-    const refazerButton = dialog.getByRole("button", { name: /refazer/i })
-    await expect(downloadButton).toBeDisabled()
-    await expect(refazerButton).toBeDisabled()
+    const markdownTextarea = dialog.locator("textarea")
+    await expect(markdownTextarea).not.toBeVisible()
+
+    // 4. Verify "Gerar Preview" button is still visible (allows retry)
+    await expect(generateButton).toBeVisible()
+    await expect(generateButton).toBeEnabled()
+
+    // 5. Verify action buttons (Regenerar, Gerar PDF) don't exist
+    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i })
+    const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
+    await expect(regenerarButton).not.toBeVisible()
+    await expect(gerarPdfButton).not.toBeVisible()
+
+    // Note: Toast verification removed (Sonner auto-dismisses quickly, making it flaky)
 
     await page.keyboard.press("Escape")
   })
@@ -230,47 +264,57 @@ Salário: R$ 1.800,00 + benefícios
     await empresaInput.clear()
     await empresaInput.fill(empresaName)
 
+    // Manually fill fit fields to ensure correct format (like vagas.spec.ts)
+    await dialog.getByLabel(/fit requisitos/i).clear()
+    await dialog.getByLabel(/fit requisitos/i).fill("4.0")
+    await dialog.getByLabel(/fit perfil/i).clear()
+    await dialog.getByLabel(/fit perfil/i).fill("4.5")
+
     // Go back to Currículo tab
     const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // 1. Gerar currículo (fluxo completo)
+    // 1. Generate preview (fluxo atualizado)
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
-    // With mocks, preview appears instantly
-    await expect(dialog.getByText(/currículo personalizado/i)).toBeVisible({ timeout: 10000 })
+    // With mocks, preview appears instantly (NEW: "Preview Gerado" alert)
+    const previewAlert = dialog.getByText(/preview gerado/i)
+    await expect(previewAlert).toBeVisible({ timeout: 10000 })
 
-    // 2. Clicar em "Salvar Vaga" (botão verde)
+    // 2. Click "Salvar Vaga" (green button)
     const saveButton = dialog.getByRole("button", { name: /salvar vaga/i })
     await expect(saveButton).toBeEnabled()
     await saveButton.click()
 
-    // 3. Verificar que diálogo fechou (indica salvamento bem-sucedido)
+    // 3. Aguardar toast de sucesso (indica que save iniciou)
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
+
+    // 4. Aguardar modal fechar (indica que operação foi concluída)
     await expect(dialog).not.toBeVisible({ timeout: 10000 })
 
-    // 4. Verificar que nova vaga aparece no dashboard
+    // 5. Aguardar vaga aparecer na tabela (usa helper que aguarda loading desaparecer)
     await waitForVagaInTable(page, empresaName)
 
-    // 5. Verificar que vaga está visível na tabela
+    // 6. Verificar que vaga está visível na tabela
     const vagaRow = page.locator("tr").filter({ hasText: empresaName })
     await expect(vagaRow).toBeVisible()
   })
 
   test("deve validar que jobAnalysisData é necessário antes de gerar currículo", async ({ page }) => {
-    // Open dialog and go directly to Curriculo tab WITHOUT parsing
+    // Open dialog and go directly to Curriculo tab WITHOUT parsing (no jobAnalysisData)
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
 
-    // Skip Tab 1, manually fill Tab 2
+    // Skip Tab 1 (Descrição), go to Tab 2 (Dados) and fill manually
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
     await dadosTab.click()
     await expect(dadosTab).toHaveAttribute("data-state", "active")
 
-    // Fill minimal data manually (without AI parsing)
+    // Fill minimal data manually (without AI parsing = no jobAnalysisData)
     await dialog.getByLabel(/^empresa/i).fill("Test Company")
 
     // Go to Curriculo tab
@@ -278,7 +322,11 @@ Salário: R$ 1.800,00 + benefícios
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // Verify "Gerar Preview" button is DISABLED (no jobAnalysisData)
+    // NEW: Verify warning alert is visible (added in Batch 0)
+    const warningAlert = dialog.getByText(/análise da vaga necessária/i)
+    await expect(warningAlert).toBeVisible()
+
+    // Verify "Gerar Preview" button is DISABLED (no jobAnalysisData) - validates Batch 0 fix
     const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await expect(generateButton).toBeDisabled()
 

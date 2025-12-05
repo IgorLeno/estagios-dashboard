@@ -29,6 +29,10 @@ export async function mockParseJobSuccess(page: Page) {
           beneficios: ["Seguro saúde", "Vale refeição", "Vale transporte"],
           salario: "R$ 1.800,00 + benefícios",
           idioma_vaga: "pt" as const,
+          requisitos_score: 4.0, // 0-5 scale (matches JobDetailsSchema)
+          fit: 4.5, // 0-5 scale (matches JobDetailsSchema)
+          etapa: "Indefinido",
+          status: "Pendente" as const,
         } satisfies JobDetails,
         metadata: {
           duration: 2500,
@@ -165,9 +169,112 @@ export async function mockGenerateResumeError(page: Page) {
 }
 
 /**
+ * Mock successful HTML resume generation (new flow)
+ */
+export async function mockGenerateResumeHtmlSuccess(page: Page) {
+  await page.route("**/api/ai/generate-resume-html", async (route: Route) => {
+    if (route.request().method() === "POST") {
+      const mockHtmlContent = `
+        <div class="resume-content">
+          <h1>Igor Fernandes</h1>
+          <p>Engenharia Química - 5º ano</p>
+          <h2>Resumo</h2>
+          <p>Estudante de Engenharia Química com experiência em qualidade e segurança...</p>
+          <h2>Habilidades</h2>
+          <ul>
+            <li>ISO 9001:2015</li>
+            <li>Excel Avançado</li>
+            <li>Power BI</li>
+          </ul>
+        </div>
+      `
+
+      const mockResponse = {
+        success: true,
+        data: {
+          html: mockHtmlContent,
+        },
+        metadata: {
+          duration: 2500,
+          model: "gemini-2.5-flash",
+          timestamp: new Date().toISOString(),
+        },
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockResponse),
+      })
+    } else {
+      // Health check (GET)
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "ok",
+          message: "AI Resume HTML Generator is ready",
+        }),
+      })
+    }
+  })
+}
+
+/**
+ * Mock successful PDF generation from HTML
+ */
+export async function mockHtmlToPdfSuccess(page: Page) {
+  await page.route("**/api/ai/html-to-pdf", async (route: Route) => {
+    if (route.request().method() === "POST") {
+      // Minimal valid PDF header in base64
+      const mockPdfBase64 =
+        "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKP7/AEMAdQByAHIA7QBjAHUAbABvACkKL0NyZWF0b3IgKFB1cHBldGVlcikKL1Byb2R1Y2VyIChTa2lhL1BERiBtMTEwKQovQ3JlYXRpb25EYXRlIChEOjIwMjQwMTAxMDAwMDAwKQo+PgplbmRvYmoKMiAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMyAwIFIKPj4KZW5kb2JqCjMgMCBvYmo8PAovVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWzQgMCBSXQo+PgplbmRvYmoKNCAwIG9iago8PAovVHlwZSAvUGFnZQovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUGFyZW50IDMgMCBSCi9Db250ZW50cyA1IDAgUgovUmVzb3VyY2VzIDw8Cj4+Cj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggMgo+PgpzdHJlYW0KCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMjQgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMjMwIDAwMDAwIG4gCjAwMDAwMDAzNDIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDIgMCBSCi9JbmZvIDEgMCBSCj4+CnN0YXJ0eHJlZgo0MDUKJSVFT0YK"
+
+      const mockResponse = {
+        success: true,
+        data: {
+          pdfBase64: mockPdfBase64,
+          filename: "cv-igor-fernandes-saipem-pt.pdf",
+        },
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockResponse),
+      })
+    } else {
+      await route.continue()
+    }
+  })
+}
+
+/**
+ * Mock error for HTML resume generation
+ */
+export async function mockGenerateResumeHtmlError(page: Page) {
+  await page.route("**/api/ai/generate-resume-html", async (route: Route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: false,
+          error: "Erro ao gerar preview. Tente novamente.",
+        }),
+      })
+    } else {
+      await route.continue()
+    }
+  })
+}
+
+/**
  * Unmock all API routes (restore real API calls)
  */
 export async function unmockAllApis(page: Page) {
   await page.unroute("**/api/ai/parse-job")
   await page.unroute("**/api/ai/generate-resume")
+  await page.unroute("**/api/ai/generate-resume-html")
+  await page.unroute("**/api/ai/html-to-pdf")
 }
