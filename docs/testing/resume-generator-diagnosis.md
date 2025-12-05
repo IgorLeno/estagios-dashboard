@@ -22,6 +22,7 @@ Tests were written against the old implementation and need to be aligned with cu
 ### Test 1: "deve gerar currículo personalizado com sucesso" ❌
 
 **Expected behavior (by test)**:
+
 - Find text matching `/clique em.*gerar.*preview/i`
 - Click "Gerar Preview"
 - Verify text "Currículo personalizado" appears
@@ -30,6 +31,7 @@ Tests were written against the old implementation and need to be aligned with cu
 - Verify buttons "Baixar PDF" and "Refazer" are enabled
 
 **Actual behavior (current implementation)**:
+
 - No text "Clique em... gerar... preview" exists (test fails at line 88)
 - After generating preview:
   - Alert shows "Preview Gerado" (not "Currículo personalizado")
@@ -47,6 +49,7 @@ Tests were written against the old implementation and need to be aligned with cu
 ### Test 2: "deve permitir regenerar currículo" ❌
 
 **Expected behavior (by test)**:
+
 - Generate resume
 - Save initial filename from `span.font-mono`
 - Click "Refazer" button
@@ -54,6 +57,7 @@ Tests were written against the old implementation and need to be aligned with cu
 - Verify preview still visible
 
 **Actual behavior (current implementation)**:
+
 - After generating preview, NO filename exists yet
 - Test times out at line 124 waiting for `span.font-mono` (timeout 30s)
 - Button is called "Regenerar" (not "Refazer")
@@ -62,6 +66,7 @@ Tests were written against the old implementation and need to be aligned with cu
 **Root cause**: Filename only appears after separate "Gerar PDF" step. Test expects old flow where PDF was generated immediately.
 
 **Fix needed**: Adjust test to:
+
 1. Generate preview → Generate PDF → verify filename
 2. OR test "Regenerar" clears preview correctly
 
@@ -70,6 +75,7 @@ Tests were written against the old implementation and need to be aligned with cu
 ### Test 3: "deve baixar PDF do currículo" ❌
 
 **Expected behavior (by test)**:
+
 - Generate resume
 - Wait for preview to show "Currículo personalizado"
 - Setup download listener
@@ -77,6 +83,7 @@ Tests were written against the old implementation and need to be aligned with cu
 - Verify .pdf file downloaded
 
 **Actual behavior (current implementation)**:
+
 - After generating preview, "Baixar PDF" button doesn't exist
 - Test fails at line 162: button not found
 - User must click "Gerar PDF" first, THEN "Baixar PDF" appears
@@ -84,6 +91,7 @@ Tests were written against the old implementation and need to be aligned with cu
 **Root cause**: Two-step flow: Preview → Generate PDF → Download
 
 **Fix needed**: Adjust test to follow new flow:
+
 1. Generate preview
 2. Click "Gerar PDF"
 3. Click "Baixar PDF" (now available)
@@ -93,6 +101,7 @@ Tests were written against the old implementation and need to be aligned with cu
 ### Test 4: "deve lidar com erro na geração" ❌
 
 **Expected behavior (by test)**:
+
 - Mock API error
 - Generate resume
 - Wait 1s
@@ -100,6 +109,7 @@ Tests were written against the old implementation and need to be aligned with cu
 - Verify "Baixar PDF" and "Refazer" disabled
 
 **Actual behavior (current implementation)**:
+
 - Same issue as Test 1: text doesn't exist
 - Test fails at line 206
 - On error, toast appears (Sonner notification)
@@ -107,6 +117,7 @@ Tests were written against the old implementation and need to be aligned with cu
 **Root cause**: Same UI redesign issue - instructional text changed
 
 **Fix needed**: Instead of checking static text, verify:
+
 - Toast error message appears
 - Preview remains empty (no Markdown textarea)
 - "Gerar PDF" button doesn't appear
@@ -116,6 +127,7 @@ Tests were written against the old implementation and need to be aligned with cu
 ### Test 5: "deve validar que jobAnalysisData é necessário antes de gerar currículo" ❌
 
 **Expected behavior (by test)**:
+
 - Open dialog
 - Skip job parsing (Tab 1)
 - Manually fill data in Tab 2
@@ -123,6 +135,7 @@ Tests were written against the old implementation and need to be aligned with cu
 - Verify "Gerar Preview" button is **DISABLED**
 
 **Actual behavior (current implementation)**:
+
 - Button is **ENABLED** (test fails at line 283)
 - `curriculo-tab.tsx:313` - button only disabled when `isGenerating === true`
 - NO validation for `jobAnalysisData` exists
@@ -131,6 +144,7 @@ Tests were written against the old implementation and need to be aligned with cu
 **Root cause**: **Business logic changed** - button doesn't require `jobAnalysisData` anymore
 
 **Fix needed**: **Product decision required**:
+
 - Option A: This is intentional - remove test (feature changed)
 - Option B: This is a bug - add validation back to component
 
@@ -138,16 +152,16 @@ Tests were written against the old implementation and need to be aligned with cu
 
 ## Comparison: Expected vs. Actual
 
-| Element/Behavior | Tests Expect | Current Implementation |
-|------------------|-------------|------------------------|
-| Instructional text | "Clique em... gerar... preview" | "Escolha o idioma e gere um preview..." |
-| Preview success message | "Currículo personalizado" | "Preview Gerado" |
-| PDF ready message | "PDF gerado e pronto para download" | N/A (PDF generated separately) |
-| Filename display timing | Immediately after preview | Only after "Gerar PDF" clicked |
-| Regenerate button text | "Refazer" | "Regenerar" |
-| Regenerate behavior | Generates new preview | Clears current preview |
-| Download flow | 1 step (generate → download) | 2 steps (generate preview → generate PDF → download) |
-| jobAnalysisData validation | Required (button disabled) | NOT required (button always enabled) |
+| Element/Behavior           | Tests Expect                        | Current Implementation                               |
+| -------------------------- | ----------------------------------- | ---------------------------------------------------- |
+| Instructional text         | "Clique em... gerar... preview"     | "Escolha o idioma e gere um preview..."              |
+| Preview success message    | "Currículo personalizado"           | "Preview Gerado"                                     |
+| PDF ready message          | "PDF gerado e pronto para download" | N/A (PDF generated separately)                       |
+| Filename display timing    | Immediately after preview           | Only after "Gerar PDF" clicked                       |
+| Regenerate button text     | "Refazer"                           | "Regenerar"                                          |
+| Regenerate behavior        | Generates new preview               | Clears current preview                               |
+| Download flow              | 1 step (generate → download)        | 2 steps (generate preview → generate PDF → download) |
+| jobAnalysisData validation | Required (button disabled)          | NOT required (button always enabled)                 |
 
 ---
 
@@ -156,6 +170,7 @@ Tests were written against the old implementation and need to be aligned with cu
 File: `components/tabs/curriculo-tab.tsx`
 
 ### State Management
+
 ```typescript
 const [resumeLanguage, setResumeLanguage] = useState<"pt" | "en" | "both">("pt")
 const [markdownPreviewPt, setMarkdownPreviewPt] = useState("")
@@ -167,6 +182,7 @@ const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 ```
 
 ### UI Flow
+
 1. **No preview** (line 312-326):
    - Show "Gerar Preview" button (enabled, no validation)
 
@@ -180,6 +196,7 @@ const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
    - Show file cards with "Baixar" buttons
 
 ### Key Functions
+
 - `handleGeneratePreview()` (line 59-170): Calls `/api/ai/generate-resume-html` → converts to Markdown
 - `handleConvertToPdf()` (line 172-255): Converts Markdown → HTML → PDF via `/api/ai/html-to-pdf`
 - `handleDownloadPdfLocal()` (line 257-265): Downloads base64 PDF
@@ -189,12 +206,15 @@ const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 ## Recommendations
 
 ### Priority 1: Critical Decision
+
 **Test 5 - jobAnalysisData validation**
+
 - [ ] Product team: Is jobAnalysisData requirement removed intentionally?
 - If YES: Remove/skip test
 - If NO: Add validation to component (line 313)
 
 ### Priority 2: Test Rewrites
+
 All 5 tests need rewrites to match current implementation:
 
 1. **Test 1** - Adjust selectors and expectations:
@@ -223,6 +243,7 @@ All 5 tests need rewrites to match current implementation:
 5. **Test 5** - Depends on product decision
 
 ### Priority 3: Test Stability
+
 - Use `data-testid` attributes for critical elements (reduce text dependency)
 - Add explicit waits for API responses
 - Consider centralizing button text constants

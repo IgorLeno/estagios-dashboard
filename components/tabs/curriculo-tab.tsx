@@ -321,7 +321,12 @@ export function CurriculoTab({
 
       {/* Generate preview button - show if no preview */}
       {!hasPreview && (
-        <Button onClick={handleGeneratePreview} disabled={!jobAnalysisData || isGenerating} className="w-full" size="lg">
+        <Button
+          onClick={handleGeneratePreview}
+          disabled={!jobAnalysisData || isGenerating}
+          className="w-full"
+          size="lg"
+        >
           {isGenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

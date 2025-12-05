@@ -10,6 +10,7 @@
 ## Overview
 
 All 5 tests are **misaligned** with current implementation due to:
+
 - UI redesign (text changes, new elements)
 - Flow changes (Preview → Edit → Generate PDF → Download)
 - Business logic changes (jobAnalysisData no longer required?)
@@ -62,6 +63,7 @@ const markdownTextarea = dialog.getByTestId("markdown-preview-pt")
 ```
 
 **Improvement**: Add `data-testid` attributes to `curriculo-tab.tsx`:
+
 - `data-testid="curriculo-gerar-preview-button"`
 - `data-testid="curriculo-regenerar-button"`
 - `data-testid="curriculo-gerar-pdf-button"`
@@ -90,6 +92,7 @@ const markdownTextarea = dialog.getByTestId("markdown-preview-pt")
    - "Gerar Preview" button visible again (back to initial state)
 
 **Alternative test**: If we want to test "regenerating" (not clearing), test should:
+
 1. Generate preview PT
 2. Verify Markdown content exists
 3. Click "Gerar Preview" again
@@ -151,22 +154,26 @@ await expect(markdownTextarea).not.toBeVisible()
 **Why**: **Business logic changed** - button no longer validates `jobAnalysisData`. Need to confirm if intentional.
 
 **Current behavior**:
+
 - Button always enabled (line 313: `disabled={isGenerating}`)
 - API accepts `vagaId` OR `jobDescription` (either works)
 
 **Options**:
 
 #### Option A: Change was intentional → Remove test
+
 - Feature allows generating resume without AI job analysis
 - User can paste job description directly
 - **Action**: Delete test or mark as skipped with comment
 
 #### Option B: Change was unintentional → Fix component
+
 - Add validation: `disabled={isGenerating || !jobAnalysisData}`
 - Require AI analysis before resume generation
 - **Action**: Fix component, keep test
 
 #### Option C: Hybrid approach → Adjust test
+
 - Button enabled if EITHER `jobAnalysisData` OR `jobDescription` exists
 - **Action**: Rewrite test to verify: button disabled ONLY if BOTH are missing
 
@@ -255,6 +262,7 @@ expect(download.suggestedFilename()).toMatch(/\.pdf$/)
 ```
 
 **Challenge**: Mocking PDF generation requires:
+
 - Mock `/api/ai/generate-resume-html` (already done)
 - Mock `/api/ai/html-to-pdf` (needs to be added to `api-mocks.ts`)
 
@@ -270,7 +278,8 @@ export async function mockHtmlToPdfSuccess(page: Page) {
       body: JSON.stringify({
         success: true,
         data: {
-          pdfBase64: "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKP7/AEUAeABhAG0AcABsAGUpCi9DcmVhdG9yIChQdXBwZXRlZXIpCi9Qcm9kdWNlciAoU2tpYS9QREYgbTExMCkKL0NyZWF0aW9uRGF0ZSAoRDoyMDI0MDEwMTAwMDAwMCkKPj4KZW5kb2JqCjIgMCBvYmo8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMyAwIFIKPj4KZW5kb2JqCjMgMCBvYmo8PAovVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWzQgMCBSXQo+PgplbmRvYmoKNCAwIG9iago8PAovVHlwZSAvUGFnZQovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUGFyZW50IDMgMCBSCi9Db250ZW50cyA1IDAgUgovUmVzb3VyY2VzIDw8Cj4+Cj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggMgo+PgpzdHJlYW0KCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMjQgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMjMwIDAwMDAwIG4gCjAwMDAwMDAzNDIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDIgMCBSCi9JbmZvIDEgMCBSCj4+CnN0YXJ0eHJlZgo0MDUKJSVFT0YK",
+          pdfBase64:
+            "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKP7/AEUAeABhAG0AcABsAGUpCi9DcmVhdG9yIChQdXBwZXRlZXIpCi9Qcm9kdWNlciAoU2tpYS9QREYgbTExMCkKL0NyZWF0aW9uRGF0ZSAoRDoyMDI0MDEwMTAwMDAwMCkKPj4KZW5kb2JqCjIgMCBvYmo8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMyAwIFIKPj4KZW5kb2JqCjMgMCBvYmo8PAovVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWzQgMCBSXQo+PgplbmRvYmoKNCAwIG9iago8PAovVHlwZSAvUGFnZQovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUGFyZW50IDMgMCBSCi9Db250ZW50cyA1IDAgUgovUmVzb3VyY2VzIDw8Cj4+Cj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggMgo+PgpzdHJlYW0KCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMjQgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMjMwIDAwMDAwIG4gCjAwMDAwMDAzNDIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDIgMCBSCi9JbmZvIDEgMCBSCj4+CnN0YXJ0eHJlZgo0MDUKJSVFT0YK",
           filename: "cv-igor-fernandes-pt.pdf",
         },
       }),
@@ -288,6 +297,7 @@ export async function mockHtmlToPdfSuccess(page: Page) {
 **File**: `components/tabs/curriculo-tab.tsx`
 
 Add to key elements:
+
 - Line 313: `<Button data-testid="curriculo-gerar-preview-button" ...`
 - Line 344: `<Textarea data-testid="markdown-preview-pt" ...`
 - Line 358: `<Textarea data-testid="markdown-preview-en" ...`
@@ -387,11 +397,13 @@ export async function generatePdf(dialog: Locator) {
 ## Execution Order
 
 ### Step 1: Add mocks and helpers
+
 - [ ] Add `mockHtmlToPdfSuccess()` to `api-mocks.ts`
 - [ ] Create `resume-helpers.ts` with reusable functions
 - [ ] (Optional) Create `test-constants.ts` with button text
 
 ### Step 2: Batch A - Happy Path
+
 - [ ] Rewrite Test 1: "deve gerar currículo personalizado com sucesso"
 - [ ] Run: `pnpm test:e2e e2e/resume-generator.spec.ts -g "deve gerar currículo personalizado"`
 - [ ] ✅ Verify passing
@@ -400,6 +412,7 @@ export async function generatePdf(dialog: Locator) {
 - [ ] ✅ Verify passing
 
 ### Step 3: Batch B - Errors & Validations
+
 - [ ] Rewrite Test 4: "deve lidar com erro na geração"
 - [ ] Run: `pnpm test:e2e e2e/resume-generator.spec.ts -g "deve lidar com erro"`
 - [ ] ✅ Verify passing
@@ -409,11 +422,13 @@ export async function generatePdf(dialog: Locator) {
   - If adjust test: Implement Option C
 
 ### Step 4: Batch C - PDF Download
+
 - [ ] Rewrite Test 3: "deve baixar PDF do currículo"
 - [ ] Run: `pnpm test:e2e e2e/resume-generator.spec.ts -g "deve baixar PDF"`
 - [ ] ✅ Verify passing
 
 ### Step 5: Full Suite Verification
+
 - [ ] Run: `pnpm test:e2e e2e/resume-generator.spec.ts`
 - [ ] ✅ All tests passing (or Test 5 skipped with reason)
 - [ ] Run: `pnpm test --run` (unit tests)
@@ -422,6 +437,7 @@ export async function generatePdf(dialog: Locator) {
 - [ ] ✅ No regressions in other E2E tests
 
 ### Step 6: Documentation & Cleanup
+
 - [ ] Update `docs/testing/TEST_STATUS.md` with:
   - AI Resume Generator E2E coverage
   - Known limitations (e.g., PDF mocking, if any)
@@ -437,6 +453,7 @@ export async function generatePdf(dialog: Locator) {
 ✅ **Tests reflect actual user flows** (not implementation details)
 ✅ **Tests are stable** (no flaky timeouts, clear selectors)
 ✅ **Clear coverage** of:
+
 - Generate preview (PT/EN/Both)
 - Regenerate (clear preview)
 - Generate PDF
@@ -450,12 +467,12 @@ export async function generatePdf(dialog: Locator) {
 
 ## Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Test 5 decision delays execution | Medium | Proceed with Batches A, B (partial), C. Revisit Test 5 later. |
-| PDF mocking complex (binary data) | Low | Use simple base64 string, focus on flow not content validation. |
-| Component changes during rewrite | Medium | Lock component file, coordinate with team. |
-| Timeouts in CI (slower) | Low | Use longer timeouts for E2E (already 10s), test locally first. |
+| Risk                              | Impact | Mitigation                                                      |
+| --------------------------------- | ------ | --------------------------------------------------------------- |
+| Test 5 decision delays execution  | Medium | Proceed with Batches A, B (partial), C. Revisit Test 5 later.   |
+| PDF mocking complex (binary data) | Low    | Use simple base64 string, focus on flow not content validation. |
+| Component changes during rewrite  | Medium | Lock component file, coordinate with team.                      |
+| Timeouts in CI (slower)           | Low    | Use longer timeouts for E2E (already 10s), test locally first.  |
 
 ---
 
