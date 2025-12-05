@@ -68,8 +68,8 @@ Salário: R$ 1.800,00 + benefícios
     await expect(textarea).toBeVisible()
     await textarea.fill(sampleJobDescription)
 
-    // 4. Clicar em "Preencher Dados"
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    // 4. Clicar em "Realizar Análise"
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await expect(fillButton).toBeEnabled()
     await fillButton.click()
 
@@ -101,8 +101,8 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill("Texto muito curto")
 
-    // 3. Verificar que botão "Preencher Dados" está desabilitado
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    // 3. Verificar que botão "Realizar Análise" está desabilitado
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await expect(fillButton).toBeDisabled()
 
     // 4. Digitar 50+ caracteres
@@ -128,7 +128,7 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     // Aguardar mudança para aba "Dados da Vaga" (resposta instantânea com mocks)
@@ -168,8 +168,8 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    // 4. Clicar em "Preencher Dados"
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    // 4. Clicar em "Realizar Análise"
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     // 5. Aguardar um momento para API call acontecer
@@ -202,8 +202,8 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    // 4. Clicar em "Preencher Dados"
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    // 4. Clicar em "Realizar Análise"
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     // 5. Aguardar um momento para API call acontecer
@@ -235,7 +235,7 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     // Aguardar mudança para aba "Dados da Vaga" (resposta instantânea com mocks)
