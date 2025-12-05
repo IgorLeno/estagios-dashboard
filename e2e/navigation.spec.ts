@@ -20,8 +20,8 @@ test.describe("Navegação do Dashboard", () => {
 
     // Navegar para Configurações via botão da sidebar
     await page.getByTestId("sidebar-configuracoes").click()
-    // Verificar que página de configurações está ativa - procurar por "Sistema de Datas"
-    await expect(page.getByText(/sistema.*datas|rastreamento|meia.*noite/i).first()).toBeVisible({ timeout: 5000 })
+    // Verificar que página de configurações está ativa - procurar por tabs "Geral" e "Prompts de IA"
+    await expect(page.getByRole("tab", { name: /geral/i })).toBeVisible({ timeout: 5000 })
 
     // Voltar para Dashboard via botão da sidebar
     await page.getByTestId("sidebar-vagas").click()
