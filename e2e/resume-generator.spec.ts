@@ -56,7 +56,7 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     // With mocks, response is instant - wait for tab switch
@@ -85,10 +85,10 @@ Salário: R$ 1.800,00 + benefícios
     const dialog = await setupJobAnalysis(page)
 
     // 1. Verificar que preview está vazio inicialmente
-    await expect(dialog.getByText(/clique em.*gerar currículo/i)).toBeVisible()
+    await expect(dialog.getByText(/clique em.*gerar.*preview/i)).toBeVisible()
 
-    // 2. Clicar em "Gerar Currículo"
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    // 2. Clicar em "Gerar Preview"
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await expect(generateButton).toBeEnabled()
     await generateButton.click()
 
@@ -113,7 +113,7 @@ Salário: R$ 1.800,00 + benefícios
     const dialog = await setupJobAnalysis(page)
 
     // 1. Gerar currículo (fluxo completo)
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
@@ -148,7 +148,7 @@ Salário: R$ 1.800,00 + benefícios
     const dialog = await setupJobAnalysis(page)
 
     // 1. Gerar currículo (fluxo completo)
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
@@ -185,7 +185,7 @@ Salário: R$ 1.800,00 + benefícios
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
-    const fillButton = dialog.getByRole("button", { name: /preencher dados/i })
+    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
@@ -195,15 +195,15 @@ Salário: R$ 1.800,00 + benefícios
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // 1. Clicar em "Gerar Currículo"
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    // 1. Clicar em "Gerar Preview"
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // 2. With mocks, error response is instant - wait for preview to remain empty
     await page.waitForTimeout(1000)
 
     // 3. Verificar que preview continua vazio
-    await expect(dialog.getByText(/clique em.*gerar currículo/i)).toBeVisible()
+    await expect(dialog.getByText(/clique em.*gerar.*preview/i)).toBeVisible()
 
     // 4. Verificar que botões de download/refazer estão desabilitados
     const downloadButton = dialog.getByRole("button", { name: /baixar pdf/i })
@@ -236,7 +236,7 @@ Salário: R$ 1.800,00 + benefícios
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
     // 1. Gerar currículo (fluxo completo)
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
@@ -278,8 +278,8 @@ Salário: R$ 1.800,00 + benefícios
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // Verify "Gerar Currículo" button is DISABLED (no jobAnalysisData)
-    const generateButton = dialog.getByRole("button", { name: /^gerar currículo$/i })
+    // Verify "Gerar Preview" button is DISABLED (no jobAnalysisData)
+    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
     await expect(generateButton).toBeDisabled()
 
     await page.keyboard.press("Escape")
