@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS vagas_estagio (
   local TEXT NOT NULL,
   modalidade TEXT NOT NULL CHECK (modalidade IN ('Presencial', 'Híbrido', 'Remoto')),
 
-  -- Score e fit
-  requisitos INTEGER CHECK (requisitos >= 0 AND requisitos <= 100), -- Score 0-100
-  fit INTEGER CHECK (fit >= 0 AND fit <= 10), -- Fit 0-10
+  -- Score e fit (escala 0-5 com incrementos de 0.5)
+  requisitos NUMERIC(3,1) CHECK (requisitos >= 0 AND requisitos <= 5), -- Fit de Requisitos 0-5 (0.0, 0.5, 1.0, ..., 5.0)
+  fit NUMERIC(3,1) CHECK (fit >= 0 AND fit <= 5), -- Fit Geral 0-5 (0.0, 0.5, 1.0, ..., 5.0)
 
   -- Acompanhamento
   etapa TEXT,
