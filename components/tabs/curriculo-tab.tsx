@@ -361,7 +361,7 @@ export function CurriculoTab({
                 value={markdownPreviewPt}
                 onChange={(e) => setMarkdownPreviewPt(e.target.value)}
                 rows={25}
-                className="font-mono text-xs resize-none"
+                className="w-full p-4 bg-white border border-gray-200 rounded-lg font-mono text-xs resize-none overflow-auto whitespace-pre-wrap break-words"
                 placeholder="Currículo em Markdown (português)..."
               />
             </div>
@@ -375,7 +375,7 @@ export function CurriculoTab({
                 value={markdownPreviewEn}
                 onChange={(e) => setMarkdownPreviewEn(e.target.value)}
                 rows={25}
-                className="font-mono text-xs resize-none"
+                className="w-full p-4 bg-white border border-gray-200 rounded-lg font-mono text-xs resize-none overflow-auto whitespace-pre-wrap break-words"
                 placeholder="Resume in Markdown (English)..."
               />
             </div>
