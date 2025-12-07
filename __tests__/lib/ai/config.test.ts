@@ -5,32 +5,32 @@ describe("AI Config", () => {
   let originalApiKey: string | undefined
 
   beforeEach(() => {
-    originalApiKey = process.env.GOOGLE_API_KEY
+    originalApiKey = process.env.OPENROUTER_API_KEY
   })
 
   afterEach(() => {
-    process.env.GOOGLE_API_KEY = originalApiKey
+    process.env.OPENROUTER_API_KEY = originalApiKey
   })
 
   describe("createGeminiClient", () => {
-    it("should throw if GOOGLE_API_KEY is missing", () => {
-      delete process.env.GOOGLE_API_KEY
+    it("should throw if OPENROUTER_API_KEY is missing", () => {
+      delete process.env.OPENROUTER_API_KEY
       expect(() => createGeminiClient()).toThrow()
     })
 
-    it("should throw if GOOGLE_API_KEY is empty string", () => {
-      process.env.GOOGLE_API_KEY = "   "
+    it("should throw if OPENROUTER_API_KEY is empty string", () => {
+      process.env.OPENROUTER_API_KEY = "   "
       expect(() => createGeminiClient()).toThrow()
     })
 
-    it("should create client if GOOGLE_API_KEY exists", () => {
-      process.env.GOOGLE_API_KEY = "valid-api-key-at-least-20-chars-long"
+    it("should create client if OPENROUTER_API_KEY exists", () => {
+      process.env.OPENROUTER_API_KEY = "sk-or-v1-valid-api-key-at-least-20-chars-long"
       const client = createGeminiClient()
       expect(client).toBeDefined()
     })
 
     it("should expose getGenerativeModel method on created client", () => {
-      process.env.GOOGLE_API_KEY = "valid-api-key-at-least-20-chars-long"
+      process.env.OPENROUTER_API_KEY = "sk-or-v1-valid-api-key-at-least-20-chars-long"
       const client = createGeminiClient()
       expect(client).toBeDefined()
       // Verificar que o cliente expõe métodos esperados
@@ -38,7 +38,7 @@ describe("AI Config", () => {
     })
 
     it("should expose expected properties and methods on created client", () => {
-      process.env.GOOGLE_API_KEY = "valid-api-key-at-least-20-chars-long"
+      process.env.OPENROUTER_API_KEY = "sk-or-v1-valid-api-key-at-least-20-chars-long"
       const client = createGeminiClient()
       expect(client).toBeDefined()
       expect(typeof client.getGenerativeModel).toBe("function")
@@ -46,18 +46,18 @@ describe("AI Config", () => {
   })
 
   describe("validateAIConfig", () => {
-    it("should throw if GOOGLE_API_KEY is empty string", () => {
-      process.env.GOOGLE_API_KEY = ""
+    it("should throw if OPENROUTER_API_KEY is empty string", () => {
+      process.env.OPENROUTER_API_KEY = ""
       expect(() => validateAIConfig()).toThrow()
     })
 
-    it("should return true if GOOGLE_API_KEY exists", () => {
-      process.env.GOOGLE_API_KEY = "valid-api-key-at-least-20-chars-long"
+    it("should return true if OPENROUTER_API_KEY exists", () => {
+      process.env.OPENROUTER_API_KEY = "sk-or-v1-valid-api-key-at-least-20-chars-long"
       expect(validateAIConfig()).toBe(true)
     })
 
-    it("should throw if GOOGLE_API_KEY is missing", () => {
-      delete process.env.GOOGLE_API_KEY
+    it("should throw if OPENROUTER_API_KEY is missing", () => {
+      delete process.env.OPENROUTER_API_KEY
       expect(() => validateAIConfig()).toThrow()
     })
   })
@@ -71,10 +71,8 @@ describe("AI Config", () => {
       expect(MODEL_FALLBACK_CHAIN.length).toBeGreaterThan(0)
     })
 
-    it("should contain expected model entries", () => {
-      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.5-flash")
-      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.0-flash-001")
-      expect(MODEL_FALLBACK_CHAIN).toContain("gemini-2.5-pro")
+    it("should contain Grok model (migrated from Gemini)", () => {
+      expect(MODEL_FALLBACK_CHAIN).toContain("x-ai/grok-4.1-fast")
     })
 
     it("should have all entries as strings", () => {
@@ -84,13 +82,13 @@ describe("AI Config", () => {
     })
   })
 
-  describe("GEMINI_CONFIG", () => {
-    it("should have correct model name", () => {
-      expect(GEMINI_CONFIG.model).toBe("gemini-2.5-flash")
+  describe("GEMINI_CONFIG (now using Grok)", () => {
+    it("should have Grok model name", () => {
+      expect(GEMINI_CONFIG.model).toBe("x-ai/grok-4.1-fast")
     })
 
-    it("should have low temperature for consistency", () => {
-      expect(GEMINI_CONFIG.temperature).toBe(0.1)
+    it("should have balanced temperature for Grok", () => {
+      expect(GEMINI_CONFIG.temperature).toBe(0.7)
     })
   })
 })

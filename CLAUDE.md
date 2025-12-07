@@ -165,28 +165,28 @@ await waitFor(() => expect(result.current.value).toBe(expected))
 
 **Status:** ✅ Implemented
 
-Uses **Gemini 2.5 Flash** to extract structured data from job descriptions.
+Uses **Grok 4.1 Fast via OpenRouter** to extract structured data from job descriptions.
 
 **Environment:**
 
 ```env
-GOOGLE_API_KEY=your_gemini_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
-Get key at: <https://aistudio.google.com/app/apikey>
+Get key at: <https://openrouter.ai/keys>
 
-**Free Tier**: 15 req/min, 1M tokens/day
+**Paid Tier**: OpenRouter (pay-per-use)
 
-**Model**: `gemini-2.5-flash` (stable) with fallback chain (`gemini-2.0-flash-001`, `gemini-2.5-pro`)
+**Model**: `x-ai/grok-4.1-fast` (fast, high quality)
 
-**Rate Limiter**: 10 req/min (buffer below Gemini's 15 req/min limit)
+**Rate Limiter**: 10 req/min (configurable)
 
 ### Job Parser Architecture
 
 ```text
 lib/ai/
 ├── types.ts          # Interfaces + Zod schemas
-├── config.ts         # Gemini client setup
+├── config.ts         # AI client setup (Grok via OpenRouter)
 ├── prompts.ts        # LLM prompt templates
 └── job-parser.ts     # Core parsing logic
 
@@ -222,7 +222,7 @@ Response (success):
     "salario": null,
     "idioma_vaga": "pt"  // pt | en
   },
-  "metadata": { "duration": 3245, "model": "gemini-2.5-flash", "timestamp": "..." }
+  "metadata": { "duration": 3245, "model": "x-ai/grok-4.1-fast", "timestamp": "..." }
 }
 ```
 
@@ -231,9 +231,9 @@ Response (success):
 ### Job Parser Usage
 
 ```typescript
-import { parseJobWithGemini } from "@/lib/ai/job-parser"
+import { parseJobWithAnalysis } from "@/lib/ai/job-parser"
 
-const { data, duration, model } = await parseJobWithGemini(jobDescription)
+const { data, duration, model } = await parseJobWithAnalysis(jobDescription)
 console.log(`Parsed with ${model} in ${duration}ms`)
 ```
 
@@ -251,7 +251,7 @@ Automated: `pnpm test -- ai`
 
 **Status:** ✅ Implemented
 
-Personalizes CV using **Gemini 2.5 Flash** (summary, skills, projects). Generates editable Markdown preview → PDF.
+Personalizes CV using **Grok 4.1 Fast** (summary, skills, projects). Generates editable Markdown preview → PDF.
 
 ### Markdown Preview Flow
 
@@ -287,7 +287,7 @@ Response:
 {
   "success": true,
   "data": { "pdfBase64": "...", "filename": "cv-igor-fernandes-saipem-pt.pdf" },
-  "metadata": { "duration": 5432, "model": "gemini-2.5-flash", "personalizedSections": [...] }
+  "metadata": { "duration": 5432, "model": "x-ai/grok-4.1-fast", "personalizedSections": [...] }
 }
 ```
 
@@ -295,7 +295,7 @@ Response:
 
 ### Configuration
 
-- **Model**: `gemini-2.5-flash`, temperature: 0.3
+- **Model**: `x-ai/grok-4.1-fast`, temperature: 0.7
 - **Timeout**: 60s
 - **Strategy**: Moderate enhancement (no fabrication)
 
@@ -324,7 +324,7 @@ Customizable prompts for Job Parser and Resume Generator.
 
 **Model Settings:**
 
-- `modelo_gemini`: "gemini-2.5-flash" | "gemini-2.5-pro"
+- `modelo_gemini`: "x-ai/grok-4.1-fast" (field kept for DB compatibility)
 - `temperatura`: 0.0-1.0
 - `max_tokens`: 512-32768
 - `top_p`, `top_k`: Optional
@@ -342,7 +342,7 @@ import { loadUserAIConfig, getGenerationConfig } from "@/lib/ai/config"
 
 const config = await loadUserAIConfig(userId)
 const model = genAI.getGenerativeModel({
-  model: config.modelo_gemini,
+  model: config.modelo_gemini, // Now using Grok via OpenRouter
   generationConfig: getGenerationConfig(config),
   systemInstruction: config.curriculo_prompt,
 })
@@ -360,4 +360,4 @@ Creates table, indexes, triggers, RLS policies, global defaults (user_id = NULL)
 
 - **Config not loading**: Check migration executed, verify global defaults exist
 - **RLS blocking**: Verify policies, check `auth.uid()` returns correct user_id
-- **Changes not reflecting**: Restart server, verify `loadUserAIConfig()` called before Gemini API
+- **Changes not reflecting**: Restart server, verify `loadUserAIConfig()` called before AI API

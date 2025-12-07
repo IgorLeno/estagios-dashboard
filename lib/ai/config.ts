@@ -1,32 +1,16 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
 import { getPromptsConfig } from "@/lib/supabase/prompts"
 import type { PromptsConfig } from "@/lib/types"
+import { callGrok, validateGrokConfig, type GrokMessage } from "./grok-client"
 
 /**
- * Model fallback chain for resilience
- * Using gemini-2.5-flash (stable, newest flash model) as primary
- * Free tier quotas: 15 RPM, 1.5K RPD, 1M TPM
- *
- * Note: gemini-1.5-flash does NOT exist - Gemini 1.5 series only has Pro models
- * Flash models start from 2.0 series onwards
+ * AI Model Configuration for Grok 4.1 Fast via OpenRouter
+ * Migrated from Gemini 2.5 Flash
  */
-export const MODEL_FALLBACK_CHAIN = [
-  "gemini-2.5-flash", // Primary: Newest stable flash model for free tier
-  "gemini-2.0-flash-001", // Secondary: Older stable flash alternative
-  "gemini-2.5-pro", // Tertiary: Highest quality (slower, may require billing)
-] as const
-
-export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
-
-/**
- * Configuração do modelo Gemini
- */
-export const GEMINI_CONFIG = {
-  model: "gemini-2.5-flash", // Using newest stable flash model
-  temperature: 0.1, // Baixa para consistência
-  maxOutputTokens: 65536, // Full capacity of gemini-2.5-flash to prevent truncation
-  topP: 0.95,
-  topK: 40,
+export const AI_MODEL_CONFIG = {
+  model: "x-ai/grok-4.1-fast",
+  temperature: 0.7,
+  maxOutputTokens: 4096, // Grok default, can be increased if needed
+  topP: 0.9,
 } as const
 
 /**
@@ -43,30 +27,72 @@ export const AI_TIMEOUT_CONFIG = {
 } as const
 
 /**
- * Helper para validar e obter API key
- * Centraliza validação de API key para evitar duplicação
- * @throws Error se GOOGLE_API_KEY não estiver configurada ou for inválida
- * @returns API key validada
+ * Creates an AI model wrapper with Gemini-compatible interface
+ * Internally uses Grok 4.1 Fast via OpenRouter
+ *
+ * @param systemInstruction - System prompt for the model
+ * @param generationConfig - Generation parameters (temperature, maxTokens, etc.)
+ * @returns Model wrapper with generateContent() method
  */
-function getValidatedApiKey(): string {
-  const apiKey = process.env.GOOGLE_API_KEY
-
-  if (!apiKey || apiKey.trim() === "") {
-    throw new Error(
-      "GOOGLE_API_KEY not found in environment. " + "Get your key at: https://aistudio.google.com/app/apikey"
-    )
+export function createAIModel(
+  systemInstruction?: string,
+  generationConfig?: {
+    temperature?: number
+    maxOutputTokens?: number
+    topP?: number
+  }
+) {
+  const config = {
+    temperature: generationConfig?.temperature ?? AI_MODEL_CONFIG.temperature,
+    max_tokens: generationConfig?.maxOutputTokens ?? AI_MODEL_CONFIG.maxOutputTokens,
+    top_p: generationConfig?.topP ?? AI_MODEL_CONFIG.topP,
   }
 
-  return apiKey
+  return {
+    /**
+     * Generate content using Grok (Gemini-compatible interface)
+     * @param prompt - User prompt
+     * @returns Response with Gemini-like structure
+     */
+    async generateContent(prompt: string) {
+      const messages: GrokMessage[] = []
+
+      if (systemInstruction) {
+        messages.push({ role: "system", content: systemInstruction })
+      }
+
+      messages.push({ role: "user", content: prompt })
+
+      const grokResponse = await callGrok(messages, config)
+
+      // Return Gemini-compatible response structure
+      return {
+        response: {
+          text: () => grokResponse.content,
+          usageMetadata: {
+            promptTokenCount: grokResponse.usage.prompt_tokens,
+            candidatesTokenCount: grokResponse.usage.completion_tokens,
+            totalTokenCount: grokResponse.usage.total_tokens,
+          },
+        },
+      }
+    },
+  }
 }
 
 /**
- * Cria cliente Gemini configurado
- * @throws Error se GOOGLE_API_KEY não estiver configurada
+ * Creates AI model configured for job analysis
+ * Uses Grok 4.1 Fast with analysis-optimized settings
+ *
+ * @param systemPrompt - Optional system prompt override
+ * @throws Error if OPENROUTER_API_KEY not configured
  */
-export function createGeminiClient(): GoogleGenerativeAI {
-  const apiKey = getValidatedApiKey()
-  return new GoogleGenerativeAI(apiKey)
+export function createAnalysisModel(systemPrompt?: string) {
+  return createAIModel(systemPrompt, {
+    temperature: 0.7, // Balanced for analysis
+    maxOutputTokens: 4096, // Sufficient for job analysis
+    topP: 0.9,
+  })
 }
 
 /**
@@ -74,41 +100,8 @@ export function createGeminiClient(): GoogleGenerativeAI {
  * @throws Error se configuração inválida
  */
 export function validateAIConfig(): boolean {
-  getValidatedApiKey()
+  validateGrokConfig()
   return true
-}
-
-/**
- * Configuração específica para modelo de análise
- * Note: Google Search grounding requires @google/genai SDK (not @google/generative-ai)
- * TODO: Migrate to @google/genai to enable external company research
- */
-export const ANALYSIS_MODEL_CONFIG = {
-  model: "gemini-2.5-flash", // Stable flash model for analysis
-  temperature: 0.1,
-  maxOutputTokens: 65536, // Full capacity to prevent JSON truncation on long analyses
-  topP: 0.95,
-  topK: 40,
-} as const
-
-/**
- * Creates Gemini model configured for job analysis
- * @throws Error if GOOGLE_API_KEY not configured
- */
-export function createAnalysisModel() {
-  const genAI = createGeminiClient()
-
-  return genAI.getGenerativeModel({
-    model: ANALYSIS_MODEL_CONFIG.model,
-    generationConfig: {
-      temperature: ANALYSIS_MODEL_CONFIG.temperature,
-      maxOutputTokens: ANALYSIS_MODEL_CONFIG.maxOutputTokens,
-      topP: ANALYSIS_MODEL_CONFIG.topP,
-      topK: ANALYSIS_MODEL_CONFIG.topK,
-    },
-    // Note: tools with googleSearch requires @google/genai SDK
-    // Current implementation uses @google/generative-ai (legacy)
-  })
 }
 
 /**
@@ -123,14 +116,44 @@ export async function loadUserAIConfig(userId?: string): Promise<PromptsConfig> 
 }
 
 /**
- * Get Gemini generation config from PromptsConfig
- * Extracts only the fields needed for Gemini API
+ * Get generation config from PromptsConfig
+ * Extracts only the fields needed for AI API
+ *
+ * NOTE: PromptsConfig still references 'modelo_gemini' for backward compatibility
+ * with database schema, but this config is now used for Grok
  */
 export function getGenerationConfig(config: PromptsConfig) {
   return {
     temperature: config.temperatura,
     maxOutputTokens: config.max_tokens,
     topP: config.top_p,
-    topK: config.top_k,
+  }
+}
+
+// Backward compatibility exports
+// These are deprecated but kept to avoid breaking existing imports
+export const GEMINI_CONFIG = AI_MODEL_CONFIG
+export const ANALYSIS_MODEL_CONFIG = {
+  model: AI_MODEL_CONFIG.model,
+  temperature: AI_MODEL_CONFIG.temperature,
+  maxOutputTokens: AI_MODEL_CONFIG.maxOutputTokens,
+  topP: AI_MODEL_CONFIG.topP,
+}
+
+// Fallback chain no longer needed with Grok (no quota issues)
+// Kept for compatibility
+export const MODEL_FALLBACK_CHAIN = ["x-ai/grok-4.1-fast"] as const
+export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
+
+/**
+ * @deprecated Use createAIModel() instead
+ * Kept for backward compatibility
+ */
+export function createGeminiClient() {
+  // Return a mock object for compatibility
+  return {
+    getGenerativeModel: (config: any) => {
+      return createAIModel(config.systemInstruction, config.generationConfig)
+    },
   }
 }
