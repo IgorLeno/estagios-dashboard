@@ -52,42 +52,80 @@ export function MarkdownPreview({ content, editable = false, onChange, className
 
 /**
  * Converte Markdown simples para HTML com formatação básica
- * Não usa biblioteca externa para manter simplicidade
+ * Garante que TODO texto seja envolvido em elementos HTML (nunca text nodes soltos)
  */
 function renderMarkdownToHTML(markdown: string): string {
-  let html = markdown
+  const lines = markdown.split('\n')
+  const result: string[] = []
+  let paragraphLines: string[] = []
 
-  // H1 - Títulos principais
-  html = html.replace(/^# (.+)$/gm, '<h1 class="markdown-h1">$1</h1>')
+  function applyInlineFormatting(text: string): string {
+    let formatted = text
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong class="markdown-strong">$1</strong>')
+    formatted = formatted.replace(/\*(.+?)\*/g, '<em class="markdown-em">$1</em>')
+    formatted = formatted.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="markdown-link" target="_blank" rel="noopener">$1</a>')
+    formatted = formatted.replace(/`(.+?)`/g, '<code class="markdown-code">$1</code>')
+    return formatted
+  }
 
-  // H2 - Títulos de seção
-  html = html.replace(/^## (.+)$/gm, '<h2 class="markdown-h2">$1</h2>')
+  function flushParagraph() {
+    if (paragraphLines.length > 0) {
+      const content = applyInlineFormatting(paragraphLines.join(' ').trim())
+      result.push(`<p class="markdown-p">${content}</p>`)
+      paragraphLines = []
+    }
+  }
 
-  // H3 - Subtítulos
-  html = html.replace(/^### (.+)$/gm, '<h3 class="markdown-h3">$1</h3>')
+  for (const line of lines) {
+    const trimmed = line.trim()
 
-  // Negrito
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="markdown-strong">$1</strong>')
+    // Empty line - end current paragraph
+    if (trimmed === '') {
+      flushParagraph()
+      continue
+    }
 
-  // Itálico
-  html = html.replace(/\*(.+?)\*/g, '<em class="markdown-em">$1</em>')
+    // H1
+    if (trimmed.startsWith('# ')) {
+      flushParagraph()
+      result.push(`<h1 class="markdown-h1">${trimmed.slice(2)}</h1>`)
+      continue
+    }
 
-  // Links
-  html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="markdown-link" target="_blank" rel="noopener">$1</a>')
+    // H2
+    if (trimmed.startsWith('## ')) {
+      flushParagraph()
+      result.push(`<h2 class="markdown-h2">${trimmed.slice(3)}</h2>`)
+      continue
+    }
 
-  // Listas não ordenadas
-  html = html.replace(/^- (.+)$/gm, '<li class="markdown-li">$1</li>')
-  html = html.replace(/(<li class="markdown-li">.*<\/li>)/s, '<ul class="markdown-ul">$1</ul>')
+    // H3
+    if (trimmed.startsWith('### ')) {
+      flushParagraph()
+      result.push(`<h3 class="markdown-h3">${trimmed.slice(4)}</h3>`)
+      continue
+    }
 
-  // Code inline
-  html = html.replace(/`(.+?)`/g, '<code class="markdown-code">$1</code>')
+    // List item
+    if (trimmed.startsWith('- ')) {
+      flushParagraph()
+      const content = applyInlineFormatting(trimmed.slice(2))
+      result.push(`<li class="markdown-li">${content}</li>`)
+      continue
+    }
 
-  // Quebras de linha duplas = parágrafo
-  html = html.replace(/\n\n/g, '</p><p class="markdown-p">')
-  html = `<p class="markdown-p">${html}</p>`
+    // Regular text - accumulate in paragraph
+    paragraphLines.push(trimmed)
+  }
 
-  // Limpar tags vazias
-  html = html.replace(/<p class="markdown-p"><\/p>/g, "")
+  // Flush any remaining paragraph
+  flushParagraph()
+
+  // Wrap consecutive <li> in <ul>
+  let html = result.join('')
+  html = html.replace(/(<li class="markdown-li">.*?<\/li>)+/gs, match => {
+    return `<ul class="markdown-ul">${match}</ul>`
+  })
 
   return html
 }
