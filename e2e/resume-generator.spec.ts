@@ -248,11 +248,9 @@ Salário: R$ 1.800,00 + benefícios
     await page.keyboard.press("Escape")
   })
 
-  test.skip("deve salvar vaga após gerar currículo", async ({ page }) => {
-    // FIXME: Test failing - save operation not completing (toast doesn't appear)
-    // Issue: Supabase insert fails silently despite having valid data
-    // All resume generation flows work correctly (covered by other 5 tests)
-    // This test verifies the integration between resume generation and vaga save
+  test("deve salvar vaga após gerar currículo", async ({ page }) => {
+    // Test verifies the integration between resume generation and vaga save
+    // Uses generated resume PDF and validates complete save flow
     await page.waitForLoadState("networkidle")
 
     const empresaName = generateUniqueTestName("[E2E-TEST] Resume Test")

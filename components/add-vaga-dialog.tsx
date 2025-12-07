@@ -229,7 +229,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         console.log("[AddVagaDialog] Criando vaga com data_inscricao:", dataInscricao, "Config:", config)
       }
 
-      const { error } = await supabase.from("vagas_estagio").insert({
+      const cvDataUrl = resumePdfBase64 ? `data:application/pdf;base64,${resumePdfBase64}` : null
+
+      const insertData = {
         empresa: formData.empresa,
         cargo: formData.cargo,
         local: formData.local,
@@ -240,18 +242,28 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         status: formData.status,
         observacoes: formData.observacoes || null,
         arquivo_analise_url: formData.arquivo_analise_url || null,
-        arquivo_cv_url: resumePdfBase64 ? `data:application/pdf;base64,${resumePdfBase64}` : null,
+        arquivo_cv_url: cvDataUrl,
         data_inscricao: dataInscricao,
-      })
+      }
 
-      if (error) throw error
+      // Insert with .select() to ensure operation completes and returns data
+      const { data, error } = await supabase.from("vagas_estagio").insert(insertData).select()
 
+      if (error) {
+        console.error("[AddVagaDialog] Insert error:", error)
+        throw error
+      }
+
+      if (!data || data.length === 0) {
+        console.error("[AddVagaDialog] Insert returned no data - silent failure detected")
+        throw new Error("Failed to save vaga - no data returned from database")
+      }
       toast.success("✓ Vaga salva com sucesso!")
       resetForm()
       onOpenChange(false)
       onSuccess()
     } catch (error) {
-      console.error("Error adding job:", error)
+      console.error("[AddVagaDialog] Error adding job:", error)
       toast.error("Erro ao salvar vaga. Tente novamente.")
     } finally {
       setLoading(false)
