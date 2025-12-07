@@ -31,10 +31,7 @@ function getValidatedApiKey(): string {
   const apiKey = process.env.OPENROUTER_API_KEY
 
   if (!apiKey || apiKey.trim() === "") {
-    throw new Error(
-      "OPENROUTER_API_KEY not found in environment. " +
-        "Get your key at: https://openrouter.ai/keys"
-    )
+    throw new Error("OPENROUTER_API_KEY not found in environment. " + "Get your key at: https://openrouter.ai/keys")
   }
 
   return apiKey
@@ -47,10 +44,7 @@ function getValidatedApiKey(): string {
  * @returns Response content and token usage
  * @throws Error if API call fails
  */
-export async function callGrok(
-  messages: GrokMessage[],
-  options?: GrokOptions
-): Promise<GrokResponse> {
+export async function callGrok(messages: GrokMessage[], options?: GrokOptions): Promise<GrokResponse> {
   const apiKey = getValidatedApiKey()
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

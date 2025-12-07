@@ -1,5 +1,5 @@
-import { createGeminiClient, GEMINI_CONFIG } from "./config"
-import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt, RESUME_SYSTEM_PROMPT } from "./resume-prompts"
+import { createGeminiClient, loadUserAIConfig, getGenerationConfig } from "./config"
+import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./resume-prompts"
 import { getCVTemplate } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
@@ -151,7 +151,8 @@ function extractTokenUsage(response: any): {
  */
 export async function generateTailoredResume(
   jobDetails: JobDetails,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  userId?: string
 ): Promise<{
   cv: CVTemplate
   duration: number
@@ -163,20 +164,19 @@ export async function generateTailoredResume(
 
   console.log(`[Resume Generator] Starting personalization (${language})`)
 
+  // Load user AI config
+  const config = await loadUserAIConfig(userId)
+  console.log(`[Resume Generator] Loaded AI config for user: ${userId || "global"}`)
+
   // Load CV template
   const baseCv = getCVTemplate(language)
 
-  // Create Gemini model
+  // Create Gemini model with user config
   const genAI = createGeminiClient()
   const model = genAI.getGenerativeModel({
-    model: GEMINI_CONFIG.model,
-    generationConfig: {
-      temperature: 0.3, // Slightly higher for creativity
-      maxOutputTokens: 4096,
-      topP: GEMINI_CONFIG.topP,
-      topK: GEMINI_CONFIG.topK,
-    },
-    systemInstruction: RESUME_SYSTEM_PROMPT,
+    model: config.modelo_gemini,
+    generationConfig: getGenerationConfig(config),
+    systemInstruction: config.curriculo_prompt,
   })
 
   // Personalize 3 sections in parallel
@@ -217,7 +217,7 @@ export async function generateTailoredResume(
   return {
     cv: personalizedCv,
     duration,
-    model: GEMINI_CONFIG.model,
+    model: config.modelo_gemini,
     tokenUsage: totalTokenUsage,
     personalizedSections: ["summary", "skills", "projects"],
   }

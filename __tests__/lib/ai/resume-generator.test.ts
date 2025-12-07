@@ -80,12 +80,22 @@ vi.mock("@/lib/ai/config", () => ({
       generateContent: mockGenerateContent,
     })),
   })),
-  GEMINI_CONFIG: {
-    model: "gemini-2.5-flash",
-    temperature: 0.1,
-    topP: 0.95,
-    topK: 40,
-  },
+  loadUserAIConfig: vi.fn(async () => ({
+    modelo_gemini: "x-ai/grok-4.1-fast",
+    temperatura: 0.7,
+    max_tokens: 4096,
+    top_p: 0.95,
+    top_k: 40,
+    dossie_prompt: "Mock user profile",
+    analise_prompt: "Mock analysis prompt",
+    curriculo_prompt: "You are a professional resume writer",
+  })),
+  getGenerationConfig: vi.fn((config) => ({
+    temperature: config.temperatura || 0.7,
+    maxOutputTokens: config.max_tokens || 4096,
+    topP: config.top_p,
+    topK: config.top_k,
+  })),
 }))
 
 // Mock CV templates
@@ -153,7 +163,6 @@ vi.mock("@/lib/ai/resume-prompts", () => ({
   buildSummaryPrompt: vi.fn(() => "Summary prompt"),
   buildSkillsPrompt: vi.fn(() => "Skills prompt"),
   buildProjectsPrompt: vi.fn(() => "Projects prompt"),
-  RESUME_SYSTEM_PROMPT: "You are a professional resume writer",
 }))
 
 describe("generateTailoredResume", () => {
@@ -210,7 +219,7 @@ describe("generateTailoredResume", () => {
   it("should include correct metadata", async () => {
     const result = await generateTailoredResume(mockJobDetails, "pt")
 
-    expect(result.model).toBe("gemini-2.5-flash")
+    expect(result.model).toBe("x-ai/grok-4.1-fast")
     expect(result.duration).toBeGreaterThanOrEqual(0)
     expect(result.personalizedSections).toEqual(["summary", "skills", "projects"])
   })

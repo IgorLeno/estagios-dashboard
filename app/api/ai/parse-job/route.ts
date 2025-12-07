@@ -6,6 +6,7 @@ import { ParseJobRequestSchema } from "@/lib/ai/types"
 import { checkRateLimit, consumeRequest, consumeTokens, RATE_LIMIT_CONFIG } from "@/lib/ai/rate-limiter"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
 import { ZodError } from "zod"
+import { createClient } from "@/lib/supabase/server"
 
 /**
  * POST /api/ai/parse-job
@@ -111,11 +112,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { jobDescription } = ParseJobRequestSchema.parse(body)
 
-    console.log("[AI Parser] Starting job parsing...")
+    // Get user ID from session (if authenticated)
+    const supabase = await createClient()
+    const { data: userData } = await supabase.auth.getUser()
+    const userId = userData?.user?.id
 
-    // Chamar serviço de análise com timeout protection
+    console.log(`[AI Parser] Starting job parsing for user: ${userId || "unauthenticated"}`)
+
+    // Chamar serviço de análise com timeout protection (passa userId para carregar config personalizada)
     const { data, analise, duration, model, tokenUsage } = await withTimeout(
-      parseJobWithAnalysis(jobDescription),
+      parseJobWithAnalysis(jobDescription, userId),
       AI_TIMEOUT_CONFIG.parsingTimeoutMs,
       `Analysis took longer than ${AI_TIMEOUT_CONFIG.parsingTimeoutMs}ms`
     )

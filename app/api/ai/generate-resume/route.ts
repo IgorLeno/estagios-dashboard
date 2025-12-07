@@ -45,12 +45,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     console.log(`[Resume API] Request: ${vagaId ? `vaga ${vagaId}` : "job description"}, language: ${language}`)
 
+    // Get user ID from session
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const userId = user?.id
+
     // Get job details (outside timeout wrapper to handle 404 early)
     let jobDetails: JobDetails | undefined
 
     if (vagaId) {
       // Fetch from database
-      const supabase = await createClient()
       const { data: vaga, error } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
       if (error || !vaga) {
@@ -98,7 +104,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
 
         // Generate tailored resume
-        const resumeResult = await generateTailoredResume(jobDetails, language)
+        const resumeResult = await generateTailoredResume(jobDetails, language, userId)
 
         // Generate PDF
         const pdfBuffer = await generateResumePDF(resumeResult.cv)

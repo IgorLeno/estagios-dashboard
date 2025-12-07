@@ -157,7 +157,7 @@ export function ConfiguracoesPrompts() {
             <span className="text-foreground">Configurações de IA</span>
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Personalize os prompts usados pelo Gemini para análise de vagas e geração de currículos
+            Personalize os prompts e parâmetros do modelo de IA para análise de vagas e geração de currículos
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -204,15 +204,17 @@ export function ConfiguracoesPrompts() {
             <TabsContent value="modelo" className="space-y-4 mt-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="modelo_gemini">Modelo Gemini</Label>
+                  <Label htmlFor="modelo_gemini">Modelo LLM</Label>
                   <Input
                     id="modelo_gemini"
                     value={config.modelo_gemini}
                     onChange={(e) => setConfig({ ...config, modelo_gemini: e.target.value })}
-                    placeholder="gemini-2.5-flash"
+                    placeholder="x-ai/grok-4.1-fast"
                     className="bg-background"
                   />
-                  <p className="text-xs text-muted-foreground">Exemplos: gemini-2.5-flash, gemini-2.5-pro</p>
+                  <p className="text-xs text-muted-foreground">
+                    Modelo via OpenRouter. Exemplos: x-ai/grok-4.1-fast, anthropic/claude-3.5-sonnet
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

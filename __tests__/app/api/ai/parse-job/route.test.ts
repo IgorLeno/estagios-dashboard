@@ -5,7 +5,7 @@ import { NextRequest } from "next/server"
 // Mock das dependências
 vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(),
-  GEMINI_CONFIG: { model: "gemini-2.5-flash" },
+  GEMINI_CONFIG: { model: "x-ai/grok-4.1-fast" },
   AI_TIMEOUT_CONFIG: { parsingTimeoutMs: 30000 },
 }))
 
@@ -21,6 +21,17 @@ vi.mock("@/lib/ai/rate-limiter", () => ({
     maxRequestsPerMin: 10,
     maxTokensPerDay: 1000000,
   },
+}))
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "test-user-id" } },
+        error: null,
+      })),
+    },
+  })),
 }))
 
 vi.mock("@/lib/ai/utils", () => {
@@ -77,7 +88,7 @@ describe("POST /api/ai/parse-job", () => {
       },
       analise: "# Análise da Vaga\n\nConteúdo da análise...",
       duration: 2500,
-      model: "gemini-2.5-flash",
+      model: "x-ai/grok-4.1-fast",
       tokenUsage: { inputTokens: 500, outputTokens: 300, totalTokens: 800 },
     })
 
@@ -248,7 +259,7 @@ describe("POST /api/ai/parse-job", () => {
       },
       analise: "# Análise\n\nConteúdo...",
       duration: 1000,
-      model: "gemini-2.5-flash",
+      model: "x-ai/grok-4.1-fast",
       tokenUsage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
     }
 
@@ -282,7 +293,7 @@ describe("GET /api/ai/parse-job", () => {
 
     expect(response.status).toBe(200)
     expect(data.status).toBe("ok")
-    expect(data.model).toBe("gemini-2.5-flash")
+    expect(data.model).toBe("x-ai/grok-4.1-fast")
   })
 
   it("should return 500 when config is invalid", async () => {

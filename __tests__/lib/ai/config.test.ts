@@ -1,5 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { createGeminiClient, validateAIConfig, GEMINI_CONFIG, MODEL_FALLBACK_CHAIN } from "@/lib/ai/config"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import {
+  createGeminiClient,
+  validateAIConfig,
+  GEMINI_CONFIG,
+  MODEL_FALLBACK_CHAIN,
+  loadUserAIConfig,
+  getGenerationConfig,
+} from "@/lib/ai/config"
+import type { PromptsConfig } from "@/lib/types"
+
+// Mock Supabase prompts module
+vi.mock("@/lib/supabase/prompts", () => ({
+  getPromptsConfig: vi.fn(),
+}))
 
 describe("AI Config", () => {
   let originalApiKey: string | undefined
@@ -89,6 +102,110 @@ describe("AI Config", () => {
 
     it("should have balanced temperature for Grok", () => {
       expect(GEMINI_CONFIG.temperature).toBe(0.7)
+    })
+  })
+
+  describe("loadUserAIConfig", () => {
+    it("should load user config from Supabase", async () => {
+      const mockConfig: PromptsConfig = {
+        id: "test-id",
+        user_id: "test-user",
+        modelo_gemini: "x-ai/grok-4.1-fast",
+        temperatura: 0.8,
+        max_tokens: 2048,
+        top_p: 0.95,
+        top_k: undefined,
+        dossie_prompt: "Test dossie",
+        analise_prompt: "Test analise",
+        curriculo_prompt: "Test curriculo",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const { getPromptsConfig } = await import("@/lib/supabase/prompts")
+      vi.mocked(getPromptsConfig).mockResolvedValue(mockConfig)
+
+      const result = await loadUserAIConfig("test-user")
+
+      expect(result).toEqual(mockConfig)
+      expect(getPromptsConfig).toHaveBeenCalledWith("test-user")
+    })
+
+    it("should load global defaults when userId not provided", async () => {
+      const mockGlobalConfig: PromptsConfig = {
+        id: "global-id",
+        user_id: null,
+        modelo_gemini: "x-ai/grok-4.1-fast",
+        temperatura: 0.7,
+        max_tokens: 4096,
+        top_p: 0.9,
+        top_k: undefined,
+        dossie_prompt: "Global dossie",
+        analise_prompt: "Global analise",
+        curriculo_prompt: "Global curriculo",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const { getPromptsConfig } = await import("@/lib/supabase/prompts")
+      vi.mocked(getPromptsConfig).mockResolvedValue(mockGlobalConfig)
+
+      const result = await loadUserAIConfig()
+
+      expect(result).toEqual(mockGlobalConfig)
+      expect(getPromptsConfig).toHaveBeenCalledWith(undefined)
+    })
+  })
+
+  describe("getGenerationConfig", () => {
+    it("should extract generation parameters from PromptsConfig", () => {
+      const config: PromptsConfig = {
+        id: "test-id",
+        user_id: "test-user",
+        modelo_gemini: "x-ai/grok-4.1-fast",
+        temperatura: 0.8,
+        max_tokens: 2048,
+        top_p: 0.95,
+        top_k: 40,
+        dossie_prompt: "Test dossie",
+        analise_prompt: "Test analise",
+        curriculo_prompt: "Test curriculo",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const result = getGenerationConfig(config)
+
+      expect(result).toEqual({
+        temperature: 0.8,
+        maxOutputTokens: 2048,
+        topP: 0.95,
+      })
+    })
+
+    it("should handle undefined top_p", () => {
+      const config: PromptsConfig = {
+        id: "test-id",
+        user_id: "test-user",
+        modelo_gemini: "x-ai/grok-4.1-fast",
+        temperatura: 0.7,
+        max_tokens: 4096,
+        top_p: undefined,
+        top_k: undefined,
+        dossie_prompt: "Test",
+        analise_prompt: "Test",
+        curriculo_prompt: "Test",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const result = getGenerationConfig(config)
+
+      expect(result).toEqual({
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+        topP: undefined,
+      })
     })
   })
 })

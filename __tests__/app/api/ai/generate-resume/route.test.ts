@@ -17,7 +17,7 @@ vi.mock("@/lib/ai/resume-generator", () => ({
       certifications: [],
     },
     duration: 5000,
-    model: "gemini-2.5-flash",
+    model: "x-ai/grok-4.1-fast",
     tokenUsage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
     personalizedSections: ["summary", "skills", "projects"],
   })),
@@ -30,14 +30,6 @@ vi.mock("@/lib/ai/pdf-generator", () => ({
 
 vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(() => true),
-  createGeminiClient: vi.fn(() => ({
-    // Mock Gemini client if needed
-  })),
-  GEMINI_CONFIG: {
-    model: "gemini-2.5-flash",
-    temperature: 0.3,
-    maxOutputTokens: 4096,
-  },
 }))
 
 vi.mock("@/lib/ai/job-parser", () => ({
@@ -56,12 +48,18 @@ vi.mock("@/lib/ai/job-parser", () => ({
       idioma_vaga: "pt" as const,
     },
     duration: 1000,
-    model: "gemini-2.5-flash",
+    model: "x-ai/grok-4.1-fast",
   })),
 }))
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "test-user-id" } },
+        error: null,
+      })),
+    },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({

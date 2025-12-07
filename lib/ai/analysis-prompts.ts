@@ -1,5 +1,4 @@
 // lib/ai/analysis-prompts.ts
-import type { UserProfile } from "./user-profile"
 
 /**
  * Max description length for prompt injection prevention
@@ -34,8 +33,10 @@ function sanitizeJobDescription(jobDescription: string): string {
 
 /**
  * Builds prompt for job analysis generation
+ * @param jobDescription - Job description text
+ * @param dossiePrompt - Complete candidate profile from config.dossie_prompt
  */
-export function buildJobAnalysisPrompt(jobDescription: string, userProfile: UserProfile): string {
+export function buildJobAnalysisPrompt(jobDescription: string, dossiePrompt: string): string {
   const sanitizedDescription = sanitizeJobDescription(jobDescription)
 
   return `
@@ -48,10 +49,7 @@ ${sanitizedDescription}
 -----END JOB DESCRIPTION-----
 
 2. Perfil do Candidato:
-- Habilidades: ${userProfile.skills.join(", ")}
-- Experiência: ${userProfile.experience.join("; ")}
-- Formação: ${userProfile.education}
-- Objetivos: ${userProfile.goals}
+${dossiePrompt}
 
 TAREFA:
 1. Extraia dados estruturados (empresa, cargo, local, modalidade, etc.) - JSON

@@ -5,12 +5,13 @@ import {
   GeminiModelType,
   createAnalysisModel,
   ANALYSIS_MODEL_CONFIG,
+  loadUserAIConfig,
+  getGenerationConfig,
 } from "./config"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
 import { JobDetails, JobDetailsSchema, JobAnalysisResponseSchema } from "./types"
 import { isQuotaError } from "./errors"
 import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "./analysis-prompts"
-import { USER_PROFILE } from "./user-profile"
 import { validateAnalysisMarkdown } from "./validation"
 
 /**
@@ -408,11 +409,13 @@ function createTimeoutPromise(timeoutMs: number): Promise<never> {
  * Parses job description and generates comprehensive analysis using Gemini
  * Includes timeout protection and retry logic for truncation errors
  * @param jobDescription - Job description text
+ * @param userId - Optional user ID to load personalized config
  * @param timeoutMs - Timeout in milliseconds (default: 90000ms / 90 seconds)
  * @returns Structured data, analysis markdown, duration, model, and token usage
  */
 export async function parseJobWithAnalysis(
   jobDescription: string,
+  userId?: string,
   timeoutMs: number = 90000
 ): Promise<{
   data: JobDetails
@@ -424,17 +427,29 @@ export async function parseJobWithAnalysis(
   const startTime = Date.now()
   const MAX_RETRIES = 2
 
+  // Load user AI config (or global defaults)
+  const config = await loadUserAIConfig(userId)
+  console.log(`[Job Parser] Loaded AI config for user: ${userId || "global"}`)
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       console.log(
-        `[Job Parser] Starting analysis with model: ${ANALYSIS_MODEL_CONFIG.model} (attempt ${attempt}/${MAX_RETRIES})`
+        `[Job Parser] Starting analysis with model: ${config.modelo_gemini} (attempt ${attempt}/${MAX_RETRIES})`
       )
 
-      // Create analysis model
-      const model = createAnalysisModel()
+      // Get generation config from loaded settings
+      const generationConfig = getGenerationConfig(config)
 
-      // Build prompt with user profile
-      const prompt = buildJobAnalysisPrompt(jobDescription, USER_PROFILE)
+      // Create Gemini client
+      const genAI = createGeminiClient()
+      const model = genAI.getGenerativeModel({
+        model: config.modelo_gemini,
+        generationConfig,
+        systemInstruction: ANALYSIS_SYSTEM_PROMPT,
+      })
+
+      // Build prompt with user's dossie
+      const prompt = buildJobAnalysisPrompt(jobDescription, config.dossie_prompt)
 
       // Call Gemini with timeout protection
       const result = await Promise.race([model.generateContent(prompt), createTimeoutPromise(timeoutMs)])
@@ -465,14 +480,14 @@ export async function parseJobWithAnalysis(
       const duration = Date.now() - startTime
 
       console.log(
-        `[Job Parser] ✅ Analysis complete: ${ANALYSIS_MODEL_CONFIG.model} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
+        `[Job Parser] ✅ Analysis complete: ${config.modelo_gemini} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
       )
 
       return {
         data: validated.structured_data,
         analise: validated.analise_markdown,
         duration,
-        model: ANALYSIS_MODEL_CONFIG.model,
+        model: config.modelo_gemini,
         tokenUsage,
       }
     } catch (error: unknown) {

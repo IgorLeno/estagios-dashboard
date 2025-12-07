@@ -361,3 +361,24 @@ Creates table, indexes, triggers, RLS policies, global defaults (user_id = NULL)
 - **Config not loading**: Check migration executed, verify global defaults exist
 - **RLS blocking**: Verify policies, check `auth.uid()` returns correct user_id
 - **Changes not reflecting**: Restart server, verify `loadUserAIConfig()` called before AI API
+
+---
+
+## 🔄 Checkpoint Ativo: Correção de Configurações de IA
+
+**Última atualização:** 2025-12-07 12:12:41
+**Arquivo de checkpoint:** `docs/sessions/checkpoint-20251207-121241.md`
+
+**Resumo executivo:**
+
+- Corrigindo bug onde Configurações > Prompts de IA não são aplicadas nas rotas `/api/ai/*`
+- Etapa atual: Batch B (de 6 batches) concluído ✅
+- Status: ~33.3% concluído (2/6 batches)
+- Próximo: Batch C - UI Updates
+- Contexto no checkpoint: 55.4% restante (~110k tokens)
+
+**Para retomar:**
+
+```bash
+cat docs/sessions/checkpoint-20251207-121241.md
+```

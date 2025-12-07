@@ -163,13 +163,14 @@ Text with quotes."
   })
 })
 
-// Mock the Gemini API
+// Mock the Gemini API and config
 vi.mock("@/lib/ai/config", () => ({
-  createAnalysisModel: vi.fn(() => ({
-    generateContent: vi.fn(async () => ({
-      response: {
-        text: () => {
-          const analysisMarkdown = `# Análise da Vaga - Dev @ Tech Corp
+  createGeminiClient: vi.fn(() => ({
+    getGenerativeModel: vi.fn(() => ({
+      generateContent: vi.fn(async () => ({
+        response: {
+          text: () => {
+            const analysisMarkdown = `# Análise da Vaga - Dev @ Tech Corp
 
 ## 🏢 Sobre a Empresa
 Tech Corp é uma empresa de tecnologia moderna focada em React.
@@ -184,7 +185,7 @@ Score: 4/5 estrelas. Excelente match técnico.
 1. Pergunte sobre arquitetura do projeto
 2. Entenda o processo de code review`
 
-          return `\`\`\`json
+            return `\`\`\`json
 {
   "structured_data": {
     "empresa": "Tech Corp",
@@ -202,25 +203,33 @@ Score: 4/5 estrelas. Excelente match técnico.
   "analise_markdown": ${JSON.stringify(analysisMarkdown)}
 }
 \`\`\``
+          },
+          usageMetadata: {
+            promptTokenCount: 500,
+            candidatesTokenCount: 1500,
+            totalTokenCount: 2000,
+          },
         },
-        usageMetadata: {
-          promptTokenCount: 500,
-          candidatesTokenCount: 1500,
-          totalTokenCount: 2000,
-        },
-      },
+      })),
     })),
   })),
-  ANALYSIS_MODEL_CONFIG: { model: "gemini-2.0-flash-exp" },
-}))
-
-vi.mock("@/lib/ai/user-profile", () => ({
-  USER_PROFILE: {
-    skills: ["React"],
-    experience: ["Project X"],
-    education: "CS",
-    goals: "Get internship",
-  },
+  loadUserAIConfig: vi.fn(async () => ({
+    modelo_gemini: "x-ai/grok-4.1-fast",
+    temperatura: 0.7,
+    max_tokens: 4096,
+    top_p: 0.9,
+    top_k: 40,
+    dossie_prompt: "Candidato com experiência em React, buscando estágio em tech.",
+    analise_prompt: "",
+    curriculo_prompt: "",
+  })),
+  getGenerationConfig: vi.fn((config: any) => ({
+    temperature: config.temperatura,
+    maxOutputTokens: config.max_tokens,
+    topP: config.top_p,
+  })),
+  ANALYSIS_SYSTEM_PROMPT: "You are a career coach.",
+  ANALYSIS_MODEL_CONFIG: { model: "x-ai/grok-4.1-fast" },
 }))
 
 describe("parseJobWithAnalysis", () => {
@@ -231,7 +240,7 @@ describe("parseJobWithAnalysis", () => {
 
     expect(result.data.empresa).toBe("Tech Corp")
     expect(result.analise).toContain("## 🏢 Sobre a Empresa")
-    expect(result.model).toBe("gemini-2.0-flash-exp")
+    expect(result.model).toBe("x-ai/grok-4.1-fast")
     expect(result.duration).toBeGreaterThan(0)
     expect(result.tokenUsage.totalTokens).toBe(2000)
   })
