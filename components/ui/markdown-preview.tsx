@@ -37,10 +37,11 @@ export function MarkdownPreview({ content, editable = false, onChange, className
   return (
     <div
       className={cn(
-        "markdown-preview prose prose-sm max-w-none",
+        "markdown-preview",
         "p-6 rounded-lg border border-border bg-card",
         "text-foreground break-words overflow-wrap-anywhere",
         "overflow-x-hidden overflow-y-auto",
+        "w-full max-w-full min-w-0",
         className
       )}
       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(content) }}

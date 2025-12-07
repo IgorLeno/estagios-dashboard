@@ -103,7 +103,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
       {/* Linha expandida com cards */}
       {isExpanded && (
         <TableRow className="border-b border-border">
-          <TableCell colSpan={5} className="bg-muted/20 p-6">
+          <TableCell colSpan={5} className="bg-muted/20 p-6 max-w-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Card Principal: Resumo da Análise (2/3 da largura) */}
               <Card className="glass-card lg:col-span-2 min-w-0">
@@ -113,14 +113,14 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                     Resumo
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="min-w-0">
                   {vaga.observacoes ? (
-                    <div className="space-y-3 w-full">
-                      <div className="w-full overflow-hidden">
+                    <div className="space-y-3 w-full min-w-0">
+                      <div className="w-full overflow-hidden min-w-0">
                         <MarkdownPreview
                           content={vaga.observacoes}
                           editable={false}
-                          className="max-h-[400px] !max-w-full break-words"
+                          className="max-h-[400px] w-full min-w-0"
                         />
                       </div>
                       {/* Se houver link para análise completa */}

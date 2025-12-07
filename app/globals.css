@@ -214,7 +214,14 @@
     color: #1a1a1a; /* Almost black for maximum contrast */
     font-size: 14px;
     word-break: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .markdown-preview * {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
   }
 
   .markdown-preview .markdown-h1 {
@@ -298,6 +305,8 @@
     border-bottom: 1px solid transparent;
     transition: border-color 0.2s;
     font-weight: 500;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .markdown-preview .markdown-link:hover {
@@ -355,6 +364,8 @@
 
   .dark .markdown-preview .markdown-link {
     color: #60a5fa;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .dark .markdown-preview .markdown-link:hover {
