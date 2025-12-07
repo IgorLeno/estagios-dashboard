@@ -106,7 +106,7 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
           <TableCell colSpan={5} className="bg-muted/20 p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Card Principal: Resumo da Análise (2/3 da largura) */}
-              <Card className="glass-card lg:col-span-2">
+              <Card className="glass-card lg:col-span-2 min-w-0">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
