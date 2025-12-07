@@ -103,8 +103,8 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
       {/* Linha expandida com cards */}
       {isExpanded && (
         <TableRow className="border-b border-border">
-          <TableCell colSpan={5} className="bg-muted/20 p-6 max-w-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <TableCell colSpan={5} className="bg-muted/20 p-6 max-w-full overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full min-w-0">
               {/* Card Principal: Resumo da Análise (2/3 da largura) */}
               <Card className="glass-card lg:col-span-2 min-w-0">
                 <CardHeader className="pb-3">

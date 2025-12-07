@@ -42,6 +42,7 @@ export function MarkdownPreview({ content, editable = false, onChange, className
         "text-foreground break-words overflow-wrap-anywhere",
         "overflow-x-hidden overflow-y-auto",
         "w-full max-w-full min-w-0",
+        "[&_*]:break-words [&_*]:max-w-full",
         className
       )}
       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(content) }}

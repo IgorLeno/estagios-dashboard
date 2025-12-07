@@ -138,22 +138,22 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
             <div className="text-center py-8 text-muted-foreground">Nenhuma vaga encontrada para este dia</div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow className="border-b border-border">
-                    <TableHead scope="col" className="text-left font-semibold">
+                    <TableHead scope="col" className="text-left font-semibold w-[25%]">
                       Empresa
                     </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">
+                    <TableHead scope="col" className="text-left font-semibold w-[25%]">
                       Cargo
                     </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">
+                    <TableHead scope="col" className="text-left font-semibold w-[20%]">
                       Local
                     </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold">
+                    <TableHead scope="col" className="text-left font-semibold w-[15%]">
                       Modalidade
                     </TableHead>
-                    <TableHead scope="col" className="w-[50px]">
+                    <TableHead scope="col" className="w-[15%]">
                       <span className="sr-only">Ações</span>
                     </TableHead>
                   </TableRow>
