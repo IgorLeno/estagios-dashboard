@@ -52,7 +52,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [analyzing, setAnalyzing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [generatingResume, setGeneratingResume] = useState(false)
-  const [resumeContent, setResumeContent] = useState("")
+  const [resumeContentPt, setResumeContentPt] = useState("")
+  const [resumeContentEn, setResumeContentEn] = useState("")
   const [resumePdfBase64, setResumePdfBase64] = useState<string | null>(null)
   const [resumeFilename, setResumeFilename] = useState<string | null>(null)
   const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
@@ -190,7 +191,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       if (result.success) {
         setResumePdfBase64(result.data.pdfBase64)
         setResumeFilename(result.data.filename)
-        setResumeContent("PDF gerado")
+        // resumeContent removido - agora usa resumeContentPt/En do preview
         toast.success("✓ Currículo gerado com sucesso!")
       }
     } catch (err) {
@@ -249,6 +250,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         arquivo_cv_url: cvDataUrl, // Legacy field
         arquivo_cv_url_pt: cvDataUrlPt,
         arquivo_cv_url_en: cvDataUrlEn,
+        curriculo_text_pt: resumeContentPt || null,
+        curriculo_text_en: resumeContentEn || null,
         data_inscricao: dataInscricao,
       }
 
@@ -293,7 +296,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setJobDescription("")
     setLastAnalyzedDescription("")
     setJobAnalysisData(null)
-    setResumeContent("")
+    setResumeContentPt("")
+    setResumeContentEn("")
     setResumePdfBase64(null)
     setResumeFilename(null)
     setResumePdfBase64Pt(null)
@@ -338,8 +342,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
           <TabsContent value="curriculo" className="mt-4">
             <CurriculoTab
-              resumeContent={resumeContent}
-              setResumeContent={setResumeContent}
+              resumeContent={resumeContentPt}
+              setResumeContent={setResumeContentPt}
               resumePdfBase64={resumePdfBase64}
               resumeFilename={resumeFilename}
               onPdfGenerated={(pdfBase64: string, filename: string) => {
@@ -352,6 +356,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
                 // Keep legacy state updated (last generated PDF)
                 setResumePdfBase64(pdfBase64)
                 setResumeFilename(filename)
+              }}
+              onMarkdownGenerated={(markdownPt: string, markdownEn: string) => {
+                setResumeContentPt(markdownPt)
+                setResumeContentEn(markdownEn)
+                console.log("[AddVagaDialog] Markdown recebido:", {
+                  ptLength: markdownPt.length,
+                  enLength: markdownEn.length,
+                })
               }}
               jobAnalysisData={jobAnalysisData}
               generatingResume={generatingResume}

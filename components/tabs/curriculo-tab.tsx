@@ -16,6 +16,7 @@ interface CurriculoTabProps {
   resumePdfBase64: string | null
   resumeFilename: string | null
   onPdfGenerated?: (pdfBase64: string, filename: string) => void
+  onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
   jobAnalysisData: JobDetails | null
   generatingResume: boolean
   savingVaga: boolean
@@ -31,6 +32,7 @@ export function CurriculoTab({
   resumePdfBase64,
   resumeFilename,
   onPdfGenerated,
+  onMarkdownGenerated,
   jobAnalysisData,
   savingVaga,
   onDownloadPDF,
@@ -161,7 +163,10 @@ export function CurriculoTab({
 
       const message = resumeLanguage === "both" ? "2 previews gerados com sucesso!" : "Preview gerado com sucesso!"
       toast.success(message)
-      console.log("[CurriculoTab] ✅ All previews generated successfully")
+
+      // Notificar parent sobre markdown gerado
+      onMarkdownGenerated?.(markdownPreviewPt, markdownPreviewEn)
+      console.log("[CurriculoTab] ✅ All previews generated successfully, parent notified")
     } catch (error) {
       console.error("[CurriculoTab] Error generating preview:", error)
       const errorMessage = error instanceof Error ? error.message : "Erro ao gerar preview"
