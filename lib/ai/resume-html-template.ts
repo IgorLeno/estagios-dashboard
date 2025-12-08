@@ -37,8 +37,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 11pt;
-      line-height: 1.3;
+      font-size: 10.5pt;
+      line-height: 1.35;
       color: #000;
       background: white;
     }
@@ -52,29 +52,28 @@ export function generateResumeHTML(cv: CVTemplate): string {
     /* Header */
     .header {
       text-align: left;
-      margin-bottom: 8pt;
-      padding-bottom: 4pt;
-      border-bottom: 2px solid #000;
+      margin-bottom: 10pt;
     }
 
     .header h1 {
-      font-size: 20pt;
+      font-size: 16pt;
       font-weight: bold;
-      margin-bottom: 4px;
+      margin-bottom: 6pt;
       color: #000;
+      text-transform: none;
     }
 
     .header .title {
-      font-size: 12pt;
+      font-size: 11pt;
       color: #555;
-      margin-bottom: 8px;
+      margin-bottom: 6pt;
     }
 
     .header .contact {
-      font-size: 9pt;
-      color: #333;
-      margin-bottom: 4px;
-      line-height: 1.4;
+      font-size: 10pt;
+      color: #000;
+      margin-bottom: 0;
+      line-height: 1.3;
     }
 
     .header .contact a {
@@ -84,7 +83,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Section */
     .section {
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
       page-break-inside: avoid;
     }
 
@@ -93,17 +92,18 @@ export function generateResumeHTML(cv: CVTemplate): string {
       font-weight: bold;
       text-transform: uppercase;
       color: #000;
-      margin-top: 10pt;
-      margin-bottom: 4pt;
-      padding-bottom: 2pt;
-      border-bottom: 1px solid #000;
+      margin-top: 8pt;
+      margin-bottom: 6pt;
+      padding-bottom: 3pt;
+      border-bottom: 1.5px solid #000;
     }
 
     /* Summary */
     .summary {
       text-align: justify;
-      margin-bottom: 4pt;
-      font-size: 11pt;
+      margin-bottom: 0;
+      font-size: 10.5pt;
+      line-height: 1.4;
     }
 
     /* Experience */
@@ -119,23 +119,23 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     .experience-title {
       font-weight: bold;
-      font-size: 11pt;
+      font-size: 10.5pt;
     }
 
     .experience-company {
-      font-size: 11pt;
-      color: #555;
+      font-size: 10.5pt;
+      color: #000;
     }
 
     .experience-period {
-      font-size: 9pt;
-      color: #777;
-      font-style: italic;
+      font-size: 10pt;
+      color: #000;
+      font-style: normal;
     }
 
     .experience-location {
-      font-size: 9pt;
-      color: #777;
+      font-size: 10pt;
+      color: #000;
     }
 
     .experience-description {
@@ -144,8 +144,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
     }
 
     .experience-description li {
-      margin-bottom: 2pt;
-      font-size: 11pt;
+      margin-bottom: 1pt;
+      font-size: 10.5pt;
     }
 
     /* Education */
@@ -155,18 +155,18 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     .education-degree {
       font-weight: bold;
-      font-size: 11pt;
+      font-size: 10.5pt;
     }
 
     .education-institution {
-      color: #555;
-      font-size: 11pt;
+      color: #000;
+      font-size: 10.5pt;
     }
 
     .education-period {
-      font-size: 9pt;
-      color: #777;
-      font-style: italic;
+      font-size: 10pt;
+      color: #000;
+      font-style: normal;
     }
 
     /* Skills */
@@ -176,13 +176,13 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     .skills-category-name {
       font-weight: bold;
-      margin-bottom: 2pt;
-      font-size: 11pt;
+      margin-bottom: 1pt;
+      font-size: 10.5pt;
     }
 
     .skills-items {
       margin-left: 12pt;
-      font-size: 11pt;
+      font-size: 10.5pt;
     }
 
     /* Projects */
@@ -192,8 +192,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     .project-title {
       font-weight: bold;
-      margin-bottom: 2pt;
-      font-size: 11pt;
+      margin-bottom: 1pt;
+      font-size: 10.5pt;
     }
 
     .project-description {
@@ -201,16 +201,16 @@ export function generateResumeHTML(cv: CVTemplate): string {
     }
 
     .project-description li {
-      margin-bottom: 2pt;
-      font-size: 11pt;
+      margin-bottom: 1pt;
+      font-size: 10.5pt;
     }
 
     /* Languages & Certifications */
     .language-item,
     .certification-item {
-      margin-bottom: 2pt;
-      margin-left: 12pt;
-      font-size: 11pt;
+      margin-bottom: 1pt;
+      margin-left: 0;
+      font-size: 10.5pt;
     }
 
     /* Print optimization */
