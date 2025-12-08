@@ -9,11 +9,14 @@ import { createClient } from "@/lib/supabase/server"
  * Request body: Partial VagaEstagio object
  * Response: { success: boolean, error?: string }
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createClient()
     const body = await request.json()
-    const { id } = params
+    const { id } = await context.params
 
     if (!id) {
       return NextResponse.json({ success: false, error: "ID is required" }, { status: 400 })
@@ -67,10 +70,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  *
  * Response: { success: boolean, data?: VagaEstagio, error?: string }
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createClient()
-    const { id } = params
+    const { id } = await context.params
 
     if (!id) {
       return NextResponse.json({ success: false, error: "ID is required" }, { status: 400 })
