@@ -26,7 +26,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
   <style>
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 0;
     }
 
     * {
@@ -37,9 +37,9 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 10pt;
+      font-size: 11pt;
       line-height: 1.3;
-      color: #333;
+      color: #000;
       background: white;
     }
 
@@ -52,8 +52,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
     /* Header */
     .header {
       text-align: left;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
+      margin-bottom: 8pt;
+      padding-bottom: 4pt;
       border-bottom: 2px solid #000;
     }
 
@@ -84,45 +84,46 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Section */
     .section {
-      margin-bottom: 12px;
+      margin-bottom: 8pt;
       page-break-inside: avoid;
     }
 
     .section-title {
-      font-size: 12pt;
+      font-size: 11pt;
       font-weight: bold;
       text-transform: uppercase;
       color: #000;
-      margin-bottom: 6px;
-      padding-bottom: 3px;
+      margin-top: 10pt;
+      margin-bottom: 4pt;
+      padding-bottom: 2pt;
       border-bottom: 1px solid #000;
     }
 
     /* Summary */
     .summary {
       text-align: justify;
-      margin-bottom: 8px;
-      font-size: 10pt;
+      margin-bottom: 4pt;
+      font-size: 11pt;
     }
 
     /* Experience */
     .experience-item {
-      margin-bottom: 8px;
+      margin-bottom: 6pt;
     }
 
     .experience-header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 3px;
+      margin-bottom: 2pt;
     }
 
     .experience-title {
       font-weight: bold;
-      font-size: 10pt;
+      font-size: 11pt;
     }
 
     .experience-company {
-      font-size: 10pt;
+      font-size: 11pt;
       color: #555;
     }
 
@@ -138,28 +139,28 @@ export function generateResumeHTML(cv: CVTemplate): string {
     }
 
     .experience-description {
-      margin-left: 12px;
-      margin-top: 3px;
+      margin-left: 12pt;
+      margin-top: 2pt;
     }
 
     .experience-description li {
-      margin-bottom: 2px;
-      font-size: 10pt;
+      margin-bottom: 2pt;
+      font-size: 11pt;
     }
 
     /* Education */
     .education-item {
-      margin-bottom: 6px;
+      margin-bottom: 4pt;
     }
 
     .education-degree {
       font-weight: bold;
-      font-size: 10pt;
+      font-size: 11pt;
     }
 
     .education-institution {
       color: #555;
-      font-size: 10pt;
+      font-size: 11pt;
     }
 
     .education-period {
@@ -170,46 +171,46 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Skills */
     .skills-category {
-      margin-bottom: 6px;
+      margin-bottom: 4pt;
     }
 
     .skills-category-name {
       font-weight: bold;
-      margin-bottom: 2px;
-      font-size: 10pt;
+      margin-bottom: 2pt;
+      font-size: 11pt;
     }
 
     .skills-items {
-      margin-left: 12px;
-      font-size: 10pt;
+      margin-left: 12pt;
+      font-size: 11pt;
     }
 
     /* Projects */
     .project-item {
-      margin-bottom: 8px;
+      margin-bottom: 6pt;
     }
 
     .project-title {
       font-weight: bold;
-      margin-bottom: 2px;
-      font-size: 10pt;
+      margin-bottom: 2pt;
+      font-size: 11pt;
     }
 
     .project-description {
-      margin-left: 12px;
+      margin-left: 12pt;
     }
 
     .project-description li {
-      margin-bottom: 2px;
-      font-size: 10pt;
+      margin-bottom: 2pt;
+      font-size: 11pt;
     }
 
     /* Languages & Certifications */
     .language-item,
     .certification-item {
-      margin-bottom: 3px;
-      margin-left: 12px;
-      font-size: 10pt;
+      margin-bottom: 2pt;
+      margin-left: 12pt;
+      font-size: 11pt;
     }
 
     /* Print optimization */
