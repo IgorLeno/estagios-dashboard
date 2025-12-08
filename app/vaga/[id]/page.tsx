@@ -50,8 +50,24 @@ export default function VagaDetailPage() {
         setMarkdownContent(data.observacoes)
       }
 
-      // Se houver arquivo CV (qualquer versão), marcar que tem currículo gerado
-      if (data?.arquivo_cv_url || data?.arquivo_cv_url_pt || data?.arquivo_cv_url_en) {
+      // Se houver texto do currículo (markdown), carregar para preview
+      if (data?.curriculo_text_pt || data?.curriculo_text_en) {
+        const curriculoText = data.curriculo_text_pt || data.curriculo_text_en
+        setCurriculoMarkdown(curriculoText)
+        console.log("[Page] Currículo markdown carregado do banco:", {
+          ptLength: data.curriculo_text_pt?.length || 0,
+          enLength: data.curriculo_text_en?.length || 0,
+        })
+      }
+
+      // Se houver arquivo CV (PDF) OU texto markdown, marcar que tem currículo gerado
+      if (
+        data?.arquivo_cv_url ||
+        data?.arquivo_cv_url_pt ||
+        data?.arquivo_cv_url_en ||
+        data?.curriculo_text_pt ||
+        data?.curriculo_text_en
+      ) {
         setHasGeneratedResume(true)
       }
     } catch (error) {
