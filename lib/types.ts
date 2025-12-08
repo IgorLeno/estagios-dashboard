@@ -27,7 +27,10 @@ export interface VagaEstagio {
   status: "Pendente" | "Avançado" | "Melou" | "Contratado"
   observacoes?: string
   arquivo_analise_url?: string
+  /** @deprecated Legacy field - use arquivo_cv_url_pt or arquivo_cv_url_en instead */
   arquivo_cv_url?: string
+  arquivo_cv_url_pt?: string // URL do currículo PDF em Português (base64 data URL)
+  arquivo_cv_url_en?: string // URL do currículo PDF em Inglês (base64 data URL)
   is_test_data?: boolean // Flag to identify E2E test data (true = test, false = production)
 }
 

@@ -15,6 +15,7 @@ interface CurriculoTabProps {
   setResumeContent: (value: string) => void
   resumePdfBase64: string | null
   resumeFilename: string | null
+  onPdfGenerated?: (pdfBase64: string, filename: string) => void
   jobAnalysisData: JobDetails | null
   generatingResume: boolean
   savingVaga: boolean
@@ -29,6 +30,7 @@ interface CurriculoTabProps {
 export function CurriculoTab({
   resumePdfBase64,
   resumeFilename,
+  onPdfGenerated,
   jobAnalysisData,
   savingVaga,
   onDownloadPDF,
@@ -206,6 +208,12 @@ export function CurriculoTab({
         if (result.success && result.data?.pdfBase64) {
           setPdfBase64Pt(result.data.pdfBase64)
           console.log("[CurriculoTab] PT PDF generated from Markdown")
+
+          // Notify parent component
+          if (onPdfGenerated) {
+            const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-pt.pdf`
+            onPdfGenerated(result.data.pdfBase64, filename)
+          }
         }
       }
 
@@ -241,6 +249,12 @@ export function CurriculoTab({
         if (result.success && result.data?.pdfBase64) {
           setPdfBase64En(result.data.pdfBase64)
           console.log("[CurriculoTab] EN PDF generated from Markdown")
+
+          // Notify parent component
+          if (onPdfGenerated) {
+            const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-en.pdf`
+            onPdfGenerated(result.data.pdfBase64, filename)
+          }
         }
       }
 

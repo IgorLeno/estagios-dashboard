@@ -55,6 +55,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [resumeContent, setResumeContent] = useState("")
   const [resumePdfBase64, setResumePdfBase64] = useState<string | null>(null)
   const [resumeFilename, setResumeFilename] = useState<string | null>(null)
+  const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
+  const [resumePdfBase64En, setResumePdfBase64En] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -230,6 +232,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       }
 
       const cvDataUrl = resumePdfBase64 ? `data:application/pdf;base64,${resumePdfBase64}` : null
+      const cvDataUrlPt = resumePdfBase64Pt ? `data:application/pdf;base64,${resumePdfBase64Pt}` : null
+      const cvDataUrlEn = resumePdfBase64En ? `data:application/pdf;base64,${resumePdfBase64En}` : null
 
       const insertData = {
         empresa: formData.empresa,
@@ -242,7 +246,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         status: formData.status,
         observacoes: formData.observacoes || null,
         arquivo_analise_url: formData.arquivo_analise_url || null,
-        arquivo_cv_url: cvDataUrl,
+        arquivo_cv_url: cvDataUrl, // Legacy field
+        arquivo_cv_url_pt: cvDataUrlPt,
+        arquivo_cv_url_en: cvDataUrlEn,
         data_inscricao: dataInscricao,
       }
 
@@ -290,6 +296,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumeContent("")
     setResumePdfBase64(null)
     setResumeFilename(null)
+    setResumePdfBase64Pt(null)
+    setResumePdfBase64En(null)
     setActiveTab("descricao")
   }
 
@@ -334,6 +342,17 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               setResumeContent={setResumeContent}
               resumePdfBase64={resumePdfBase64}
               resumeFilename={resumeFilename}
+              onPdfGenerated={(pdfBase64: string, filename: string) => {
+                // Detect language from filename
+                if (filename.includes("-pt.pdf")) {
+                  setResumePdfBase64Pt(pdfBase64)
+                } else if (filename.includes("-en.pdf")) {
+                  setResumePdfBase64En(pdfBase64)
+                }
+                // Keep legacy state updated (last generated PDF)
+                setResumePdfBase64(pdfBase64)
+                setResumeFilename(filename)
+              }}
               jobAnalysisData={jobAnalysisData}
               generatingResume={generatingResume}
               savingVaga={loading}

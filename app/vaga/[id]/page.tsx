@@ -50,8 +50,8 @@ export default function VagaDetailPage() {
         setMarkdownContent(data.observacoes)
       }
 
-      // Se houver arquivo CV, marcar que tem currículo gerado
-      if (data?.arquivo_cv_url) {
+      // Se houver arquivo CV (qualquer versão), marcar que tem currículo gerado
+      if (data?.arquivo_cv_url || data?.arquivo_cv_url_pt || data?.arquivo_cv_url_en) {
         setHasGeneratedResume(true)
       }
     } catch (error) {
@@ -329,7 +329,27 @@ export default function VagaDetailPage() {
                       setIsEditingCurriculo(false)
                     }}
                   />
-                  {vaga.arquivo_cv_url && (
+                  {vaga.arquivo_cv_url_pt && (
+                    <Button
+                      size="sm"
+                      onClick={() => downloadPdf(vaga.arquivo_cv_url_pt, `curriculo-${vaga.empresa}-pt.pdf`)}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar PDF (PT)
+                    </Button>
+                  )}
+                  {vaga.arquivo_cv_url_en && (
+                    <Button
+                      size="sm"
+                      onClick={() => downloadPdf(vaga.arquivo_cv_url_en, `curriculo-${vaga.empresa}-en.pdf`)}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar PDF (EN)
+                    </Button>
+                  )}
+                  {!vaga.arquivo_cv_url_pt && !vaga.arquivo_cv_url_en && vaga.arquivo_cv_url && (
                     <Button
                       size="sm"
                       onClick={() => downloadPdf(vaga.arquivo_cv_url, `curriculo-${vaga.empresa}.pdf`)}
@@ -387,13 +407,35 @@ export default function VagaDetailPage() {
                           <MarkdownPreview content={curriculoMarkdown} editable={false} className="max-h-[500px]" />
                         </div>
                       )}
-                      {!curriculoMarkdown && vaga.arquivo_cv_url && (
-                        <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-                          <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">curriculo-{vaga.empresa}.pdf</p>
-                            <p className="text-xs text-muted-foreground">Currículo personalizado para esta vaga</p>
-                          </div>
+                      {!curriculoMarkdown && (vaga.arquivo_cv_url || vaga.arquivo_cv_url_pt || vaga.arquivo_cv_url_en) && (
+                        <div className="space-y-2">
+                          {vaga.arquivo_cv_url_pt && (
+                            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                              <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">curriculo-{vaga.empresa}-pt.pdf</p>
+                                <p className="text-xs text-muted-foreground">Currículo em Português</p>
+                              </div>
+                            </div>
+                          )}
+                          {vaga.arquivo_cv_url_en && (
+                            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                              <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">curriculo-{vaga.empresa}-en.pdf</p>
+                                <p className="text-xs text-muted-foreground">Currículo em Inglês</p>
+                              </div>
+                            </div>
+                          )}
+                          {!vaga.arquivo_cv_url_pt && !vaga.arquivo_cv_url_en && vaga.arquivo_cv_url && (
+                            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                              <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">curriculo-{vaga.empresa}.pdf</p>
+                                <p className="text-xs text-muted-foreground">Currículo personalizado para esta vaga</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </>
