@@ -59,10 +59,10 @@ export async function generateResumePDF(cv: CVTemplate): Promise<Buffer> {
       format: "A4",
       printBackground: true,
       margin: {
-        top: "0.5in",
-        bottom: "0.5in",
-        left: "0.6in",
-        right: "0.6in",
+        top: "0",
+        bottom: "0",
+        left: "0",
+        right: "0",
       },
     })
 
@@ -119,10 +119,10 @@ export async function generatePDFFromHTML(html: string): Promise<Buffer> {
       format: "A4",
       printBackground: true,
       margin: {
-        top: "0.5in",
-        bottom: "0.5in",
-        left: "0.6in",
-        right: "0.6in",
+        top: "0",
+        bottom: "0",
+        left: "0",
+        right: "0",
       },
     })
 

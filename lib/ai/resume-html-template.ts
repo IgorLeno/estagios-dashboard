@@ -26,7 +26,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
   <style>
     @page {
       size: A4;
-      margin: 0;
+      margin: 0.5in 0.6in;
     }
 
     * {
@@ -52,13 +52,13 @@ export function generateResumeHTML(cv: CVTemplate): string {
     /* Header */
     .header {
       text-align: left;
-      margin-bottom: 10pt;
+      margin-bottom: 12pt;
     }
 
     .header h1 {
       font-size: 16pt;
       font-weight: bold;
-      margin-bottom: 6pt;
+      margin-bottom: 4pt;
       color: #000;
       text-transform: none;
     }
@@ -66,14 +66,14 @@ export function generateResumeHTML(cv: CVTemplate): string {
     .header .title {
       font-size: 11pt;
       color: #555;
-      margin-bottom: 6pt;
+      margin-bottom: 4pt;
     }
 
     .header .contact {
       font-size: 10pt;
       color: #000;
       margin-bottom: 0;
-      line-height: 1.3;
+      line-height: 1.25;
     }
 
     .header .contact a {
@@ -83,7 +83,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Section */
     .section {
-      margin-bottom: 6pt;
+      margin-bottom: 8pt;
       page-break-inside: avoid;
     }
 
@@ -92,9 +92,9 @@ export function generateResumeHTML(cv: CVTemplate): string {
       font-weight: bold;
       text-transform: uppercase;
       color: #000;
-      margin-top: 8pt;
-      margin-bottom: 6pt;
-      padding-bottom: 3pt;
+      margin-top: 0;
+      margin-bottom: 4pt;
+      padding-bottom: 2pt;
       border-bottom: 1.5px solid #000;
     }
 
@@ -103,7 +103,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
       text-align: justify;
       margin-bottom: 0;
       font-size: 10.5pt;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
     /* Experience */
@@ -150,67 +150,48 @@ export function generateResumeHTML(cv: CVTemplate): string {
 
     /* Education */
     .education-item {
-      margin-bottom: 4pt;
-    }
-
-    .education-degree {
-      font-weight: bold;
+      margin-bottom: 3pt;
       font-size: 10.5pt;
-    }
-
-    .education-institution {
-      color: #000;
-      font-size: 10.5pt;
-    }
-
-    .education-period {
-      font-size: 10pt;
-      color: #000;
-      font-style: normal;
+      line-height: 1.35;
     }
 
     /* Skills */
     .skills-category {
-      margin-bottom: 4pt;
-    }
-
-    .skills-category-name {
-      font-weight: bold;
-      margin-bottom: 1pt;
+      margin-bottom: 3pt;
       font-size: 10.5pt;
-    }
-
-    .skills-items {
-      margin-left: 12pt;
-      font-size: 10.5pt;
+      line-height: 1.35;
     }
 
     /* Projects */
     .project-item {
-      margin-bottom: 6pt;
+      margin-bottom: 5pt;
     }
 
     .project-title {
       font-weight: bold;
-      margin-bottom: 1pt;
+      margin-bottom: 0;
       font-size: 10.5pt;
     }
 
     .project-description {
-      margin-left: 12pt;
+      margin-left: 0;
+      padding-left: 12pt;
+      margin-top: 1pt;
     }
 
     .project-description li {
-      margin-bottom: 1pt;
+      margin-bottom: 0;
       font-size: 10.5pt;
+      line-height: 1.35;
     }
 
     /* Languages & Certifications */
     .language-item,
     .certification-item {
-      margin-bottom: 1pt;
+      margin-bottom: 2pt;
       margin-left: 0;
       font-size: 10.5pt;
+      line-height: 1.35;
     }
 
     /* Print optimization */
@@ -247,13 +228,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
       <h2 class="section-title">${cv.language === "pt" ? "EDUCAÇÃO" : "EDUCATION"}</h2>
       ${cv.education
         .map(
-          (edu) => `
-        <div class="education-item">
-          <div class="education-degree">• ${escapeHtml(edu.degree)}</div>
-          <div class="education-institution">  ${escapeHtml(edu.institution)}</div>
-          <div class="education-period">  ${escapeHtml(edu.period)}${edu.location ? ` | ${escapeHtml(edu.location)}` : ""}</div>
-        </div>
-      `
+          (edu) => `<div class="education-item">• <strong>${escapeHtml(edu.degree)}</strong> - ${escapeHtml(edu.institution)} (${escapeHtml(edu.period)}${edu.location ? ` | ${escapeHtml(edu.location)}` : ""})</div>`
         )
         .join("\n")}
     </div>
@@ -263,12 +238,7 @@ export function generateResumeHTML(cv: CVTemplate): string {
       <h2 class="section-title">${cv.language === "pt" ? "HABILIDADES E FERRAMENTAS" : "SKILLS AND TOOLS"}</h2>
       ${cv.skills
         .map(
-          (skillGroup) => `
-        <div class="skills-category">
-          <div class="skills-category-name">• ${escapeHtml(skillGroup.category)}:</div>
-          <div class="skills-items">  ${skillGroup.items.map(escapeHtml).join(", ")}</div>
-        </div>
-      `
+          (skillGroup) => `<div class="skills-category">• <strong>${escapeHtml(skillGroup.category)}:</strong> ${skillGroup.items.map(escapeHtml).join(", ")}.</div>`
         )
         .join("\n")}
     </div>
