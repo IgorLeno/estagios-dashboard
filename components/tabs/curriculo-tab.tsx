@@ -72,6 +72,10 @@ export function CurriculoTab({
 
     setIsGenerating(true)
 
+    // Use local variables to store generated markdown (avoid race condition with setState)
+    let generatedPt = ""
+    let generatedEn = ""
+
     try {
       // Generate PT preview
       if (resumeLanguage === "pt" || resumeLanguage === "both") {
@@ -110,6 +114,7 @@ export function CurriculoTab({
         if (result.success && result.data?.html) {
           // Convert HTML to Markdown for better editing experience
           const markdown = htmlToMarkdown(result.data.html)
+          generatedPt = markdown // Store in local variable
           setMarkdownPreviewPt(markdown)
           console.log("[CurriculoTab] ✅ PT preview generated and converted to Markdown")
         } else {
@@ -154,6 +159,7 @@ export function CurriculoTab({
         if (result.success && result.data?.html) {
           // Convert HTML to Markdown for better editing experience
           const markdown = htmlToMarkdown(result.data.html)
+          generatedEn = markdown // Store in local variable
           setMarkdownPreviewEn(markdown)
           console.log("[CurriculoTab] ✅ EN preview generated and converted to Markdown")
         } else {
@@ -164,9 +170,12 @@ export function CurriculoTab({
       const message = resumeLanguage === "both" ? "2 previews gerados com sucesso!" : "Preview gerado com sucesso!"
       toast.success(message)
 
-      // Notificar parent sobre markdown gerado
-      onMarkdownGenerated?.(markdownPreviewPt, markdownPreviewEn)
-      console.log("[CurriculoTab] ✅ All previews generated successfully, parent notified")
+      // Notificar parent sobre markdown gerado (usar variáveis locais, não estado!)
+      onMarkdownGenerated?.(generatedPt, generatedEn)
+      console.log("[CurriculoTab] ✅ All previews generated successfully, parent notified with:", {
+        ptLength: generatedPt.length,
+        enLength: generatedEn.length,
+      })
     } catch (error) {
       console.error("[CurriculoTab] Error generating preview:", error)
       const errorMessage = error instanceof Error ? error.message : "Erro ao gerar preview"
