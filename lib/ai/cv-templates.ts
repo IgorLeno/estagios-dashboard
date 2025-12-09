@@ -27,7 +27,7 @@ export const CV_TEMPLATE_PT: CVTemplate = {
 
   // PERSONALIZABLE: LLM can rewrite this section (80-120 words)
   summary:
-    "Estudante de Engenharia Química (UNESP) em fase de conclusão, com perfil analítico e interesse em Qualidade, Gestão Ambiental (QHSE) e Controle Técnico. Possuo experiência acadêmica em pesquisa, modelagem de processos e análise de dados, com domínio de ferramentas de gestão (Excel Avançado, MS Office) e análise (Python, SQL) para administração de bancos de dados, acompanhamento de indicadores e elaboração de relatórios técnicos. Busco oportunidade de estágio inicial para aplicar conhecimentos e contribuir ativamente em projetos de Controle de Qualidade, monitoramento de registros e planos de melhoria.",
+    "Estudante de Engenharia Química (UNESP) em fase de conclusão, com forte perfil analítico e interesse direcionado para as áreas de Qualidade, Gestão Ambiental (QHSE) e Controle Técnico. Possuo experiência acadêmica em pesquisa, modelagem de processos e análise de dados, com domínio de ferramentas de gestão (Excel Avançado, MS Office) e análise (Python, SQL) para administração de bases de dados, monitoramento de indicadores e elaboração de relatórios técnicos. Busco a primeira oportunidade de estágio para aplicar meus conhecimentos e contribuir ativamente para projetos de Controle de Qualidade, monitoramento de registros e planos de melhoria.",
 
   // FIXED: Never modify experience section
   experience: [],
@@ -37,13 +37,7 @@ export const CV_TEMPLATE_PT: CVTemplate = {
     {
       degree: "Bacharelado em Engenharia Química",
       institution: 'Universidade Estadual Paulista "Júlio de Mesquita Filho" (UNESP)',
-      period: "Previsão de conclusão: 12/2026",
-      location: "",
-    },
-    {
-      degree: "Ensino Médio",
-      institution: "Colégio Metodista Bertioga",
-      period: "2011-2013",
+      period: "Previsão de conclusão: Dezembro/2026",
       location: "",
     },
   ],
@@ -51,28 +45,28 @@ export const CV_TEMPLATE_PT: CVTemplate = {
   // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
     {
-      category: "Gestão e Documentação",
-      items: [
-        "Elaboração de relatórios técnicos",
-        "Controle de prazos e gestão de registros de projetos",
-        "Comunicação técnica",
-      ],
+      category: "Linguagens & Análise de Dados",
+      items: ["Python (Pandas, NumPy, Scikit-learn)", "SQL", "R", "VBA"],
     },
     {
-      category: "MS Office & Ferramentas de Análise de Dados",
-      items: ["Microsoft Excel (Avançado)", "PowerPoint", "Word", "Outlook", "Power BI"],
-    },
-    {
-      category: "Análise Técnica & Banco de Dados",
-      items: ["SQL", "Python (Pandas, NumPy)"],
-    },
-    {
-      category: "Software de Engenharia & Modelagem",
+      category: "Ferramentas de Engenharia",
       items: ["Aspen Plus", "MOPAC", "CREST", "Avogadro"],
     },
     {
-      category: "Desenvolvimento & Automação",
-      items: ["VBA (para automação do Excel)", "R", "Git"],
+      category: "Visualização & BI",
+      items: [
+        "Power BI (dashboards, KPI tracking)",
+        "Excel Avançado (Tabelas Dinâmicas, Macros, Power Query)",
+      ],
+    },
+    {
+      category: "Soft Skills",
+      items: [
+        "Relatórios técnicos",
+        "Gestão de projetos (KPIs/qualidade)",
+        "Comunicação técnica",
+        "Controle de não-conformidades",
+      ],
     },
   ],
 
@@ -81,13 +75,13 @@ export const CV_TEMPLATE_PT: CVTemplate = {
     {
       title: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
       description: [
-        "Desenvolvimento de pipeline em Python para automatizar geração e controle de dados, resultando em treinamento de modelos e elaboração de relatórios analíticos",
+        "Desenvolvimento de pipeline em Python para automação da geração e controle de dados, resultando no treinamento de modelos e elaboração de relatórios analíticos.",
       ],
     },
     {
-      title: "Modelagem de Equilíbrio Líquido-Vapor para Produção de Biodiesel (2022-2023)",
+      title: "Modelagem do Equilíbrio Líquido-Vapor para Produção de Biodiesel (2022-2023)",
       description: [
-        "Análise de eficiência de processo industrial (foco ambiental) através de modelagem molecular e simulação físico-química para otimização de desempenho",
+        "Análise da eficiência de processos industriais (foco ambiental) por meio de modelagem molecular e simulação físico-química para otimização de performance.",
       ],
     },
   ],
@@ -97,10 +91,10 @@ export const CV_TEMPLATE_PT: CVTemplate = {
 
   // FIXED: Never modify certifications
   certifications: [
-    "Deep Learning Specialization (Coursera, 2024)",
-    "Power BI Impressionador 1.0 (Hashtag Treinamentos, 2023)",
-    "SQL Impressionador (Hashtag Treinamentos, 2023)",
-    "Google Data Analytics (Coursera, 2023)",
+    "Deep Learning Specialization - (Coursera, 2024)",
+    "Power BI Impressionador - (Hashtag Treinamentos, 2023)",
+    "SQL Impressionador - (Hashtag Treinamentos, 2023)",
+    "Google Data Analytics - (Coursera, 2023)",
   ],
 }
 
