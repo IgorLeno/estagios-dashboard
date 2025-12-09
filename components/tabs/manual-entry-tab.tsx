@@ -86,15 +86,15 @@ export function ManualEntryTab({ formData, setFormData, onSubmit, loading }: Man
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="fit">Fit Perfil (⭐)</Label>
+          <Label htmlFor="perfil">Fit Perfil (⭐)</Label>
           <Input
-            id="fit"
+            id="perfil"
             type="number"
             min="0"
             max="5"
             step="0.5"
-            value={formData.fit}
-            onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
+            value={formData.perfil}
+            onChange={(e) => setFormData({ ...formData, perfil: e.target.value })}
             placeholder="0.0 - 5.0"
           />
         </div>

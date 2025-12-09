@@ -29,7 +29,7 @@ describe("mapJobDetailsToFormData", () => {
     expect(result.local).toBe("São Paulo, SP")
     expect(result.modalidade).toBe("Híbrido")
     expect(result.requisitos).toBe("4.5")
-    expect(result.fit).toBe("3.5")
+    expect(result.perfil).toBe("3.5")
     expect(result.etapa).toBe("Inscrição")
     expect(result.status).toBe("Pendente")
   })
@@ -54,7 +54,7 @@ describe("mapJobDetailsToFormData", () => {
     const result = mapJobDetailsToFormData(apiData)
 
     expect(result.requisitos).toBe("")
-    expect(result.fit).toBe("")
+    expect(result.perfil).toBe("")
     expect(result.etapa).toBe("")
     expect(result.status).toBe("Pendente")
     expect(result.observacoes).toBe("")

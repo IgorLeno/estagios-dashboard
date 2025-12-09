@@ -30,7 +30,7 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
     local: "",
     modalidade: "Presencial" as "Presencial" | "Híbrido" | "Remoto",
     requisitos: "",
-    fit: "",
+    perfil: "",
     etapa: "",
     status: "Pendente" as "Pendente" | "Avançado" | "Melou" | "Contratado",
     observacoes: "",
@@ -48,7 +48,7 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
         local: vaga.local,
         modalidade: vaga.modalidade,
         requisitos: vaga.requisitos?.toString() || "",
-        fit: vaga.perfil?.toString() || "",
+        perfil: vaga.perfil?.toString() || "",
         etapa: vaga.etapa || "",
         status: vaga.status,
         observacoes: vaga.observacoes || "",
@@ -66,7 +66,7 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
       ...(parsed.local && { local: parsed.local }),
       ...(parsed.modalidade && { modalidade: parsed.modalidade }),
       ...(parsed.requisitos !== undefined && { requisitos: parsed.requisitos.toString() }),
-      ...(parsed.fit !== undefined && { fit: parsed.fit.toString() }),
+      ...(parsed.fit !== undefined && { perfil: parsed.fit.toString() }),
       ...(parsed.etapa && { etapa: parsed.etapa }),
       ...(parsed.status && { status: parsed.status }),
       ...(parsed.observacoes && { observacoes: parsed.observacoes }),
@@ -87,7 +87,7 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
           local: formData.local,
           modalidade: formData.modalidade,
           requisitos: normalizeRatingForSave(formData.requisitos),
-          fit: normalizeRatingForSave(formData.fit),
+          perfil: normalizeRatingForSave(formData.perfil),
           etapa: formData.etapa || null,
           status: formData.status,
           observacoes: formData.observacoes || null,
@@ -204,15 +204,15 @@ export function EditVagaDialog({ vaga, open, onOpenChange, onSuccess }: EditVaga
               - Exemplo: 8 (escala 0-10) → 4.0 (normalizado)
             */}
             <div className="space-y-2">
-              <Label htmlFor="fit">Fit Perfil (⭐)</Label>
+              <Label htmlFor="perfil">Fit Perfil (⭐)</Label>
               <Input
-                id="fit"
+                id="perfil"
                 type="number"
                 min="0"
                 max="5"
                 step="0.5"
-                value={formData.fit}
-                onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
+                value={formData.perfil}
+                onChange={(e) => setFormData({ ...formData, perfil: e.target.value })}
                 placeholder="0.0 - 5.0"
               />
             </div>

@@ -10,7 +10,7 @@ describe("ManualEntryTab", () => {
     local: "",
     modalidade: "Presencial",
     requisitos: "",
-    fit: "",
+    perfil: "",
     etapa: "",
     status: "Pendente",
     observacoes: "",
@@ -42,7 +42,7 @@ describe("ManualEntryTab", () => {
       cargo: "Software Engineer",
       local: "São Paulo",
       requisitos: "4.5",
-      fit: "3.5",
+      perfil: "3.5",
     }
 
     const mockSetFormData = vi.fn()

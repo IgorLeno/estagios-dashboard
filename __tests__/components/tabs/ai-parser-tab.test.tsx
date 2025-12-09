@@ -18,7 +18,7 @@ describe("AiParserTab", () => {
     local: "",
     modalidade: "Presencial",
     requisitos: "",
-    fit: "",
+    perfil: "",
     etapa: "",
     status: "Pendente",
     observacoes: "",

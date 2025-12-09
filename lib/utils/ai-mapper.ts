@@ -9,7 +9,7 @@ export interface FormData {
   local: string
   modalidade: "Presencial" | "Híbrido" | "Remoto"
   requisitos: string
-  fit: string
+  perfil: string
   etapa: string
   status: "Pendente" | "Avançado" | "Melou" | "Contratado"
   observacoes: string
@@ -40,7 +40,7 @@ export function mapJobDetailsToFormData(apiData: JobDetails, analiseMarkdown?: s
       apiData.requisitos_score !== undefined && apiData.requisitos_score !== null
         ? apiData.requisitos_score.toString()
         : "",
-    fit: apiData.fit !== undefined && apiData.fit !== null ? apiData.fit.toString() : "",
+    perfil: apiData.fit !== undefined && apiData.fit !== null ? apiData.fit.toString() : "",
     etapa: apiData.etapa && apiData.etapa !== "Indefinido" ? apiData.etapa : "",
     status: apiData.status || "Pendente",
     observacoes: analiseMarkdown || buildObservacoes(apiData),

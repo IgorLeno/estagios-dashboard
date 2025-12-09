@@ -153,6 +153,60 @@ export default function VagaDetailPage() {
     }
   }
 
+  function handleDownloadPDF(language: "pt" | "en") {
+    if (!vaga) return
+
+    const pdfUrl = language === "pt" ? vaga.arquivo_cv_url_pt : vaga.arquivo_cv_url_en
+
+    if (!pdfUrl) {
+      toast.error(`Nenhum PDF disponível em ${language.toUpperCase()}`)
+      return
+    }
+
+    // Se for data URL (base64)
+    if (pdfUrl.startsWith("data:")) {
+      const link = document.createElement("a")
+      link.href = pdfUrl
+      link.download = `curriculo-${vaga.empresa}-${language}.pdf`
+      link.click()
+      toast.success("PDF baixado!")
+    } else {
+      // Se for URL externa
+      window.open(pdfUrl, "_blank")
+    }
+  }
+
+  async function handleDeleteResume(language: "pt" | "en") {
+    if (!vaga) return
+
+    const confirmed = window.confirm(
+      `Deseja realmente excluir o currículo em ${language.toUpperCase()}? Esta ação não pode ser desfeita.`
+    )
+
+    if (!confirmed) return
+
+    try {
+      const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          [`curriculo_text_${language}`]: null,
+          [`arquivo_cv_url_${language}`]: null,
+        }),
+      })
+
+      if (!updateResponse.ok) {
+        throw new Error("Erro ao excluir currículo")
+      }
+
+      toast.success(`Currículo em ${language.toUpperCase()} excluído com sucesso!`)
+      loadVaga()
+    } catch (error) {
+      console.error("Erro ao excluir currículo:", error)
+      toast.error("Erro ao excluir currículo")
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center ml-64">
@@ -255,11 +309,11 @@ export default function VagaDetailPage() {
 
                 {/* Coluna 2: Fit Scores */}
                 <div className="space-y-6">
-                  <h3 className="text-base font-semibold text-foreground mb-4">Fit com a Vaga</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-4">Fit</h3>
 
                   {/* Fit Requisitos */}
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-foreground">Fit Requisitos</p>
+                    <p className="text-sm font-medium text-foreground">Requisitos</p>
                     <div className="flex items-center gap-3">
                       <StarRating value={requisitos} readonly size="md" />
                       <span className="text-2xl font-bold text-foreground">{requisitos.toFixed(1)}</span>
@@ -268,7 +322,7 @@ export default function VagaDetailPage() {
 
                   {/* Fit Perfil */}
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-foreground">Fit Perfil</p>
+                    <p className="text-sm font-medium text-foreground">Perfil</p>
                     <div className="flex items-center gap-3">
                       <StarRating value={perfil} readonly size="md" />
                       <span className="text-2xl font-bold text-foreground">{perfil.toFixed(1)}</span>
@@ -346,28 +400,9 @@ export default function VagaDetailPage() {
 
           {/* CARD 3 e 4: Currículos Personalizados (Vertical) */}
           <div className="space-y-6">
-            {/* Header com botão de regenerar (se tiver pelo menos um currículo) */}
+            {/* Header */}
             {(vaga.curriculo_text_pt || vaga.curriculo_text_en) && (
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Currículos Personalizados</h2>
-                <ResumeGeneratorDialog
-                  vagaId={vaga.id}
-                  trigger={
-                    <Button size="sm" variant="outline">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Regenerar Currículo
-                    </Button>
-                  }
-                  onSuccess={(filename) => {
-                    toast.success(`Currículo gerado: ${filename}`)
-                    loadVaga()
-                  }}
-                  onMarkdownGenerated={() => {
-                    // Markdown is saved directly to database, just reload
-                    loadVaga()
-                  }}
-                />
-              </div>
+              <h2 className="text-xl font-semibold">Currículos Personalizados</h2>
             )}
 
             {/* Currículo PT (sempre primeiro se existir) */}
@@ -377,7 +412,9 @@ export default function VagaDetailPage() {
                 language="pt"
                 markdownContent={vaga.curriculo_text_pt}
                 pdfUrl={vaga.arquivo_cv_url_pt}
-                onGeneratePDF={handleGeneratePDF}
+                onGenerate={handleGeneratePDF}
+                onDownload={handleDownloadPDF}
+                onDelete={handleDeleteResume}
                 isGenerating={isGeneratingPDF === "pt"}
               />
             )}
@@ -389,7 +426,9 @@ export default function VagaDetailPage() {
                 language="en"
                 markdownContent={vaga.curriculo_text_en}
                 pdfUrl={vaga.arquivo_cv_url_en}
-                onGeneratePDF={handleGeneratePDF}
+                onGenerate={handleGeneratePDF}
+                onDownload={handleDownloadPDF}
+                onDelete={handleDeleteResume}
                 isGenerating={isGeneratingPDF === "en"}
               />
             )}
