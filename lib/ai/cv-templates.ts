@@ -27,7 +27,7 @@ export const CV_TEMPLATE_PT: CVTemplate = {
 
   // PERSONALIZABLE: LLM can rewrite this section (80-120 words)
   summary:
-    "Estudante de Engenharia Química (UNESP) em fase de conclusão, com forte perfil analítico e interesse direcionado para as áreas de Qualidade, Gestão Ambiental (QHSE) e Controle Técnico. Possuo experiência acadêmica em pesquisa, modelagem de processos e análise de dados, com domínio de ferramentas de gestão (Excel Avançado, MS Office) e análise (Python, SQL) para administração de bases de dados, monitoramento de indicadores e elaboração de relatórios técnicos. Busco a primeira oportunidade de estágio para aplicar meus conhecimentos e contribuir ativamente para projetos de Controle de Qualidade, monitoramento de registros e planos de melhoria.",
+    "Estudante de Engenharia Química (UNESP) em fase de conclusão, com forte perfil analítico e interesse direcionado para as áreas de Qualidade, Gestão Ambiental (QHSE) e Controle Técnico. Possuo experiência acadêmica em pesquisa, modelagem de processos e análise de dados, com domínio de ferramentas de gestão (Excel Avançado, MS Office) e análise (Python, SQL) para administração de bases de dados, monitoramento de indicadores e elaboração de relatórios técnicos. Disponível para estágio em período integral com início imediato e mobilidade para realocação.",
 
   // FIXED: Never modify experience section
   experience: [],
