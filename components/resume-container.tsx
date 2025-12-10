@@ -1,14 +1,18 @@
 "use client"
 
-import { Loader2, FileText, Pencil, Trash2 } from "lucide-react"
+import { Loader2, FileText, Pencil, Trash2, FileDown, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
 
 interface ResumeContainerProps {
   language: "pt" | "en"
   markdown?: string
+  pdfUrl?: string | null
   isGenerating: boolean
+  isGeneratingPdf?: boolean
   onGenerate: () => void
+  onGeneratePdf?: () => void
+  onDownloadPdf?: () => void
   onEdit: () => void
   onDelete: () => void
 }
@@ -16,8 +20,12 @@ interface ResumeContainerProps {
 export function ResumeContainer({
   language,
   markdown,
+  pdfUrl,
   isGenerating,
+  isGeneratingPdf,
   onGenerate,
+  onGeneratePdf,
+  onDownloadPdf,
   onEdit,
   onDelete,
 }: ResumeContainerProps) {
@@ -29,18 +37,24 @@ export function ResumeContainer({
       title: "Currículo Personalizado",
       generateLabel: hasContent ? "Regenerar" : "Gerar",
       editLabel: "Editar",
+      generatePdfLabel: "Gerar PDF",
+      downloadLabel: "Baixar",
       deleteLabel: "Excluir",
       emptyMessage: "Currículo ainda não foi gerado",
       generatingLabel: "Gerando...",
+      generatingPdfLabel: "Gerando PDF...",
     },
     en: {
       flag: "🇺🇸",
       title: "Personalized Resume",
       generateLabel: hasContent ? "Regenerate" : "Generate",
       editLabel: "Edit",
+      generatePdfLabel: "Generate PDF",
+      downloadLabel: "Download",
       deleteLabel: "Delete",
       emptyMessage: "Resume has not been generated yet",
       generatingLabel: "Generating...",
+      generatingPdfLabel: "Generating PDF...",
     },
   }
 
@@ -96,6 +110,49 @@ export function ResumeContainer({
             {config.editLabel}
           </button>
 
+          {/* Botão Gerar PDF */}
+          {hasContent && (
+            <button
+              onClick={onGeneratePdf}
+              disabled={isGeneratingPdf || isGenerating}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
+                "border border-gray-300 dark:border-gray-600",
+                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-colors"
+              )}
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  {config.generatingPdfLabel}
+                </>
+              ) : (
+                <>
+                  <FileDown size={16} />
+                  {config.generatePdfLabel}
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Botão Baixar */}
+          {pdfUrl && (
+            <button
+              onClick={onDownloadPdf}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
+                "border border-gray-300 dark:border-gray-600",
+                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "transition-colors"
+              )}
+            >
+              <Download size={16} />
+              {config.downloadLabel}
+            </button>
+          )}
+
           {/* Botão Excluir */}
           <button
             onClick={onDelete}
@@ -123,7 +180,7 @@ export function ResumeContainer({
       >
         {hasContent ? (
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <MarkdownPreview content={markdown} editable={false} />
+            <MarkdownPreview content={markdown!} editable={false} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">

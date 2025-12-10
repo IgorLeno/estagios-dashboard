@@ -7,7 +7,7 @@ import type { VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit2, Star, User, MapPin, Building2, Save } from "lucide-react"
+import { ArrowLeft, Edit2, Star, User, MapPin, Building2, Save, Download } from "lucide-react"
 import { EditVagaDialog } from "@/components/edit-vaga-dialog"
 import { Sidebar } from "@/components/sidebar"
 import { StarRating } from "@/components/ui/star-rating"
@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
 import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
+import { markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
 
 export default function VagaDetailPage() {
   const params = useParams()
@@ -28,6 +29,8 @@ export default function VagaDetailPage() {
   const [markdownContent, setMarkdownContent] = useState("")
   const [isEditingMarkdown, setIsEditingMarkdown] = useState(false)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<"pt" | "en" | null>(null)
+  const [isGeneratingPdfPT, setIsGeneratingPdfPT] = useState(false)
+  const [isGeneratingPdfEN, setIsGeneratingPdfEN] = useState(false)
   const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
   const [editingResumeContent, setEditingResumeContent] = useState("")
 
@@ -168,6 +171,7 @@ export default function VagaDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           [`curriculo_text_${editingResumeLanguage}`]: editingResumeContent,
+          [`arquivo_cv_url_${editingResumeLanguage}`]: null, // Invalidate PDF when markdown changes
         }),
       })
 
@@ -175,13 +179,110 @@ export default function VagaDetailPage() {
         throw new Error("Erro ao salvar currículo")
       }
 
-      toast.success(`Currículo em ${editingResumeLanguage.toUpperCase()} atualizado com sucesso!`)
+      toast.success(
+        `Currículo em ${editingResumeLanguage.toUpperCase()} atualizado! PDF invalidado - clique em 'Gerar PDF' para atualizar.`
+      )
       setEditingResumeLanguage(null)
       setEditingResumeContent("")
       loadVaga()
     } catch (error) {
       console.error("Erro ao salvar currículo:", error)
       toast.error("Erro ao salvar currículo")
+    }
+  }
+
+  async function handleGeneratePdf(language: "pt" | "en") {
+    if (!vaga) return
+
+    try {
+      // Set loading state
+      if (language === "pt") {
+        setIsGeneratingPdfPT(true)
+      } else {
+        setIsGeneratingPdfEN(true)
+      }
+
+      // Get markdown content
+      const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+      const markdown = vaga[markdownField]
+
+      if (!markdown) {
+        toast.error(`Nenhum conteúdo de currículo encontrado em ${language.toUpperCase()}`)
+        return
+      }
+
+      // Convert markdown to HTML
+      const html = await markdownToHtml(markdown)
+      const wrappedHtml = wrapMarkdownAsHTML(html)
+
+      // Generate PDF via API
+      const response = await fetch("/api/ai/html-to-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: wrappedHtml }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Falha ao gerar PDF")
+      }
+
+      const result = await response.json()
+      const dataUrl = `data:application/pdf;base64,${result.data.pdfBase64}`
+
+      // Save PDF to database
+      const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+      const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [pdfField]: dataUrl }),
+      })
+
+      if (!updateResponse.ok) {
+        throw new Error("Falha ao salvar PDF")
+      }
+
+      // Refresh vaga data
+      await loadVaga()
+
+      toast.success(`PDF gerado com sucesso em ${language.toUpperCase()}!`)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      toast.error("Erro ao gerar PDF. Tente novamente.")
+    } finally {
+      if (language === "pt") {
+        setIsGeneratingPdfPT(false)
+      } else {
+        setIsGeneratingPdfEN(false)
+      }
+    }
+  }
+
+  async function handleDownloadPdf(language: "pt" | "en") {
+    if (!vaga) return
+
+    try {
+      const pdfUrl = language === "pt" ? vaga.arquivo_cv_url_pt : vaga.arquivo_cv_url_en
+
+      if (!pdfUrl) {
+        toast.error(`PDF não encontrado em ${language.toUpperCase()}`)
+        return
+      }
+
+      // Generate filename: curriculo-pt-<empresa>.pdf or resume-en-<empresa>.pdf
+      const empresaSlug = vaga.empresa.toLowerCase().replace(/\s+/g, "-")
+      const prefix = language === "pt" ? "curriculo-pt" : "resume-en"
+      const filename = `${prefix}-${empresaSlug}.pdf`
+
+      const success = downloadPdf(pdfUrl, filename)
+
+      if (success) {
+        toast.success("Download iniciado!")
+      } else {
+        toast.error("Erro ao iniciar download")
+      }
+    } catch (error) {
+      console.error("Error downloading PDF:", error)
+      toast.error("Erro ao baixar PDF. Tente novamente.")
     }
   }
 
@@ -384,8 +485,12 @@ export default function VagaDetailPage() {
             <ResumeContainer
               language="pt"
               markdown={vaga.curriculo_text_pt || undefined}
+              pdfUrl={vaga.arquivo_cv_url_pt}
               isGenerating={isGeneratingPDF === "pt"}
+              isGeneratingPdf={isGeneratingPdfPT}
               onGenerate={() => handleGenerateResume("pt")}
+              onGeneratePdf={() => handleGeneratePdf("pt")}
+              onDownloadPdf={() => handleDownloadPdf("pt")}
               onEdit={() => handleEditResume("pt")}
               onDelete={() => handleDeleteResume("pt")}
             />
@@ -394,8 +499,12 @@ export default function VagaDetailPage() {
             <ResumeContainer
               language="en"
               markdown={vaga.curriculo_text_en || undefined}
+              pdfUrl={vaga.arquivo_cv_url_en}
               isGenerating={isGeneratingPDF === "en"}
+              isGeneratingPdf={isGeneratingPdfEN}
               onGenerate={() => handleGenerateResume("en")}
+              onGeneratePdf={() => handleGeneratePdf("en")}
+              onDownloadPdf={() => handleDownloadPdf("en")}
               onEdit={() => handleEditResume("en")}
               onDelete={() => handleDeleteResume("en")}
             />
