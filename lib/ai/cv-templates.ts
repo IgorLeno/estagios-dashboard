@@ -117,7 +117,7 @@ export const CV_TEMPLATE_EN: CVTemplate = {
 
   // PERSONALIZABLE: LLM can rewrite this section (80-120 words)
   summary:
-    "Chemical Engineering student (UNESP) nearing completion, with a strong analytical profile and keen interest in Quality, Environmental Management (QHSE), and Technical Control. I have academic experience in research, process modeling, and data analysis, with proficiency in management tools (Advanced Excel, MS Office) and analysis tools (Python, SQL) for database administration, indicator monitoring, and technical report preparation. Seeking an initial internship opportunity to apply my knowledge and actively contribute to Quality Control projects, records monitoring, and improvement plans.",
+    "Chemical Engineering student (UNESP) nearing completion, with a strong analytical profile and keen interest in Quality, Environmental Management (QHSE), and Technical Control. I have academic experience in research, process modeling, and data analysis, with proficiency in management tools (Advanced Excel, MS Office) and analysis tools (Python, SQL) for database administration, indicator monitoring, and technical report preparation. Seeking an initial internship opportunity to apply my knowledge and actively contribute to Quality Control projects, records monitoring, and improvement plans. Available for full-time internship with immediate start and willing to relocate.",
 
   // FIXED: Never modify experience section
   experience: [],
@@ -130,39 +130,33 @@ export const CV_TEMPLATE_EN: CVTemplate = {
       period: "Expected graduation: 12/2026",
       location: "",
     },
-    {
-      degree: "High School Diploma",
-      institution: "Colégio Metodista Bertioga",
-      period: "2011-2013",
-      location: "",
-    },
   ],
 
   // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
     {
-      category: "Management and Documentation",
-      items: [
-        "Preparation of technical reports",
-        "Deadline control and project records management",
-        "Technical communication",
-      ],
+      category: "Languages & Data Analysis",
+      items: ["Python (Pandas, NumPy, Scikit-learn)", "SQL", "R", "VBA"],
     },
     {
-      category: "MS Office & Data Analysis Tools",
-      items: ["Microsoft Excel (Advanced)", "PowerPoint", "Word", "Outlook", "Power BI"],
-    },
-    {
-      category: "Technical Analysis & Database",
-      items: ["SQL", "Python (Pandas, NumPy)"],
-    },
-    {
-      category: "Engineering & Modeling Software",
+      category: "Engineering Tools",
       items: ["Aspen Plus", "MOPAC", "CREST", "Avogadro"],
     },
     {
-      category: "Development & Automation",
-      items: ["VBA (for Excel automation)", "R", "Git"],
+      category: "Visualization & BI",
+      items: [
+        "Power BI (dashboards, KPI tracking)",
+        "Advanced Excel (Pivot Tables, Macros, Power Query)",
+      ],
+    },
+    {
+      category: "Soft Skills",
+      items: [
+        "Technical reporting",
+        "Project management (KPIs/Quality)",
+        "Technical communication",
+        "Non-conformance control",
+      ],
     },
   ],
 
