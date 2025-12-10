@@ -1,9 +1,10 @@
+
 -- Migration: Create resumes table for storing resume previews
 -- Description: Stores HTML/Markdown resume previews with PDF generation status
 
 -- Create resumes table
 CREATE TABLE IF NOT EXISTS resumes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_id UUID NOT NULL REFERENCES vagas_estagio(id) ON DELETE CASCADE,
   language VARCHAR(2) NOT NULL CHECK (language IN ('pt', 'en')),
   html_content TEXT,
