@@ -399,67 +399,70 @@ export default function VagaDetailPage() {
           </Card>
 
           {/* CARD 3 e 4: Currículos Personalizados (Vertical) */}
-          <div className="space-y-6">
-            {/* Header */}
-            {(vaga.curriculo_text_pt || vaga.curriculo_text_en) && (
+          {(vaga.curriculo_text_pt || vaga.curriculo_text_en) && (
+            <div className="space-y-4">
+              {/* Header */}
               <h2 className="text-xl font-semibold">Currículos Personalizados</h2>
-            )}
 
-            {/* Currículo PT (sempre primeiro se existir) */}
-            {vaga.curriculo_text_pt && (
-              <CurriculumCard
-                title="Currículo Personalizado"
-                language="pt"
-                markdownContent={vaga.curriculo_text_pt}
-                pdfUrl={vaga.arquivo_cv_url_pt}
-                onGenerate={handleGeneratePDF}
-                onDownload={handleDownloadPDF}
-                onDelete={handleDeleteResume}
-                isGenerating={isGeneratingPDF === "pt"}
-              />
-            )}
-
-            {/* Currículo EN (sempre depois do PT, se existir) */}
-            {vaga.curriculo_text_en && (
-              <CurriculumCard
-                title="Personalized Resume"
-                language="en"
-                markdownContent={vaga.curriculo_text_en}
-                pdfUrl={vaga.arquivo_cv_url_en}
-                onGenerate={handleGeneratePDF}
-                onDownload={handleDownloadPDF}
-                onDelete={handleDeleteResume}
-                isGenerating={isGeneratingPDF === "en"}
-              />
-            )}
-
-            {/* Mensagem se não tiver nenhum currículo */}
-            {!vaga.curriculo_text_pt && !vaga.curriculo_text_en && (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground mb-6">Nenhum currículo gerado ainda</p>
-                  <ResumeGeneratorDialog
-                    vagaId={vaga.id}
-                    trigger={
-                      <Button size="lg" className="bg-primary hover:bg-primary/90">
-                        <FileText className="h-5 w-5 mr-2" />
-                        Gerar Currículo Personalizado
-                      </Button>
-                    }
-                    onSuccess={(filename) => {
-                      toast.success(`Currículo gerado: ${filename}`)
-                      loadVaga()
-                    }}
-                    onMarkdownGenerated={() => {
-                      // Markdown is saved directly to database, just reload
-                      loadVaga()
-                    }}
+              {/* Container com rolagem vertical */}
+              <div className="max-h-[800px] lg:max-h-[70vh] overflow-y-auto space-y-6 pr-2">
+                {/* Currículo PT (sempre primeiro se existir) */}
+                {vaga.curriculo_text_pt && (
+                  <CurriculumCard
+                    title="Currículo Personalizado"
+                    language="pt"
+                    markdownContent={vaga.curriculo_text_pt}
+                    pdfUrl={vaga.arquivo_cv_url_pt}
+                    onGenerate={handleGeneratePDF}
+                    onDownload={handleDownloadPDF}
+                    onDelete={handleDeleteResume}
+                    isGenerating={isGeneratingPDF === "pt"}
                   />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                )}
+
+                {/* Currículo EN (sempre depois do PT, se existir) */}
+                {vaga.curriculo_text_en && (
+                  <CurriculumCard
+                    title="Personalized Resume"
+                    language="en"
+                    markdownContent={vaga.curriculo_text_en}
+                    pdfUrl={vaga.arquivo_cv_url_en}
+                    onGenerate={handleGeneratePDF}
+                    onDownload={handleDownloadPDF}
+                    onDelete={handleDeleteResume}
+                    isGenerating={isGeneratingPDF === "en"}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Mensagem se não tiver nenhum currículo */}
+          {!vaga.curriculo_text_pt && !vaga.curriculo_text_en && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground mb-6">Nenhum currículo gerado ainda</p>
+                <ResumeGeneratorDialog
+                  vagaId={vaga.id}
+                  trigger={
+                    <Button size="lg" className="bg-primary hover:bg-primary/90">
+                      <FileText className="h-5 w-5 mr-2" />
+                      Gerar Currículo Personalizado
+                    </Button>
+                  }
+                  onSuccess={(filename) => {
+                    toast.success(`Currículo gerado: ${filename}`)
+                    loadVaga()
+                  }}
+                  onMarkdownGenerated={() => {
+                    // Markdown is saved directly to database, just reload
+                    loadVaga()
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <EditVagaDialog vaga={vaga} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={loadVaga} />
         </div>

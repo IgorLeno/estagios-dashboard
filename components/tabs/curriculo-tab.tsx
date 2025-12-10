@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, Eye, RefreshCw, FileText, Info, CheckCircle, Download } from "lucide-react"
-import type { JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse } from "@/lib/ai/types"
+import { Loader2, Eye, Info, CheckCircle } from "lucide-react"
+import type { JobDetails } from "@/lib/ai/types"
 import { toast } from "sonner"
 import { htmlToMarkdown, markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
+import { ResumePreviewCard } from "@/components/resume-preview-card"
 
 interface CurriculoTabProps {
   resumeContent: string
@@ -49,6 +49,10 @@ export function CurriculoTab({
   const [isConverting, setIsConverting] = useState(false)
   const [pdfBase64Pt, setPdfBase64Pt] = useState<string | null>(null)
   const [pdfBase64En, setPdfBase64En] = useState<string | null>(null)
+  const [isPreviewSavedPt, setIsPreviewSavedPt] = useState(false)
+  const [isPreviewSavedEn, setIsPreviewSavedEn] = useState(false)
+  const [isSavingPt, setIsSavingPt] = useState(false)
+  const [isSavingEn, setIsSavingEn] = useState(false)
 
   const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 
@@ -185,94 +189,61 @@ export function CurriculoTab({
     }
   }
 
-  // Convert Markdown to PDF
-  async function handleConvertToPdf() {
+  // Convert Markdown to PDF (single language)
+  async function handleConvertToPdfSingle(language: "pt" | "en") {
     setIsConverting(true)
 
     try {
-      // Convert PT
-      if (markdownPreviewPt) {
-        console.log("[CurriculoTab] Converting PT Markdown to PDF...")
+      const markdownText = language === "pt" ? markdownPreviewPt : markdownPreviewEn
 
-        // Step 1: Markdown → HTML
-        const htmlContent = await markdownToHtml(markdownPreviewPt)
-        console.log("[CurriculoTab] PT Markdown converted to HTML")
+      if (!markdownText) {
+        toast.error(`Nenhum conteúdo em ${language.toUpperCase()} para converter`)
+        return
+      }
 
-        // Step 2: Wrap with CSS
-        const fullHtml = wrapMarkdownAsHTML(htmlContent)
-        console.log("[CurriculoTab] PT HTML wrapped with CSS")
+      console.log(`[CurriculoTab] Converting ${language.toUpperCase()} Markdown to PDF...`)
 
-        // Step 3: Send to PDF generator
-        const response = await fetch("/api/ai/html-to-pdf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            html: fullHtml,
-            filename: `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-pt.pdf`,
-          }),
-        })
+      // Step 1: Markdown → HTML
+      const htmlContent = await markdownToHtml(markdownText)
+      console.log(`[CurriculoTab] ${language.toUpperCase()} Markdown converted to HTML`)
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || `API error: ${response.status}`)
-        }
+      // Step 2: Wrap with CSS
+      const fullHtml = wrapMarkdownAsHTML(htmlContent)
+      console.log(`[CurriculoTab] ${language.toUpperCase()} HTML wrapped with CSS`)
 
-        const result = await response.json()
+      // Step 3: Send to PDF generator
+      const response = await fetch("/api/ai/html-to-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          html: fullHtml,
+          filename: `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-${language}.pdf`,
+        }),
+      })
 
-        if (result.success && result.data?.pdfBase64) {
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success && result.data?.pdfBase64) {
+        if (language === "pt") {
           setPdfBase64Pt(result.data.pdfBase64)
-          console.log("[CurriculoTab] PT PDF generated from Markdown")
-
-          // Notify parent component
-          if (onPdfGenerated) {
-            const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-pt.pdf`
-            onPdfGenerated(result.data.pdfBase64, filename)
-          }
-        }
-      }
-
-      // Convert EN
-      if (markdownPreviewEn) {
-        console.log("[CurriculoTab] Converting EN Markdown to PDF...")
-
-        // Step 1: Markdown → HTML
-        const htmlContent = await markdownToHtml(markdownPreviewEn)
-        console.log("[CurriculoTab] EN Markdown converted to HTML")
-
-        // Step 2: Wrap with CSS
-        const fullHtml = wrapMarkdownAsHTML(htmlContent)
-        console.log("[CurriculoTab] EN HTML wrapped with CSS")
-
-        // Step 3: Send to PDF generator
-        const response = await fetch("/api/ai/html-to-pdf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            html: fullHtml,
-            filename: `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-en.pdf`,
-          }),
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || `API error: ${response.status}`)
-        }
-
-        const result = await response.json()
-
-        if (result.success && result.data?.pdfBase64) {
+        } else {
           setPdfBase64En(result.data.pdfBase64)
-          console.log("[CurriculoTab] EN PDF generated from Markdown")
-
-          // Notify parent component
-          if (onPdfGenerated) {
-            const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-en.pdf`
-            onPdfGenerated(result.data.pdfBase64, filename)
-          }
         }
-      }
+        console.log(`[CurriculoTab] ${language.toUpperCase()} PDF generated from Markdown`)
 
-      toast.success("PDF(s) gerado(s) com sucesso!")
+        // Notify parent component
+        if (onPdfGenerated) {
+          const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-${language}.pdf`
+          onPdfGenerated(result.data.pdfBase64, filename)
+        }
+
+        toast.success(`PDF ${language.toUpperCase()} gerado com sucesso!`)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erro ao gerar PDF"
       toast.error(errorMessage)
@@ -290,6 +261,68 @@ export function CurriculoTab({
     link.download = filename
     link.click()
     toast.success(`✓ PDF ${language.toUpperCase()} baixado!`)
+  }
+
+  // Save preview to database
+  async function handleSavePreview(language: "pt" | "en") {
+    if (!vagaId) {
+      toast.error("ID da vaga não disponível")
+      return
+    }
+
+    const markdownContent = language === "pt" ? markdownPreviewPt : markdownPreviewEn
+
+    if (!markdownContent) {
+      toast.error(`Nenhum preview em ${language.toUpperCase()} para salvar`)
+      return
+    }
+
+    // Set loading state
+    if (language === "pt") {
+      setIsSavingPt(true)
+    } else {
+      setIsSavingEn(true)
+    }
+
+    try {
+      const response = await fetch(`/api/resumes/${vagaId}/save-preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language,
+          markdownContent,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Update saved state
+        if (language === "pt") {
+          setIsPreviewSavedPt(true)
+        } else {
+          setIsPreviewSavedEn(true)
+        }
+
+        toast.success(`Preview ${language.toUpperCase()} salvo com sucesso!`)
+      }
+    } catch (error) {
+      console.error("[CurriculoTab] Error saving preview:", error)
+      const errorMessage = error instanceof Error ? error.message : "Erro ao salvar preview"
+      toast.error(errorMessage)
+    } finally {
+      // Reset loading state
+      if (language === "pt") {
+        setIsSavingPt(false)
+      } else {
+        setIsSavingEn(false)
+      }
+    }
   }
 
   return (
@@ -381,100 +414,46 @@ export function CurriculoTab({
             </AlertDescription>
           </Alert>
 
-          {/* PT preview */}
-          {markdownPreviewPt && (
-            <div className="space-y-2">
-              <Label>Preview - Português</Label>
-              <Textarea
-                value={markdownPreviewPt}
-                onChange={(e) => setMarkdownPreviewPt(e.target.value)}
-                rows={25}
-                className="w-full p-4 bg-white border border-gray-200 rounded-lg font-mono text-xs resize-none overflow-auto whitespace-pre-wrap break-words"
-                placeholder="Currículo em Markdown (português)..."
+          {/* Container com rolagem vertical */}
+          <div className="max-h-[800px] lg:max-h-[70vh] overflow-y-auto space-y-6 pr-2">
+            {/* PT preview */}
+            {markdownPreviewPt && (
+              <ResumePreviewCard
+                language="pt"
+                markdownContent={markdownPreviewPt}
+                pdfUrl={pdfBase64Pt ? `data:application/pdf;base64,${pdfBase64Pt}` : null}
+                isGenerated={true}
+                isPreviewSaved={isPreviewSavedPt}
+                onRegenerate={handleGeneratePreview}
+                onSavePreview={() => handleSavePreview("pt")}
+                onGeneratePDF={() => handleConvertToPdfSingle("pt")}
+                onDownload={() => handleDownloadPdfLocal(pdfBase64Pt!, "pt")}
+                onMarkdownChange={setMarkdownPreviewPt}
+                isRegenerating={isGenerating}
+                isSaving={isSavingPt}
+                isGeneratingPDF={isConverting}
               />
-            </div>
-          )}
+            )}
 
-          {/* EN preview */}
-          {markdownPreviewEn && (
-            <div className="space-y-2">
-              <Label>Preview - English</Label>
-              <Textarea
-                value={markdownPreviewEn}
-                onChange={(e) => setMarkdownPreviewEn(e.target.value)}
-                rows={25}
-                className="w-full p-4 bg-white border border-gray-200 rounded-lg font-mono text-xs resize-none overflow-auto whitespace-pre-wrap break-words"
-                placeholder="Resume in Markdown (English)..."
+            {/* EN preview */}
+            {markdownPreviewEn && (
+              <ResumePreviewCard
+                language="en"
+                markdownContent={markdownPreviewEn}
+                pdfUrl={pdfBase64En ? `data:application/pdf;base64,${pdfBase64En}` : null}
+                isGenerated={true}
+                isPreviewSaved={isPreviewSavedEn}
+                onRegenerate={handleGeneratePreview}
+                onSavePreview={() => handleSavePreview("en")}
+                onGeneratePDF={() => handleConvertToPdfSingle("en")}
+                onDownload={() => handleDownloadPdfLocal(pdfBase64En!, "en")}
+                onMarkdownChange={setMarkdownPreviewEn}
+                isRegenerating={isGenerating}
+                isSaving={isSavingEn}
+                isGeneratingPDF={isConverting}
               />
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setMarkdownPreviewPt("")
-                setMarkdownPreviewEn("")
-                setPdfBase64Pt(null)
-                setPdfBase64En(null)
-              }}
-              className="flex-1"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Regenerar
-            </Button>
-            <Button onClick={handleConvertToPdf} disabled={isConverting} className="flex-1">
-              {isConverting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Gerando PDF...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Gerar PDF
-                </>
-              )}
-            </Button>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* PDF download section */}
-      {(pdfBase64Pt || pdfBase64En || resumePdfBase64) && (
-        <div className="space-y-4 pt-4 border-t">
-          <h4 className="font-semibold text-sm">PDFs Gerados</h4>
-
-          {pdfBase64Pt && (
-            <div className="flex items-center gap-2 bg-slate-50 p-3 rounded border">
-              <FileText className="h-5 w-5 text-slate-400" />
-              <span className="flex-1 font-mono text-sm">cv-igor-fernandes-pt.pdf</span>
-              <Button size="sm" variant="outline" onClick={() => handleDownloadPdfLocal(pdfBase64Pt, "pt")}>
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {pdfBase64En && (
-            <div className="flex items-center gap-2 bg-slate-50 p-3 rounded border">
-              <FileText className="h-5 w-5 text-slate-400" />
-              <span className="flex-1 font-mono text-sm">cv-igor-fernandes-en.pdf</span>
-              <Button size="sm" variant="outline" onClick={() => handleDownloadPdfLocal(pdfBase64En, "en")}>
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {resumePdfBase64 && resumeFilename && (
-            <div className="flex items-center gap-2 bg-slate-50 p-3 rounded border">
-              <FileText className="h-5 w-5 text-slate-400" />
-              <span className="flex-1 font-mono text-sm">{resumeFilename}</span>
-              <Button size="sm" variant="outline" onClick={onDownloadPDF}>
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
         </div>
       )}
 

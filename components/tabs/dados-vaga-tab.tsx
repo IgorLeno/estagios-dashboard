@@ -208,14 +208,15 @@ export function DadosVagaTab({
         </div>
       )}
 
-      {/* Refazer análise button - positioned at top of form section */}
-      {jobAnalysisData && (
-        <div className="flex justify-end pt-2">
-          <Button onClick={onRefreshAnalysis} variant="outline" size="sm" disabled={refreshing}>
+      {/* Footer with all action buttons aligned horizontally */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t mt-6">
+        {/* Refazer Análise button */}
+        {jobAnalysisData && (
+          <Button onClick={onRefreshAnalysis} variant="outline" disabled={refreshing}>
             {refreshing ? (
               <>
                 <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                Refazendo Análise...
+                Refazendo...
               </>
             ) : (
               <>
@@ -224,17 +225,17 @@ export function DadosVagaTab({
               </>
             )}
           </Button>
-        </div>
-      )}
+        )}
 
-      {/* Footer with Cancelar and Próximo buttons side-by-side */}
-      <div className="flex flex-row justify-between items-center gap-3 pt-4 border-t mt-6">
+        {/* Cancelar button */}
         {onCancel && (
           <Button variant="outline" onClick={onCancel} type="button">
             Cancelar
           </Button>
         )}
-        <Button onClick={onNextTab} type="button" className={!onCancel ? "ml-auto" : ""}>
+
+        {/* Próximo button */}
+        <Button onClick={onNextTab} type="button">
           Próximo
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
