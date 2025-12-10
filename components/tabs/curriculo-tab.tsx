@@ -1,46 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, Eye, Info, CheckCircle, FileText, RefreshCw, Languages } from "lucide-react"
+import { Loader2, Info, CheckCircle, FileText, RefreshCw, Languages } from "lucide-react"
 import type { JobDetails } from "@/lib/ai/types"
 import { toast } from "sonner"
 import { htmlToMarkdown, markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
 import { ResumePreviewCard } from "@/components/resume-preview-card"
+import { createClient } from "@/lib/supabase/client"
 
 interface CurriculoTabProps {
-  resumeContent: string
-  setResumeContent: (value: string) => void
-  resumePdfBase64: string | null
-  resumeFilename: string | null
-  onPdfGenerated?: (pdfBase64: string, filename: string) => void
-  onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
   jobAnalysisData: JobDetails | null
-  generatingResume: boolean
-  savingVaga: boolean
-  onGenerateResume: () => Promise<void>
-  onRefreshResume: () => Promise<void>
-  onDownloadPDF: () => void
-  onSaveVaga: () => Promise<void>
   jobDescription: string
   vagaId?: string
+  isInPage?: boolean
+  onSaveVaga?: () => Promise<void>
+  savingVaga?: boolean
+  onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
 }
 
 export function CurriculoTab({
-  resumePdfBase64,
-  resumeFilename,
-  onPdfGenerated,
-  onMarkdownGenerated,
   jobAnalysisData,
-  savingVaga,
-  onDownloadPDF,
-  onSaveVaga,
   jobDescription,
   vagaId,
+  isInPage = false,
+  onSaveVaga,
+  savingVaga = false,
+  onMarkdownGenerated,
 }: CurriculoTabProps) {
-  console.log("[CurriculoTab] Rendering", { jobAnalysisData, resumePdfBase64, vagaId })
+  console.log("[CurriculoTab] Rendering", { jobAnalysisData, vagaId, isInPage })
 
   const [markdownPreviewPt, setMarkdownPreviewPt] = useState("")
   const [markdownPreviewEn, setMarkdownPreviewEn] = useState("")
@@ -63,6 +52,42 @@ export function CurriculoTab({
     isGenerating,
     generatingLanguage,
   })
+
+  // Fetch saved resumes when component mounts (if vagaId exists)
+  useEffect(() => {
+    async function fetchSavedResumes() {
+      if (!vagaId) return
+
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from("resumes")
+          .select("language, markdown_content, pdf_url")
+          .eq("job_id", vagaId)
+
+        if (error) throw error
+
+        // Load saved previews into state
+        data?.forEach((resume) => {
+          if (resume.language === "pt" && resume.markdown_content) {
+            setMarkdownPreviewPt(resume.markdown_content)
+            setIsPreviewSavedPt(true)
+          } else if (resume.language === "en" && resume.markdown_content) {
+            setMarkdownPreviewEn(resume.markdown_content)
+            setIsPreviewSavedEn(true)
+          }
+        })
+
+        console.log("[CurriculoTab] Loaded saved resumes:", data?.length || 0)
+      } catch (error) {
+        console.error("[CurriculoTab] Error fetching saved resumes:", error)
+      }
+    }
+
+    if (vagaId) {
+      fetchSavedResumes()
+    }
+  }, [vagaId])
 
   // Generate HTML preview
   async function handleGeneratePreview(language: "pt" | "en" | "both") {
@@ -173,12 +198,67 @@ export function CurriculoTab({
         }
       }
 
+      // Auto-save generated previews to database (if vagaId exists)
+      if (vagaId) {
+        const savePromises = []
+
+        if (generatedPt) {
+          console.log("[CurriculoTab] Auto-saving PT preview to database...")
+          const htmlContentPt = await markdownToHtml(generatedPt)
+          savePromises.push(
+            fetch(`/api/resumes/${vagaId}/save-preview`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                language: "pt",
+                markdownContent: generatedPt,
+                htmlContent: htmlContentPt,
+              }),
+            })
+          )
+        }
+
+        if (generatedEn) {
+          console.log("[CurriculoTab] Auto-saving EN preview to database...")
+          const htmlContentEn = await markdownToHtml(generatedEn)
+          savePromises.push(
+            fetch(`/api/resumes/${vagaId}/save-preview`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                language: "en",
+                markdownContent: generatedEn,
+                htmlContent: htmlContentEn,
+              }),
+            })
+          )
+        }
+
+        // Wait for all saves to complete
+        const saveResults = await Promise.allSettled(savePromises)
+
+        // Update saved states based on results
+        saveResults.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            const savedLanguage = generatedPt && index === 0 ? "pt" : "en"
+            if (savedLanguage === "pt") {
+              setIsPreviewSavedPt(true)
+            } else {
+              setIsPreviewSavedEn(true)
+            }
+            console.log(`[CurriculoTab] ✅ ${savedLanguage.toUpperCase()} preview auto-saved to database`)
+          } else {
+            console.error("[CurriculoTab] Error auto-saving preview:", result.reason)
+          }
+        })
+      }
+
       const message =
         language === "both"
-          ? "2 previews gerados com sucesso!"
+          ? "2 previews gerados e salvos com sucesso!"
           : language === "pt"
-          ? "Preview PT gerado com sucesso!"
-          : "Preview EN gerado com sucesso!"
+          ? "Preview PT gerado e salvo com sucesso!"
+          : "Preview EN gerado e salvo com sucesso!"
       toast.success(message)
 
       // Notificar parent sobre markdown gerado (usar variáveis locais, não estado!)
@@ -243,13 +323,6 @@ export function CurriculoTab({
           setPdfBase64En(result.data.pdfBase64)
         }
         console.log(`[CurriculoTab] ${language.toUpperCase()} PDF generated from Markdown`)
-
-        // Notify parent component
-        if (onPdfGenerated) {
-          const filename = `cv-igor-fernandes-${jobAnalysisData?.empresa || "vaga"}-${language}.pdf`
-          onPdfGenerated(result.data.pdfBase64, filename)
-        }
-
         toast.success(`PDF ${language.toUpperCase()} gerado com sucesso!`)
       }
     } catch (err) {
@@ -495,25 +568,27 @@ export function CurriculoTab({
         </div>
       )}
 
-      {/* Save vaga button */}
-      <Button
-        onClick={onSaveVaga}
-        disabled={savingVaga}
-        className="w-full bg-green-600 hover:bg-green-700 text-white"
-        size="lg"
-      >
-        {savingVaga ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Salvando...
-          </>
-        ) : (
-          <>
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Salvar Vaga
-          </>
-        )}
-      </Button>
+      {/* Save vaga button - only in dialog context */}
+      {!isInPage && onSaveVaga && (
+        <Button
+          onClick={onSaveVaga}
+          disabled={savingVaga}
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
+          size="lg"
+        >
+          {savingVaga ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Salvar Vaga
+            </>
+          )}
+        </Button>
+      )}
     </div>
   )
 }
