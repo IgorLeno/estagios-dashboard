@@ -358,8 +358,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
                 setResumeFilename(filename)
               }}
               onMarkdownGenerated={(markdownPt: string, markdownEn: string) => {
-                setResumeContentPt(markdownPt)
-                setResumeContentEn(markdownEn)
+                // ✅ FIX: Só atualiza se não for vazio (merge em vez de sobrescrever)
+                if (markdownPt) setResumeContentPt(markdownPt)
+                if (markdownEn) setResumeContentEn(markdownEn)
                 console.log("[AddVagaDialog] Markdown recebido:", {
                   ptLength: markdownPt.length,
                   enLength: markdownEn.length,
