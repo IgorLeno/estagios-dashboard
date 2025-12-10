@@ -7,19 +7,17 @@ import type { VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit2, FileText, RefreshCw, Star, User, MapPin, Building2, Save, Download } from "lucide-react"
+import { ArrowLeft, Edit2, Star, User, MapPin, Building2, Save } from "lucide-react"
 import { EditVagaDialog } from "@/components/edit-vaga-dialog"
-import { ResumeGeneratorDialog } from "@/components/resume-generator-dialog"
 import { Sidebar } from "@/components/sidebar"
 import { StarRating } from "@/components/ui/star-rating"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
-import { CurriculumCard } from "@/components/curriculum-card"
+import { ResumeContainer } from "@/components/resume-container"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
 import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
-import { markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
 
 export default function VagaDetailPage() {
   const params = useParams()
@@ -30,6 +28,8 @@ export default function VagaDetailPage() {
   const [markdownContent, setMarkdownContent] = useState("")
   const [isEditingMarkdown, setIsEditingMarkdown] = useState(false)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<"pt" | "en" | null>(null)
+  const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
+  const [editingResumeContent, setEditingResumeContent] = useState("")
 
   useEffect(() => {
     loadVaga()
@@ -83,99 +83,6 @@ export default function VagaDetailPage() {
     }
   }
 
-  async function handleGeneratePDF(language: "pt" | "en") {
-    if (!vaga) return
-
-    try {
-      setIsGeneratingPDF(language)
-
-      const markdownText = language === "pt" ? vaga.curriculo_text_pt : vaga.curriculo_text_en
-
-      if (!markdownText) {
-        toast.error(`Nenhum conteúdo de currículo em ${language.toUpperCase()} para gerar PDF`)
-        return
-      }
-
-      console.log(`[VagaDetail] Gerando PDF em ${language.toUpperCase()}...`)
-
-      // Step 1: Markdown → HTML
-      const htmlContent = await markdownToHtml(markdownText)
-      console.log("[VagaDetail] Markdown convertido para HTML")
-
-      // Step 2: Wrap com CSS
-      const fullHtml = wrapMarkdownAsHTML(htmlContent)
-      console.log("[VagaDetail] HTML envolto com CSS")
-
-      // Step 3: Gerar PDF
-      const pdfResponse = await fetch("/api/ai/html-to-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          html: fullHtml,
-          filename: `curriculo-${vaga.empresa}-${language}.pdf`,
-        }),
-      })
-
-      if (!pdfResponse.ok) {
-        const errorData = await pdfResponse.json()
-        throw new Error(errorData.error || `Erro ao gerar PDF: ${pdfResponse.status}`)
-      }
-
-      const pdfResult = await pdfResponse.json()
-      console.log("[VagaDetail] PDF gerado com sucesso")
-
-      // Step 4: Atualizar banco de dados com data URL do PDF
-      const pdfDataUrl = `data:application/pdf;base64,${pdfResult.data.pdfBase64}`
-
-      const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          [`arquivo_cv_url_${language}`]: pdfDataUrl,
-        }),
-      })
-
-      if (!updateResponse.ok) {
-        throw new Error("Erro ao salvar URL do PDF no banco")
-      }
-
-      console.log("[VagaDetail] URL do PDF salva no banco")
-      toast.success(`PDF em ${language.toUpperCase()} gerado com sucesso!`)
-
-      // Refresh da página para mostrar o novo PDF
-      loadVaga()
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error)
-      const errorMessage = error instanceof Error ? error.message : "Erro ao gerar PDF"
-      toast.error(errorMessage)
-    } finally {
-      setIsGeneratingPDF(null)
-    }
-  }
-
-  function handleDownloadPDF(language: "pt" | "en") {
-    if (!vaga) return
-
-    const pdfUrl = language === "pt" ? vaga.arquivo_cv_url_pt : vaga.arquivo_cv_url_en
-
-    if (!pdfUrl) {
-      toast.error(`Nenhum PDF disponível em ${language.toUpperCase()}`)
-      return
-    }
-
-    // Se for data URL (base64)
-    if (pdfUrl.startsWith("data:")) {
-      const link = document.createElement("a")
-      link.href = pdfUrl
-      link.download = `curriculo-${vaga.empresa}-${language}.pdf`
-      link.click()
-      toast.success("PDF baixado!")
-    } else {
-      // Se for URL externa
-      window.open(pdfUrl, "_blank")
-    }
-  }
-
   async function handleDeleteResume(language: "pt" | "en") {
     if (!vaga) return
 
@@ -204,6 +111,77 @@ export default function VagaDetailPage() {
     } catch (error) {
       console.error("Erro ao excluir currículo:", error)
       toast.error("Erro ao excluir currículo")
+    }
+  }
+
+  async function handleGenerateResume(language: "pt" | "en") {
+    if (!vaga) return
+
+    try {
+      setIsGeneratingPDF(language)
+
+      const response = await fetch("/api/ai/generate-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vagaId: vaga.id,
+          language,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Erro ao gerar currículo: ${response.status}`)
+      }
+
+      toast.success(`Currículo em ${language.toUpperCase()} gerado com sucesso!`)
+      loadVaga()
+    } catch (error) {
+      console.error("Erro ao gerar currículo:", error)
+      const errorMessage = error instanceof Error ? error.message : "Erro ao gerar currículo"
+      toast.error(errorMessage)
+    } finally {
+      setIsGeneratingPDF(null)
+    }
+  }
+
+  function handleEditResume(language: "pt" | "en") {
+    if (!vaga) return
+
+    const currentContent = language === "pt" ? vaga.curriculo_text_pt : vaga.curriculo_text_en
+
+    if (!currentContent) {
+      toast.error(`Nenhum currículo em ${language.toUpperCase()} para editar`)
+      return
+    }
+
+    setEditingResumeLanguage(language)
+    setEditingResumeContent(currentContent)
+  }
+
+  async function handleSaveResumeEdit() {
+    if (!vaga || !editingResumeLanguage) return
+
+    try {
+      const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          [`curriculo_text_${editingResumeLanguage}`]: editingResumeContent,
+        }),
+      })
+
+      if (!updateResponse.ok) {
+        throw new Error("Erro ao salvar currículo")
+      }
+
+      toast.success(`Currículo em ${editingResumeLanguage.toUpperCase()} atualizado com sucesso!`)
+      setEditingResumeLanguage(null)
+      setEditingResumeContent("")
+      loadVaga()
+    } catch (error) {
+      console.error("Erro ao salvar currículo:", error)
+      toast.error("Erro ao salvar currículo")
     }
   }
 
@@ -398,73 +376,73 @@ export default function VagaDetailPage() {
             </CardContent>
           </Card>
 
-          {/* CARD 3 e 4: Currículos Personalizados (Vertical) */}
-          {(vaga.curriculo_text_pt || vaga.curriculo_text_en) && (
-            <div className="space-y-4">
-              {/* Header */}
-              <h2 className="text-xl font-semibold">Currículos Personalizados</h2>
+          {/* ✅ SEÇÃO DE CURRÍCULOS - SEMPRE VISÍVEL */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-bold">Currículos Personalizados</h2>
 
-              {/* Container com rolagem vertical */}
-              <div className="max-h-[800px] lg:max-h-[70vh] overflow-y-auto space-y-6 pr-2">
-                {/* Currículo PT (sempre primeiro se existir) */}
-                {vaga.curriculo_text_pt && (
-                  <CurriculumCard
-                    title="Currículo Personalizado"
-                    language="pt"
-                    markdownContent={vaga.curriculo_text_pt}
-                    pdfUrl={vaga.arquivo_cv_url_pt}
-                    onGenerate={handleGeneratePDF}
-                    onDownload={handleDownloadPDF}
-                    onDelete={handleDeleteResume}
-                    isGenerating={isGeneratingPDF === "pt"}
-                  />
-                )}
+            {/* PT - SEMPRE VISÍVEL */}
+            <ResumeContainer
+              language="pt"
+              markdown={vaga.curriculo_text_pt || undefined}
+              isGenerating={isGeneratingPDF === "pt"}
+              onGenerate={() => handleGenerateResume("pt")}
+              onEdit={() => handleEditResume("pt")}
+              onDelete={() => handleDeleteResume("pt")}
+            />
 
-                {/* Currículo EN (sempre depois do PT, se existir) */}
-                {vaga.curriculo_text_en && (
-                  <CurriculumCard
-                    title="Personalized Resume"
-                    language="en"
-                    markdownContent={vaga.curriculo_text_en}
-                    pdfUrl={vaga.arquivo_cv_url_en}
-                    onGenerate={handleGeneratePDF}
-                    onDownload={handleDownloadPDF}
-                    onDelete={handleDeleteResume}
-                    isGenerating={isGeneratingPDF === "en"}
+            {/* EN - SEMPRE VISÍVEL */}
+            <ResumeContainer
+              language="en"
+              markdown={vaga.curriculo_text_en || undefined}
+              isGenerating={isGeneratingPDF === "en"}
+              onGenerate={() => handleGenerateResume("en")}
+              onEdit={() => handleEditResume("en")}
+              onDelete={() => handleDeleteResume("en")}
+            />
+          </section>
+
+          <EditVagaDialog vaga={vaga} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={loadVaga} />
+
+          {/* Modal de Edição de Currículo */}
+          {editingResumeLanguage && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="px-6 py-4 border-b">
+                  <h3 className="text-lg font-semibold">
+                    Editar Currículo ({editingResumeLanguage === "pt" ? "Português" : "English"})
+                  </h3>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <MarkdownPreview
+                    content={editingResumeContent}
+                    editable={true}
+                    onChange={setEditingResumeContent}
+                    className="min-h-[400px]"
                   />
-                )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditingResumeLanguage(null)
+                      setEditingResumeContent("")
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveResumeEdit}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar
+                  </Button>
+                </div>
               </div>
             </div>
           )}
-
-          {/* Mensagem se não tiver nenhum currículo */}
-          {!vaga.curriculo_text_pt && !vaga.curriculo_text_en && (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground mb-6">Nenhum currículo gerado ainda</p>
-                <ResumeGeneratorDialog
-                  vagaId={vaga.id}
-                  trigger={
-                    <Button size="lg" className="bg-primary hover:bg-primary/90">
-                      <FileText className="h-5 w-5 mr-2" />
-                      Gerar Currículo Personalizado
-                    </Button>
-                  }
-                  onSuccess={(filename) => {
-                    toast.success(`Currículo gerado: ${filename}`)
-                    loadVaga()
-                  }}
-                  onMarkdownGenerated={() => {
-                    // Markdown is saved directly to database, just reload
-                    loadVaga()
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          <EditVagaDialog vaga={vaga} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={loadVaga} />
         </div>
       </main>
     </div>
