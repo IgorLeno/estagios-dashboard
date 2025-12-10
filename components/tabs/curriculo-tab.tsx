@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, Eye, Info, CheckCircle } from "lucide-react"
+import { Loader2, Eye, Info, CheckCircle, FileText, RefreshCw, Languages } from "lucide-react"
 import type { JobDetails } from "@/lib/ai/types"
 import { toast } from "sonner"
 import { htmlToMarkdown, markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
@@ -42,10 +42,10 @@ export function CurriculoTab({
 }: CurriculoTabProps) {
   console.log("[CurriculoTab] Rendering", { jobAnalysisData, resumePdfBase64, vagaId })
 
-  const [resumeLanguage, setResumeLanguage] = useState<"pt" | "en" | "both">("pt")
   const [markdownPreviewPt, setMarkdownPreviewPt] = useState("")
   const [markdownPreviewEn, setMarkdownPreviewEn] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generatingLanguage, setGeneratingLanguage] = useState<"pt" | "en" | "both" | null>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [pdfBase64Pt, setPdfBase64Pt] = useState<string | null>(null)
   const [pdfBase64En, setPdfBase64En] = useState<string | null>(null)
@@ -57,16 +57,17 @@ export function CurriculoTab({
   const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 
   console.log("[CurriculoTab] States:", {
-    resumeLanguage,
     hasPreview,
     markdownPreviewPtLength: markdownPreviewPt?.length,
     markdownPreviewEnLength: markdownPreviewEn?.length,
+    isGenerating,
+    generatingLanguage,
   })
 
   // Generate HTML preview
-  async function handleGeneratePreview() {
+  async function handleGeneratePreview(language: "pt" | "en" | "both") {
     console.log("[CurriculoTab] Starting preview generation")
-    console.log("[CurriculoTab] Selected language:", resumeLanguage)
+    console.log("[CurriculoTab] Selected language:", language)
     console.log("[CurriculoTab] Input data:", {
       hasVagaId: !!vagaId,
       vagaId,
@@ -75,6 +76,7 @@ export function CurriculoTab({
     })
 
     setIsGenerating(true)
+    setGeneratingLanguage(language)
 
     // Use local variables to store generated markdown (avoid race condition with setState)
     let generatedPt = ""
@@ -82,7 +84,7 @@ export function CurriculoTab({
 
     try {
       // Generate PT preview
-      if (resumeLanguage === "pt" || resumeLanguage === "both") {
+      if (language === "pt" || language === "both") {
         console.log("[CurriculoTab] Generating PT preview...")
 
         const payload = {
@@ -127,7 +129,7 @@ export function CurriculoTab({
       }
 
       // Generate EN preview
-      if (resumeLanguage === "en" || resumeLanguage === "both") {
+      if (language === "en" || language === "both") {
         console.log("[CurriculoTab] Generating EN preview...")
 
         const payload = {
@@ -171,7 +173,12 @@ export function CurriculoTab({
         }
       }
 
-      const message = resumeLanguage === "both" ? "2 previews gerados com sucesso!" : "Preview gerado com sucesso!"
+      const message =
+        language === "both"
+          ? "2 previews gerados com sucesso!"
+          : language === "pt"
+          ? "Preview PT gerado com sucesso!"
+          : "Preview EN gerado com sucesso!"
       toast.success(message)
 
       // Notificar parent sobre markdown gerado (usar variáveis locais, não estado!)
@@ -186,6 +193,7 @@ export function CurriculoTab({
       toast.error(`Erro ao gerar preview: ${errorMessage}`)
     } finally {
       setIsGenerating(false)
+      setGeneratingLanguage(null)
     }
   }
 
@@ -331,46 +339,12 @@ export function CurriculoTab({
       <div>
         <h3 className="text-lg font-semibold mb-2">Gerar Currículo Personalizado</h3>
         <p className="text-sm text-muted-foreground">
-          Escolha o idioma e gere um preview editável do currículo adaptado para esta vaga.
+          Gere previews editáveis do currículo adaptado para esta vaga em português, inglês ou ambos.
         </p>
       </div>
 
-      {/* Language selector - ALWAYS VISIBLE */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Idioma do Currículo</Label>
-        <div className="grid grid-cols-3 gap-3">
-          <Button
-            type="button"
-            variant={resumeLanguage === "pt" ? "default" : "outline"}
-            onClick={() => setResumeLanguage("pt")}
-            className="w-full"
-          >
-            <span className="mr-2">🇧🇷</span>
-            Português
-          </Button>
-          <Button
-            type="button"
-            variant={resumeLanguage === "en" ? "default" : "outline"}
-            onClick={() => setResumeLanguage("en")}
-            className="w-full"
-          >
-            <span className="mr-2">🇺🇸</span>
-            English
-          </Button>
-          <Button
-            type="button"
-            variant={resumeLanguage === "both" ? "default" : "outline"}
-            onClick={() => setResumeLanguage("both")}
-            className="w-full"
-          >
-            <span className="mr-2">🌐</span>
-            Ambos
-          </Button>
-        </div>
-      </div>
-
       {/* Warning if no job analysis data */}
-      {!hasPreview && !jobAnalysisData && (
+      {!jobAnalysisData && (
         <Alert variant="destructive">
           <Info className="h-4 w-4" />
           <AlertTitle>Análise da vaga necessária</AlertTitle>
@@ -380,27 +354,89 @@ export function CurriculoTab({
         </Alert>
       )}
 
-      {/* Generate preview button - show if no preview */}
-      {!hasPreview && (
+      {/* ✅ NOVO: Botões de geração dinâmicos - SEMPRE VISÍVEIS */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {/* Botão: Gerar/Regenerar PT */}
         <Button
-          onClick={handleGeneratePreview}
+          onClick={() => handleGeneratePreview("pt")}
+          variant={markdownPreviewPt ? "outline" : "default"}
           disabled={!jobAnalysisData || isGenerating}
-          className="w-full"
-          size="lg"
         >
-          {isGenerating ? (
+          {isGenerating && generatingLanguage === "pt" ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Gerando preview...
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Gerando...
             </>
           ) : (
             <>
-              <Eye className="mr-2 h-4 w-4" />
-              Gerar Preview
+              {markdownPreviewPt ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Regenerar PT
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gerar PT
+                </>
+              )}
             </>
           )}
         </Button>
-      )}
+
+        {/* Botão: Gerar/Regenerar EN */}
+        <Button
+          onClick={() => handleGeneratePreview("en")}
+          variant={markdownPreviewEn ? "outline" : "default"}
+          disabled={!jobAnalysisData || isGenerating}
+        >
+          {isGenerating && generatingLanguage === "en" ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              {markdownPreviewEn ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Regenerar EN
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gerar EN
+                </>
+              )}
+            </>
+          )}
+        </Button>
+
+        {/* Botão: Gerar/Regenerar Ambos (dinâmico) */}
+        <Button
+          onClick={() => handleGeneratePreview("both")}
+          variant="secondary"
+          disabled={!jobAnalysisData || isGenerating}
+        >
+          {isGenerating && generatingLanguage === "both" ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Gerando...
+            </>
+          ) : (
+            <>
+              <Languages className="h-4 w-4 mr-2" />
+              {markdownPreviewPt && markdownPreviewEn
+                ? "Regenerar Ambos"
+                : markdownPreviewPt
+                ? "Regenerar PT e Gerar EN"
+                : markdownPreviewEn
+                ? "Gerar PT e Regenerar EN"
+                : "Gerar Ambos"}
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* Editable preview - show after generation */}
       {hasPreview && (
@@ -424,12 +460,12 @@ export function CurriculoTab({
                 pdfUrl={pdfBase64Pt ? `data:application/pdf;base64,${pdfBase64Pt}` : null}
                 isGenerated={true}
                 isPreviewSaved={isPreviewSavedPt}
-                onRegenerate={handleGeneratePreview}
+                onRegenerate={() => handleGeneratePreview("pt")}
                 onSavePreview={() => handleSavePreview("pt")}
                 onGeneratePDF={() => handleConvertToPdfSingle("pt")}
                 onDownload={() => handleDownloadPdfLocal(pdfBase64Pt!, "pt")}
                 onMarkdownChange={setMarkdownPreviewPt}
-                isRegenerating={isGenerating}
+                isRegenerating={isGenerating && generatingLanguage === "pt"}
                 isSaving={isSavingPt}
                 isGeneratingPDF={isConverting}
                 showSavePreview={!!vagaId}
@@ -444,12 +480,12 @@ export function CurriculoTab({
                 pdfUrl={pdfBase64En ? `data:application/pdf;base64,${pdfBase64En}` : null}
                 isGenerated={true}
                 isPreviewSaved={isPreviewSavedEn}
-                onRegenerate={handleGeneratePreview}
+                onRegenerate={() => handleGeneratePreview("en")}
                 onSavePreview={() => handleSavePreview("en")}
                 onGeneratePDF={() => handleConvertToPdfSingle("en")}
                 onDownload={() => handleDownloadPdfLocal(pdfBase64En!, "en")}
                 onMarkdownChange={setMarkdownPreviewEn}
-                isRegenerating={isGenerating}
+                isRegenerating={isGenerating && generatingLanguage === "en"}
                 isSaving={isSavingEn}
                 isGeneratingPDF={isConverting}
                 showSavePreview={!!vagaId}
