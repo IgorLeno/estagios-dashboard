@@ -89,6 +89,17 @@ export function CurriculoTab({
     }
   }, [vagaId])
 
+  // 🔍 DEBUG: Monitor markdown state changes
+  useEffect(() => {
+    console.log("[CurriculoTab] 🔄 Markdown states changed:", {
+      markdownPreviewPtLength: markdownPreviewPt?.length || 0,
+      markdownPreviewEnLength: markdownPreviewEn?.length || 0,
+      hasPT: Boolean(markdownPreviewPt),
+      hasEN: Boolean(markdownPreviewEn),
+      hasPreview,
+    })
+  }, [markdownPreviewPt, markdownPreviewEn, hasPreview])
+
   // Generate HTML preview
   async function handleGeneratePreview(language: "pt" | "en" | "both") {
     console.log("[CurriculoTab] Starting preview generation")
@@ -142,11 +153,34 @@ export function CurriculoTab({
           error: result.error,
         })
 
+        // 🔍 DEBUG: Log FULL response body
+        console.log("[CurriculoTab] 📦 PT Full Response Body:", JSON.stringify(result, null, 2))
+
         if (result.success && result.data?.html) {
           // Convert HTML to Markdown for better editing experience
           const markdown = htmlToMarkdown(result.data.html)
           generatedPt = markdown // Store in local variable
+
+          // 🔍 DEBUG: Log markdown BEFORE setState
+          console.log("[CurriculoTab] 📝 PT Markdown BEFORE setState:", {
+            length: markdown.length,
+            preview: markdown.substring(0, 150),
+          })
+
           setMarkdownPreviewPt(markdown)
+
+          // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
+          console.log("[CurriculoTab] ✅ PT setMarkdownPreviewPt called with length:", markdown.length)
+
+          // 🔍 DEBUG: Verify state update after a tick
+          setTimeout(() => {
+            console.log("[CurriculoTab] 🔄 PT State after setState (async check):", {
+              markdownPreviewPtLength: markdownPreviewPt.length,
+              generatedPtLength: generatedPt.length,
+              stateMatchesGenerated: markdownPreviewPt === generatedPt,
+            })
+          }, 100)
+
           console.log("[CurriculoTab] ✅ PT preview generated and converted to Markdown")
         } else {
           throw new Error(result.error || "Failed to generate PT preview")
@@ -187,11 +221,34 @@ export function CurriculoTab({
           error: result.error,
         })
 
+        // 🔍 DEBUG: Log FULL response body
+        console.log("[CurriculoTab] 📦 EN Full Response Body:", JSON.stringify(result, null, 2))
+
         if (result.success && result.data?.html) {
           // Convert HTML to Markdown for better editing experience
           const markdown = htmlToMarkdown(result.data.html)
           generatedEn = markdown // Store in local variable
+
+          // 🔍 DEBUG: Log markdown BEFORE setState
+          console.log("[CurriculoTab] 📝 EN Markdown BEFORE setState:", {
+            length: markdown.length,
+            preview: markdown.substring(0, 150),
+          })
+
           setMarkdownPreviewEn(markdown)
+
+          // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
+          console.log("[CurriculoTab] ✅ EN setMarkdownPreviewEn called with length:", markdown.length)
+
+          // 🔍 DEBUG: Verify state update after a tick
+          setTimeout(() => {
+            console.log("[CurriculoTab] 🔄 EN State after setState (async check):", {
+              markdownPreviewEnLength: markdownPreviewEn.length,
+              generatedEnLength: generatedEn.length,
+              stateMatchesGenerated: markdownPreviewEn === generatedEn,
+            })
+          }, 100)
+
           console.log("[CurriculoTab] ✅ EN preview generated and converted to Markdown")
         } else {
           throw new Error(result.error || "Failed to generate EN preview")
@@ -526,6 +583,12 @@ export function CurriculoTab({
           {/* Container com rolagem vertical */}
           <div className="max-h-[800px] lg:max-h-[70vh] overflow-y-auto space-y-6 pr-2">
             {/* PT preview */}
+            {/* 🔍 DEBUG: Log before conditional render */}
+            {console.log("[CurriculoTab] 🔍 Conditional render check for PT:", {
+              markdownPreviewPt: Boolean(markdownPreviewPt),
+              markdownPreviewPtLength: markdownPreviewPt?.length || 0,
+              willRenderPT: Boolean(markdownPreviewPt),
+            })}
             {markdownPreviewPt && (
               <ResumePreviewCard
                 language="pt"
@@ -546,6 +609,12 @@ export function CurriculoTab({
             )}
 
             {/* EN preview */}
+            {/* 🔍 DEBUG: Log before conditional render */}
+            {console.log("[CurriculoTab] 🔍 Conditional render check for EN:", {
+              markdownPreviewEn: Boolean(markdownPreviewEn),
+              markdownPreviewEnLength: markdownPreviewEn?.length || 0,
+              willRenderEN: Boolean(markdownPreviewEn),
+            })}
             {markdownPreviewEn && (
               <ResumePreviewCard
                 language="en"

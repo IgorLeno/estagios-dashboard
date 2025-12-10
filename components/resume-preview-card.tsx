@@ -38,6 +38,16 @@ export function ResumePreviewCard({
   isGeneratingPDF = false,
   showSavePreview = true,
 }: ResumePreviewCardProps) {
+  // 🔍 DEBUG: Log props on every render
+  console.log(`[ResumePreviewCard] 🎨 Rendering ${language.toUpperCase()}:`, {
+    hasMarkdownContent: Boolean(markdownContent),
+    markdownLength: markdownContent?.length || 0,
+    markdownPreview: markdownContent?.substring(0, 100) || "EMPTY",
+    isGenerated,
+    isPreviewSaved,
+    isRegenerating,
+  })
+
   const labels = {
     pt: {
       title: "🇧🇷 Preview do Currículo - Português",
