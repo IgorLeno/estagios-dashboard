@@ -432,6 +432,7 @@ export function CurriculoTab({
                 isRegenerating={isGenerating}
                 isSaving={isSavingPt}
                 isGeneratingPDF={isConverting}
+                showSavePreview={!!vagaId}
               />
             )}
 
@@ -451,6 +452,7 @@ export function CurriculoTab({
                 isRegenerating={isGenerating}
                 isSaving={isSavingEn}
                 isGeneratingPDF={isConverting}
+                showSavePreview={!!vagaId}
               />
             )}
           </div>

@@ -19,6 +19,7 @@ interface ResumePreviewCardProps {
   isRegenerating?: boolean
   isSaving?: boolean
   isGeneratingPDF?: boolean
+  showSavePreview?: boolean
 }
 
 export function ResumePreviewCard({
@@ -35,6 +36,7 @@ export function ResumePreviewCard({
   isRegenerating = false,
   isSaving = false,
   isGeneratingPDF = false,
+  showSavePreview = true,
 }: ResumePreviewCardProps) {
   const labels = {
     pt: {
@@ -87,23 +89,25 @@ export function ResumePreviewCard({
           </Button>
 
           {/* Salvar Preview */}
-          <Button
-            variant={isPreviewSaved ? "outline" : "default"}
-            onClick={onSavePreview}
-            disabled={!isGenerated || isPreviewSaved || isSaving}
-          >
-            {isPreviewSaved ? (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                {t.saved}
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? (language === "pt" ? "Salvando..." : "Saving...") : t.save}
-              </>
-            )}
-          </Button>
+          {showSavePreview && (
+            <Button
+              variant={isPreviewSaved ? "outline" : "default"}
+              onClick={onSavePreview}
+              disabled={!isGenerated || isPreviewSaved || isSaving}
+            >
+              {isPreviewSaved ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  {t.saved}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? (language === "pt" ? "Salvando..." : "Saving...") : t.save}
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Gerar PDF */}
           <Button variant="outline" onClick={onGeneratePDF} disabled={!isGenerated || isGeneratingPDF}>
