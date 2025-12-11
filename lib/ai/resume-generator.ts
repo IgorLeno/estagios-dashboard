@@ -3,6 +3,8 @@ import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./re
 import { getCVTemplate } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
+import { loadUserSkillsBank } from "./skills-bank" // NEW: Skills Bank
+import { calculateATSScore } from "./ats-scorer" // NEW: ATS Scorer
 import type { JobDetails, CVTemplate, PersonalizedSections } from "./types"
 
 /**
@@ -38,12 +40,14 @@ async function personalizeSummary(
 async function personalizeSkills(
   jobDetails: JobDetails,
   cv: CVTemplate,
+  skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
   model: any,
   language: "pt" | "en"
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects, language)
+  // Pass skillsBank to prompt builder
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -52,22 +56,50 @@ async function personalizeSkills(
   const jsonData = extractJsonFromResponse(text)
   const validated = PersonalizedSectionsSchema.pick({ skills: true }).parse(jsonData)
 
-  // CRITICAL VALIDATION: Check for fabricated skills
+  // CRITICAL VALIDATION: Check for fabricated skills (CV + Skills Bank)
   const originalSkills = cv.skills.flatMap((cat) => cat.items)
+
+  // Build allowed skills bank items (with proficiency indicators)
+  const allowedBankSkills = skillsBank.map((s) =>
+    s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`
+  )
+
+  // Combined allowed skills
+  const allowedSkills = [...originalSkills, ...allowedBankSkills]
+
+  // Get returned skills
   const returnedSkills = validated.skills.flatMap((cat) => cat.items)
 
-  const fabricatedSkills = returnedSkills.filter((skill) => !originalSkills.includes(skill))
+  // Check for fabrication (allow proficiency suffixes)
+  const fabricatedSkills = returnedSkills.filter((skill) => {
+    // Remove proficiency suffix for comparison
+    const baseSkill = skill.replace(/\s*\([^)]+\)$/, "")
+
+    // Check if skill is in allowed list (exact match or base match)
+    return !allowedSkills.some(
+      (allowed) =>
+        allowed === skill || // Exact match
+        allowed === baseSkill || // Base match
+        allowed.startsWith(baseSkill) // Starts with base skill
+    )
+  })
 
   if (fabricatedSkills.length > 0) {
     console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
+    console.error("[Resume Generator] Allowed skills (CV):", originalSkills)
+    console.error("[Resume Generator] Allowed skills (Bank):", allowedBankSkills)
     throw new Error(
-      `LLM fabricated skills not in original CV: ${fabricatedSkills.join(", ")}. ` +
-        `Only these skills are allowed: ${originalSkills.join(", ")}`
+      `LLM fabricated skills not in CV or Skills Bank: ${fabricatedSkills.join(", ")}. ` +
+        `Only these skills are allowed: ${allowedSkills.join(", ")}`
     )
   }
 
   const duration = Date.now() - startTime
   const tokenUsage = extractTokenUsage(response)
+
+  console.log(
+    `[Resume Generator] ✅ Skills personalized (${returnedSkills.length} skills, ${skillsBank.length} from bank available)`
+  )
 
   return { skills: validated.skills, duration, tokenUsage }
 }
@@ -159,6 +191,7 @@ export async function generateTailoredResume(
   model: string
   tokenUsage: { inputTokens: number; outputTokens: number; totalTokens: number }
   personalizedSections: string[]
+  atsScore?: number // NEW: ATS compatibility score
 }> {
   const startTime = Date.now()
 
@@ -167,6 +200,10 @@ export async function generateTailoredResume(
   // Load user AI config
   const config = await loadUserAIConfig(userId)
   console.log(`[Resume Generator] Loaded AI config for user: ${userId || "global"}`)
+
+  // Load user skills bank (NEW)
+  const skillsBank = await loadUserSkillsBank(userId)
+  console.log(`[Resume Generator] Loaded ${skillsBank.length} skills from bank`)
 
   // Load CV template
   const baseCv = getCVTemplate(language)
@@ -182,7 +219,7 @@ export async function generateTailoredResume(
   // Personalize 3 sections in parallel
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     personalizeSummary(jobDetails, baseCv, model, language),
-    personalizeSkills(jobDetails, baseCv, model, language),
+    personalizeSkills(jobDetails, baseCv, skillsBank, model, language), // Pass skillsBank
     personalizeProjects(jobDetails, baseCv, model, language),
   ])
 
@@ -193,6 +230,9 @@ export async function generateTailoredResume(
     skills: skillsResult.skills,
     projects: projectsResult.projects,
   }
+
+  // Calculate ATS compatibility score (NEW)
+  const atsScore = calculateATSScore(personalizedCv, jobDetails)
 
   // Aggregate token usage
   const totalTokenUsage = {
@@ -212,7 +252,9 @@ export async function generateTailoredResume(
 
   const duration = Date.now() - startTime
 
-  console.log(`[Resume Generator] ✅ Personalization complete (${duration}ms, ${totalTokenUsage.totalTokens} tokens)`)
+  console.log(
+    `[Resume Generator] ✅ Personalization complete (${duration}ms, ${totalTokenUsage.totalTokens} tokens, ATS score: ${atsScore}%)`
+  )
 
   return {
     cv: personalizedCv,
@@ -220,5 +262,6 @@ export async function generateTailoredResume(
     model: config.modelo_gemini,
     tokenUsage: totalTokenUsage,
     personalizedSections: ["summary", "skills", "projects"],
+    atsScore, // NEW
   }
 }
