@@ -253,6 +253,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         curriculo_text_pt: resumeContentPt || null,
         curriculo_text_en: resumeContentEn || null,
         data_inscricao: dataInscricao,
+        is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true",
       }
 
       // Insert with .select() to ensure operation completes and returns data
