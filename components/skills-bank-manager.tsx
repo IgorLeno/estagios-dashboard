@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Database, Plus, Trash2, X } from "lucide-react"
+import { Database, Plus, Trash2, X, Sparkles } from "lucide-react"
 import { toast } from "sonner"
+import { SkillsImportDialog } from "@/components/skills-import-dialog"
 
 /**
  * Skill from API
@@ -51,6 +52,7 @@ export function SkillsBankManager() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
 
   // Form state
   const [newSkill, setNewSkill] = useState("")
@@ -222,9 +224,21 @@ export function SkillsBankManager() {
           <div className="text-center py-8 text-muted-foreground">
             <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm">Nenhuma skill cadastrada ainda</p>
-            <p className="text-xs mt-1">Adicione suas primeiras skills para começar</p>
+            <p className="text-xs mt-1">Importe suas skills do perfil ou adicione manualmente</p>
           </div>
         )}
+
+        {/* Import Skills Button */}
+        <div className="flex gap-3">
+          <Button onClick={() => setImportDialogOpen(true)} variant="default" className="flex-1">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Importar do Perfil (IA)
+          </Button>
+          <Button onClick={() => setShowAddForm(true)} variant="outline" className="flex-1" disabled={showAddForm}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Manualmente
+          </Button>
+        </div>
 
         {/* Add skill form */}
         {showAddForm ? (
@@ -297,12 +311,17 @@ export function SkillsBankManager() {
               </Button>
             </div>
           </form>
-        ) : (
-          <Button onClick={() => setShowAddForm(true)} variant="outline" className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Nova Skill
-          </Button>
-        )}
+        ) : null}
+
+        {/* Skills Import Dialog */}
+        <SkillsImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onSuccess={() => {
+            toast.success("Skills importadas! Atualizando lista...")
+            loadSkills()
+          }}
+        />
       </CardContent>
     </Card>
   )
