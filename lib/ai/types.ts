@@ -4,8 +4,8 @@ import { z } from "zod"
  * Schema de validação para dados extraídos de vagas
  * Compatível com ParsedVagaData do markdown-parser.ts
  *
- * IMPORTANT: Only "empresa" is required. All other fields are optional in INPUT.
- * - empresa: Required, min 1 character
+ * IMPORTANT: All fields are optional in INPUT.
+ * - empresa: null/undefined/missing → "Empresa Confidencial"
  * - String fields: null/undefined/missing → "Indefinido"
  * - Enum fields: null/undefined/missing → default value (Presencial, Estágio, pt)
  * - Arrays: null/undefined/missing → empty array []
@@ -14,9 +14,9 @@ import { z } from "zod"
 export const JobDetailsSchema = z.object({
   empresa: z
     .string()
-    .min(1, "Empresa é obrigatória")
     .nullable()
-    .transform((v) => v ?? ""),
+    .default("Empresa Confidencial")
+    .transform((v) => (v && v.trim() !== "" ? v : "Empresa Confidencial")),
   cargo: z
     .string()
     .nullable()

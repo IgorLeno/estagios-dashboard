@@ -68,19 +68,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return NextResponse.json(errorResponse, { status: 404 })
       }
 
-      // Map vaga to JobDetails
+      // Map vaga to JobDetails (schema handles null/undefined with defaults)
       jobDetails = JobDetailsSchema.parse({
-        empresa: vaga.empresa || "",
-        cargo: vaga.cargo || "",
-        local: vaga.local || "",
-        modalidade: vaga.modalidade || "Presencial",
-        tipo_vaga: vaga.tipo_vaga || "Estágio",
-        requisitos_obrigatorios: vaga.requisitos_obrigatorios || [],
-        requisitos_desejaveis: vaga.requisitos_desejaveis || [],
-        responsabilidades: vaga.responsabilidades || [],
-        beneficios: vaga.beneficios || [],
+        empresa: vaga.empresa,
+        cargo: vaga.cargo,
+        local: vaga.local,
+        modalidade: vaga.modalidade,
+        tipo_vaga: vaga.tipo_vaga,
+        requisitos_obrigatorios: vaga.requisitos_obrigatorios,
+        requisitos_desejaveis: vaga.requisitos_desejaveis,
+        responsabilidades: vaga.responsabilidades,
+        beneficios: vaga.beneficios,
         salario: vaga.salario,
-        idioma_vaga: vaga.idioma_vaga || "pt",
+        idioma_vaga: vaga.idioma_vaga,
       })
     } else if (jobDescription) {
       // Parse from description - will be done inside timeout wrapper
