@@ -45,6 +45,17 @@ export const CV_TEMPLATE_PT: CVTemplate = {
   // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
     {
+      category: "Química Analítica & Laboratório",
+      items: [
+        "Preparação de soluções e reagentes",
+        "Titulações volumétricas",
+        "Síntese química",
+        "Controle de amostras",
+        "Organização de laboratório",
+        "Boas Práticas de Laboratório (BPL)",
+      ],
+    },
+    {
       category: "Linguagens & Análise de Dados",
       items: ["Python (Pandas, NumPy, Scikit-learn)", "SQL", "R", "VBA"],
     },
@@ -134,6 +145,17 @@ export const CV_TEMPLATE_EN: CVTemplate = {
 
   // PERSONALIZABLE: LLM can reorder items within categories (NEVER add new skills)
   skills: [
+    {
+      category: "Analytical Chemistry & Laboratory",
+      items: [
+        "Solution and reagent preparation",
+        "Volumetric titrations",
+        "Chemical synthesis",
+        "Sample control",
+        "Laboratory organization",
+        "Good Laboratory Practices (GLP)",
+      ],
+    },
     {
       category: "Languages & Data Analysis",
       items: ["Python (Pandas, NumPy, Scikit-learn)", "SQL", "R", "VBA"],

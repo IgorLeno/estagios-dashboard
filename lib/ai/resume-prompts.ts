@@ -1,5 +1,11 @@
 import type { JobDetails } from "./types"
 import type { CVTemplate } from "./types"
+import type { JobContext } from "./job-context-detector"
+import {
+  getSummaryContextInstructions,
+  getSkillsContextInstructions,
+  getProjectsContextInstructions,
+} from "./context-specific-instructions"
 
 /**
  * System instruction for resume personalization
@@ -45,7 +51,8 @@ export function buildSummaryPrompt(
   jobDetails: JobDetails,
   originalSummary: string,
   userSkills: string[],
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: JobContext
 ): string {
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
@@ -64,7 +71,12 @@ export function buildSummaryPrompt(
       ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
       : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
 
+  // Get context-specific instructions
+  const contextInstructions = getSummaryContextInstructions(jobContext, language)
+
   return `${languageInstruction}
+
+${contextInstructions}
 
 Rewrite the professional summary to be HIGHLY OPTIMIZED FOR ATS (Applicant Tracking Systems).
 
@@ -101,13 +113,17 @@ INSTRUCTIONS - ATS OPTIMIZATION:
 2. EXACT TERMINOLOGY MATCHING (CRITICAL FOR ATS):
    - Use EXACT phrases from "Exact Phrases" list (e.g., if job says "Excel Avançado", use "Excel Avançado" not "Excel")
    - Match acronyms EXACTLY as written (e.g., "QHSE" not "qhse" or "Q.H.S.E.")
-   - Repeat critical technical terms from list (e.g., if job mentions "ISO 17025" multiple times, include it)
+   - ⚠️ CRITICAL: Use technical terms NATURALLY - mention each term ONCE (max 1-2x total in summary)
+   - If job mentions "ISO 17025" repeatedly, you should still mention it ONLY ONCE in summary
+   - NO KEYWORD STUFFING - quality over quantity
 
-3. KEYWORD DENSITY:
-   - Include AT LEAST 8-10 job keywords naturally distributed across sentences
+3. KEYWORD DENSITY (USE NATURALLY - NO STUFFING):
+   - Include 6-8 job keywords naturally distributed across sentences
    - PRIORITIZE keywords from "Required Skills" list
    - Use action verbs from list (e.g., "monitorar", "desenvolver", "implementar")
-   - Front-load most important keywords in FIRST TWO SENTENCES (ATS scans top first)
+   - Front-load most important keywords in FIRST SENTENCE (ATS scans top first)
+   - ⚠️ CRITICAL: Each keyword should appear MAX 1-2 times in ENTIRE summary (no repetition)
+   - Use keywords in context, not forced or stuffed
 
 4. ATS BEST PRACTICES:
    - Write 100-120 words (optimal ATS length - not too short, not too long)
@@ -140,7 +156,8 @@ export function buildSkillsPrompt(
   currentSkills: Array<{ category: string; items: string[] }>,
   skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
   projects: Array<{ title: string; description: string[] }>,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: JobContext
 ): string {
   // Extract ATS keywords
   const atsKeywords = extractATSKeywords(jobDetails)
@@ -167,7 +184,12 @@ export function buildSkillsPrompt(
       ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
       : "⚠️ MANDATORY: Keep category and skill names EXACTLY as they are (they may be in Portuguese or English). DO NOT translate tool, software, or technology names."
 
+  // Get context-specific instructions
+  const contextInstructions = getSkillsContextInstructions(jobContext, language)
+
   return `${languageInstruction}
+
+${contextInstructions}
 
 ⚠️  CRITICAL: REORDER + SELECT FROM SKILLS BANK (ATS OPTIMIZATION)
 
@@ -277,7 +299,8 @@ Return JSON format:
 export function buildProjectsPrompt(
   jobDetails: JobDetails,
   currentProjects: Array<{ title: string; description: string[] }>,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: JobContext
 ): string {
   const jobKeywords = extractTopKeywords(jobDetails, 10)
 
@@ -299,7 +322,12 @@ export function buildProjectsPrompt(
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
 
+  // Get context-specific instructions
+  const contextInstructions = getProjectsContextInstructions(jobContext, language)
+
   return `${languageInstruction}
+
+${contextInstructions}
 
 ⚠️  CRITICAL: KEEP TITLES UNCHANGED - REWRITE DESCRIPTIONS FOR ATS OPTIMIZATION
 

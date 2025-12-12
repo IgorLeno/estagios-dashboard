@@ -5,6 +5,7 @@ import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
 import { loadUserSkillsBank } from "./skills-bank" // NEW: Skills Bank
 import { calculateATSScore } from "./ats-scorer" // NEW: ATS Scorer
+import { detectJobContext, getContextDescription } from "./job-context-detector" // NEW: Job Context Detection
 import type { JobDetails, CVTemplate, PersonalizedSections } from "./types"
 
 /**
@@ -14,12 +15,13 @@ async function personalizeSummary(
   jobDetails: JobDetails,
   cv: CVTemplate,
   model: any,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: string
 ): Promise<{ summary: string; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
   const allSkills = cv.skills.flatMap((group) => group.items)
-  const prompt = buildSummaryPrompt(jobDetails, cv.summary, allSkills, language)
+  const prompt = buildSummaryPrompt(jobDetails, cv.summary, allSkills, language, jobContext as any)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -42,12 +44,13 @@ async function personalizeSkills(
   cv: CVTemplate,
   skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
   model: any,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: string
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
   // Pass skillsBank to prompt builder
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language)
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language, jobContext as any)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -111,11 +114,12 @@ async function personalizeProjects(
   jobDetails: JobDetails,
   cv: CVTemplate,
   model: any,
-  language: "pt" | "en"
+  language: "pt" | "en",
+  jobContext: string
 ): Promise<{ projects: PersonalizedSections["projects"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildProjectsPrompt(jobDetails, cv.projects, language)
+  const prompt = buildProjectsPrompt(jobDetails, cv.projects, language, jobContext as any)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -197,6 +201,11 @@ export async function generateTailoredResume(
 
   console.log(`[Resume Generator] Starting personalization (${language})`)
 
+  // STEP 1: Detect job context FIRST (NEW)
+  const jobContext = detectJobContext(jobDetails)
+  const contextDesc = getContextDescription(jobContext)
+  console.log(`[Resume Generator] 🎯 Detected context: ${jobContext} - ${contextDesc}`)
+
   // Load user AI config
   const config = await loadUserAIConfig(userId)
   console.log(`[Resume Generator] Loaded AI config for user: ${userId || "global"}`)
@@ -216,11 +225,11 @@ export async function generateTailoredResume(
     systemInstruction: config.curriculo_prompt,
   })
 
-  // Personalize 3 sections in parallel
+  // STEP 2: Personalize 3 sections in parallel (pass jobContext to all)
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
-    personalizeSummary(jobDetails, baseCv, model, language),
-    personalizeSkills(jobDetails, baseCv, skillsBank, model, language), // Pass skillsBank
-    personalizeProjects(jobDetails, baseCv, model, language),
+    personalizeSummary(jobDetails, baseCv, model, language, jobContext),
+    personalizeSkills(jobDetails, baseCv, skillsBank, model, language, jobContext), // Pass skillsBank + jobContext
+    personalizeProjects(jobDetails, baseCv, model, language, jobContext),
   ])
 
   // Merge personalized sections into CV
