@@ -32,6 +32,14 @@ vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(() => true),
 }))
 
+vi.mock("@/lib/ai/resume-html-template", () => ({
+  generateResumeHTML: vi.fn((cv) => `<html><body>HTML for ${cv.header.name}</body></html>`),
+}))
+
+vi.mock("@/lib/ai/markdown-converter", () => ({
+  htmlToMarkdown: vi.fn((html) => `# Markdown\n\nConverted from: ${html.substring(0, 20)}...`),
+}))
+
 vi.mock("@/lib/ai/job-parser", () => ({
   parseJobWithGemini: vi.fn(async () => ({
     data: {

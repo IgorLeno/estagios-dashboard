@@ -13,6 +13,8 @@ import { parseJobWithGemini } from "@/lib/ai/job-parser"
 import { validateAIConfig } from "@/lib/ai/config"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
 import { ZodError } from "zod"
+import { generateResumeHTML } from "@/lib/ai/resume-html-template"
+import { htmlToMarkdown } from "@/lib/ai/markdown-converter"
 
 /**
  * POST /api/ai/generate-resume
@@ -121,9 +123,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
           const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
 
+          // ✅ CONVERT CVTemplate → HTML → Markdown before saving
+          const html = generateResumeHTML(resumeResult.cv)
+          const markdown = htmlToMarkdown(html)
+
           // ✅ PARTIAL UPDATE: Only update the requested language field
           const updateData = {
-            [markdownField]: resumeResult.cv,
+            [markdownField]: markdown,
             [pdfField]: pdfDataUrl,
           }
 
