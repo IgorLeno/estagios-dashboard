@@ -407,6 +407,7 @@ if (result.success && result.data?.pdfBase64) {
    - **VERIFICAR:** Botão "Baixar PDF" funciona e baixa o arquivo
 
 3. **Verificação no banco:**
+
    ```sql
    SELECT id, empresa, cargo, arquivo_cv_url FROM vagas_estagio
    ORDER BY created_at DESC LIMIT 5;
