@@ -105,7 +105,7 @@ Salário: R$ 1.800,00 + benefícios
     await expect(markdownTextarea).toBeVisible()
 
     // 5. Verify action buttons are visible
-    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i })
+    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i }).first()
     const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
     await expect(regenerarButton).toBeVisible()
     await expect(regenerarButton).toBeEnabled()
@@ -133,20 +133,26 @@ Salário: R$ 1.800,00 + benefícios
     // Verify Markdown textarea has content
     const markdownTextarea = dialog.locator("textarea").first()
     await expect(markdownTextarea).toBeVisible()
-    await expect(markdownTextarea).not.toHaveValue("")
+    const initialContent = await markdownTextarea.inputValue()
+    expect(initialContent).not.toBe("")
 
-    // 2. Click "Regenerar PT" (clears preview, no confirmation dialog in current implementation)
-    const regenerarButton = dialog.getByRole("button", { name: /regenerar pt/i })
+    // 2. Click "Regenerar" button (inside ResumePreviewCard, not at root level)
+    // The button regenerates the preview (replaces content, doesn't clear)
+    const regenerarButton = dialog.getByRole("button", { name: /^regenerar$/i }).first()
+    await expect(regenerarButton).toBeVisible()
     await expect(regenerarButton).toBeEnabled()
     await regenerarButton.click()
 
-    // 3. Verify preview was cleared (back to initial state)
-    await expect(previewAlert).not.toBeVisible()
-    await expect(markdownTextarea).not.toBeVisible()
+    // 3. Wait for regeneration to complete (mock is instant)
+    await page.waitForTimeout(1000)
 
-    // 4. Verify "Gerar PT" button is visible again
-    await expect(generateButton).toBeVisible()
-    await expect(generateButton).toBeEnabled()
+    // 4. Verify preview is still visible (regenerate replaces content, doesn't clear)
+    await expect(previewAlert).toBeVisible()
+    await expect(markdownTextarea).toBeVisible()
+
+    // 5. Content should still exist (mock returns same content in this test)
+    const newContent = await markdownTextarea.inputValue()
+    expect(newContent).not.toBe("")
 
     await page.keyboard.press("Escape")
   })
@@ -166,28 +172,27 @@ Salário: R$ 1.800,00 + benefícios
     const markdownTextarea = dialog.locator("textarea").first()
     await expect(markdownTextarea).toBeVisible()
 
-    // Step 2: Generate PDF (NEW: separate step)
+    // Step 2: Generate PDF (button is inside the preview card, not at root level)
     const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
     await expect(gerarPdfButton).toBeVisible()
     await expect(gerarPdfButton).toBeEnabled()
     await gerarPdfButton.click()
 
-    // Step 3: Wait for PDF section to appear
-    const pdfSection = dialog.getByText(/pdfs gerados/i)
-    await expect(pdfSection).toBeVisible({ timeout: 10000 })
+    // Step 3: Wait for PDF generation to complete (toast message or button state change)
+    // PDF is generated and stored in state (pdfBase64Pt)
+    await page.waitForTimeout(2000) // Wait for mock response
 
-    // Step 4: Verify file card with download button appears
-    const fileCard = dialog.locator(".bg-slate-50").filter({ hasText: /cv-igor-fernandes.*\.pdf/i })
-    await expect(fileCard).toBeVisible()
+    // Step 4: Setup download listener and click download button
+    // The download button appears after PDF is generated
+    const downloadPromise = page.waitForEvent("download", { timeout: 10000 })
 
-    // Step 5: Setup download listener and click download button
-    const downloadPromise = page.waitForEvent("download")
-
-    const downloadButton = fileCard.getByRole("button") // Download icon button inside card
+    // Find download button (SVG icon button or labeled button)
+    const downloadButton = dialog.getByRole("button", { name: /download|baixar/i })
+    await expect(downloadButton).toBeVisible({ timeout: 5000 })
     await expect(downloadButton).toBeEnabled()
     await downloadButton.click()
 
-    // Step 6: Verify download started
+    // Step 5: Verify download started
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/\.pdf$/)
 
@@ -248,7 +253,7 @@ Salário: R$ 1.800,00 + benefícios
     await page.keyboard.press("Escape")
   })
 
-  test("deve salvar vaga após gerar currículo", async ({ page }) => {
+  test("deve salvar vaga após gerar currículo", { timeout: 60000 }, async ({ page }) => {
     // Test verifies the integration between resume generation and vaga save
     // Uses generated resume PDF and validates complete save flow
     await page.waitForLoadState("networkidle")

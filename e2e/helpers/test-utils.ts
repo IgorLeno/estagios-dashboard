@@ -139,14 +139,25 @@ export async function getTableRowCount(page: Page): Promise<number> {
  * Aguarda que o indicador de carregamento desapareça
  */
 export async function waitForDataLoad(page: Page) {
-  // Primeiro, verificar se o loading apareceu (pode aparecer muito rápido)
-  // Se não aparecer em 1s, assumir que já carregou
-  const loadingIndicator = page.getByText(/carregando/i)
+  // Aguardar um pouco para garantir que o loading apareceu (se vai aparecer)
+  await page.waitForTimeout(500)
+
+  // Verificar se o loading está visível
+  const loadingIndicator = page.getByText(/carregando/i).first()
   const isLoadingVisible = await loadingIndicator.isVisible().catch(() => false)
 
   if (isLoadingVisible) {
-    // Se o loading está visível, aguardar que desapareça
-    await expect(loadingIndicator).not.toBeVisible({ timeout: 10000 })
+    // Se o loading está visível, aguardar que desapareça OU que a tabela apareça
+    // Usa Promise.race para não ficar preso se o loading não desaparecer
+    try {
+      await Promise.race([
+        expect(loadingIndicator).not.toBeVisible({ timeout: 10000 }),
+        page.locator("table tbody tr").first().waitFor({ state: "visible", timeout: 10000 }),
+      ])
+    } catch (error) {
+      // Se ambos falharem, apenas continue (o teste de visibilidade da vaga vai falhar se necessário)
+      console.warn("[waitForDataLoad] Loading indicator didn't disappear or table didn't appear, continuing anyway")
+    }
   } else {
     // Se não está visível, aguardar um pouco para garantir que a rede estabilizou
     await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {
@@ -163,13 +174,24 @@ export async function waitForVagaInTable(page: Page, empresaName: string) {
   // Aguardar que o loading desapareça primeiro
   await waitForDataLoad(page)
 
-  // Aguardar que a empresa apareça como célula na tabela (mais específico que getByText)
-  // Usar locator de célula da tabela para garantir que está visível na viewport
-  const tableCell = page.locator("table tbody td").filter({ hasText: empresaName }).first()
-  await expect(tableCell).toBeVisible({ timeout: 15000 })
+  // Aguardar que a tabela esteja visível
+  await expect(page.locator("table")).toBeVisible({ timeout: 10000 })
 
-  // Scroll para garantir que o elemento está na viewport
-  await tableCell.scrollIntoViewIfNeeded()
+  // Aguardar que a empresa apareça na tabela
+  // Usar getByText é mais robusto que filtrar células
+  const vagaText = page.getByText(empresaName, { exact: false })
+
+  try {
+    await expect(vagaText).toBeVisible({ timeout: 20000 })
+    // Scroll para garantir que o elemento está na viewport
+    await vagaText.scrollIntoViewIfNeeded()
+  } catch (error) {
+    // Debug: mostrar conteúdo atual da tabela se falhar
+    console.error(`[waitForVagaInTable] Failed to find vaga: ${empresaName}`)
+    const tableCells = await page.locator("table tbody td").allTextContents()
+    console.error("[waitForVagaInTable] Current table contents:", tableCells.slice(0, 20))
+    throw error
+  }
 }
 
 /**

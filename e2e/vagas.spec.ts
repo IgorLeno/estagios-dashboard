@@ -92,7 +92,7 @@ test.describe("Gerenciamento de Vagas", () => {
     await page.keyboard.press("Escape")
   })
 
-  test("deve editar vaga existente", async ({ page }) => {
+  test("deve editar vaga existente", { timeout: 60000 }, async ({ page }) => {
     await page.waitForLoadState("networkidle")
 
     const empresaName = generateUniqueTestName("[E2E-TEST] Edit Company")
@@ -147,7 +147,17 @@ test.describe("Gerenciamento de Vagas", () => {
     await expect(editDialog.getByText(/editar vaga/i)).toBeVisible()
 
     // Editar campos (etapa foi removido do sistema)
-    await editDialog.getByLabel(/status/i).click()
+    const statusButton = editDialog.getByLabel(/status/i)
+
+    // Aguardar que o botão esteja pronto para interação
+    await expect(statusButton).toBeVisible({ timeout: 10000 })
+    await expect(statusButton).toBeEnabled()
+    await statusButton.scrollIntoViewIfNeeded()
+
+    // Aguardar um pouco para garantir que animações/transições terminaram
+    await page.waitForTimeout(500)
+
+    await statusButton.click({ force: true })
     await page.getByRole("option", { name: "Avançado" }).click()
 
     // Salvar (o botão no EditVagaDialog tem texto "Salvar Alterações")

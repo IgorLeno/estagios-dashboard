@@ -174,7 +174,7 @@ test.describe("Navegação do Dashboard", () => {
     await expect(loadingText).not.toBeVisible({ timeout: 15000 })
 
     // Verificar que a tabela OU mensagem de "nenhuma vaga encontrada" aparece
-    const tableOrEmpty = page.locator("table, text=/nenhuma vaga encontrada/i")
+    const tableOrEmpty = page.locator("table").or(page.getByText(/nenhuma vaga encontrada/i))
     await expect(tableOrEmpty).toBeVisible({ timeout: 10000 })
 
     // Verificar que pelo menos uma requisição foi interceptada
