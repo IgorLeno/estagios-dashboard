@@ -13,7 +13,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     modalidade: "Híbrido",
     status: "Pendente",
     etapa: "Pendente",
-    requisitos: 85,
+    requisitos: 4.5, // ✅ Atualizado para escala 0-5 (era 85 na escala 0-100)
     observacoes: "Vaga de teste E2E - Google",
     data_inscricao: new Date().toISOString().split("T")[0],
     is_test_data: true, // ✅ Always mark test data
@@ -25,7 +25,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     modalidade: "Remoto",
     status: "Avançado",
     etapa: "Entrevista Técnica",
-    requisitos: 75,
+    requisitos: 4.0, // ✅ Atualizado para escala 0-5 (era 75 na escala 0-100)
     observacoes: "Vaga de teste E2E - Meta",
     data_inscricao: new Date().toISOString().split("T")[0],
     is_test_data: true, // ✅ Always mark test data
@@ -37,7 +37,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     modalidade: "Presencial",
     status: "Contratado",
     etapa: "Oferta",
-    requisitos: 90,
+    requisitos: 4.5, // ✅ Atualizado para escala 0-5 (era 90 na escala 0-100)
     observacoes: "Vaga de teste E2E - Amazon",
     data_inscricao: new Date().toISOString().split("T")[0],
     is_test_data: true, // ✅ Always mark test data
@@ -49,7 +49,7 @@ const SAMPLE_VAGAS: Partial<VagaEstagio>[] = [
     modalidade: "Híbrido",
     status: "Melou",
     etapa: "Rejeitado",
-    requisitos: 70,
+    requisitos: 3.5, // ✅ Atualizado para escala 0-5 (era 70 na escala 0-100)
     observacoes: "Vaga de teste E2E - Microsoft",
     data_inscricao: new Date().toISOString().split("T")[0],
     is_test_data: true, // ✅ Always mark test data

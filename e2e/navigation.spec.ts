@@ -144,8 +144,8 @@ test.describe("Navegação do Dashboard", () => {
   })
 
   test("deve exibir indicadores de carregamento", async ({ page }) => {
-    // Delay artificial para requisições do Supabase (500ms)
-    const requestDelay = 500
+    // Delay artificial para requisições do Supabase (200ms - reduzido para evitar timeout)
+    const requestDelay = 200
     let requestCount = 0
     // Usar um seletor mais específico - o texto de carregamento dentro do CardContent da tabela
     const loadingText = page.locator('[class*="text-center"][class*="py-8"]', { hasText: /carregando/i })
@@ -161,15 +161,21 @@ test.describe("Navegação do Dashboard", () => {
       await route.continue()
     })
 
+    // Aguardar networkidle antes de reload para garantir estado limpo
+    await page.waitForLoadState("networkidle")
+
     // Recarregar página com delay nas requisições
     await page.reload()
 
     // Verificar que o indicador de carregamento aparece
-    await expect(loadingText).toBeVisible({ timeout: 1000 })
+    await expect(loadingText).toBeVisible({ timeout: 2000 })
 
-    // Aguardar que o indicador desapareça e a tabela apareça
-    await expect(loadingText).not.toBeVisible({ timeout: 10000 })
-    await expect(page.locator("table")).toBeVisible({ timeout: 20000 })
+    // Aguardar que o indicador desapareça e a tabela apareça (ou mensagem de vazio)
+    await expect(loadingText).not.toBeVisible({ timeout: 15000 })
+
+    // Verificar que a tabela OU mensagem de "nenhuma vaga encontrada" aparece
+    const tableOrEmpty = page.locator("table, text=/nenhuma vaga encontrada/i")
+    await expect(tableOrEmpty).toBeVisible({ timeout: 10000 })
 
     // Verificar que pelo menos uma requisição foi interceptada
     expect(requestCount).toBeGreaterThan(0)

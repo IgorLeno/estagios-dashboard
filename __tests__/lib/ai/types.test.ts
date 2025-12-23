@@ -30,15 +30,29 @@ describe("JobDetailsSchema", () => {
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it("should reject empty string for empresa", () => {
-    const invalid = { ...validJob, empresa: "" }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+  it("should accept empty string for empresa with fallback", () => {
+    const jobWithEmptyEmpresa = { ...validJob, empresa: "" }
+    const result = JobDetailsSchema.parse(jobWithEmptyEmpresa)
+    expect(result.empresa).toBe("Empresa Confidencial")
   })
 
-  it("should reject undefined empresa field", () => {
+  it("should accept undefined empresa field with fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { empresa, ...invalid } = validJob
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+    const { empresa, ...jobWithoutEmpresa } = validJob
+    const result = JobDetailsSchema.parse(jobWithoutEmpresa)
+    expect(result.empresa).toBe("Empresa Confidencial")
+  })
+
+  it("should preserve valid empresa value", () => {
+    const jobWithValidEmpresa = { ...validJob, empresa: "SGS Brasil" }
+    const result = JobDetailsSchema.parse(jobWithValidEmpresa)
+    expect(result.empresa).toBe("SGS Brasil")
+  })
+
+  it("should trim whitespace and apply fallback if empty after trim", () => {
+    const jobWithWhitespace = { ...validJob, empresa: "   " }
+    const result = JobDetailsSchema.parse(jobWithWhitespace)
+    expect(result.empresa).toBe("Empresa Confidencial")
   })
 
   it("should accept null salario", () => {
@@ -176,17 +190,16 @@ describe("JobDetailsSchema", () => {
     }
   })
 
-  it("should provide specific validation error message for invalid campo", () => {
-    const invalid = { ...validJob, empresa: "" }
+  it("should provide specific validation error message for invalid enum value", () => {
+    const invalid = { ...validJob, modalidade: "InvalidMode" }
     try {
       JobDetailsSchema.parse(invalid)
       expect.fail("Should have thrown")
     } catch (error: unknown) {
       if (error && typeof error === "object" && "issues" in error) {
         const zodError = error as { issues: Array<{ path: string[]; message: string }> }
-        const empresaError = zodError.issues.find((issue) => issue.path.includes("empresa"))
-        expect(empresaError).toBeDefined()
-        expect(empresaError?.message).toContain("obrigatória")
+        const modalidadeError = zodError.issues.find((issue) => issue.path.includes("modalidade"))
+        expect(modalidadeError).toBeDefined()
       }
     }
   })

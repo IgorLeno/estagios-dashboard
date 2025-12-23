@@ -87,12 +87,12 @@ Salário: R$ 1.800,00 + benefícios
   test("deve gerar currículo personalizado com sucesso", async ({ page }) => {
     const dialog = await setupJobAnalysis(page)
 
-    // 1. Verify "Gerar Preview" button is visible and enabled (jobAnalysisData exists)
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    // 1. Verify "Gerar PT" button is visible and enabled (jobAnalysisData exists)
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await expect(generateButton).toBeVisible()
     await expect(generateButton).toBeEnabled()
 
-    // 2. Click "Gerar Preview"
+    // 2. Click "Gerar PT"
     await generateButton.click()
 
     // 3. With mocks, response is instant - verify preview appears
@@ -123,7 +123,7 @@ Salário: R$ 1.800,00 + benefícios
     const dialog = await setupJobAnalysis(page)
 
     // 1. Generate preview first (fluxo completo)
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
@@ -135,8 +135,8 @@ Salário: R$ 1.800,00 + benefícios
     await expect(markdownTextarea).toBeVisible()
     await expect(markdownTextarea).not.toHaveValue("")
 
-    // 2. Click "Regenerar" (clears preview, no confirmation dialog in current implementation)
-    const regenerarButton = dialog.getByRole("button", { name: /regenerar/i })
+    // 2. Click "Regenerar PT" (clears preview, no confirmation dialog in current implementation)
+    const regenerarButton = dialog.getByRole("button", { name: /regenerar pt/i })
     await expect(regenerarButton).toBeEnabled()
     await regenerarButton.click()
 
@@ -144,7 +144,7 @@ Salário: R$ 1.800,00 + benefícios
     await expect(previewAlert).not.toBeVisible()
     await expect(markdownTextarea).not.toBeVisible()
 
-    // 4. Verify "Gerar Preview" button is visible again
+    // 4. Verify "Gerar PT" button is visible again
     await expect(generateButton).toBeVisible()
     await expect(generateButton).toBeEnabled()
 
@@ -155,7 +155,7 @@ Salário: R$ 1.800,00 + benefícios
     const dialog = await setupJobAnalysis(page)
 
     // Step 1: Generate preview (Markdown)
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly
@@ -218,8 +218,8 @@ Salário: R$ 1.800,00 + benefícios
     await curriculoTab.click()
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
-    // 1. Click "Gerar Preview"
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    // 1. Click "Gerar PT"
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await expect(generateButton).toBeEnabled()
     await generateButton.click()
 
@@ -233,7 +233,7 @@ Salário: R$ 1.800,00 + benefícios
     const markdownTextarea = dialog.locator("textarea")
     await expect(markdownTextarea).not.toBeVisible()
 
-    // 4. Verify "Gerar Preview" button is still visible (allows retry)
+    // 4. Verify "Gerar PT" button is still visible (allows retry)
     await expect(generateButton).toBeVisible()
     await expect(generateButton).toBeEnabled()
 
@@ -278,7 +278,7 @@ Salário: R$ 1.800,00 + benefícios
     await expect(curriculoTab).toHaveAttribute("data-state", "active")
 
     // 1. Generate preview (fluxo atualizado)
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await generateButton.click()
 
     // With mocks, preview appears instantly (NEW: "Preview Gerado" alert)
@@ -328,8 +328,8 @@ Salário: R$ 1.800,00 + benefícios
     const warningAlert = dialog.getByText(/análise da vaga necessária/i)
     await expect(warningAlert).toBeVisible()
 
-    // Verify "Gerar Preview" button is DISABLED (no jobAnalysisData) - validates Batch 0 fix
-    const generateButton = dialog.getByRole("button", { name: /^gerar preview$/i })
+    // Verify "Gerar PT" button is DISABLED (no jobAnalysisData) - validates Batch 0 fix
+    const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await expect(generateButton).toBeDisabled()
 
     await page.keyboard.press("Escape")

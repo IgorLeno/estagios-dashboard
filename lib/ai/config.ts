@@ -148,8 +148,12 @@ export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
 /**
  * @deprecated Use createAIModel() instead
  * Kept for backward compatibility
+ * @throws Error if OPENROUTER_API_KEY not configured
  */
 export function createGeminiClient() {
+  // Validate API key before creating client
+  validateGrokConfig()
+
   // Return a mock object for compatibility
   return {
     getGenerativeModel: (config: any) => {

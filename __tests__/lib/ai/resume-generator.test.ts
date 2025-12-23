@@ -165,6 +165,39 @@ vi.mock("@/lib/ai/resume-prompts", () => ({
   buildProjectsPrompt: vi.fn(() => "Projects prompt"),
 }))
 
+// Mock skills bank (NEW: to avoid Supabase server-side cookies error in tests)
+vi.mock("@/lib/ai/skills-bank", () => ({
+  loadUserSkillsBank: vi.fn(async () => [
+    { skill: "Python", category: "Linguagens de Programação", level: "Avançado", context: "Desenvolvimento de ML" },
+    { skill: "TensorFlow", category: "Machine Learning", level: "Intermediário", context: "Modelos preditivos" },
+    { skill: "Docker", category: "DevOps", level: "Básico", context: "Containerização" },
+  ]),
+}))
+
+// Mock ATS functions (to avoid require() errors in ats-scorer.ts)
+vi.mock("@/lib/ai/ats-scorer", () => ({
+  calculateATSScore: vi.fn(() => ({
+    score: 85,
+    matches: { technical_terms: 12, required_skills: 5, action_verbs: 3, certifications: 1, exact_phrases: 2, acronyms: 4 },
+    keywords: {
+      technical_terms: ["Python", "TensorFlow", "Machine Learning"],
+      required_skills: ["Python", "Machine Learning", "TensorFlow"],
+      action_verbs: ["desenvolver", "analisar", "implementar"],
+      certifications: [],
+      exact_phrases: ["modelos de ML", "pipelines de dados"],
+      acronyms: ["ML"],
+    },
+  })),
+}))
+
+// Mock job context detector (pure functions, but need to be consistent with implementation)
+vi.mock("@/lib/ai/job-context-detector", async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+  }
+})
+
 describe("generateTailoredResume", () => {
   beforeEach(() => {
     vi.clearAllMocks()
