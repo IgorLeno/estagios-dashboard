@@ -13,6 +13,7 @@
 **Arquivo:** `components/skills-bank-manager.tsx`
 
 **Mudanças:**
+
 1. ✅ Importado `SkillsImportDialog` component
 2. ✅ Adicionado estado `importDialogOpen`
 3. ✅ Botão "Importar do Perfil (IA)" com ícone Sparkles
@@ -20,6 +21,7 @@
 5. ✅ Layout melhorado: 2 botões lado-a-lado (Importar IA / Adicionar Manual)
 
 **Interface Atualizada:**
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ 🔷 Banco de Skills                              │
@@ -66,6 +68,7 @@ PROJETOS DE PESQUISA
    - Apresentação no Congresso de Iniciação Científica
 
 CERTIFICAÇÕES
+
 - Deep Learning Specialization (Coursera, 2024)
 - Power BI Impressionador (Hashtag Treinamentos, 2023)
 - SQL Impressionador (Hashtag Treinamentos, 2023)
@@ -75,6 +78,7 @@ EXPERIÊNCIA LABORATORIAL
 Disciplinas experimentais: Química Analítica, Físico-Química, Química Orgânica
 
 Atividades:
+
 - Preparação de soluções e reagentes
 - Titulação e análises volumétricas
 - Síntese química e caracterização
@@ -83,6 +87,7 @@ Atividades:
 - Descarte de resíduos conforme normas
 
 COMPETÊNCIAS TÉCNICAS
+
 - Python (Pandas, NumPy, Scikit-learn, TensorFlow): Avançado
 - SQL: Intermediário
 - R: Básico
@@ -94,6 +99,7 @@ COMPETÊNCIAS TÉCNICAS
 - Git/GitHub: Intermediário
 
 SOFT SKILLS
+
 - Resolução de problemas
 - Aprendizado autodidata
 - Trabalho em equipe
@@ -239,23 +245,23 @@ SOFT SKILLS
 
 ### **Skills Extraídas: 28 skills**
 
-| Categoria | Count | Skills |
-|-----------|-------|--------|
-| **Programming & Data** | 5 | Python, SQL, R, VBA, Git/GitHub |
-| **Engineering Tools** | 5 | GAMESS, CREST, MOPAC, OpenBabel, Aspen Plus |
-| **Visualization & BI** | 2 | Excel Avançado, Power BI |
-| **Soft Skills** | 8 | Resolução de problemas, Aprendizado autodidata, Gestão de projetos, Trabalho em equipe, Atenção aos detalhes, Comunicação técnica, Preparação de soluções, Controle de qualidade |
+| Categoria              | Count | Skills                                                                                                                                                                           |
+| ---------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Programming & Data** | 5     | Python, SQL, R, VBA, Git/GitHub                                                                                                                                                  |
+| **Engineering Tools**  | 5     | GAMESS, CREST, MOPAC, OpenBabel, Aspen Plus                                                                                                                                      |
+| **Visualization & BI** | 2     | Excel Avançado, Power BI                                                                                                                                                         |
+| **Soft Skills**        | 8     | Resolução de problemas, Aprendizado autodidata, Gestão de projetos, Trabalho em equipe, Atenção aos detalhes, Comunicação técnica, Preparação de soluções, Controle de qualidade |
 
 ### ✅ **Validação de Qualidade**
 
-| Critério | Status | Observação |
-|----------|--------|------------|
-| Mínimo 5 skills | ✅ PASS | 28 skills extraídas |
-| Categorização correta | ✅ PASS | Todas em categorias adequadas |
-| Proficiências realistas | ✅ PASS | Python=Avançado, GAMESS=Intermediário |
+| Critério                   | Status  | Observação                                    |
+| -------------------------- | ------- | --------------------------------------------- |
+| Mínimo 5 skills            | ✅ PASS | 28 skills extraídas                           |
+| Categorização correta      | ✅ PASS | Todas em categorias adequadas                 |
+| Proficiências realistas    | ✅ PASS | Python=Avançado, GAMESS=Intermediário         |
 | Skills críticas capturadas | ✅ PASS | Python, GAMESS, CREST, Preparação de soluções |
-| Sem duplicatas | ✅ PASS | Todas únicas |
-| Descrições significativas | ✅ PASS | Todas >10 chars, contextualizadas |
+| Sem duplicatas             | ✅ PASS | Todas únicas                                  |
+| Descrições significativas  | ✅ PASS | Todas >10 chars, contextualizadas             |
 
 ---
 
@@ -360,6 +366,7 @@ elaboração de relatórios técnicos e controles de estoque.
 ```
 
 **Reframing:** ✅ MESMO projeto Grimperium, mas com foco em:
+
 - "controle de qualidade" (não "pipeline automatizado")
 - "rastreabilidade" (não "automação de ML")
 - "boas práticas laboratoriais" (não "feature engineering")
@@ -460,6 +467,7 @@ reais de engenharia química.
 ```
 
 **Reframing:** ✅ MESMO projeto, mas com foco em:
+
 - "pipeline automatizado" (não "controle de qualidade")
 - "ETL" (não "rastreabilidade")
 - "integração de APIs" (não "boas práticas laboratoriais")
@@ -473,12 +481,12 @@ reais de engenharia química.
 
 ### **Perfil Profissional**
 
-| Aspecto | SGS (Lab) | Data Science |
-|---------|-----------|--------------|
-| **Foco inicial** | "química analítica, laboratório" | "Data Science, Machine Learning" |
-| **Keywords principais** | ISO 17025, soluções, reagentes | Python, Pandas, pipelines |
-| **Ferramentas** | Pacote Office | Python, SQL, Scikit-learn |
-| **Experiência destacada** | Disciplinas experimentais | Projeto Grimperium (GitHub) |
+| Aspecto                   | SGS (Lab)                        | Data Science                     |
+| ------------------------- | -------------------------------- | -------------------------------- |
+| **Foco inicial**          | "química analítica, laboratório" | "Data Science, Machine Learning" |
+| **Keywords principais**   | ISO 17025, soluções, reagentes   | Python, Pandas, pipelines        |
+| **Ferramentas**           | Pacote Office                    | Python, SQL, Scikit-learn        |
+| **Experiência destacada** | Disciplinas experimentais        | Projeto Grimperium (GitHub)      |
 
 ✅ **Currículos SÃO DIFERENTES** - Perfis completamente adaptados
 
@@ -486,12 +494,12 @@ reais de engenharia química.
 
 ### **Competências**
 
-| Categoria | SGS (Lab) | Data Science |
-|-----------|-----------|--------------|
-| **Categoria 1** | Química Analítica & Laboratório | Programação & Data Engineering |
-| **Categoria 2** | Gestão de Qualidade & Normas | Machine Learning |
-| **Skills em destaque** | Preparação de soluções, ISO 17025 | Python, Pandas, SQL, ML |
-| **Ordem** | Lab skills primeiro | Python/ML primeiro |
+| Categoria              | SGS (Lab)                         | Data Science                   |
+| ---------------------- | --------------------------------- | ------------------------------ |
+| **Categoria 1**        | Química Analítica & Laboratório   | Programação & Data Engineering |
+| **Categoria 2**        | Gestão de Qualidade & Normas      | Machine Learning               |
+| **Skills em destaque** | Preparação de soluções, ISO 17025 | Python, Pandas, SQL, ML        |
+| **Ordem**              | Lab skills primeiro               | Python/ML primeiro             |
 
 ✅ **Reordenação FUNCIONA** - Skills mais relevantes aparecem primeiro
 
@@ -499,13 +507,13 @@ reais de engenharia química.
 
 ### **Projeto Grimperium**
 
-| Elemento | SGS (Lab) | Data Science |
-|----------|-----------|--------------|
-| **Título** | IGUAL: "Pipeline... para ML" | IGUAL: "Pipeline... para ML" |
-| **Ênfase** | Controle de qualidade, rastreabilidade | ETL, automação, ML |
-| **Verbos** | "validação", "organização", "documentação" | "desenvolvimento", "implementação", "processamento" |
-| **Tecnologias mencionadas** | Não menciona Python, foco em métodos | Python, Pandas, APIs, Git |
-| **Contexto** | "ambiente de pesquisa química" | "Machine Learning, processamento de dados" |
+| Elemento                    | SGS (Lab)                                  | Data Science                                        |
+| --------------------------- | ------------------------------------------ | --------------------------------------------------- |
+| **Título**                  | IGUAL: "Pipeline... para ML"               | IGUAL: "Pipeline... para ML"                        |
+| **Ênfase**                  | Controle de qualidade, rastreabilidade     | ETL, automação, ML                                  |
+| **Verbos**                  | "validação", "organização", "documentação" | "desenvolvimento", "implementação", "processamento" |
+| **Tecnologias mencionadas** | Não menciona Python, foco em métodos       | Python, Pandas, APIs, Git                           |
+| **Contexto**                | "ambiente de pesquisa química"             | "Machine Learning, processamento de dados"          |
 
 ✅ **Reframing FUNCIONA** - Mesmo projeto, ângulos completamente diferentes
 
@@ -513,10 +521,10 @@ reais de engenharia química.
 
 ### **ATS Scores**
 
-| Vaga | Score | Motivo |
-|------|-------|--------|
-| **SGS (Lab)** | 88% | Match exato com ISO 17025 (6x na vaga), preparação de soluções |
-| **Data Science** | 92% | Match com Python, Pandas, NumPy, SQL, ML, ETL, GitHub |
+| Vaga             | Score | Motivo                                                         |
+| ---------------- | ----- | -------------------------------------------------------------- |
+| **SGS (Lab)**    | 88%   | Match exato com ISO 17025 (6x na vaga), preparação de soluções |
+| **Data Science** | 92%   | Match com Python, Pandas, NumPy, SQL, ML, ETL, GitHub          |
 
 ✅ **Ambos ≥80%** - Excelente otimização ATS
 
@@ -536,19 +544,20 @@ O sistema **JÁ FAZ REFRAMING** através de:
 
 ### 📋 **Evidências de Sucesso**
 
-| Funcionalidade | Status | Evidência |
-|----------------|--------|-----------|
-| ✅ Extração de Skills | IMPLEMENTADO | 5 arquivos criados, UI integrada |
-| ✅ Reframing de Perfil | IMPLEMENTADO | `buildSummaryPrompt()` com keywords |
+| Funcionalidade           | Status       | Evidência                                |
+| ------------------------ | ------------ | ---------------------------------------- |
+| ✅ Extração de Skills    | IMPLEMENTADO | 5 arquivos criados, UI integrada         |
+| ✅ Reframing de Perfil   | IMPLEMENTADO | `buildSummaryPrompt()` com keywords      |
 | ✅ Reordenação de Skills | IMPLEMENTADO | `buildSkillsPrompt()` + bank integration |
 | ✅ Reframing de Projetos | IMPLEMENTADO | `buildProjectsPrompt()` com domain-aware |
-| ✅ ATS Scoring | IMPLEMENTADO | `ats-scorer.ts` com 6 tipos de keywords |
+| ✅ ATS Scoring           | IMPLEMENTADO | `ats-scorer.ts` com 6 tipos de keywords  |
 
 ### 🚀 **Próximas Ações**
 
 #### **Imediatas (Teste Real):**
 
 1. **Executar extração real:**
+
    ```bash
    pnpm dev
    # Navegar para Configurações > Banco de Skills
@@ -558,6 +567,7 @@ O sistema **JÁ FAZ REFRAMING** através de:
    ```
 
 2. **Gerar currículos reais:**
+
    ```bash
    # Criar vaga SGS no dashboard
    # Gerar currículo PT
@@ -621,6 +631,7 @@ O sistema **JÁ FAZ REFRAMING** através de:
 ### 🧪 **Próximo Passo: Teste Real**
 
 Execute com dossiê real e valide se:
+
 1. Skills extraídas fazem sentido
 2. Proficiências realistas
 3. Currículos realmente diferem

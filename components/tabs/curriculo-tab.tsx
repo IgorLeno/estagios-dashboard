@@ -314,8 +314,8 @@ export function CurriculoTab({
         language === "both"
           ? "2 previews gerados e salvos com sucesso!"
           : language === "pt"
-          ? "Preview PT gerado e salvo com sucesso!"
-          : "Preview EN gerado e salvo com sucesso!"
+            ? "Preview PT gerado e salvo com sucesso!"
+            : "Preview EN gerado e salvo com sucesso!"
       toast.success(message)
 
       // Notificar parent sobre markdown gerado (usar variáveis locais, não estado!)
@@ -559,10 +559,10 @@ export function CurriculoTab({
               {markdownPreviewPt && markdownPreviewEn
                 ? "Regenerar Ambos"
                 : markdownPreviewPt
-                ? "Regenerar PT e Gerar EN"
-                : markdownPreviewEn
-                ? "Gerar PT e Regenerar EN"
-                : "Gerar Ambos"}
+                  ? "Regenerar PT e Gerar EN"
+                  : markdownPreviewEn
+                    ? "Gerar PT e Regenerar EN"
+                    : "Gerar Ambos"}
             </>
           )}
         </Button>

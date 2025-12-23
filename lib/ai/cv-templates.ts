@@ -65,10 +65,7 @@ export const CV_TEMPLATE_PT: CVTemplate = {
     },
     {
       category: "Visualização & BI",
-      items: [
-        "Power BI (dashboards, KPI tracking)",
-        "Excel Avançado (Tabelas Dinâmicas, Macros, Power Query)",
-      ],
+      items: ["Power BI (dashboards, KPI tracking)", "Excel Avançado (Tabelas Dinâmicas, Macros, Power Query)"],
     },
     {
       category: "Soft Skills",
@@ -166,10 +163,7 @@ export const CV_TEMPLATE_EN: CVTemplate = {
     },
     {
       category: "Visualization & BI",
-      items: [
-        "Power BI (dashboards, KPI tracking)",
-        "Advanced Excel (Pivot Tables, Macros, Power Query)",
-      ],
+      items: ["Power BI (dashboards, KPI tracking)", "Advanced Excel (Pivot Tables, Macros, Power Query)"],
     },
     {
       category: "Soft Skills",

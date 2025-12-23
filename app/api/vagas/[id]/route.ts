@@ -9,10 +9,7 @@ import { createClient } from "@/lib/supabase/server"
  * Request body: Partial VagaEstagio object
  * Response: { success: boolean, error?: string }
  */
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createClient()
     const body = await request.json()
@@ -70,10 +67,7 @@ export async function PATCH(
  *
  * Response: { success: boolean, data?: VagaEstagio, error?: string }
  */
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createClient()
     const { id } = await context.params

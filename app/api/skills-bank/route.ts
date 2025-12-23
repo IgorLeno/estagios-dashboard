@@ -10,12 +10,7 @@ const AddSkillSchema = z.object({
   proficiency: z.enum(["Básico", "Intermediário", "Avançado"], {
     errorMap: () => ({ message: "Invalid proficiency level" }),
   }),
-  category: z.enum([
-    "Linguagens & Análise de Dados",
-    "Ferramentas de Engenharia",
-    "Visualização & BI",
-    "Soft Skills"
-  ], {
+  category: z.enum(["Linguagens & Análise de Dados", "Ferramentas de Engenharia", "Visualização & BI", "Soft Skills"], {
     errorMap: () => ({ message: "Invalid category" }),
   }),
 })
@@ -103,17 +98,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log(
-      `[Skills Bank API] ✅ Added skill: ${validated.skill} (${validated.proficiency}) for user ${user.id}`
-    )
+    console.log(`[Skills Bank API] ✅ Added skill: ${validated.skill} (${validated.proficiency}) for user ${user.id}`)
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid input", details: error.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 })
     }
 
     console.error("[Skills Bank API] Unexpected error:", error)
@@ -145,11 +135,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete skill (RLS ensures user can only delete their own)
-    const { error } = await supabase
-      .from("user_skills_bank")
-      .delete()
-      .eq("id", skillId)
-      .eq("user_id", user.id)
+    const { error } = await supabase.from("user_skills_bank").delete().eq("id", skillId).eq("user_id", user.id)
 
     if (error) {
       console.error("[Skills Bank API] Error deleting skill:", error)

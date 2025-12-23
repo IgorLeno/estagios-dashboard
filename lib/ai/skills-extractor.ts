@@ -167,7 +167,9 @@ export function validateExtractedSkills(skills: ExtractedSkills): void {
   const totalSkills = allCategories.reduce((sum, cat) => sum + skills[cat].length, 0)
 
   if (totalSkills < 5) {
-    throw new Error(`Extracted only ${totalSkills} skills (minimum 5 expected). Profile may be too short or lack detail.`)
+    throw new Error(
+      `Extracted only ${totalSkills} skills (minimum 5 expected). Profile may be too short or lack detail.`
+    )
   }
 
   console.log(`[Skills Extractor] ✅ Validation passed (${totalSkills} skills)`)

@@ -66,6 +66,7 @@ O componente `MarkdownPreview` **já tinha todos os estilos corretos**:
 - ✅ `overflow-x-hidden` (esconde overflow horizontal)
 
 **Mas** o **container pai** (Card) estava impedindo esses estilos de funcionarem porque:
+
 - Card expandia além da largura disponível
 - MarkdownPreview tentava quebrar, mas o Card não deixava
 
@@ -92,6 +93,7 @@ O componente `MarkdownPreview` **já tinha todos os estilos corretos**:
 ```
 
 **Efeito:**
+
 - Permite que o Card **encolha abaixo do tamanho do seu conteúdo**
 - Força o Grid a **respeitar a largura disponível** (2/3 das 3 colunas)
 - O MarkdownPreview interno agora consegue **quebrar linhas corretamente**
@@ -123,13 +125,13 @@ O componente `MarkdownPreview` **já tinha todos os estilos corretos**:
 
 ## 📊 Comparação: Listagem vs. Página Individual
 
-| Aspecto | Página Individual (✅) | Listagem (❌→✅) |
-|---------|------------------------|------------------|
-| Container pai | Card normal | TableCell + Grid |
-| Layout | Sem grid | Grid 3 colunas |
-| Largura do card | Largura natural | `lg:col-span-2` (2/3 do grid) |
-| min-width | Não afeta | **Crítico** - precisa `min-w-0` |
-| Funciona? | ✅ Sempre | ✅ Após fix |
+| Aspecto         | Página Individual (✅) | Listagem (❌→✅)                |
+| --------------- | ---------------------- | ------------------------------- |
+| Container pai   | Card normal            | TableCell + Grid                |
+| Layout          | Sem grid               | Grid 3 colunas                  |
+| Largura do card | Largura natural        | `lg:col-span-2` (2/3 do grid)   |
+| min-width       | Não afeta              | **Crítico** - precisa `min-w-0` |
+| Funciona?       | ✅ Sempre              | ✅ Após fix                     |
 
 ---
 
@@ -146,11 +148,11 @@ O componente `MarkdownPreview` **já tinha todos os estilos corretos**:
 
 ### Manual (Responsivo)
 
-| Viewport | Largura | Grid Behavior | Esperado |
-|----------|---------|---------------|----------|
-| Mobile | 375px | 1 coluna (stacked) | Card 100% largura, texto quebra |
-| Tablet | 768px | 3 colunas | Card 2/3 largura, texto quebra |
-| Desktop | 1920px | 3 colunas | Card 2/3 largura, texto quebra |
+| Viewport | Largura | Grid Behavior      | Esperado                        |
+| -------- | ------- | ------------------ | ------------------------------- |
+| Mobile   | 375px   | 1 coluna (stacked) | Card 100% largura, texto quebra |
+| Tablet   | 768px   | 3 colunas          | Card 2/3 largura, texto quebra  |
+| Desktop  | 1920px  | 3 colunas          | Card 2/3 largura, texto quebra  |
 
 ### Lint/Build
 

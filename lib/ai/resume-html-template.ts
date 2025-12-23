@@ -19,7 +19,7 @@ function escapeHtml(value: string): string {
  */
 export function generateResumeHTML(cv: CVTemplate): string {
   return `<!DOCTYPE html>
-<html lang="${cv.language === 'pt' ? 'pt-BR' : 'en'}">
+<html lang="${cv.language === "pt" ? "pt-BR" : "en"}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -208,7 +208,8 @@ export function generateResumeHTML(cv: CVTemplate): string {
       <ul>
         ${cv.skills
           .map(
-            (skillGroup) => `<li><strong>${escapeHtml(skillGroup.category)}:</strong> ${skillGroup.items.map(escapeHtml).join(", ")}</li>`
+            (skillGroup) =>
+              `<li><strong>${escapeHtml(skillGroup.category)}:</strong> ${skillGroup.items.map(escapeHtml).join(", ")}</li>`
           )
           .join("\n        ")}
       </ul>

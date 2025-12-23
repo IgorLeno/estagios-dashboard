@@ -20,13 +20,13 @@ User Profile Text (Dossiê/CV)
 
 ## 📂 Files Created
 
-| File | Purpose |
-|------|---------|
-| `lib/ai/skills-extractor-prompt.ts` | LLM system prompt for skill extraction |
-| `lib/ai/skills-extractor.ts` | Core extraction logic + validation |
-| `lib/ai/skills-bank-seeder.ts` | Database seeding (replace/merge modes) |
-| `app/api/skills/extract-from-profile/route.ts` | API endpoint (POST/GET) |
-| `components/skills-import-dialog.tsx` | UI dialog component |
+| File                                           | Purpose                                |
+| ---------------------------------------------- | -------------------------------------- |
+| `lib/ai/skills-extractor-prompt.ts`            | LLM system prompt for skill extraction |
+| `lib/ai/skills-extractor.ts`                   | Core extraction logic + validation     |
+| `lib/ai/skills-bank-seeder.ts`                 | Database seeding (replace/merge modes) |
+| `app/api/skills/extract-from-profile/route.ts` | API endpoint (POST/GET)                |
+| `components/skills-import-dialog.tsx`          | UI dialog component                    |
 
 ## 🧪 Manual Testing
 
@@ -37,6 +37,7 @@ curl http://localhost:3000/api/skills/extract-from-profile
 ```
 
 **Expected Output:**
+
 ```json
 {
   "status": "ok",
@@ -52,11 +53,13 @@ curl http://localhost:3000/api/skills/extract-from-profile
 ### Test 2: Extract Skills (Short Profile)
 
 **Input Profile:**
+
 ```
 Engenheiro Químico pela UNESP, desenvolvi o projeto Grimperium em Python com Pandas e CREST para automação de dados moleculares. Na iniciação científica, usei GAMESS para cálculos quânticos. Tenho certificação em Deep Learning e Power BI. Experiência em laboratório com preparação de soluções e titulações.
 ```
 
 **API Request:**
+
 ```bash
 curl -X POST http://localhost:3000/api/skills/extract-from-profile \
   -H "Content-Type: application/json" \
@@ -69,14 +72,15 @@ curl -X POST http://localhost:3000/api/skills/extract-from-profile \
 
 **Expected Skills Extracted:**
 
-| Category | Expected Skills |
-|----------|----------------|
-| **Programming & Data** | Python (Pandas), Deep Learning |
-| **Engineering Tools** | CREST, GAMESS |
-| **Visualization & BI** | Power BI |
-| **Soft Skills** | Resolução de problemas, Gestão de projetos |
+| Category               | Expected Skills                            |
+| ---------------------- | ------------------------------------------ |
+| **Programming & Data** | Python (Pandas), Deep Learning             |
+| **Engineering Tools**  | CREST, GAMESS                              |
+| **Visualization & BI** | Power BI                                   |
+| **Soft Skills**        | Resolução de problemas, Gestão de projetos |
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -102,6 +106,7 @@ curl -X POST http://localhost:3000/api/skills/extract-from-profile \
 ### Test 3: Full Dossiê (Igor's Complete Profile)
 
 **Input Profile:**
+
 ```
 PERFIL PROFISSIONAL
 
@@ -173,6 +178,7 @@ SOFT SKILLS
 **Expected Skills Count:** 25-35 skills
 
 **Expected Categories Breakdown:**
+
 - Programming & Data: 8-12 skills
 - Engineering Tools: 6-8 skills
 - Visualization & BI: 3-4 skills
@@ -220,6 +226,7 @@ GROUP BY category;
 ```
 
 **Expected Categories in DB:**
+
 - Linguagens & Análise de Dados
 - Ferramentas de Engenharia
 - Visualização & BI
@@ -229,30 +236,35 @@ GROUP BY category;
 
 ## 📊 Performance Benchmarks
 
-| Profile Length | Expected Duration | Token Usage |
-|----------------|------------------|-------------|
-| 200-500 chars | 3-5s | ~800 tokens |
-| 500-1000 chars | 5-8s | ~1200 tokens |
-| 1000-2000 chars | 8-15s | ~2000 tokens |
-| Full dossiê (2000+ chars) | 10-20s | ~2500 tokens |
+| Profile Length            | Expected Duration | Token Usage  |
+| ------------------------- | ----------------- | ------------ |
+| 200-500 chars             | 3-5s              | ~800 tokens  |
+| 500-1000 chars            | 5-8s              | ~1200 tokens |
+| 1000-2000 chars           | 8-15s             | ~2000 tokens |
+| Full dossiê (2000+ chars) | 10-20s            | ~2500 tokens |
 
 ---
 
 ## 🐛 Troubleshooting
 
 ### Error: "Profile text too short"
+
 **Solution:** Provide at least 50 characters
 
 ### Error: "LLM response does not contain valid JSON"
+
 **Solution:** Check Grok API key, verify API is accessible
 
 ### Error: "Extracted only X skills (minimum 5 expected)"
+
 **Solution:** Provide more detailed profile text with explicit skills
 
 ### Error: "Duplicate skill names found in category"
+
 **Solution:** LLM bug - regenerate extraction
 
 ### Error: "Unauthorized"
+
 **Solution:** Ensure user is authenticated (valid session token)
 
 ---
@@ -270,6 +282,7 @@ const skillsBank = await loadUserSkillsBank(userId)
 ```
 
 **Benefits:**
+
 - No manual skill entry (1-click import)
 - Skills categorized automatically
 - Proficiency levels inferred from context

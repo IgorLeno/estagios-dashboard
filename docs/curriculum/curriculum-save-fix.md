@@ -8,6 +8,7 @@
 ## Problema Reportado
 
 **Fluxo atual:**
+
 1. ✅ Usuário clica em "Adicionar Estágio"
 2. ✅ Preenche dados da vaga
 3. ✅ Clica em "Realizar Análise" → Análise é gerada com sucesso
@@ -22,11 +23,13 @@
 **Componente principal:** `components/add-vaga-dialog.tsx`
 
 **Estados relevantes:**
+
 - Linha 55: `const [resumeContent, setResumeContent] = useState("")`
 - Linha 56: `const [resumePdfBase64, setResumePdfBase64] = useState<string | null>(null)`
 - Linha 57: `const [resumeFilename, setResumeFilename] = useState<string | null>(null)`
 
 **Tab de currículo:** `components/tabs/curriculo-tab.tsx`
+
 - Recebe `resumePdfBase64` e `resumeFilename` como props (valores)
 - **NÃO recebe** `setResumePdfBase64` nem `setResumeFilename` (setters)
 - Usa estados locais próprios:
@@ -74,6 +77,7 @@ const { data, error } = await supabase.from("vagas_estagio").insert(insertData).
 ```
 
 **Schema do banco:** `supabase-schema.sql:32`
+
 ```sql
 arquivo_cv_url TEXT -- URL do currículo PDF/DOCX
 ```
@@ -95,6 +99,7 @@ Campo existe no banco ✅
 **Página de detalhes:** `app/vaga/[id]/page.tsx`
 
 **Leitura do currículo:**
+
 - Linha 54-56: Verifica se `data?.arquivo_cv_url` existe
   ```typescript
   if (data?.arquivo_cv_url) {
@@ -145,17 +150,19 @@ Campo existe no banco ✅
 **Evidências:**
 
 1. **CurriculoTab não recebe setters do pai:**
+
    ```typescript
    // curriculo-tab.tsx:13-27
    interface CurriculoTabProps {
-     resumePdfBase64: string | null       // ✅ Recebe valor
-     resumeFilename: string | null        // ✅ Recebe valor
+     resumePdfBase64: string | null // ✅ Recebe valor
+     resumeFilename: string | null // ✅ Recebe valor
      // ❌ NÃO recebe setResumePdfBase64
      // ❌ NÃO recebe setResumeFilename
    }
    ```
 
 2. **AddVagaDialog não passa setters:**
+
    ```typescript
    // add-vaga-dialog.tsx:332-346
    <CurriculoTab
@@ -167,6 +174,7 @@ Campo existe no banco ✅
    ```
 
 3. **CurriculoTab usa estados locais:**
+
    ```typescript
    // curriculo-tab.tsx:46-47
    const [pdfBase64Pt, setPdfBase64Pt] = useState<string | null>(null)
@@ -378,6 +386,7 @@ if (result.success && result.data?.pdfBase64) {
 #### Teste Manual
 
 1. **Setup:**
+
    ```bash
    pnpm dev
    ```
@@ -402,12 +411,14 @@ if (result.success && result.data?.pdfBase64) {
    SELECT id, empresa, cargo, arquivo_cv_url FROM vagas_estagio
    ORDER BY created_at DESC LIMIT 5;
    ```
+
    - Campo `arquivo_cv_url` deve começar com `"data:application/pdf;base64,"`
    - Não deve ser `NULL`
 
 #### Teste de Regressão
 
 Verificar que o fluxo antigo (se ainda existir) não foi quebrado:
+
 - Se houver outro caminho para gerar currículo, testar também
 
 ---
@@ -421,16 +432,19 @@ Verificar que o fluxo antigo (se ainda existir) não foi quebrado:
 **Opções:**
 
 **A. Salvar apenas o último gerado** (implementação atual)
+
 - Simples
 - Compatível com schema atual
 - **Limitação:** Se gerar ambos, apenas o último (EN) é salvo
 
 **B. Salvar ambos em campos separados**
+
 - Requer migration: adicionar `arquivo_cv_url_pt` e `arquivo_cv_url_en`
 - Mais complexo
 - Permite preservar ambos os PDFs
 
 **C. Salvar um ZIP com ambos**
+
 - Requer lógica adicional para criar ZIP client-side
 - Complexo
 - Bom para preservar múltiplas versões
@@ -445,8 +459,8 @@ Atualizar `resetForm()` no `AddVagaDialog` para limpar os novos estados:
 // add-vaga-dialog.tsx:273-294
 function resetForm() {
   // ... código existente
-  setResumePdfBase64(null)  // ✅ Já existe
-  setResumeFilename(null)   // ✅ Já existe
+  setResumePdfBase64(null) // ✅ Já existe
+  setResumeFilename(null) // ✅ Já existe
   // Estados locais do CurriculoTab são resetados automaticamente ao fechar
 }
 ```
@@ -457,11 +471,11 @@ function resetForm() {
 
 ### Resumo das Mudanças
 
-| Batch | Arquivo | Mudança | Linhas |
-|-------|---------|---------|--------|
-| A | `add-vaga-dialog.tsx` | Adicionar callback `onPdfGenerated` ao passar props para `<CurriculoTab>` | ~332-346 |
-| B | `curriculo-tab.tsx` | Adicionar `onPdfGenerated?` na interface e desestruturar | ~13-27, ~29-38 |
-| C | `curriculo-tab.tsx` | Chamar `onPdfGenerated()` após gerar PDFs PT e EN | ~207, ~242 |
+| Batch | Arquivo               | Mudança                                                                   | Linhas         |
+| ----- | --------------------- | ------------------------------------------------------------------------- | -------------- |
+| A     | `add-vaga-dialog.tsx` | Adicionar callback `onPdfGenerated` ao passar props para `<CurriculoTab>` | ~332-346       |
+| B     | `curriculo-tab.tsx`   | Adicionar `onPdfGenerated?` na interface e desestruturar                  | ~13-27, ~29-38 |
+| C     | `curriculo-tab.tsx`   | Chamar `onPdfGenerated()` após gerar PDFs PT e EN                         | ~207, ~242     |
 
 **Total de arquivos modificados:** 2
 **Total de linhas modificadas:** ~15-20 linhas
@@ -490,11 +504,13 @@ function resetForm() {
 ### Resumo das Mudanças
 
 **Phase 3: Correção Básica (3 batches)**
+
 - ✅ Callback `onPdfGenerated` conecta estados do `CurriculoTab` ao `AddVagaDialog`
 - ✅ PDFs gerados agora propagam para o componente pai
 - ✅ `handleSaveVaga` recebe os PDFs corretamente
 
 **Phase 4: Suporte a Múltiplos PDFs (4 batches)**
+
 - ✅ Migration `003_add_separate_cv_fields.sql` criada
 - ✅ Novos campos: `arquivo_cv_url_pt`, `arquivo_cv_url_en`
 - ✅ Campo legacy `arquivo_cv_url` mantido para compatibilidade
@@ -503,13 +519,13 @@ function resetForm() {
 
 ### Arquivos Modificados
 
-| Arquivo | Mudanças | Linhas |
-|---------|----------|--------|
-| `components/add-vaga-dialog.tsx` | + Callback `onPdfGenerated`<br>+ Estados `resumePdfBase64Pt/En`<br>+ Detecção de idioma<br>+ Salvamento em campos separados<br>+ Limpeza de estados | ~30 |
-| `components/tabs/curriculo-tab.tsx` | + Interface `onPdfGenerated`<br>+ Chamadas de callback após gerar PDFs | ~15 |
-| `migrations/003_add_separate_cv_fields.sql` | + Novos campos no banco | 1 arquivo novo |
-| `lib/types.ts` | + Campos `arquivo_cv_url_pt/en` | ~3 |
-| `app/vaga/[id]/page.tsx` | + Detecção de múltiplos PDFs<br>+ Botões separados PT/EN<br>+ Exibição de ambos os arquivos | ~25 |
+| Arquivo                                     | Mudanças                                                                                                                                            | Linhas         |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `components/add-vaga-dialog.tsx`            | + Callback `onPdfGenerated`<br>+ Estados `resumePdfBase64Pt/En`<br>+ Detecção de idioma<br>+ Salvamento em campos separados<br>+ Limpeza de estados | ~30            |
+| `components/tabs/curriculo-tab.tsx`         | + Interface `onPdfGenerated`<br>+ Chamadas de callback após gerar PDFs                                                                              | ~15            |
+| `migrations/003_add_separate_cv_fields.sql` | + Novos campos no banco                                                                                                                             | 1 arquivo novo |
+| `lib/types.ts`                              | + Campos `arquivo_cv_url_pt/en`                                                                                                                     | ~3             |
+| `app/vaga/[id]/page.tsx`                    | + Detecção de múltiplos PDFs<br>+ Botões separados PT/EN<br>+ Exibição de ambos os arquivos                                                         | ~25            |
 
 **Total:** 5 arquivos modificados, 1 arquivo novo, ~73 linhas de código
 
@@ -531,6 +547,7 @@ psql postgresql://[connection-string]
 ```
 
 **Esperado:**
+
 - Colunas `arquivo_cv_url_pt` e `arquivo_cv_url_en` criadas
 - Tipo: `TEXT`
 - Nullable: `YES`
@@ -538,6 +555,7 @@ psql postgresql://[connection-string]
 ### 2. Teste Manual Completo
 
 **Cenário 1: Gerar PDF único (PT)**
+
 1. Adicionar vaga → Analisar → Ir para aba "Currículo"
 2. Selecionar "Português"
 3. Clicar "Gerar Preview"
@@ -550,6 +568,7 @@ psql postgresql://[connection-string]
 10. **Verificar:** Clicar e baixar funciona
 
 **Cenário 2: Gerar ambos (PT e EN)**
+
 1. Adicionar vaga → Analisar → Ir para aba "Currículo"
 2. Selecionar "Ambos"
 3. Clicar "Gerar Preview"
@@ -562,6 +581,7 @@ psql postgresql://[connection-string]
 10. **Verificar:** Ambos downloads funcionam
 
 **Cenário 3: Compatibilidade com vagas antigas**
+
 1. Acessar vaga criada ANTES da migration (sem `arquivo_cv_url_pt/en`)
 2. **Verificar:** Se houver `arquivo_cv_url`, botão "Baixar PDF" aparece normalmente
 3. **Verificar:** Não mostra "Nenhum currículo gerado"
@@ -585,12 +605,14 @@ LIMIT 5;
 ```
 
 **Esperado (após Cenário 1):**
+
 - `has_legacy`: `true` (fallback)
 - `has_pt`: `true`
 - `has_en`: `false`
 - `pt_size`: > 10000 (base64 string grande)
 
 **Esperado (após Cenário 2):**
+
 - `has_legacy`: `true` (último gerado = EN)
 - `has_pt`: `true`
 - `has_en`: `true`
@@ -608,6 +630,7 @@ LIMIT 5;
 ## 🎉 Resultado Esperado
 
 ### Antes (QUEBRADO)
+
 ```
 Gerar Preview → Gerar PDF → Salvar Vaga
 → arquivo_cv_url = NULL
@@ -615,6 +638,7 @@ Gerar Preview → Gerar PDF → Salvar Vaga
 ```
 
 ### Depois (CORRIGIDO)
+
 ```
 Gerar Preview (PT) → Gerar PDF → Salvar Vaga
 → arquivo_cv_url_pt = "data:application/pdf;base64,..." ✅

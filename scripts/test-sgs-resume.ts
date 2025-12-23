@@ -47,9 +47,9 @@ const sgsJobDetails: JobDetails = {
 }
 
 async function main() {
-  console.log("=" .repeat(80))
+  console.log("=".repeat(80))
   console.log("🧪 TESTING SGS LABORATORY JOB - CONTEXT DETECTION & TEMPLATE")
-  console.log("=" .repeat(80))
+  console.log("=".repeat(80))
   console.log("\n📋 Job Details:")
   console.log(`  Company: ${sgsJobDetails.empresa}`)
   console.log(`  Position: ${sgsJobDetails.cargo}`)
@@ -88,21 +88,17 @@ async function main() {
     // Run validation checks on base template and context detection
     const checks = {
       context_is_laboratory: jobContext === "laboratory",
-      template_has_lab_category: baseTemplate.skills.some(cat =>
-        cat.category.toLowerCase().includes("laboratório") ||
-        cat.category.toLowerCase().includes("química")
+      template_has_lab_category: baseTemplate.skills.some(
+        (cat) => cat.category.toLowerCase().includes("laboratório") || cat.category.toLowerCase().includes("química")
       ),
-      lab_category_is_first: baseTemplate.skills[0].category.toLowerCase().includes("laboratório") ||
-                             baseTemplate.skills[0].category.toLowerCase().includes("química"),
-      lab_skills_include_preparacao: baseTemplate.skills[0].items.some(item =>
+      lab_category_is_first:
+        baseTemplate.skills[0].category.toLowerCase().includes("laboratório") ||
+        baseTemplate.skills[0].category.toLowerCase().includes("química"),
+      lab_skills_include_preparacao: baseTemplate.skills[0].items.some((item) =>
         item.toLowerCase().includes("preparação")
       ),
-      lab_skills_include_titulacao: baseTemplate.skills[0].items.some(item =>
-        item.toLowerCase().includes("titula")
-      ),
-      python_not_in_first_category: !baseTemplate.skills[0].items.some(item =>
-        item.toLowerCase().includes("python")
-      ),
+      lab_skills_include_titulacao: baseTemplate.skills[0].items.some((item) => item.toLowerCase().includes("titula")),
+      python_not_in_first_category: !baseTemplate.skills[0].items.some((item) => item.toLowerCase().includes("python")),
     }
 
     console.log(`  ✅ Context detected as LABORATORY: ${checks.context_is_laboratory ? "✅ SIM" : "❌ NÃO"}`)
@@ -112,10 +108,12 @@ async function main() {
     console.log(`  ✅ Lab skills include "Titulação": ${checks.lab_skills_include_titulacao ? "✅ SIM" : "❌ NÃO"}`)
     console.log(`  ✅ Python NOT in 1st category: ${checks.python_not_in_first_category ? "✅ SIM" : "❌ NÃO"}`)
 
-    const passedChecks = Object.values(checks).filter(v => v).length
+    const passedChecks = Object.values(checks).filter((v) => v).length
     const totalChecks = Object.keys(checks).length
 
-    console.log(`\n📊 VALIDATION SCORE: ${passedChecks}/${totalChecks} checks passed (${Math.round(passedChecks/totalChecks*100)}%)`)
+    console.log(
+      `\n📊 VALIDATION SCORE: ${passedChecks}/${totalChecks} checks passed (${Math.round((passedChecks / totalChecks) * 100)}%)`
+    )
 
     if (passedChecks === totalChecks) {
       console.log("\n🎉 ALL BASE CHECKS PASSED! System infrastructure is correct! 🎉")
@@ -149,7 +147,6 @@ async function main() {
    6. Skills appear in order: Lab → Data → Engineering → BI → Soft Skills
     `)
     console.log("\n" + "=".repeat(80))
-
   } catch (error) {
     console.error("\n❌ ERROR:", error)
     if (error instanceof Error) {

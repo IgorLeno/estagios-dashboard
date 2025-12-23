@@ -1,4 +1,3 @@
-
 ---
 name: context-management
 description: Monitora uso de contexto em tarefas longas e propõe limpeza estratégica com checkpoints, preservando progresso em tarefas multi-etapa
@@ -51,6 +50,7 @@ Ao final de cada passo/batch, analise:
 ```
 
 **Indicadores de contexto baixo:**
+
 - Muitas leituras de arquivos grandes já realizadas
 - Múltiplos outputs de testes (especialmente E2E com logs extensos)
 - Diffs grandes de código já mostrados
@@ -58,6 +58,7 @@ Ao final de cada passo/batch, analise:
 - Contexto restante abaixo de 100k tokens (50% de 200k)
 
 **Fórmula de referência:**
+
 - Total disponível: 200,000 tokens
 - 50% = 100,000 tokens restantes
 - 40% = 80,000 tokens restantes
@@ -95,7 +96,7 @@ Execute **antes de limpar**:
 
 #### 2.1. Gerar arquivo de checkpoint
 
-```
+````
 cat > docs/sessions/checkpoint-$(date +%Y%m%d-%H%M%S).md << 'EOF'
 # Checkpoint de Contexto - [Nome da Tarefa]
 
@@ -120,13 +121,14 @@ cat > docs/sessions/checkpoint-$(date +%Y%m%d-%H%M%S).md << 'EOF'
 ```bash
 pnpm test -- [específico]
 pnpm test:e2e [específico]
-```
+````
 
 **Resultados dos testes:**
+
 - Unit: X/Y passando
 - E2E: X/Y passando
 
-***
+---
 
 ## 🎯 PRÓXIMOS PASSOS (Continuação)
 
@@ -136,10 +138,12 @@ pnpm test:e2e [específico]
 [Descrição clara do que precisa ser feito]
 
 **Arquivos a modificar:**
+
 - `arquivo3.ts`
 - `arquivo4.tsx`
 
 **Comandos a executar:**
+
 ```bash
 [comandos específicos]
 ```
@@ -147,20 +151,23 @@ pnpm test:e2e [específico]
 **Critério de sucesso:**
 [Como validar que esta etapa está completa]
 
-***
+---
 
 ## 🔍 CONTEXTO TÉCNICO IMPORTANTE
 
 **Dependências chave:**
+
 - [Listar bibliotecas/APIs relevantes]
 
 **Convenções do projeto:**
+
 - [Padrões de código, estrutura de pastas, etc.]
 
 **Armadilhas conhecidas:**
+
 - [Problemas já encontrados e como foram resolvidos]
 
-***
+---
 
 ## 📋 CHECKLIST DE RETOMADA
 
@@ -171,7 +178,7 @@ Ao retomar após `clear`:
 3. [ ] Rodar testes para confirmar estado atual
 4. [ ] Continuar na Etapa [N+1]
 
-***
+---
 
 **Comando para retomar:**
 
@@ -180,15 +187,18 @@ cat docs/sessions/checkpoint-[data].md
 git status
 pnpm test -- [últimos testes executados]
 ```
+
 EOF
+
 ```
 
 #### 2.2. Atualizar CLAUDE.md (contexto permanente)
 
 ```
+
 cat >> CLAUDE.md << 'EOF'
 
-***
+---
 
 ## 🔄 Checkpoint Ativo: [Nome da Tarefa]
 
@@ -196,25 +206,30 @@ cat >> CLAUDE.md << 'EOF'
 **Arquivo de checkpoint:** `docs/sessions/checkpoint-[timestamp].md`
 
 **Resumo executivo:**
+
 - [1-2 frases sobre o que está sendo feito]
 - Etapa atual: [N] de [Total]
 - Status: [X]% concluído
 - Contexto no checkpoint: [Y]% restante
 
 **Para retomar:**
+
 ```bash
 cat docs/sessions/checkpoint-[timestamp].md
 ```
 
 EOF
+
 ```
 
 #### 2.3. Informar o usuário
 
 ```
+
 ✅ Checkpoint criado com sucesso!
 
 📄 Arquivos gerados:
+
 - `docs/sessions/checkpoint-[timestamp].md` - Contexto completo da sessão
 - `CLAUDE.md` - Atualizado com referência ao checkpoint
 
@@ -228,13 +243,16 @@ Claude Code, retome a tarefa "[Nome da Tarefa]" a partir do checkpoint.
 
 Execute:
 ```
+
 cat docs/sessions/checkpoint-[timestamp].md
 git status
 pnpm test -- [últimos testes]
+
 ```
 
 Continue a partir da Etapa [N+1].
 ```
+
 ```
 
 ---
@@ -244,33 +262,42 @@ Continue a partir da Etapa [N+1].
 Quando o usuário enviar o prompt de retomada:
 
 1. Ler o checkpoint:
-   ```
-   cat docs/sessions/checkpoint-[timestamp].md
-   ```
+```
+
+cat docs/sessions/checkpoint-[timestamp].md
+
+```
 
 2. Verificar estado atual:
-   ```
-   git status
-   git diff --stat
-   ```
+```
+
+git status
+git diff --stat
+
+```
 
 3. Confirmar testes ainda passando:
-   ```
-   pnpm test -- [últimos cenários]
-   ```
+```
+
+pnpm test -- [últimos cenários]
+
+```
 
 4. Resumir para o usuário:
-   ```
-   ✅ Contexto restaurado!
+```
 
-   **Status recuperado:**
-   - Etapas 1-[N] concluídas ✅
-   - Próxima: Etapa [N+1] - [nome]
-   - Testes: [X unit, Y E2E] passando
-   - Contexto fresco: 100% disponível (200k tokens)
+✅ Contexto restaurado!
 
-   Continuando execução...
-   ```
+**Status recuperado:**
+
+- Etapas 1-[N] concluídas ✅
+- Próxima: Etapa [N+1] - [nome]
+- Testes: [X unit, Y E2E] passando
+- Contexto fresco: 100% disponível (200k tokens)
+
+Continuando execução...
+
+```
 
 5. Prosseguir com a próxima etapa do plano
 
@@ -291,11 +318,13 @@ Quando o usuário enviar o prompt de retomada:
 ## ✅ EXEMPLO DE USO
 
 ```
+
 ### Fim do Batch 2 (de 5)
 
 ✅ Batch 2 concluído: Resume Generator integrado com loadUserAIConfig
 
 ⚠️ ANÁLISE DE CONTEXTO
+
 - Tokens consumidos: 105,000 / 200,000 (52.5%)
 - Tokens restantes: 95,000 (47.5%)
 - Próximas etapas: Batch 3 (UI leve), Batch 4 (cleanup médio), Batch 5 (testes E2E pesados)
@@ -303,15 +332,18 @@ Quando o usuário enviar o prompt de retomada:
 💡 RECOMENDAÇÃO: Limpar contexto agora.
 
 Justificativa:
+
 - Contexto abaixo de 50% ✅
 - Batch 5 (testes E2E) gerará muito output ✅
 - Melhor criar checkpoint agora com progresso consolidado ✅
 
 Você deseja:
+
 1. Continuar com contexto atual (não recomendado)
 2. 🔄 Limpar contexto e gerar checkpoint (RECOMENDADO)
 
 Responda: 1 ou 2
+
 ```
 
 ---
@@ -319,18 +351,20 @@ Responda: 1 ou 2
 ## 📦 ESTRUTURA DE ARQUIVOS ESPERADA
 
 ```
+
 docs/
 ├── sessions/
-│   ├── checkpoint-20251207-093000.md
-│   ├── checkpoint-20251207-094500.md
-│   └── ...
+│ ├── checkpoint-20251207-093000.md
+│ ├── checkpoint-20251207-094500.md
+│ └── ...
 ├── ia/
-│   └── ia-settings-refactor.md
+│ └── ia-settings-refactor.md
 ├── testing/
-│   └── TEST_STATUS.md
+│ └── TEST_STATUS.md
 └── ...
 
 CLAUDE.md (raiz do projeto)
+
 ```
 
 ---

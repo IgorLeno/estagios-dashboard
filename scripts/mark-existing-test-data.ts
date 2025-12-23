@@ -82,10 +82,7 @@ async function markExistingTestData() {
       const batch = vagasToUpdate.slice(i, i + batchSize)
       const ids = batch.map((v) => v.id)
 
-      const { error: updateError } = await supabase
-        .from("vagas_estagio")
-        .update({ is_test_data: true })
-        .in("id", ids)
+      const { error: updateError } = await supabase.from("vagas_estagio").update({ is_test_data: true }).in("id", ids)
 
       if (updateError) {
         throw new Error(`Failed to update batch: ${updateError.message}`)

@@ -172,9 +172,7 @@ export function buildSkillsPrompt(
   const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
 
   // Build allowed skills bank items (with proficiency indicators)
-  const bankSkillItems = skillsBank.map((s) =>
-    s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`
-  )
+  const bankSkillItems = skillsBank.map((s) => (s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`))
 
   // Combined allowed skills
   const allAllowedSkills = [...cvSkillItems, ...bankSkillItems]
@@ -546,9 +544,7 @@ function isTechnicalTerm(word: string): boolean {
     "erp",
     "crm",
   ]
-  const hasKnownKeyword = technicalKeywords.some((keyword) =>
-    word.toLowerCase().includes(keyword)
-  )
+  const hasKnownKeyword = technicalKeywords.some((keyword) => word.toLowerCase().includes(keyword))
 
   return hasTechnicalPattern || hasKnownKeyword
 }
@@ -629,8 +625,7 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
   exact_phrases.push(...quotedMatches.map((m) => m.replace(/"/g, "").trim()))
 
   // Extract Title Case phrases (potential tool/product names)
-  const titleCaseMatches =
-    allText.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g) || []
+  const titleCaseMatches = allText.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g) || []
   exact_phrases.push(...titleCaseMatches)
 
   // Add known multi-word tools/technologies
@@ -676,10 +671,6 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
 function extractTopKeywords(jobDetails: JobDetails, limit: number): string[] {
   const atsKeywords = extractATSKeywords(jobDetails)
   // Combine all keywords for backward compatibility
-  const allKeywords = [
-    ...atsKeywords.technical_terms,
-    ...atsKeywords.required_skills,
-    ...atsKeywords.acronyms,
-  ]
+  const allKeywords = [...atsKeywords.technical_terms, ...atsKeywords.required_skills, ...atsKeywords.acronyms]
   return Array.from(new Set(allKeywords)).slice(0, limit)
 }

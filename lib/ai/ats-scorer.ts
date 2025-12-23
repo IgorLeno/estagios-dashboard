@@ -40,11 +40,7 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
  * @param atsKeywords - Pre-extracted ATS keywords (optional, will extract if not provided)
  * @returns ATS score from 0 to 100
  */
-export function calculateATSScore(
-  cv: CVTemplate,
-  jobDetails: JobDetails,
-  atsKeywords?: ATSKeywords
-): number {
+export function calculateATSScore(cv: CVTemplate, jobDetails: JobDetails, atsKeywords?: ATSKeywords): number {
   // Extract keywords if not provided
   let keywords = atsKeywords
   if (!keywords) {
@@ -62,42 +58,32 @@ export function calculateATSScore(
   const maxPoints = 100
 
   // 1. Required Skills Match (40 points max)
-  const requiredSkillsMatched = keywords.required_skills.filter((skill) =>
-    cvText.includes(skill.toLowerCase())
-  ).length
+  const requiredSkillsMatched = keywords.required_skills.filter((skill) => cvText.includes(skill.toLowerCase())).length
 
   const requiredSkillsScore = Math.min(requiredSkillsMatched * 8, 40)
   totalPoints += requiredSkillsScore
 
   // 2. Technical Terms Match (25 points max)
-  const technicalMatched = keywords.technical_terms.filter((term) =>
-    cvText.includes(term.toLowerCase())
-  ).length
+  const technicalMatched = keywords.technical_terms.filter((term) => cvText.includes(term.toLowerCase())).length
 
   const technicalScore = Math.min(technicalMatched * 3, 25)
   totalPoints += technicalScore
 
   // 3. Action Verbs Match (15 points max)
-  const verbsMatched = keywords.action_verbs.filter((verb) =>
-    cvText.includes(verb.toLowerCase())
-  ).length
+  const verbsMatched = keywords.action_verbs.filter((verb) => cvText.includes(verb.toLowerCase())).length
 
   const verbsScore = Math.min(verbsMatched * 3, 15)
   totalPoints += verbsScore
 
   // 4. Exact Phrases Match (10 points max)
-  const phrasesMatched = keywords.exact_phrases.filter((phrase) =>
-    cvText.includes(phrase.toLowerCase())
-  ).length
+  const phrasesMatched = keywords.exact_phrases.filter((phrase) => cvText.includes(phrase.toLowerCase())).length
 
   const phrasesScore = Math.min(phrasesMatched * 5, 10)
   totalPoints += phrasesScore
 
   // 5. Acronyms Match (10 points max)
   // Case-sensitive matching for acronyms
-  const acronymsMatched = keywords.acronyms.filter((acronym) =>
-    cvTextOriginal.includes(acronym)
-  ).length
+  const acronymsMatched = keywords.acronyms.filter((acronym) => cvTextOriginal.includes(acronym)).length
 
   const acronymsScore = Math.min(acronymsMatched * 2, 10)
   totalPoints += acronymsScore
@@ -110,13 +96,9 @@ export function calculateATSScore(
   console.log(
     `  - Required skills: ${requiredSkillsMatched}/${keywords.required_skills.length} (${requiredSkillsScore} pts)`
   )
-  console.log(
-    `  - Technical terms: ${technicalMatched}/${keywords.technical_terms.length} (${technicalScore} pts)`
-  )
+  console.log(`  - Technical terms: ${technicalMatched}/${keywords.technical_terms.length} (${technicalScore} pts)`)
   console.log(`  - Action verbs: ${verbsMatched}/${keywords.action_verbs.length} (${verbsScore} pts)`)
-  console.log(
-    `  - Exact phrases: ${phrasesMatched}/${keywords.exact_phrases.length} (${phrasesScore} pts)`
-  )
+  console.log(`  - Exact phrases: ${phrasesMatched}/${keywords.exact_phrases.length} (${phrasesScore} pts)`)
   console.log(`  - Acronyms: ${acronymsMatched}/${keywords.acronyms.length} (${acronymsScore} pts)`)
 
   return score
@@ -193,21 +175,11 @@ export function getATSScoreBreakdown(
   const cvText = JSON.stringify(cv).toLowerCase()
   const cvTextOriginal = JSON.stringify(cv)
 
-  const requiredSkillsMatched = keywords.required_skills.filter((skill) =>
-    cvText.includes(skill.toLowerCase())
-  ).length
-  const technicalMatched = keywords.technical_terms.filter((term) =>
-    cvText.includes(term.toLowerCase())
-  ).length
-  const verbsMatched = keywords.action_verbs.filter((verb) =>
-    cvText.includes(verb.toLowerCase())
-  ).length
-  const phrasesMatched = keywords.exact_phrases.filter((phrase) =>
-    cvText.includes(phrase.toLowerCase())
-  ).length
-  const acronymsMatched = keywords.acronyms.filter((acronym) =>
-    cvTextOriginal.includes(acronym)
-  ).length
+  const requiredSkillsMatched = keywords.required_skills.filter((skill) => cvText.includes(skill.toLowerCase())).length
+  const technicalMatched = keywords.technical_terms.filter((term) => cvText.includes(term.toLowerCase())).length
+  const verbsMatched = keywords.action_verbs.filter((verb) => cvText.includes(verb.toLowerCase())).length
+  const phrasesMatched = keywords.exact_phrases.filter((phrase) => cvText.includes(phrase.toLowerCase())).length
+  const acronymsMatched = keywords.acronyms.filter((acronym) => cvTextOriginal.includes(acronym)).length
 
   const score = calculateATSScore(cv, jobDetails, keywords)
   const interpretation = getATSScoreInterpretation(score)

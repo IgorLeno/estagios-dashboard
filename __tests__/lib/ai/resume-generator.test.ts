@@ -178,7 +178,14 @@ vi.mock("@/lib/ai/skills-bank", () => ({
 vi.mock("@/lib/ai/ats-scorer", () => ({
   calculateATSScore: vi.fn(() => ({
     score: 85,
-    matches: { technical_terms: 12, required_skills: 5, action_verbs: 3, certifications: 1, exact_phrases: 2, acronyms: 4 },
+    matches: {
+      technical_terms: 12,
+      required_skills: 5,
+      action_verbs: 3,
+      certifications: 1,
+      exact_phrases: 2,
+      acronyms: 4,
+    },
     keywords: {
       technical_terms: ["Python", "TensorFlow", "Machine Learning"],
       required_skills: ["Python", "Machine Learning", "TensorFlow"],

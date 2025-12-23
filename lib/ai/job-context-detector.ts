@@ -172,20 +172,17 @@ export function detectJobContext(jobDetails: JobDetails): JobContext {
     const matches = keywords.filter((keyword: string) => allText.includes(keyword.toLowerCase()))
     scores[context] = matches.length * config.weight
 
-    console.log(
-      `[Job Context Detector] ${context}: ${scores[context].toFixed(1)} (${matches.length} matches)`
-    )
+    console.log(`[Job Context Detector] ${context}: ${scores[context].toFixed(1)} (${matches.length} matches)`)
   }
 
   // Find context with highest score
-  const detectedContext = Object.entries(scores).reduce((max, [context, score]) =>
-    score > max.score ? { context, score } : max
-  , { context: "general", score: 0 })
+  const detectedContext = Object.entries(scores).reduce(
+    (max, [context, score]) => (score > max.score ? { context, score } : max),
+    { context: "general", score: 0 }
+  )
 
   // Return detected context (fallback to "general" if no matches)
-  const finalContext = (detectedContext.score > 0
-    ? detectedContext.context
-    : "general") as JobContext
+  const finalContext = (detectedContext.score > 0 ? detectedContext.context : "general") as JobContext
 
   console.log(`[Job Context Detector] ✅ Detected context: ${finalContext}`)
 

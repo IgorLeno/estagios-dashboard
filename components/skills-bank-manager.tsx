@@ -27,9 +27,9 @@ interface Skill {
  * Proficiency levels with colors
  */
 const PROFICIENCY_COLORS = {
-  "Básico": "bg-blue-100 text-blue-800 border-blue-300",
-  "Intermediário": "bg-purple-100 text-purple-800 border-purple-300",
-  "Avançado": "bg-green-100 text-green-800 border-green-300",
+  Básico: "bg-blue-100 text-blue-800 border-blue-300",
+  Intermediário: "bg-purple-100 text-purple-800 border-purple-300",
+  Avançado: "bg-green-100 text-green-800 border-green-300",
 } as const
 
 /**
@@ -57,7 +57,7 @@ export function SkillsBankManager() {
   // Form state
   const [newSkill, setNewSkill] = useState("")
   const [newProficiency, setNewProficiency] = useState<"Básico" | "Intermediário" | "Avançado">("Intermediário")
-  const [newCategory, setNewCategory] = useState<typeof CATEGORIES[number]>("Linguagens & Análise de Dados")
+  const [newCategory, setNewCategory] = useState<(typeof CATEGORIES)[number]>("Linguagens & Análise de Dados")
 
   const supabase = createClient()
 
@@ -151,13 +151,16 @@ export function SkillsBankManager() {
   }
 
   // Group skills by category
-  const skillsByCategory = skills.reduce((acc, skill) => {
-    if (!acc[skill.category]) {
-      acc[skill.category] = []
-    }
-    acc[skill.category].push(skill)
-    return acc
-  }, {} as Record<string, Skill[]>)
+  const skillsByCategory = skills.reduce(
+    (acc, skill) => {
+      if (!acc[skill.category]) {
+        acc[skill.category] = []
+      }
+      acc[skill.category].push(skill)
+      return acc
+    },
+    {} as Record<string, Skill[]>
+  )
 
   if (loading) {
     return (
@@ -200,10 +203,7 @@ export function SkillsBankManager() {
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border"
                   >
                     <span className="text-sm font-medium text-foreground">{skill.skill}</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${PROFICIENCY_COLORS[skill.proficiency]}`}
-                    >
+                    <Badge variant="outline" className={`text-xs ${PROFICIENCY_COLORS[skill.proficiency]}`}>
                       {skill.proficiency}
                     </Badge>
                     <button
@@ -245,13 +245,7 @@ export function SkillsBankManager() {
           <form onSubmit={handleAddSkill} className="p-4 bg-muted/50 rounded-lg border border-border space-y-4">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-semibold text-foreground text-sm">Adicionar Nova Skill</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAddForm(false)}
-                disabled={adding}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={() => setShowAddForm(false)} disabled={adding}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -271,7 +265,11 @@ export function SkillsBankManager() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="skill-category">Categoria</Label>
-                <Select value={newCategory} onValueChange={(val) => setNewCategory(val as typeof CATEGORIES[number])} disabled={adding}>
+                <Select
+                  value={newCategory}
+                  onValueChange={(val) => setNewCategory(val as (typeof CATEGORIES)[number])}
+                  disabled={adding}
+                >
                   <SelectTrigger id="skill-category" className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -287,7 +285,11 @@ export function SkillsBankManager() {
 
               <div className="space-y-2">
                 <Label htmlFor="skill-proficiency">Proficiência</Label>
-                <Select value={newProficiency} onValueChange={(val) => setNewProficiency(val as typeof PROFICIENCY_LEVELS[number])} disabled={adding}>
+                <Select
+                  value={newProficiency}
+                  onValueChange={(val) => setNewProficiency(val as (typeof PROFICIENCY_LEVELS)[number])}
+                  disabled={adding}
+                >
                   <SelectTrigger id="skill-proficiency" className="bg-background">
                     <SelectValue />
                   </SelectTrigger>

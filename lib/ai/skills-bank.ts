@@ -147,11 +147,7 @@ export async function removeSkillFromBank(
       return { success: false, error: "User not authenticated" }
     }
 
-    const { error } = await supabase
-      .from("user_skills_bank")
-      .delete()
-      .eq("id", skillId)
-      .eq("user_id", effectiveUserId) // Ensure user can only delete their own skills
+    const { error } = await supabase.from("user_skills_bank").delete().eq("id", skillId).eq("user_id", effectiveUserId) // Ensure user can only delete their own skills
 
     if (error) {
       return { success: false, error: error.message }
