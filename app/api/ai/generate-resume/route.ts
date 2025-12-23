@@ -115,6 +115,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Generate filename
         const filename = generateResumeFilename(jobDetails.empresa, language)
 
+        // ✅ SAVE markdown to database if vagaId is provided (PARTIAL UPDATE)
+        if (vagaId) {
+          const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+          const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+          const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
+
+          // ✅ PARTIAL UPDATE: Only update the requested language field
+          const updateData = {
+            [markdownField]: resumeResult.cv,
+            [pdfField]: pdfDataUrl,
+          }
+
+          const { data: updateResult, error: updateError } = await supabase
+            .from("vagas_estagio")
+            .update(updateData)
+            .eq("id", vagaId)
+            .select()
+
+          if (updateError) {
+            console.error(`[Resume API] Failed to save resume to database:`, updateError)
+            throw new Error(`Failed to save resume: ${updateError.message}`)
+          }
+
+          if (!updateResult || updateResult.length === 0) {
+            throw new Error("Failed to save resume: vaga not found")
+          }
+
+          console.log(`[Resume API] ✅ Resume saved to database (${language.toUpperCase()})`)
+        }
+
         const totalDuration = Date.now() - startTime
 
         // Return success response
