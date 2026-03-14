@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Star, Activity, LogOut, LogIn } from "lucide-react"
+import { LayoutDashboard, BarChart3, Settings2, LogOut, LogIn, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -14,11 +14,10 @@ interface SidebarProps {
   onTabChange: (tab: string) => void
 }
 
-// Following reference design (2816023.jpg)
 const menuItems = [
-  { id: "vagas", label: "Estágios", icon: Briefcase },
-  { id: "resumo", label: "Resumo", icon: Star },
-  { id: "configuracoes", label: "Configurações", icon: Activity },
+  { id: "vagas", label: "Estágios", icon: LayoutDashboard },
+  { id: "resumo", label: "Resumo", icon: BarChart3 },
+  { id: "configuracoes", label: "Configurações", icon: Settings2 },
 ]
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -65,23 +64,28 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col py-6 z-50 border-r border-sidebar-border shadow-xl">
-      {/* Logo/Brand */}
-      <div className="px-6 mb-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-          <span className="text-white text-xl font-bold">E</span>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-50 border-r border-sidebar-border">
+      <div className="absolute inset-0 mesh-bg pointer-events-none" />
+
+      <div className="relative px-5 pt-6 pb-4 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 glow-primary">
+          <Briefcase className="w-4 h-4 text-white" />
         </div>
-        <span className="text-sidebar-primary text-sm font-semibold">Dashboard Estágios</span>
+        <div>
+          <span className="text-sidebar-primary text-sm font-bold tracking-tight block">Estágios</span>
+          <span className="text-sidebar-foreground/50 text-xs">Dashboard</span>
+        </div>
       </div>
 
-      {/* Menu Label */}
-      <div className="px-6 mb-4">
-        <p className="text-sidebar-foreground/60 text-xs uppercase tracking-wide font-medium">Menu</p>
-        <div className="mt-2 h-px bg-sidebar-border/50" />
+      <div className="relative px-5 mb-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
       </div>
 
-      {/* Menu Items */}
-      <nav className="flex-1 flex flex-col px-3 gap-1">
+      <div className="relative px-5 mb-3 mt-3">
+        <p className="text-sidebar-foreground/40 text-xs uppercase tracking-widest font-semibold">Navegação</p>
+      </div>
+
+      <nav className="relative flex-1 flex flex-col px-3 gap-0.5">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
@@ -91,42 +95,52 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               onClick={() => onTabChange(item.id)}
               data-testid={`sidebar-${item.id}`}
               className={cn(
-                "w-full h-12 rounded-lg flex items-center gap-3 px-3 transition-all duration-200",
-                "hover:bg-sidebar-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent",
+                "w-full h-10 rounded-lg flex items-center gap-3 px-3 transition-all duration-200 group relative",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                 isActive
-                  ? "bg-sidebar-accent/10 text-sidebar-accent border-l-4 border-sidebar-accent shadow-md"
-                  : "text-sidebar-foreground border-l-4 border-transparent"
+                  ? "bg-sidebar-accent/15 text-sidebar-accent"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-border/40"
               )}
             >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-sidebar-accent rounded-full" />
+              )}
               <Icon
-                className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")}
+                className={cn(
+                  "w-4 h-4 flex-shrink-0 transition-transform duration-200",
+                  isActive ? "text-sidebar-accent scale-110" : "group-hover:scale-105"
+                )}
               />
-              <span className={cn("text-sm font-medium", isActive ? "text-sidebar-accent" : "text-sidebar-foreground")}>
-                {item.label}
-              </span>
+              <span className={cn("text-sm font-medium", isActive && "font-semibold")}>{item.label}</span>
+              {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-accent opacity-80" />}
             </button>
           )
         })}
       </nav>
 
-      {/* Auth section at bottom */}
-      <div className="px-3 mt-auto pt-4 border-t border-sidebar-border/50">
+      <div className="relative px-5 mb-3">
+        <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
+      </div>
+
+      <div className="relative px-3 pb-5">
         {loading ? (
-          <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Carregando...</div>
+          <div className="px-3 py-2 text-xs text-sidebar-foreground/40 animate-pulse">Carregando...</div>
         ) : user ? (
-          <div className="space-y-2">
-            <div className="px-3 py-1">
-              <p className="text-xs text-sidebar-foreground/60">Logado como</p>
-              <p className="text-sm text-sidebar-foreground font-medium truncate">{user.email}</p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-border/30">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">{user.email?.[0]?.toUpperCase() ?? "U"}</span>
+              </div>
+              <p className="text-xs text-sidebar-foreground/70 font-medium truncate flex-1">{user.email}</p>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-primary/10 hover:text-sidebar-accent"
+              className="w-full justify-start gap-2 text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 h-9"
             >
-              <LogOut className="h-4 w-4" />
-              Sair
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="text-sm">Sair</span>
             </Button>
           </div>
         ) : (
@@ -134,10 +148,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={handleLogin}
-            className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-primary/10 hover:text-sidebar-accent"
+            className="w-full justify-start gap-2 text-sidebar-foreground/50 hover:text-sidebar-accent hover:bg-sidebar-accent/10 h-9"
           >
-            <LogIn className="h-4 w-4" />
-            Fazer Login
+            <LogIn className="h-3.5 w-3.5" />
+            <span className="text-sm">Fazer Login</span>
           </Button>
         )}
       </div>

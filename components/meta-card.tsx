@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Target, Check } from "lucide-react"
-import { cn, getMetaProgressColor, getMetaTextColor, getMetaCompletionEffects, toSafeNumber } from "@/lib/utils"
+import { cn, getMetaTextColor, toSafeNumber } from "@/lib/utils"
 
 interface MetaCardProps {
   meta: number
@@ -30,85 +30,78 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
   }
 
   return (
-    <Card className="glass-card-intense hover-lift">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Target className="h-6 w-6 text-primary" />
+    <Card className="glass-card-intense hover-lift overflow-hidden">
+      <div className="h-0.5 w-full bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50" />
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/20 flex items-center justify-center">
+              <Target className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">Meta do Dia</h3>
+              <p className="text-xs text-muted-foreground">Candidaturas planejadas</p>
+            </div>
           </div>
-          <span className="text-foreground">Meta do Dia</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <label {...(isEditing && { htmlFor: "meta-input" })} className="text-sm text-muted-foreground mb-2 block">
-              Meta:
-            </label>
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  id="meta-input"
-                  type="number"
-                  value={tempMeta}
-                  onChange={(e) => setTempMeta(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSave()
-                    } else if (e.key === "Escape") {
-                      setIsEditing(false)
-                    }
-                  }}
-                  className="w-24 h-9 bg-input border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-                  min="0"
-                  autoFocus
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSave}
-                  aria-label="Salvar meta"
-                  className="h-9 bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <p
-                className="text-2xl font-bold cursor-pointer text-foreground hover:text-primary transition-all hover:scale-105 active:scale-95"
-                onClick={() => {
-                  setIsEditing(true)
-                  setTempMeta(meta.toString())
-                }}
-              >
-                {meta} inscrições
-              </p>
-            )}
-          </div>
-
           <div className="text-right">
-            <p className="text-sm text-muted-foreground mb-2">Candidaturas de Hoje:</p>
-            <p className="text-5xl font-bold tabular-nums text-primary transition-all duration-500 hover:scale-110">
-              {candidaturas}
-            </p>
+            <p className="text-xs text-muted-foreground mb-0.5">Realizadas hoje</p>
+            <p className="text-4xl font-black gradient-text tabular-nums leading-none">{candidaturas}</p>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-foreground">Progresso</span>
-            <span
-              className={cn("font-semibold tabular-nums transition-colors duration-300", getMetaTextColor(progress))}
+        <div className="mb-4">
+          <label {...(isEditing && { htmlFor: "meta-input" })} className="text-xs text-muted-foreground block mb-1.5">
+            Meta:
+          </label>
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <Input
+                id="meta-input"
+                type="number"
+                value={tempMeta}
+                onChange={(e) => setTempMeta(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave()
+                  else if (e.key === "Escape") setIsEditing(false)
+                }}
+                className="w-28 h-8 text-sm"
+                min="0"
+                autoFocus
+              />
+              <Button type="button" size="sm" onClick={handleSave} className="h-8 bg-primary" aria-label="Salvar meta">
+                <Check className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setIsEditing(true)
+                setTempMeta(meta.toString())
+              }}
+              className="text-lg font-bold text-foreground hover:text-primary transition-colors group flex items-center gap-2"
             >
-              {progress.toFixed(0)}%
-            </span>
+              {meta} inscrições
+              <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                (editar)
+              </span>
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Progresso</span>
+            <span className={cn("font-bold tabular-nums", getMetaTextColor(progress))}>{progress.toFixed(0)}%</span>
           </div>
-          <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
             <div
               className={cn(
-                "h-full transition-all duration-700 ease-out",
-                getMetaProgressColor(progress),
-                getMetaCompletionEffects(progress)
+                "h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r",
+                progress >= 100
+                  ? "from-emerald-400 to-emerald-500"
+                  : progress >= 75
+                    ? "from-primary to-accent"
+                    : "from-primary/80 to-primary"
               )}
               style={{ width: `${progress}%` }}
             />

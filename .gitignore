@@ -41,3 +41,13 @@ lint-results.json
 
 # git worktrees
 .worktrees/
+
+# Codex CLI local config
+.codex/
+
+# Debug artifacts
+test-ai-*
+*.backup.*
+
+# CVs pessoais
+cv-igor-fernandes*

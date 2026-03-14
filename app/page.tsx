@@ -114,18 +114,21 @@ export default function Page() {
   // Don't render until currentDate is initialized
   if (!currentDate) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background mesh-bg">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse" />
+          <p className="text-muted-foreground text-sm animate-pulse">Carregando...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background mesh-bg">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <main className="flex-1 ml-64">
-        <div className="container mx-auto px-8 py-6 max-w-7xl">
+      <main className="flex-1 ml-64 min-h-screen">
+        <div className="sticky top-0 z-40 h-0.5 w-full bg-gradient-to-r from-primary via-accent to-primary opacity-60" />
+        <div className="px-8 py-8 max-w-[1400px] mx-auto">
           {activeTab === "vagas" && (
             <div className="space-y-6">
               <DashboardHeader
