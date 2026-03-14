@@ -93,10 +93,11 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
             <span className="text-muted-foreground font-medium">Progresso</span>
             <span className={cn("font-bold tabular-nums", getMetaTextColor(progress))}>{progress.toFixed(0)}%</span>
           </div>
-          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-2.5 rounded-full overflow-hidden bg-slate-200/90 ring-1 ring-slate-300/70 dark:bg-white/10 dark:ring-white/10">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r",
+                "h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r shadow-[0_0_18px_rgba(99,102,241,0.22)]",
+                progress > 0 && "min-w-1.5",
                 progress >= 100
                   ? "from-emerald-400 to-emerald-500"
                   : progress >= 75
