@@ -49,5 +49,4 @@ lint-results.json
 test-ai-*
 *.backup.*
 
-# CVs pessoais
-cv-igor-fernandes*
+

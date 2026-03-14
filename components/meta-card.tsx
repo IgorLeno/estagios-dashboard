@@ -45,7 +45,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground mb-0.5">Realizadas hoje</p>
-            <p className="text-4xl font-black gradient-text tabular-nums leading-none">{candidaturas}</p>
+            <p className="text-4xl font-black gradient-text tabular-nums leading-none">{safeCandidaturas}</p>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export function MetaCard({ meta, candidaturas, onMetaChange }: MetaCardProps) {
               }}
               className="text-lg font-bold text-foreground hover:text-primary transition-colors group flex items-center gap-2"
             >
-              {meta} inscrições
+              {safeMeta} inscrições
               <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                 (editar)
               </span>

@@ -42,7 +42,7 @@ export function DashboardHeader({ currentDate, onPrevDate, onNextDate, onDateSel
               <Button
                 variant="ghost"
                 data-testid="date-picker-trigger"
-                className="h-7 rounded-full px-3 text-sm font-semibold min-w-[130px] justify-center hover:bg-transparent"
+                className="h-7 rounded-full px-3 text-sm font-semibold min-w-[130px] justify-center hover:bg-muted/50"
               >
                 <CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary" />
                 <span className="truncate">{formattedDate}</span>

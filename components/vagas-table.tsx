@@ -67,7 +67,7 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
             <Button
               onClick={() => setShowAddDialog(true)}
               data-testid="add-vaga-button"
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold px-5 h-10 rounded-full shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-primary/40 hover:-translate-y-0.5"
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold px-5 h-10 rounded-full shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-primary/40 hover:-translate-y-0.5"
             >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Estágio
