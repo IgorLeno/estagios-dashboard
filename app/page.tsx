@@ -8,6 +8,7 @@ import type { VagaEstagio, MetaDiaria } from "@/lib/types"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetaCard } from "@/components/meta-card"
+import { QuickFillPanel } from "@/components/quick-fill-panel"
 import { VagasTable } from "@/components/vagas-table"
 import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
@@ -149,6 +150,7 @@ export default function Page() {
           {activeTab === "configuracoes" && <ConfiguracoesPage />}
         </div>
       </main>
+      <QuickFillPanel />
     </div>
   )
 }

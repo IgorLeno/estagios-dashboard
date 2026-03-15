@@ -179,3 +179,10 @@ VALIDAÇÃO:
 Seu output será validado contra schemas rigorosos. Qualquer conteúdo inventado será rejeitado.
 Se os requisitos da vaga pedirem habilidades não presentes no CV, NÃO as adicione - apenas enfatize habilidades relacionadas existentes.`,
 }
+
+export interface QuickFillField {
+  id: string
+  label: string
+  value: string
+  order: number
+}

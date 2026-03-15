@@ -176,12 +176,18 @@ export async function POST(request: NextRequest) {
 
     // Erro de validação Zod
     if (error instanceof ZodError) {
-      console.error("[AI Parser] Validation error:", error)
+      const validationIssues = error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+        code: issue.code,
+      }))
+
+      console.error("[AI Parser] Validation error:", validationIssues)
       return NextResponse.json(
         {
           success: false,
           error: "Invalid request data",
-          details: error.errors,
+          details: validationIssues,
         },
         { status: 400 }
       )
