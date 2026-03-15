@@ -13,17 +13,17 @@
   --popover-foreground: 15 23 42;
   --primary: 99 102 241;
   --primary-foreground: 255 255 255;
-  --secondary: 241 245 249;
+  --secondary: 237 242 247;
   --secondary-foreground: 15 23 42;
-  --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
+  --muted: 236 241 247;
+  --muted-foreground: 71 85 105;
   --accent: 139 92 246;
   --accent-foreground: 255 255 255;
   --accent-muted: 139 92 246 / 0.1;
   --destructive: 239 68 68;
   --destructive-foreground: 255 255 255;
-  --border: 226 232 240;
-  --input: 241 245 249;
+  --border: 191 203 222;
+  --input: 248 250 252;
   --ring: 99 102 241 / 0.4;
   --chart-1: 99 102 241;
   --chart-2: 139 92 246;
@@ -143,11 +143,17 @@
   }
 
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl shadow-sm;
+    @apply bg-card/88 backdrop-blur-sm border border-border rounded-xl shadow-[0_12px_28px_rgba(15,23,42,0.06)];
+    box-shadow:
+      0 0 0 1px rgb(var(--border) / 0.22),
+      0 12px 28px rgb(15 23 42 / 0.06);
   }
 
   .glass-card-intense {
-    @apply bg-card/90 backdrop-blur-md border border-border/80 rounded-xl shadow-lg;
+    @apply bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-[0_18px_40px_rgba(15,23,42,0.08)];
+    box-shadow:
+      0 0 0 1px rgb(var(--border) / 0.34),
+      0 18px 40px rgb(15 23 42 / 0.08);
   }
 
   .gradient-border {

@@ -25,7 +25,7 @@ export function DashboardHeader({ currentDate, onPrevDate, onNextDate, onDateSel
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 bg-card border border-border rounded-full px-1 py-1 shadow-sm">
+        <div className="flex items-center gap-1 rounded-full border border-border bg-card/95 px-1 py-1 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
           <Button
             variant="ghost"
             size="icon"
