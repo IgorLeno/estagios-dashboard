@@ -227,6 +227,19 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setLoading(true)
 
     try {
+      const empresa = formData.empresa.trim()
+      const cargo = formData.cargo.trim()
+      const local = formData.local.trim()
+      const observacoes = formData.observacoes.trim()
+      const looksLikeE2ETest = [empresa, cargo, observacoes].some(
+        (value) => value.includes("[E2E-TEST]") || value.includes("E2E-TEST")
+      )
+
+      if (!empresa || !cargo || !local) {
+        toast.error("Preencha empresa, cargo e local antes de salvar.")
+        return
+      }
+
       const dataInscricao = getDataInscricao(new Date(), config || undefined)
       if (process.env.NODE_ENV === "development") {
         console.log("[AddVagaDialog] Criando vaga com data_inscricao:", dataInscricao, "Config:", config)
@@ -237,15 +250,15 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const cvDataUrlEn = resumePdfBase64En ? `data:application/pdf;base64,${resumePdfBase64En}` : null
 
       const insertData = {
-        empresa: formData.empresa,
-        cargo: formData.cargo,
-        local: formData.local,
+        empresa,
+        cargo,
+        local,
         modalidade: formData.modalidade,
         requisitos: normalizeRatingForSave(formData.requisitos),
         perfil: normalizeRatingForSave(formData.perfil),
         etapa: formData.etapa || null,
         status: formData.status,
-        observacoes: formData.observacoes || null,
+        observacoes: observacoes || null,
         arquivo_analise_url: formData.arquivo_analise_url || null,
         arquivo_cv_url: cvDataUrl, // Legacy field
         arquivo_cv_url_pt: cvDataUrlPt,
@@ -253,7 +266,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         curriculo_text_pt: resumeContentPt || null,
         curriculo_text_en: resumeContentEn || null,
         data_inscricao: dataInscricao,
-        is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true",
+        is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true" || looksLikeE2ETest,
       }
 
       // Insert with .select() to ensure operation completes and returns data

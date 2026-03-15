@@ -5,7 +5,7 @@ import { getVagasByDateRange } from "@/lib/supabase/queries"
 import type { HistoricoResumo } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, Briefcase } from "lucide-react"
-import { format, subDays } from "date-fns"
+import { format, parse, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { useTheme } from "next-themes"
@@ -15,7 +15,7 @@ export function ResumoPage() {
   const [historico, setHistorico] = useState<HistoricoResumo[]>([])
   const [loading, setLoading] = useState(true)
   const [themeReady, setThemeReady] = useState(false)
-  const { theme, resolvedTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
 
   // Aguarda resolução do tema para evitar flash
   useEffect(() => {
@@ -99,8 +99,6 @@ export function ResumoPage() {
     )
   }
 
-  const maxCandidaturas = Math.max(...historico.map((h) => h.candidaturas), 1)
-
   return (
     <div className="space-y-6">
       {/* Total Candidaturas Card */}
@@ -130,7 +128,7 @@ export function ResumoPage() {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={historico.map((item) => ({
-                data: format(new Date(item.data), "dd/MM", { locale: ptBR }),
+                data: format(parse(item.data, "yyyy-MM-dd", new Date()), "dd/MM", { locale: ptBR }),
                 candidaturas: item.candidaturas,
               }))}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import type { DragEvent, KeyboardEvent } from "react"
-import { ClipboardCopy, Plus, Trash2, GripVertical, Check, X, ClipboardList } from "lucide-react"
+import { ClipboardCopy, Plus, Trash2, GripVertical, Check, X, ClipboardList, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -189,9 +189,9 @@ export function QuickFillPanel() {
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
               className={cn(
-                "group rounded-xl border border-sidebar-border/60 bg-card/40",
+                "group rounded-xl border border-white/10 bg-white/8",
                 "backdrop-blur-sm transition-all duration-150",
-                "hover:border-primary/30 hover:bg-card/60",
+                "hover:border-primary/35 hover:bg-white/12",
                 editingId === field.id
                   ? "cursor-default"
                   : "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-[0.98]"
@@ -203,7 +203,7 @@ export function QuickFillPanel() {
                     value={editLabel}
                     onChange={(event) => setEditLabel(event.target.value)}
                     placeholder="Nome do campo"
-                    className="h-7 text-xs bg-input border-border"
+                    className="h-8 text-xs text-sidebar-foreground bg-white/8 border-white/12 placeholder:text-sidebar-foreground/35"
                     autoFocus
                     onKeyDown={handleEditKeyDown}
                   />
@@ -211,7 +211,7 @@ export function QuickFillPanel() {
                     value={editValue}
                     onChange={(event) => setEditValue(event.target.value)}
                     placeholder="Valor"
-                    className="h-7 text-xs bg-input border-border"
+                    className="h-8 text-xs text-sidebar-foreground bg-white/8 border-white/12 placeholder:text-sidebar-foreground/35"
                     onKeyDown={handleEditKeyDown}
                   />
                   <div className="flex gap-1.5 justify-end">
@@ -227,21 +227,26 @@ export function QuickFillPanel() {
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-1.5">
                     <GripVertical className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sidebar-foreground/20 group-hover:text-sidebar-foreground/50 transition-all flex-shrink-0" />
-                    <button
-                      onClick={() => handleStartEdit(field)}
-                      className="text-xs font-semibold text-sidebar-foreground/60 hover:text-primary transition-colors truncate flex-1 text-left"
-                      title="Clique para editar"
-                    >
-                      {field.label}
-                    </button>
-                    <button
-                      onClick={() => removeField(field.id)}
-                      data-testid={`quick-fill-delete-${field.id}`}
-                      aria-label={`Remover campo ${field.label}`}
-                      className="text-sidebar-foreground/20 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    <span className="text-xs font-semibold text-sidebar-foreground/95 truncate flex-1">{field.label}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleStartEdit(field)}
+                        aria-label={`Editar campo ${field.label}`}
+                        title="Editar campo"
+                        className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => removeField(field.id)}
+                        data-testid={`quick-fill-delete-${field.id}`}
+                        aria-label={`Remover campo ${field.label}`}
+                        title="Remover campo"
+                        className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -249,8 +254,9 @@ export function QuickFillPanel() {
                       readOnly
                       value={field.value}
                       data-testid={`quick-fill-value-${field.id}`}
-                      className="h-8 text-sm bg-input/60 border-border/60 text-foreground cursor-text flex-1"
+                      className="h-8 text-sm font-medium text-sidebar-foreground bg-sidebar/80 border-white/12 placeholder:text-sidebar-foreground/55 selection:bg-primary selection:text-primary-foreground cursor-text flex-1"
                       onClick={(event) => event.currentTarget.select()}
+                      onFocus={(event) => event.currentTarget.select()}
                     />
                     <Button
                       size="icon"
@@ -263,7 +269,7 @@ export function QuickFillPanel() {
                         "h-8 w-8 flex-shrink-0 transition-all duration-200 rounded-lg",
                         copiedId === field.id
                           ? "text-emerald-400 bg-emerald-500/10"
-                          : "text-sidebar-foreground/40 hover:text-primary hover:bg-primary/10"
+                          : "text-sidebar-foreground/75 hover:text-primary hover:bg-primary/10"
                       )}
                     >
                       {copiedId === field.id ? (
@@ -285,7 +291,7 @@ export function QuickFillPanel() {
                 value={newLabel}
                 onChange={(event) => setNewLabel(event.target.value)}
                 placeholder="Nome (ex: CPF)"
-                className="h-8 text-sm bg-input border-border"
+                className="h-8 text-sm text-sidebar-foreground bg-white/8 border-white/12 placeholder:text-sidebar-foreground/35"
                 autoFocus
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleAdd()
@@ -296,7 +302,7 @@ export function QuickFillPanel() {
                 value={newValue}
                 onChange={(event) => setNewValue(event.target.value)}
                 placeholder="Valor (ex: 123.456.789-00)"
-                className="h-8 text-sm bg-input border-border"
+                className="h-8 text-sm text-sidebar-foreground bg-white/8 border-white/12 placeholder:text-sidebar-foreground/35"
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleAdd()
                   if (event.key === "Escape") resetAddForm()
