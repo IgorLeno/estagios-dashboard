@@ -235,8 +235,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         (value) => value.includes("[E2E-TEST]") || value.includes("E2E-TEST")
       )
 
-      if (!empresa || !cargo || !local) {
-        toast.error("Preencha empresa, cargo e local antes de salvar.")
+      if (!empresa) {
+        toast.error("Preencha o nome da empresa antes de salvar.")
         return
       }
 
@@ -389,6 +389,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               onSaveVaga={handleSaveVaga}
               jobDescription={lastAnalyzedDescription || jobDescription}
               vagaId={undefined}
+              initialMarkdownPt={resumeContentPt}
+              initialMarkdownEn={resumeContentEn}
             />
           </TabsContent>
         </Tabs>

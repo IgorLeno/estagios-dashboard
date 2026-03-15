@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, Info, CheckCircle, FileText, RefreshCw, Languages } from "lucide-react"
@@ -11,13 +11,24 @@ import { ResumePreviewCard } from "@/components/resume-preview-card"
 import { createClient } from "@/lib/supabase/client"
 
 interface CurriculoTabProps {
+  resumeContent?: string
+  setResumeContent?: Dispatch<SetStateAction<string>>
+  resumePdfBase64?: string | null
+  resumeFilename?: string | null
+  onPdfGenerated?: (pdfBase64: string, filename: string) => void
   jobAnalysisData: JobDetails | null
   jobDescription: string
   vagaId?: string
   isInPage?: boolean
+  generatingResume?: boolean
+  onGenerateResume?: () => Promise<void>
+  onRefreshResume?: () => Promise<void>
+  onDownloadPDF?: () => void
   onSaveVaga?: () => Promise<void>
   savingVaga?: boolean
   onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
+  initialMarkdownPt?: string
+  initialMarkdownEn?: string
 }
 
 export function CurriculoTab({
@@ -28,11 +39,13 @@ export function CurriculoTab({
   onSaveVaga,
   savingVaga = false,
   onMarkdownGenerated,
+  initialMarkdownPt = "",
+  initialMarkdownEn = "",
 }: CurriculoTabProps) {
   console.log("[CurriculoTab] Rendering", { jobAnalysisData, vagaId, isInPage })
 
-  const [markdownPreviewPt, setMarkdownPreviewPt] = useState("")
-  const [markdownPreviewEn, setMarkdownPreviewEn] = useState("")
+  const [markdownPreviewPt, setMarkdownPreviewPt] = useState(initialMarkdownPt)
+  const [markdownPreviewEn, setMarkdownPreviewEn] = useState(initialMarkdownEn)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatingLanguage, setGeneratingLanguage] = useState<"pt" | "en" | "both" | null>(null)
   const [isConverting, setIsConverting] = useState(false)
@@ -52,6 +65,16 @@ export function CurriculoTab({
     isGenerating,
     generatingLanguage,
   })
+
+  useEffect(() => {
+    if (!markdownPreviewPt && initialMarkdownPt) {
+      setMarkdownPreviewPt(initialMarkdownPt)
+    }
+    if (!markdownPreviewEn && initialMarkdownEn) {
+      setMarkdownPreviewEn(initialMarkdownEn)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMarkdownPt, initialMarkdownEn])
 
   // Fetch saved resumes when component mounts (if vagaId exists)
   useEffect(() => {
@@ -583,12 +606,6 @@ export function CurriculoTab({
           {/* Container com rolagem vertical */}
           <div className="max-h-[800px] lg:max-h-[70vh] overflow-y-auto space-y-6 pr-2">
             {/* PT preview */}
-            {/* 🔍 DEBUG: Log before conditional render */}
-            {console.log("[CurriculoTab] 🔍 Conditional render check for PT:", {
-              markdownPreviewPt: Boolean(markdownPreviewPt),
-              markdownPreviewPtLength: markdownPreviewPt?.length || 0,
-              willRenderPT: Boolean(markdownPreviewPt),
-            })}
             {markdownPreviewPt && (
               <ResumePreviewCard
                 language="pt"
@@ -609,12 +626,6 @@ export function CurriculoTab({
             )}
 
             {/* EN preview */}
-            {/* 🔍 DEBUG: Log before conditional render */}
-            {console.log("[CurriculoTab] 🔍 Conditional render check for EN:", {
-              markdownPreviewEn: Boolean(markdownPreviewEn),
-              markdownPreviewEnLength: markdownPreviewEn?.length || 0,
-              willRenderEN: Boolean(markdownPreviewEn),
-            })}
             {markdownPreviewEn && (
               <ResumePreviewCard
                 language="en"
