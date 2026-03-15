@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: 248 250 252;
+  --background: 241 245 249;
   --background-secondary: 255 255 255;
   --foreground: 15 23 42;
   --card: 255 255 255;
@@ -22,8 +22,8 @@
   --accent-muted: 139 92 246 / 0.1;
   --destructive: 239 68 68;
   --destructive-foreground: 255 255 255;
-  --border: 191 203 222;
-  --input: 248 250 252;
+  --border: 203 213 225;
+  --input: 226 232 240;
   --ring: 99 102 241 / 0.4;
   --chart-1: 99 102 241;
   --chart-2: 139 92 246;
@@ -37,7 +37,7 @@
   --sidebar-primary-foreground: 15 23 42;
   --sidebar-accent: 99 102 241;
   --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 30 41 59;
+  --sidebar-border: 148 163 184;
   --sidebar-ring: 99 102 241;
   --header: 15 23 42;
   --header-foreground: 248 250 252;
@@ -46,39 +46,39 @@
 }
 
 .dark {
-  --background: 8 10 20;
-  --background-secondary: 15 18 32;
+  --background: 17 24 39;
+  --background-secondary: 24 33 52;
   --foreground: 226 232 240;
-  --card: 15 18 32;
+  --card: 24 33 52;
   --card-foreground: 226 232 240;
-  --popover: 20 24 40;
+  --popover: 30 41 59;
   --popover-foreground: 226 232 240;
   --primary: 129 140 248;
   --primary-foreground: 8 10 20;
-  --secondary: 22 28 48;
+  --secondary: 30 41 59;
   --secondary-foreground: 203 213 225;
-  --muted: 22 28 48;
+  --muted: 30 41 59;
   --muted-foreground: 100 116 139;
   --accent: 167 139 250;
   --accent-foreground: 8 10 20;
   --accent-muted: 167 139 250 / 0.12;
   --destructive: 248 113 113;
   --destructive-foreground: 8 10 20;
-  --border: 30 37 60;
-  --input: 22 28 48;
+  --border: 51 65 85;
+  --input: 30 41 59;
   --ring: 129 140 248 / 0.5;
   --chart-1: 129 140 248;
   --chart-2: 167 139 250;
   --chart-3: 96 165 250;
   --chart-4: 52 211 153;
   --chart-5: 251 191 36;
-  --sidebar: 6 8 16;
+  --sidebar: 15 22 36;
   --sidebar-foreground: 100 116 139;
   --sidebar-primary: 226 232 240;
   --sidebar-primary-foreground: 6 8 16;
   --sidebar-accent: 129 140 248;
   --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 20 26 44;
+  --sidebar-border: 51 65 85;
   --sidebar-ring: 129 140 248;
   --header: 6 8 16;
   --header-foreground: 226 232 240;
