@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sparkles, RotateCcw, Save, Info, LogIn } from "lucide-react"
+import { Sparkles, RotateCcw, Save, Info, LogIn, Bot, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { PromptsConfig } from "@/lib/types"
 import { useRouter } from "next/navigation"
+
+const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 
 export function ConfiguracoesPrompts() {
   const [config, setConfig] = useState<Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> | null>(null)
@@ -19,12 +21,75 @@ export function ConfiguracoesPrompts() {
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [isReadOnly, setIsReadOnly] = useState(false) // True se usuário não está autenticado
+  const [modelHistory, setModelHistory] = useState<string[]>([])
+  const [showModelInput, setShowModelInput] = useState(false)
+  const [newModelInput, setNewModelInput] = useState("")
   const router = useRouter()
 
   // Load config on mount
   useEffect(() => {
     loadConfig()
   }, [])
+
+  function persistModelHistory(history: string[]) {
+    localStorage.setItem(MODEL_HISTORY_STORAGE_KEY, JSON.stringify(history))
+  }
+
+  function readModelHistory(): string[] {
+    const stored = localStorage.getItem(MODEL_HISTORY_STORAGE_KEY)
+    if (!stored) {
+      return []
+    }
+
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed
+      .filter((model): model is string => typeof model === "string")
+      .map((model) => model.trim())
+      .filter(Boolean)
+      .slice(0, 20)
+  }
+
+  function addModelToHistory(model: string) {
+    const trimmed = model.trim()
+    if (!trimmed) return
+
+    setModelHistory((prev) => {
+      const updated = [trimmed, ...prev.filter((entry) => entry !== trimmed)].slice(0, 20)
+      persistModelHistory(updated)
+      return updated
+    })
+  }
+
+  function removeModelFromHistory(model: string) {
+    if (model === config?.modelo_gemini) {
+      return
+    }
+
+    setModelHistory((prev) => {
+      const updated = prev.filter((entry) => entry !== model)
+      persistModelHistory(updated)
+      return updated
+    })
+  }
+
+  function selectModel(model: string) {
+    if (!config) return
+
+    setConfig({ ...config, modelo_gemini: model })
+    addModelToHistory(model)
+    setShowModelInput(false)
+    setNewModelInput("")
+  }
+
+  function handleAddNewModel() {
+    const trimmed = newModelInput.trim()
+    if (!trimmed) return
+    selectModel(trimmed)
+  }
 
   async function loadConfig() {
     setLoading(true)
@@ -50,6 +115,22 @@ export function ConfiguracoesPrompts() {
         })
         setLastSaved(data.updated_at)
         setIsReadOnly(result.isReadOnly || false)
+
+        try {
+          const history = readModelHistory()
+          const currentModel = data.modelo_gemini?.trim()
+          const updatedHistory = currentModel
+            ? [currentModel, ...history.filter((model) => model !== currentModel)].slice(0, 20)
+            : history
+
+          if (updatedHistory.length !== history.length || updatedHistory.some((model, index) => model !== history[index])) {
+            persistModelHistory(updatedHistory)
+          }
+
+          setModelHistory(updatedHistory)
+        } catch {
+          setModelHistory(data.modelo_gemini ? [data.modelo_gemini] : [])
+        }
       }
     } catch (error) {
       console.error("[ConfiguracoesPrompts] Error loading config:", error)
@@ -101,6 +182,7 @@ export function ConfiguracoesPrompts() {
 
       if (result.success && result.data) {
         setLastSaved(result.data.updated_at)
+        addModelToHistory(config.modelo_gemini)
         toast.success("Configurações salvas com sucesso!")
       }
     } catch (error) {
@@ -203,17 +285,123 @@ export function ConfiguracoesPrompts() {
             {/* Tab: Modelo */}
             <TabsContent value="modelo" className="space-y-4 mt-4">
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="modelo_gemini">Modelo LLM</Label>
-                  <Input
-                    id="modelo_gemini"
-                    value={config.modelo_gemini}
-                    onChange={(e) => setConfig({ ...config, modelo_gemini: e.target.value })}
-                    placeholder="x-ai/grok-4.1-fast"
-                    className="bg-background"
-                  />
+                <div className="space-y-3">
+                  <Label>Modelo LLM Ativo</Label>
+
+                  <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
+                    <Bot className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="flex-1 truncate text-sm font-medium">{config.modelo_gemini}</span>
+                    <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">ativo</span>
+                  </div>
+
+                  {modelHistory.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Histórico de modelos:</p>
+                      <div className="max-h-48 space-y-1 overflow-y-auto">
+                        {modelHistory.map((model) => (
+                          <div
+                            key={model}
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
+                              model === config.modelo_gemini
+                                ? "cursor-default border-primary/30 bg-primary/10"
+                                : "cursor-pointer border-border bg-muted/50 hover:border-primary/20 hover:bg-muted"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              className="flex-1 truncate text-left text-sm"
+                              onClick={() => model !== config.modelo_gemini && selectModel(model)}
+                              disabled={model === config.modelo_gemini || isReadOnly}
+                            >
+                              {model}
+                            </button>
+                            {model !== config.modelo_gemini && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeModelFromHistory(model)
+                                }}
+                                className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
+                                title="Remover do histórico"
+                                disabled={isReadOnly}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {showModelInput ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={newModelInput}
+                        onChange={(e) => setNewModelInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            handleAddNewModel()
+                          }
+
+                          if (e.key === "Escape") {
+                            e.preventDefault()
+                            setShowModelInput(false)
+                            setNewModelInput("")
+                          }
+                        }}
+                        placeholder="Ex: anthropic/claude-3.5-sonnet, google/gemini-2.5-pro"
+                        className="bg-background text-sm"
+                        disabled={isReadOnly}
+                        autoFocus
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleAddNewModel}
+                        disabled={!newModelInput.trim() || isReadOnly}
+                      >
+                        Usar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowModelInput(false)
+                          setNewModelInput("")
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowModelInput(true)}
+                      disabled={isReadOnly}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Adicionar modelo diferente
+                    </Button>
+                  )}
+
                   <p className="text-xs text-muted-foreground">
-                    Modelo via OpenRouter. Exemplos: x-ai/grok-4.1-fast, anthropic/claude-3.5-sonnet
+                    Qualquer modelo disponível no{" "}
+                    <a
+                      href="https://openrouter.ai/models"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-foreground"
+                    >
+                      OpenRouter
+                    </a>
+                    . O modelo ativo é usado em todas as operações de IA.
                   </p>
                 </div>
 

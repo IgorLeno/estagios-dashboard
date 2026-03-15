@@ -12,6 +12,7 @@ export interface GrokOptions {
   temperature?: number
   max_tokens?: number
   top_p?: number
+  model?: string
 }
 
 export interface GrokResponse {
@@ -56,7 +57,7 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
       "X-Title": "Estágios Dashboard",
     },
     body: JSON.stringify({
-      model: "x-ai/grok-4.1-fast",
+      model: options?.model ?? "x-ai/grok-4.1-fast",
       messages,
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.max_tokens ?? 2000,

@@ -104,7 +104,7 @@ export interface PromptsConfig {
  * Usados quando o usuário não tem configuração customizada
  */
 export const DEFAULT_PROMPTS_CONFIG: Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> = {
-  modelo_gemini: "gemini-2.5-flash",
+  modelo_gemini: "x-ai/grok-4.1-fast",
   temperatura: 0.3,
   max_tokens: 4096,
   top_p: 0.95,

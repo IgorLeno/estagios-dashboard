@@ -40,12 +40,14 @@ export function createAIModel(
     temperature?: number
     maxOutputTokens?: number
     topP?: number
+    model?: string
   }
 ) {
   const config = {
     temperature: generationConfig?.temperature ?? AI_MODEL_CONFIG.temperature,
     max_tokens: generationConfig?.maxOutputTokens ?? AI_MODEL_CONFIG.maxOutputTokens,
     top_p: generationConfig?.topP ?? AI_MODEL_CONFIG.topP,
+    model: generationConfig?.model ?? AI_MODEL_CONFIG.model,
   }
 
   return {
@@ -157,7 +159,10 @@ export function createGeminiClient() {
   // Return a mock object for compatibility
   return {
     getGenerativeModel: (config: any) => {
-      return createAIModel(config.systemInstruction, config.generationConfig)
+      return createAIModel(config.systemInstruction, {
+        ...config.generationConfig,
+        model: config.model,
+      })
     },
   }
 }
