@@ -1,14 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Database, Plus, Trash2, X, Sparkles } from "lucide-react"
+import { Database, Plus, X, Sparkles, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { SkillsImportDialog } from "@/components/skills-import-dialog"
 
@@ -53,13 +52,18 @@ export function SkillsBankManager() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [adding, setAdding] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [editingSkillId, setEditingSkillId] = useState<string | null>(null)
+  const [editSkill, setEditSkill] = useState("")
+  const [editProficiency, setEditProficiency] =
+    useState<"Básico" | "Intermediário" | "Avançado">("Intermediário")
+  const [editCategory, setEditCategory] =
+    useState<(typeof CATEGORIES)[number]>("Linguagens & Análise de Dados")
+  const [saving, setSaving] = useState(false)
 
   // Form state
   const [newSkill, setNewSkill] = useState("")
   const [newProficiency, setNewProficiency] = useState<"Básico" | "Intermediário" | "Avançado">("Intermediário")
   const [newCategory, setNewCategory] = useState<(typeof CATEGORIES)[number]>("Linguagens & Análise de Dados")
-
-  const supabase = createClient()
 
   // Load skills on mount
   useEffect(() => {
@@ -118,11 +122,60 @@ export function SkillsBankManager() {
       setNewCategory("Linguagens & Análise de Dados")
       setShowAddForm(false)
       loadSkills()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error adding skill:", error)
-      toast.error(error.message || "Erro ao adicionar skill")
+      toast.error(error instanceof Error ? error.message : "Erro ao adicionar skill")
     } finally {
       setAdding(false)
+    }
+  }
+
+  function handleStartEdit(skill: Skill) {
+    setEditingSkillId(skill.id)
+    setEditSkill(skill.skill)
+    setEditProficiency(skill.proficiency)
+    setEditCategory(skill.category)
+    setShowAddForm(false)
+  }
+
+  function handleCancelEdit() {
+    setEditingSkillId(null)
+    setEditSkill("")
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!editingSkillId || !editSkill.trim()) {
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/skills-bank?id=${editingSkillId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          skill: editSkill.trim(),
+          proficiency: editProficiency,
+          category: editCategory,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update skill")
+      }
+
+      toast.success("Skill atualizada com sucesso!")
+      setEditingSkillId(null)
+      setEditSkill("")
+      loadSkills()
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar skill")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -144,9 +197,9 @@ export function SkillsBankManager() {
 
       toast.success("Skill removida com sucesso!")
       loadSkills()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error removing skill:", error)
-      toast.error(error.message || "Erro ao remover skill")
+      toast.error(error instanceof Error ? error.message : "Erro ao remover skill")
     }
   }
 
@@ -198,22 +251,106 @@ export function SkillsBankManager() {
               <h3 className="font-semibold text-foreground text-sm">{category}</h3>
               <div className="flex flex-wrap gap-2">
                 {categorySkills.map((skill) => (
-                  <div
-                    key={skill.id}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border"
-                  >
-                    <span className="text-sm font-medium text-foreground">{skill.skill}</span>
-                    <Badge variant="outline" className={`text-xs ${PROFICIENCY_COLORS[skill.proficiency]}`}>
-                      {skill.proficiency}
-                    </Badge>
-                    <button
-                      onClick={() => handleRemoveSkill(skill.id, skill.skill)}
-                      className="ml-1 text-muted-foreground hover:text-destructive transition-colors"
-                      title="Remover skill"
+                  editingSkillId === skill.id ? (
+                    <form
+                      key={skill.id}
+                      onSubmit={handleSaveEdit}
+                      className="w-full p-3 bg-muted/50 rounded-lg border border-border space-y-3"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground">Editando skill</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                          disabled={saving}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <Input
+                        value={editSkill}
+                        onChange={(e) => setEditSkill(e.target.value)}
+                        placeholder="Nome da skill"
+                        disabled={saving}
+                        className="bg-background h-8 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Select
+                          value={editCategory}
+                          onValueChange={(val) => setEditCategory(val as (typeof CATEGORIES)[number])}
+                          disabled={saving}
+                        >
+                          <SelectTrigger className="bg-background h-8 text-xs flex-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat} className="text-xs">
+                                {cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={editProficiency}
+                          onValueChange={(val) => setEditProficiency(val as (typeof PROFICIENCY_LEVELS)[number])}
+                          disabled={saving}
+                        >
+                          <SelectTrigger className="bg-background h-8 text-xs w-36">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PROFICIENCY_LEVELS.map((level) => (
+                              <SelectItem key={level} value={level} className="text-xs">
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm" disabled={saving} className="flex-1 h-8 text-xs">
+                          {saving ? "Salvando..." : "Salvar"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                          disabled={saving}
+                          className="h-8 text-xs"
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div
+                      key={skill.id}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border"
+                    >
+                      <span className="text-sm font-medium text-foreground">{skill.skill}</span>
+                      <Badge variant="outline" className={`text-xs ${PROFICIENCY_COLORS[skill.proficiency]}`}>
+                        {skill.proficiency}
+                      </Badge>
+                      <button
+                        onClick={() => handleStartEdit(skill)}
+                        className="ml-1 text-muted-foreground hover:text-primary transition-colors"
+                        title="Editar skill"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveSkill(skill.id, skill.skill)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Remover skill"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )
                 ))}
               </div>
             </div>

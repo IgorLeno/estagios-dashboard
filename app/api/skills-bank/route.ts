@@ -112,6 +112,74 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * PUT /api/skills-bank?id=xxx
+ * Update skill in user's bank
+ *
+ * Query param: id (skill UUID)
+ * Body: { skill: string, proficiency: "Básico" | "Intermediário" | "Avançado", category: string }
+ */
+export async function PUT(req: NextRequest): Promise<NextResponse> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const skillId = req.nextUrl.searchParams.get("id")
+    if (!skillId) {
+      return NextResponse.json({ error: "Missing skill ID" }, { status: 400 })
+    }
+
+    const body = await req.json()
+    const validated = AddSkillSchema.parse(body)
+
+    const { data, error } = await supabase
+      .from("user_skills_bank")
+      .update({
+        skill_name: validated.skill.trim(),
+        proficiency: validated.proficiency,
+        category: validated.category,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", skillId)
+      .eq("user_id", user.id)
+      .select("id, skill_name, proficiency, category, created_at")
+      .single()
+
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json({ error: "Skill already exists in your bank" }, { status: 409 })
+      }
+
+      console.error("[Skills Bank API] Error updating skill:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      skill: {
+        id: data.id,
+        skill: data.skill_name,
+        proficiency: data.proficiency,
+        category: data.category,
+        createdAt: data.created_at,
+      },
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 })
+    }
+
+    console.error("[Skills Bank API] PUT error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+/**
  * DELETE /api/skills-bank?id=xxx
  * Remove skill from user's bank
  *

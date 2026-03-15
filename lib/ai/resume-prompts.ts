@@ -232,11 +232,13 @@ INSTRUCTIONS - ATS OPTIMIZATION:
    - Example: ML job → move "Linguagens & Análise de Dados" to position 1
    - Example: Engineering job → move "Ferramentas de Engenharia" to position 1
 
-4. WITHIN-CATEGORY REORDERING:
+4. WITHIN-CATEGORY REORDERING AND SELECTION:
    - Put EXACT job matches first in each category
    - Then semantic/related skills
-   - Then general skills
-   - Keep all original CV skills (don't remove, just reorder)
+   - REMOVE skills that have zero relevance to this specific job (e.g. specialized lab tools for an analytics job)
+   - Keep soft skills category with most relevant items only (max 4-5)
+   - MINIMUM: Always keep at least 3 skills total per category kept
+   - MAXIMUM: 6-8 items per category (remove excess irrelevant skills)
 
 5. EXACT TERMINOLOGY (CRITICAL FOR ATS):
    - Use EXACT skill names from job (e.g., "Power BI" not "PowerBI")
@@ -247,13 +249,18 @@ INSTRUCTIONS - ATS OPTIMIZATION:
 6. ATS BEST PRACTICES:
    - Put 5-7 most relevant skills in top 2 categories (ATS scans top first)
    - Include certifications as skills if job mentions them (e.g., "ISO 17025 (Familiar)")
-   - Avoid skill stuffing (max 6-8 items per category)
+   - Aim for 6-8 most relevant skills per category (remove irrelevant, don't stuff)
    - If job required skill not in CV or bank, DON'T add it (maintain truthfulness)
+   - REMOVE entire categories if 0 of their skills are relevant to the job
+   - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
+     in analytics/BI/HR/data roles — they are noise, not signal
 
 VALIDATION CHECK (MANDATORY):
-Before returning, verify that EVERY skill in your output appears in either:
-- ALLOWED SKILLS (CV Skills) list, OR
-- ALLOWED SKILLS (Bank Skills) list
+Before returning, verify:
+1. EVERY skill in your output appears in either ALLOWED SKILLS (CV Skills) OR ALLOWED SKILLS (Bank Skills)
+2. No engineering/lab tool appears in a data/analytics/HR/BI/people job output
+3. Category count is 2-4 (not all categories needed — only relevant ones)
+4. Total skill count across all categories: 8-20 (not all skills, only relevant ones)
 
 If you find ANY skill not in those lists, REMOVE IT immediately. This is NON-NEGOTIABLE.
 
