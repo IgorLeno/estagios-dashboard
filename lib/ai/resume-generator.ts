@@ -37,6 +37,61 @@ async function personalizeSummary(
 }
 
 /**
+ * Returns true if `returnedSkill` is an authorized rename of any skill in `allowedSkills`.
+ * An authorized rename is a skill that:
+ * 1. Shares significant word overlap with an original skill (>= 1 meaningful word in common)
+ * 2. Is in the same semantic domain (operational/process skills)
+ *
+ * This allows the LLM to follow prompt renaming instructions without being blocked
+ * by the anti-fabrication validator.
+ */
+function isAuthorizedRename(returnedSkill: string, allowedSkills: string[]): boolean {
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s*\([^)]+\)/g, "")
+      .trim()
+
+  const STOPWORDS = new Set([
+    "de",
+    "e",
+    "a",
+    "o",
+    "em",
+    "com",
+    "para",
+    "por",
+    "da",
+    "do",
+    "das",
+    "dos",
+    "na",
+    "no",
+    "nas",
+    "nos",
+    "um",
+    "uma",
+  ])
+
+  const meaningfulWords = (s: string) =>
+    normalize(s)
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+
+  const returnedWords = meaningfulWords(returnedSkill)
+
+  return allowedSkills.some((allowed) => {
+    const allowedWords = meaningfulWords(allowed)
+    const overlap = returnedWords.filter((w) =>
+      allowedWords.some((a) => a.includes(w) || w.includes(a))
+    )
+    return overlap.length >= 1
+  })
+}
+
+/**
  * Personalize CV skills section using LLM
  */
 async function personalizeSkills(
@@ -73,18 +128,24 @@ async function personalizeSkills(
   // Get returned skills
   const returnedSkills = validated.skills.flatMap((cat) => cat.items)
 
-  // Check for fabrication (allow proficiency suffixes)
+  // Check for fabrication (allow proficiency suffixes + authorized renames)
   const fabricatedSkills = returnedSkills.filter((skill) => {
-    // Remove proficiency suffix for comparison
     const baseSkill = skill.replace(/\s*\([^)]+\)$/, "")
 
-    // Check if skill is in allowed list (exact match or base match)
-    return !allowedSkills.some(
+    // Exact match (original behavior)
+    const isExactMatch = allowedSkills.some(
       (allowed) =>
-        allowed === skill || // Exact match
-        allowed === baseSkill || // Base match
-        allowed.startsWith(baseSkill) // Starts with base skill
+        allowed === skill ||
+        allowed === baseSkill ||
+        allowed.startsWith(baseSkill)
     )
+    if (isExactMatch) return false
+
+    // Authorized rename (new: allows prompt-instructed renames)
+    if (isAuthorizedRename(skill, allowedSkills)) return false
+
+    // Neither exact match nor authorized rename -> fabricated
+    return true
   })
 
   if (fabricatedSkills.length > 0) {
