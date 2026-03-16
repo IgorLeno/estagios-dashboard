@@ -106,6 +106,9 @@ INSTRUCTIONS - ATS OPTIMIZATION:
 1. STRUCTURE (5-part professional profile):
    - Opening: Education level + current status (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
    - Technical expertise: List 2-3 EXACT skills from "Required Skills" above
+   - ⚠️ INTERNSHIP/TRAINEE TONE: If the position is an internship (estágio) or junior role,
+     NEVER use "expertise" — use "conhecimento em", "experiência acadêmica com", "vivência em",
+     or "prática com" instead. "Expertise" implies senior-level mastery.
    - Domain experience: Connect to job responsibilities using action verbs from list above
    - Key achievements: Quantify 1-2 relevant accomplishments from original summary (if available)
    - Objective: Express interest in company/role using job keywords
@@ -137,8 +140,22 @@ INSTRUCTIONS - ATS OPTIMIZATION:
    - If original summary has no metrics, use qualitative descriptors instead
    - DO NOT invent experience, certifications, or tools not in original
 
+6. LOCATION AWARENESS:
+   - If job location differs from candidate's city, explicitly add availability for relocation
+     or on-site work at the end of the summary.
+   - Format: "Disponível para atuação presencial em [city]." or "Com disponibilidade para
+     mudança/atuação presencial em [job city]."
+   - Only add if job has a specific city different from candidate location.
+
+7. NEW TECHNOLOGY INTEREST:
+   - If the job mentions a specific tool the candidate doesn't have in their CV but is clearly
+     entry-level or "interest" acceptable (like Databricks, Tableau, dbt, Airflow), add one
+     sentence expressing genuine interest.
+   - Format: "Interesse em [tool] e em ambientes modernos de [domain]."
+   - Maximum 1 tool — don't list multiple "interests" (looks like padding).
+
 EXAMPLE STRUCTURE (Portuguese):
-"Estudante de Engenharia Química (UNESP) em fase de conclusão com expertise em [EXACT SKILL 1], [EXACT SKILL 2] e [EXACT SKILL 3]. Experiência comprovada em [ACTION VERB 1] [job duty] e [ACTION VERB 2] [job duty] através de projetos acadêmicos com [tool/method]. Domínio de [technical terms/certifications] para [application area]. Busco oportunidade na [company] para aplicar conhecimentos em [job area]."
+"Estudante de Engenharia Química (UNESP) em fase de conclusão com conhecimento em [EXACT SKILL 1], [EXACT SKILL 2] e [EXACT SKILL 3]. Experiência acadêmica com [ACTION VERB 1] [job duty] e [ACTION VERB 2] [job duty] através de projetos com [tool/method]. Vivência em [technical terms/certifications] para [application area]. Busco oportunidade na [company] para aplicar conhecimentos em [job area]."
 
 CRITICAL FOR ATS: This summary will be scanned by Applicant Tracking Systems. Exact keyword matches are ESSENTIAL for passing automated screening.
 
@@ -383,22 +400,47 @@ INSTRUCTIONS - ATS OPTIMIZATION:
    - Repeat critical acronyms naturally (QHSE, KPI, ML, etc.)
    - Front-load most relevant technical terms
 
-5. DOMAIN-SPECIFIC REFRAMING (critical for same project, different jobs):
+5. TRANSFERABLE SKILLS TRANSLATION (critical: describe WHAT was done, reframe HOW it's described):
 
-   If QHSE/Quality role:
-   - Emphasize: quality control, data validation, compliance, standards (ISO, OSHA), reporting, KPIs
-   - Tools to highlight: Excel, Power BI, SQL (for quality metrics)
-   - Outcomes: improved accuracy, reduced errors, enhanced traceability, compliance achieved
+   ⚠️ CRITICAL RULE: NEVER insert the job's domain (e.g., "People Analytics", "BI corporativo",
+   "HR analytics") into a project that is NOT from that domain. This is keyword stuffing and
+   will cause immediate rejection by experienced recruiters.
+
+   CORRECT approach — translate project ACTIONS into transferable business language:
+   - "Coletou e organizou dados experimentais" → "Estruturou e organizou bases de dados para análise"
+   - "Executou validação de modelos moleculares" → "Realizou validação e controle de qualidade de dados"
+   - "Gerou relatórios técnicos de simulações" → "Elaborou relatórios analíticos documentando metodologia, fontes e resultados"
+   - "Automatizou pipeline de cálculos quânticos" → "Automatizou rotinas de processamento e atualização de dados"
+   - "Comparou dados experimentais com bases bibliográficas" → "Realizou checagem de consistência e padronização de informações"
+
+   ALLOWED reframing by job type (always grounded in what was ACTUALLY done):
+
+   If People Analytics/BI/HR role:
+   - Emphasize: organização de bases, validação de dados, automação de rotinas, elaboração de
+     relatórios, padronização, documentação técnica, controle de qualidade de informação
+   - DO NOT write: "People Analytics", "análise de RH", "dados de gestão de pessoas"
+   - Use instead: "organização e atualização de bases de dados", "documentação de processos",
+     "rotinas de validação e consistência", "apoio analítico à tomada de decisão"
 
    If Data/ML role:
-   - Emphasize: model development, data pipeline, algorithm optimization, prediction accuracy
-   - Tools to highlight: Python, ML libraries (Scikit-learn, TensorFlow), databases
-   - Outcomes: improved model performance, automated workflows, data insights, accuracy gains
+   - Emphasize: pipeline de dados, automação de processamento, análise exploratória,
+     treinamento de modelos, validação de resultados
+   - DO NOT write: "pipeline para BI corporativo", "People Analytics pipeline"
+   - Use instead: "pipeline automatizado de processamento de dados", "validação de modelos preditivos"
+
+   If QHSE/Quality role:
+   - Emphasize: controle de qualidade de dados, validação de conformidade, rastreabilidade,
+     relatórios técnicos, padronização de processos
+   - DO NOT write: "controle de qualidade industrial" if project was academic
+   - Use instead: "controle de qualidade de dados acadêmicos/experimentais", "validação de resultados"
 
    If Technical/Engineering role:
-   - Emphasize: process optimization, simulation, technical analysis, design
-   - Tools to highlight: Engineering software (Aspen Plus, MATLAB), simulation tools
-   - Outcomes: efficiency gains, cost reduction, performance improvement, technical validation
+   - Emphasize: simulação de processos, otimização de parâmetros, análise técnica, modelagem
+   - Use domain-specific tools as-is (Aspen Plus, MATLAB, CREST, GAMESS are relevant here)
+
+   RULE: If a connection between project and job area feels forced, describe only the
+   PROCESS SKILLS (organizar, validar, automatizar, documentar, padronizar, elaborar relatórios)
+   without claiming domain expertise the project doesn't have.
 
 6. ATS BEST PRACTICES:
    - Use industry-standard terminology (no academic jargon)
@@ -412,36 +454,55 @@ INSTRUCTIONS - ATS OPTIMIZATION:
    - Keep all metrics/numbers from original descriptions (don't inflate)
    - Don't invent tools not actually used
    - Stay within project scope (don't exaggerate impact)
+   - NEVER inject the job's target domain into project descriptions if the project is not from
+     that domain. Example: do NOT write "People Analytics" or "BI corporativo" in a chemistry
+     or thermodynamics research project description.
+   - Translate actions into transferable skills language without changing the project's real domain
    - If original has no metrics, use qualitative descriptors instead
 
 VALIDATION CHECK (MANDATORY):
 Before returning, verify that EVERY project title in your output matches EXACTLY (character-by-character, including dates, parentheses, and capitalization) with the "REQUIRED PROJECT TITLES" list above.
 
-EXAMPLE TRANSFORMATION (Same project, different jobs):
+EXAMPLE TRANSFORMATION (People Analytics/BI job — correct approach):
 
 PROJECT: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)"
 
-QHSE Job (Quality focus):
+❌ WRONG (keyword stuffing — what the system was doing before):
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Implementar sistema de controle de qualidade de dados usando Python e SQL para monitoramento automatizado de KPIs e validação de conformidade de registros termodinâmicos (5000+ pontos de dados)",
-    "Desenvolver dashboards em Power BI para rastreamento de indicadores de qualidade, identificando não-conformidades e gerando relatórios técnicos para análise de performance",
-    "Executar validação de dados segundo padrões técnicos, reduzindo erros de registro em 35% através de controles automatizados e análise estatística"
+    "Desenvolver pipeline automatizado em Python para BI e People Analytics, realizando automação da geração de dados termodinâmicos",
+    "Elaborar relatórios analíticos com dados processados, gerando insights para cenários de People Analytics e BI",
+    "Automatizar fluxos de dados termodinâmicos, suportando análises preditivas em People Analytics"
   ]
 }
+⚠️ Problem: Forces "People Analytics" and "BI" into a thermodynamics research project. Recruiters detect this immediately.
 
-ML Job (Algorithm focus):
+✅ CORRECT (transferable skills, honest reframing):
+{
+  "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
+  "description": [
+    "Estruturar e organizar bases de dados termodinâmicos em Python (Pandas, NumPy) para análises recorrentes, com automação de rotinas de processamento e atualização de informações",
+    "Automatizar controle de consistência e validação de dados experimentais, reduzindo erros de registro e garantindo qualidade das informações para treinamento de modelos",
+    "Elaborar relatórios analíticos documentando fontes, regras de processamento e resultados, com padronização de dados para apoio à tomada de decisão"
+  ]
+}
+✅ Why it works: Uses transferable skills vocabulary (organizar, validar, automatizar, documentar,
+padronizar) without falsely claiming the project was about People Analytics. Honest AND ATS-optimized.
+
+EXAMPLE TRANSFORMATION (ML/Data Science job):
+
+✅ CORRECT (ML job — domain IS relevant here):
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
     "Desenvolver pipeline de dados end-to-end em Python (Pandas, NumPy, Scikit-learn) para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas",
-    "Implementar algoritmos de Machine Learning (Random Forest, Neural Networks) para predição de viscosidade, alcançando 35% de redução no erro através de otimização de hiperparâmetros",
-    "Automatizar geração de relatórios analíticos e visualização de performance de modelos, processando dataset com 5000+ pontos experimentais para análise de tendências"
+    "Implementar rotinas automatizadas de validação e controle de qualidade de dados, processando dataset com múltiplos pontos experimentais para análise de consistência",
+    "Automatizar geração de relatórios analíticos com visualização de performance de modelos, documentando metodologia e resultados para uso em análises futuras"
   ]
 }
-
-Notice: SAME project, COMPLETELY different emphasis based on job type!
+✅ Why it works: For a real ML/Data job, ML terminology IS contextually appropriate. The project
+genuinely uses ML tools, so the framing is honest.
 
 CRITICAL FOR ATS: These descriptions will be scanned by Applicant Tracking Systems. Exact keyword matches and domain-specific terminology are ESSENTIAL.
 
