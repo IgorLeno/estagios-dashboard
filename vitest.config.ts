@@ -6,10 +6,15 @@ export default defineConfig({
   plugins: [react()],
   test: {
     testTimeout: 60000,
+    pool: "threads",
+    maxWorkers: 1,
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    include: ["__tests__/**/*.test.{ts,tsx}"],
+    include: [
+      "__tests__/**/*.test.{ts,tsx}",
+      "lib/**/__tests__/**/*.test.{ts,tsx}",
+    ],
     exclude: ["e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",

@@ -7,7 +7,7 @@
  * - Allowed / preferred / forbidden terminology
  * - Excel label policy
  * - Location statement requirement
- * - Summary anchors for the summary section
+ * - Summary topics for the summary section
  *
  * The profile is produced by buildJobProfile() and consumed by:
  * - Evidence Selector (Etapa 3)
@@ -21,30 +21,15 @@
 
 import type { JobDetails } from "./types"
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-/**
- * High-level domain of the job.
- * Used to select the correct role pack and evidence filter.
- */
 export type RoleFamily =
-  | "people_analytics"       // People Analytics, HR Analytics, workforce data
-  | "bi_reporting"           // BI, dashboards, data visualization, operational reporting
-  | "data_science_ml"        // ML, predictive modeling, research, feature engineering
-  | "laboratory_qc"          // Analytical lab, QC lab, GLP/ISO 17025
-  | "qhse_quality"           // Quality, HSE, environment, audits, non-conformances
-  | "process_engineering"    // Process simulation, Aspen, mass/energy balances
-  | "general"                // No dominant domain detected
+  | "people_analytics"
+  | "bi_reporting"
+  | "data_science_ml"
+  | "laboratory_qc"
+  | "qhse_quality"
+  | "process_engineering"
+  | "general"
 
-/**
- * Execution mode within the role family.
- * Drives prompt framing and evidence selection.
- *
- * operational_support    → maintain/update/document existing systems
- * analytical_reporting   → build and deliver analysis/reports
- * research_modeling      → develop models, run experiments, advance methods
- * quality_control        → validate, audit, certify, enforce standards
- */
 export type RoleMode =
   | "operational_support"
   | "analytical_reporting"
@@ -53,50 +38,25 @@ export type RoleMode =
 
 export type Seniority = "internship" | "junior" | "pleno"
 
-/**
- * How strictly to enforce domain proof.
- *
- * strict   → Never imply any domain experience not explicitly in allowed evidence.
- *            Applies to people_analytics, laboratory_qc, qhse_quality.
- * moderate → May frame adjacent skills toward the domain if evidence partially supports it.
- *            Applies to bi_reporting, process_engineering.
- */
 export type DomainProofPolicy = "strict" | "moderate"
 
-// ─── Role pack IDs ────────────────────────────────────────────────────────────
-
 export type RolePackId =
-  | "analytics_operational"  // people_analytics + operational_support
-  | "data_science_ml"        // data_science_ml + research_modeling
-  | "bi_reporting"           // bi_reporting + analytical_reporting
-  | "laboratory_qc"          // laboratory_qc + quality_control
-  | "qhse_quality"           // qhse_quality + quality_control
-  | "process_engineering"    // process_engineering + research_modeling
-  | "general"                // fallback
+  | "analytics_operational"
+  | "data_science_ml"
+  | "bi_reporting"
+  | "laboratory_qc"
+  | "qhse_quality"
+  | "process_engineering"
+  | "general"
 
-// ─── Job Profile ─────────────────────────────────────────────────────────────────
-
-/**
- * Structured representation of a job's context.
- * This is the central contract passed through the resume generation pipeline.
- *
- * Produced by: buildJobProfile()
- * Consumed by: Evidence Selector, prompt builders, normalizers
- */
 export interface JobProfile {
-  // ─ Classification ────────────────────────────────────────────────────────────
   role_family: RoleFamily
   role_mode: RoleMode
   seniority: Seniority
   role_pack_id: RolePackId
-
-  // ─ Policy ────────────────────────────────────────────────────────────────
   domain_proof_policy: DomainProofPolicy
-
-  // ─ Output language ──────────────────────────────────────────────────────────
   output_language: "pt-BR" | "en"
 
-  // ─ Terminology ─────────────────────────────────────────────────────────────
   /** Terms the job explicitly uses — prefer these exact labels when present. */
   exact_terms: string[]
   /** Terms to prefer when multiple framings are equally accurate. */
@@ -104,42 +64,42 @@ export interface JobProfile {
   /** Terms and phrases that must NOT appear in the output. */
   forbidden_terms: string[]
 
-  // ─ Excel policy ─────────────────────────────────────────────────────────────
-  /**
-   * How to label Excel in the output.
-   *
-   * "use_exact_label"  → Job explicitly says "Excel Avançado" — use that exact string.
-   * "descriptive"      → Job does not specify level — describe capabilities instead
-   *                      (e.g. "Excel com fórmulas avançadas, tabelas dinâmicas e Power Query").
-   * "basic_only"       → Job is laboratory/QHSE and does not highlight Excel — use "Excel" only.
-  */
   excel_term_policy: "use_exact_label" | "descriptive" | "basic_only"
   /**
-   * The exact Excel label found in normalized job text when excel_term_policy === "use_exact_label".
-   * e.g. "excel avançado", "advanced excel", "excel intermediário"
-   * Undefined when policy is "descriptive" or "basic_only".
+   * Exact Excel label derived from exact_terms when excel_term_policy === "use_exact_label".
+   * Stored as a canonical display label (e.g. "Excel Avançado", "Excel Intermediário").
    */
   excel_exact_label?: string
 
-  // ─ Location statement ──────────────────────────────────────────────────────────
   /**
    * Whether to append a relocation/availability sentence to the summary.
-   * True when the job city differs from the candidate's city (Bertioga/SP).
+   * True when the job city differs from the candidate's mobility area.
    */
   require_location_statement: boolean
 
-  // ─ Summary anchors ──────────────────────────────────────────────────────────
-  /** Three topic anchors that structure the summary section, in order of importance. */
-  summary_anchors: {
-    /** Primary focus: role + domain + candidate positioning */
-    primary: string
-    /** Secondary focus: most relevant technical capability */
-    secondary: string
-    /** Tertiary focus: process discipline or complementary differentiator */
-    tertiary: string
+  /**
+   * Atomic semantic tags that structure the summary section.
+   * Values are snake_case domain tags — NOT prose sentences.
+   * Verbalization is the responsibility of the summary prompt builder (Etapa 5).
+   * Use string literals (not enums) to keep the taxonomy flexible during evolution.
+   */
+  summary_topics: {
+    /** Domain + execution mode tag */
+    domain: string
+    /** Primary technical capability tag */
+    capability: string
+    /** Process discipline or soft differentiator tag */
+    discipline: string
   }
 
-  // ─ Backward compatibility ────────────────────────────────────────────────────────
+  /**
+   * Human-readable reasons for classification decisions.
+   * Populated only when process.env.NODE_ENV !== "production".
+   *
+   * Must not be passed to prompt builders, persisted, or sent to the LLM.
+   */
+  explanations?: string[]
+
   /**
    * Maps JobProfile back to the legacy JobContext string.
    * Used during the transition period while prompt builders still accept JobContext.
@@ -148,11 +108,11 @@ export interface JobProfile {
   legacyContext: "laboratory" | "data_science" | "qhse" | "engineering" | "general"
 }
 
-// ─── Keyword sets for detection ───────────────────────────────────────────────────────
+const SHORT_TOKEN_WHITELIST = new Set(["bi", "rh", "ml", "etl", "sql", "vba"])
 
 const LAB_KEYWORDS = [
-  "preparação", "soluções", "amostras", "laboratório", "reagentes", "titulação",
-  "síntese", "vidrarias", "bpl", "pesagem", "ensaios", "experimental", "analítico",
+  "preparacao", "solucoes", "amostras", "laboratorio", "reagentes", "titulacao",
+  "sintese", "vidrarias", "bpl", "pesagem", "ensaios", "experimental", "analitico",
   "preparation", "solutions", "samples", "laboratory", "reagents", "titration",
   "synthesis", "glassware", "glp", "weighing", "assays",
 ]
@@ -160,17 +120,22 @@ const LAB_KEYWORDS = [
 const PEOPLE_ANALYTICS_KEYWORDS = [
   "people analytics", "rh", "recursos humanos", "headcount", "workforce",
   "turnover", "absentee", "absenteismo", "hrbp", "people data", "hr data",
-  "people operations", "gestão de pessoas",
+  "people operations", "gestao de pessoas",
+]
+
+const HR_EVIDENCE_KEYWORDS = [
+  "people analytics", "recursos humanos", "headcount", "workforce",
+  "turnover", "absenteismo", "hrbp", "people data", "hr data", "gestao de pessoas",
 ]
 
 const BI_REPORTING_KEYWORDS = [
-  "power bi", "tableau", "dashboard", "painéis", "relatório", "reporting",
-  "indicadores", "kpi", "visualização", "bi", "business intelligence",
+  "power bi", "tableau", "dashboard", "paineis", "relatorio", "reporting",
+  "indicadores", "kpi", "visualizacao", "bi", "business intelligence",
   "data visualization", "looker",
 ]
 
 const DATA_SCIENCE_ML_KEYWORDS = [
-  "machine learning", "ml", "deep learning", "neural network", "scikit-learn",
+  "machine learning", "ml", "deep learning", "neural network", "scikit learn",
   "tensorflow", "keras", "modelo preditivo", "predictive model", "feature engineering",
   "algoritmo", "algorithm", "treinamento de modelo", "model training", "nlp",
   "computer vision", "pytorch",
@@ -182,77 +147,119 @@ const DATA_OPERATIONAL_KEYWORDS = [
 ]
 
 const QHSE_KEYWORDS = [
-  "qualidade", "qhse", "hse", "iso", "não-conformidades", "auditoria",
-  "segurança", "meio ambiente", "saúde ocupacional", "higiene", "compliance",
+  "qualidade", "qhse", "hse", "iso", "nao conformidades", "auditoria",
+  "seguranca", "meio ambiente", "saude ocupacional", "higiene", "compliance",
   "quality", "audit", "safety", "environment", "occupational health",
-  "non-conformance", "standards",
+  "non conformance", "standards",
 ]
 
 const ENGINEERING_KEYWORDS = [
-  "processo", "simulação", "modelagem", "aspen", "cad", "otimização",
-  "eficiência", "process", "simulation", "modeling", "optimization",
+  "processo", "simulacao", "modelagem", "aspen", "cad", "otimizacao",
+  "eficiencia", "process", "simulation", "modeling", "optimization",
   "plant", "planta", "equipamento", "equipment",
 ]
 
-const EXCEL_LABELS = [
-  "excel avançado", "advanced excel", "excel intermediário",
-  "excel with vba", "excel com vba",
+const RESEARCH_SIGNALS = [
+  "machine learning", "modelo preditivo", "predictive model", "feature engineering",
+  "pesquisa", "research", "treinamento de modelo", "model training",
+  "algoritmo", "algorithm", "deep learning", "nlp",
 ]
 
-const CANDIDATE_CITIES_NORMALIZED = [
-  "bertioga",
-  "santos",
-  "guaruja",
-  "cubatao",
-  "sao paulo",
+const OPERATIONAL_SIGNALS = [
+  "atualizacao", "manutencao", "suporte", "support", "operacoes", "operations",
+  "validacao", "validation", "padronizacao", "documentacao", "documentation",
+  "atualizar", "organizar", "manter",
 ]
 
-// ─── Helpers ────────────────────────────────────────────────────────────────────
+const QC_SIGNALS = [
+  "auditoria", "audit", "nao conformidade", "non conformance", "conformidade",
+  "compliance", "certificacao", "certification",
+]
 
-function score(text: string, keywords: string[]): number {
-  return keywords.filter((kw) => text.includes(kw.toLowerCase())).length
+const KNOWN_EXACT_LABELS = [
+  "Excel Avançado", "Advanced Excel", "Excel Intermediário",
+  "Excel com VBA", "Excel with VBA",
+  "Power BI", "Tableau", "Power Query",
+  "SQL", "Python", "VBA", "Aspen Plus", "MATLAB",
+  "ISO 17025", "ISO 9001", "ISO 14001", "OHSAS 18001",
+  "People Analytics", "HR Analytics", "Business Intelligence",
+]
+
+const EXCEL_CANONICAL = [
+  "Excel Avançado", "Advanced Excel", "Excel Intermediário",
+  "Excel com VBA", "Excel with VBA",
+]
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-function extractExactTerms(text: string): string[] {
-  const KNOWN_EXACT_LABELS = [
-    "excel avançado", "advanced excel", "power bi", "tableau", "power query",
-    "sql", "python", "r", "vba", "aspen plus", "aspen", "matlab",
-    "iso 17025", "iso 9001", "iso 14001", "ohsas 18001",
-    "people analytics", "hr analytics", "business intelligence",
-  ]
-  return KNOWN_EXACT_LABELS.filter((label) => text.includes(label.toLowerCase()))
-}
-
-function normalizeCityName(value: string): string {
-  return value
+export function normalizeText(raw: string): string {
+  return raw
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\bpowerbi\b/g, "power bi")
+    .replace(/\bpower-bi\b/g, "power bi")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
 }
 
+export function scoreWithBoundary(text: string, keywords: string[]): number {
+  return keywords.filter((kw) => {
+    const normalized = normalizeText(kw)
+    if (SHORT_TOKEN_WHITELIST.has(normalized)) {
+      const regex = new RegExp(`(?<![a-z0-9])${escapeRegExp(normalized)}(?![a-z0-9])`)
+      return regex.test(text)
+    }
+    return text.includes(normalized)
+  }).length
+}
+
+function extractExactTerms(originalText: string): string[] {
+  const normalizedOriginal = normalizeText(originalText)
+  const exactTerms = KNOWN_EXACT_LABELS.filter((label) =>
+    normalizedOriginal.includes(normalizeText(label))
+  )
+  return [...new Set(exactTerms)]
+}
+
 function detectSeniority(jobDetails: JobDetails): Seniority {
-  const text = (jobDetails.cargo ?? "").toLowerCase()
-  const tipo = jobDetails.tipo_vaga ?? "Estágio"
-  if (tipo === "Estágio" || text.includes("estágio") || text.includes("estagiario") || text.includes("intern")) {
-    return "internship"
-  }
-  if (tipo === "Jrúnior" || text.includes("júnior") || text.includes("junior") || text.includes("jr")) {
-    return "junior"
-  }
+  const cargo = normalizeText(jobDetails.cargo ?? "")
+  const tipo = normalizeText(jobDetails.tipo_vaga ?? "")
+
+  const isInternship =
+    tipo.includes("estagio") ||
+    tipo.includes("estagiario") ||
+    tipo.includes("intern") ||
+    cargo.includes("estagio") ||
+    cargo.includes("estagiario") ||
+    cargo.includes("intern")
+
+  const isJunior =
+    tipo.includes("junior") ||
+    cargo.includes("junior") ||
+    /(?<![a-z0-9])jr(?![a-z0-9])/.test(cargo) ||
+    /(?<![a-z0-9])jr(?![a-z0-9])/.test(tipo)
+
+  if (isInternship) return "internship"
+  if (isJunior) return "junior"
   return "pleno"
 }
 
 function detectExcel(
-  text: string,
+  exactTerms: string[],
   roleFamily: RoleFamily
 ): {
   policy: JobProfile["excel_term_policy"]
   exactLabel: string | undefined
 } {
-  const foundLabel = EXCEL_LABELS.find((label) => text.includes(label))
-  if (foundLabel) return { policy: "use_exact_label", exactLabel: foundLabel }
+  const found = exactTerms.find((term) =>
+    EXCEL_CANONICAL.some((canonical) => normalizeText(term) === normalizeText(canonical))
+  )
+
+  if (found) return { policy: "use_exact_label", exactLabel: found }
   if (roleFamily === "laboratory_qc" || roleFamily === "qhse_quality") {
     return { policy: "basic_only", exactLabel: undefined }
   }
@@ -260,24 +267,52 @@ function detectExcel(
 }
 
 function detectLocationStatement(jobDetails: JobDetails): boolean {
-  const normalizedJobCity = normalizeCityName(jobDetails.local ?? "")
-  // If job location is blank or explicitly remote, no statement needed
+  /**
+   * POLITICA DE LOCALIZACAO — DECISAO DE PRODUTO
+   *
+   * A frase de mobilidade e incluida quando a vaga esta em cidade
+   * fora da mobilidade habitual do candidato (base: Bertioga/SP).
+   *
+   * Cidades consideradas dentro da mobilidade (sem frase necessaria):
+   * - bertioga, santos, guaruja, cubatao, sao paulo
+   *
+   * NOTA: Sao Paulo capital esta nesta lista por decisao explicita —
+   * o candidato considera Sao Paulo dentro da sua mobilidade habitual.
+   * Para alterar, remover "sao paulo" de CANDIDATE_CITIES_NORMALIZED.
+   *
+   * Vagas remotas ou sem local definido: nunca incluir a frase.
+   */
+  const CANDIDATE_CITIES_NORMALIZED = [
+    "bertioga",
+    "santos",
+    "guaruja",
+    "cubatao",
+    "sao paulo",
+  ]
+
+  const normalizedJobCity = normalizeText(jobDetails.local ?? "")
+  const normalizedModalidade = normalizeText(jobDetails.modalidade ?? "")
+
   if (
     !normalizedJobCity ||
     normalizedJobCity === "indefinido" ||
     normalizedJobCity.startsWith("remoto") ||
-    jobDetails.modalidade === "Remoto"
+    normalizedModalidade === "remoto"
   ) {
     return false
   }
-  // If any candidate city matches the job city, no statement needed
+
   if (
-    CANDIDATE_CITIES_NORMALIZED.some((city) =>
-      normalizedJobCity === city || normalizedJobCity.startsWith(`${city} `)
+    CANDIDATE_CITIES_NORMALIZED.some(
+      (city) =>
+        normalizedJobCity === city ||
+        normalizedJobCity.startsWith(`${city} `) ||
+        normalizedJobCity.startsWith(`${city}/`)
     )
   ) {
     return false
   }
+
   return true
 }
 
@@ -287,7 +322,7 @@ function buildForbiddenTerms(family: RoleFamily, mode: RoleMode): string[] {
       "laboratório", "amostras", "reagentes", "síntese química",
       "aspen plus", "aspen", "titulação",
       "deep learning como destaque", "redes neurais como destaque",
-      "expertise", // too senior for internship
+      "expertise",
     ]
   }
   if (family === "laboratory_qc") {
@@ -329,67 +364,63 @@ function buildPreferredTerms(family: RoleFamily, mode: RoleMode): string[] {
   return []
 }
 
-function buildSummaryAnchors(
+function buildSummaryTopics(
   family: RoleFamily,
-  mode: RoleMode,
-  seniority: Seniority
-): JobProfile["summary_anchors"] {
-  const seniorityLabel = seniority === "internship" ? "estudante" : seniority === "junior" ? "recém-formado" : "profissional"
-
+  mode: RoleMode
+): JobProfile["summary_topics"] {
   if (family === "people_analytics" && mode === "operational_support") {
     return {
-      primary: `${seniorityLabel} com interesse em People Analytics e operações de RH`,
-      secondary: "organização e validação de bases de dados com Excel, SQL e Power BI",
-      tertiary: "pensamento analítico e atenção a detalhes na documentação de processos",
+      domain: "people_analytics_operational",
+      capability: "data_validation_excel_sql_powerbi",
+      discipline: "documentation_standardization",
     }
   }
   if (family === "bi_reporting" && mode === "analytical_reporting") {
     return {
-      primary: `${seniorityLabel} com interesse em Business Intelligence e visualização de dados`,
-      secondary: "desenvolvimento de dashboards e relatórios com Power BI e SQL",
-      tertiary: "capacidade analítica e comunicação de insights para tomada de decisão",
+      domain: "bi_reporting_analytical",
+      capability: "dashboard_reporting_powerbi_sql",
+      discipline: "insight_communication",
     }
   }
   if (family === "bi_reporting" && mode === "operational_support") {
     return {
-      primary: `${seniorityLabel} com interesse em suporte operacional a dados e relatórios`,
-      secondary: "manutenção e atualização de bases, dashboards e indicadores com Excel e Power BI",
-      tertiary: "organização, padronização e consistência de informações",
+      domain: "bi_reporting_operational",
+      capability: "base_maintenance_excel_powerbi",
+      discipline: "data_consistency_standardization",
     }
   }
   if (family === "data_science_ml") {
     return {
-      primary: `${seniorityLabel} com interesse em Ciência de Dados e Aprendizado de Máquina`,
-      secondary: "desenvolvimento de modelos preditivos e pipelines em Python e SQL",
-      tertiary: "pensamento estatístico e orientação a resultados mensuráveis",
+      domain: "data_science_ml_research",
+      capability: "predictive_modeling_python_sklearn",
+      discipline: "statistical_rigor_experimentation",
     }
   }
   if (family === "laboratory_qc") {
     return {
-      primary: `${seniorityLabel} com interesse em laboratório analítico e controle de qualidade`,
-      secondary: "preparação de soluções, controle de amostras e técnicas analíticas",
-      tertiary: "organização laboratorial e atenção a normas e boas práticas",
+      domain: "laboratory_qc_quality_control",
+      capability: "sample_control_analytical_techniques",
+      discipline: "lab_best_practices_traceability",
     }
   }
   if (family === "qhse_quality") {
     return {
-      primary: `${seniorityLabel} com interesse em Qualidade, Saúde, Segurança e Meio Ambiente`,
-      secondary: "acompanhamento de KPIs, controle de não-conformidades e Excel/Power BI",
-      tertiary: "interesse em normas ISO e melhoria contínua de processos",
+      domain: "qhse_quality_control",
+      capability: "kpi_tracking_nonconformance_powerbi",
+      discipline: "iso_standards_continuous_improvement",
     }
   }
   if (family === "process_engineering") {
     return {
-      primary: `${seniorityLabel} com interesse em engenharia de processos e simulação`,
-      secondary: "simulação e modelagem de processos com Aspen Plus e Python",
-      tertiary: "orientação técnica e rigor nos balanços de massa e energia",
+      domain: "process_engineering_modeling",
+      capability: "process_simulation_aspen_python",
+      discipline: "mass_energy_balance_technical_rigor",
     }
   }
-  // general
   return {
-    primary: `${seniorityLabel} com perfil analítico e interesse naárea de atuação da vaga`,
-    secondary: "habilidades técnicas em análise de dados, Python e ferramentas de visualização",
-    tertiary: "capacidade de aprendizado rápido e trabalho com dados e processos",
+    domain: "general_analytical",
+    capability: "data_analysis_python_visualization",
+    discipline: "fast_learning_process_orientation",
   }
 }
 
@@ -403,81 +434,72 @@ function resolveLegacyContext(
   return "general"
 }
 
-// ─── Main builder ───────────────────────────────────────────────────────────────────
-
-/**
- * Builds a structured JobProfile from raw job details.
- *
- * Detection strategy:
- * 1. Score each domain with its keyword set.
- * 2. Resolve the dominant role_family.
- * 3. Determine role_mode by detecting operational vs research signals.
- * 4. Derive all remaining fields from family + mode + job text.
- *
- * @param jobDetails - Parsed job data from the database
- * @returns Fully populated JobProfile
- */
 export function buildJobProfile(jobDetails: JobDetails): JobProfile {
-  const allText = [
+  const rawText = [
     jobDetails.cargo ?? "",
     ...(jobDetails.requisitos_obrigatorios ?? []),
     ...(jobDetails.requisitos_desejaveis ?? []),
     ...(jobDetails.responsabilidades ?? []),
-  ]
-    .join(" ")
-    .toLowerCase()
+  ].join(" ")
 
-  // ─ Score each domain ─────────────────────────────────────────────────────────
-  const labScore = score(allText, LAB_KEYWORDS) * 1.2
-  const peopleAnalyticsScore = score(allText, PEOPLE_ANALYTICS_KEYWORDS) * 1.3
-  const biReportingScore = score(allText, BI_REPORTING_KEYWORDS) * 1.0
-  const dsMLScore = score(allText, DATA_SCIENCE_ML_KEYWORDS) * 1.1
-  const dsOperationalScore = score(allText, DATA_OPERATIONAL_KEYWORDS) * 0.8
-  const qhseScore = score(allText, QHSE_KEYWORDS) * 1.1
-  const engineeringScore = score(allText, ENGINEERING_KEYWORDS) * 1.0
+  const allText = normalizeText(rawText)
+  const explanations: string[] = []
 
-  // ─ Resolve role family ───────────────────────────────────────────────────────────
+  const labScore = scoreWithBoundary(allText, LAB_KEYWORDS) * 1.2
+  const peopleAnalyticsScore = scoreWithBoundary(allText, PEOPLE_ANALYTICS_KEYWORDS) * 1.3
+  const biReportingScore = scoreWithBoundary(allText, BI_REPORTING_KEYWORDS) * 1.0
+  const dsMLScore = scoreWithBoundary(allText, DATA_SCIENCE_ML_KEYWORDS) * 1.1
+  const dsOperationalScore = scoreWithBoundary(allText, DATA_OPERATIONAL_KEYWORDS) * 0.8
+  const qhseScore = scoreWithBoundary(allText, QHSE_KEYWORDS) * 1.1
+  const engineeringScore = scoreWithBoundary(allText, ENGINEERING_KEYWORDS) * 1.0
+
+  const hasHREvidence =
+    scoreWithBoundary(allText, HR_EVIDENCE_KEYWORDS) > 0 ||
+    /(?<![a-z0-9])rh(?![a-z0-9])/.test(allText)
+
+  const hasResearchSignals = scoreWithBoundary(allText, RESEARCH_SIGNALS) >= 2
+
+  const effectivePeopleAnalyticsScore = hasHREvidence ? peopleAnalyticsScore : 0
+  const effectiveDSMLScore = hasResearchSignals ? dsMLScore : dsMLScore * 0.4
+  const effectiveBIScore = !hasResearchSignals
+    ? biReportingScore + dsOperationalScore * 0.5
+    : biReportingScore
+
+  explanations.push(
+    `scored people_analytics=${effectivePeopleAnalyticsScore.toFixed(1)} (hasHREvidence=${hasHREvidence})`
+  )
+  explanations.push(
+    `scored bi_reporting=${effectiveBIScore.toFixed(1)}, data_science_ml=${effectiveDSMLScore.toFixed(1)} (hasResearchSignals=${hasResearchSignals})`
+  )
+  explanations.push(
+    `scored laboratory_qc=${labScore.toFixed(1)}, qhse=${qhseScore.toFixed(1)}, engineering=${engineeringScore.toFixed(1)}`
+  )
+
   let role_family: RoleFamily = "general"
   let highScore = 0
 
   const candidates: [RoleFamily, number][] = [
+    ["people_analytics", effectivePeopleAnalyticsScore],
     ["laboratory_qc", labScore],
-    ["people_analytics", peopleAnalyticsScore],
-    ["bi_reporting", biReportingScore],
-    ["data_science_ml", dsMLScore],
     ["qhse_quality", qhseScore],
+    ["bi_reporting", effectiveBIScore],
+    ["data_science_ml", effectiveDSMLScore],
     ["process_engineering", engineeringScore],
   ]
 
-  for (const [family, s] of candidates) {
-    if (s > highScore) {
-      highScore = s
+  for (const [family, score] of candidates) {
+    if (score > highScore) {
+      highScore = score
       role_family = family
     }
   }
 
-  // ─ Resolve role mode ───────────────────────────────────────────────────────────
-  const RESEARCH_SIGNALS = [
-    "machine learning", "modelo preditivo", "predictive model", "feature engineering",
-    "pesquisa", "research", "treinamento de modelo", "model training",
-    "algoritmo", "algorithm", "deep learning", "nlp",
-  ]
-  const OPERATIONAL_SIGNALS = [
-    "atualização", "manutenção", "suporte", "support", "operações", "operations",
-    "validação", "validation", "padronização", "documentação", "documentation",
-    "atualizar", "organizar", "manter",
-  ]
-  const QC_SIGNALS = [
-    "auditoria", "audit", "não-conformidade", "non-conformance", "conformidade",
-    "compliance", "certificação", "certification",
-  ]
-
   let role_mode: RoleMode
   if (role_family === "laboratory_qc" || role_family === "qhse_quality") {
-    role_mode = score(allText, QC_SIGNALS) > 0 ? "quality_control" : "operational_support"
-  } else if (score(allText, RESEARCH_SIGNALS) >= 2) {
+    role_mode = scoreWithBoundary(allText, QC_SIGNALS) > 0 ? "quality_control" : "operational_support"
+  } else if (hasResearchSignals) {
     role_mode = "research_modeling"
-  } else if (score(allText, OPERATIONAL_SIGNALS) >= 2) {
+  } else if (scoreWithBoundary(allText, OPERATIONAL_SIGNALS) >= 2) {
     role_mode = "operational_support"
   } else if (role_family === "bi_reporting") {
     role_mode = "analytical_reporting"
@@ -485,7 +507,6 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
     role_mode = "operational_support"
   }
 
-  // ─ Resolve role pack ID ─────────────────────────────────────────────────────────
   let role_pack_id: RolePackId
   if (role_family === "people_analytics") {
     role_pack_id = "analytics_operational"
@@ -503,7 +524,6 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
     role_pack_id = "general"
   }
 
-  // ─ Resolve domain proof policy ─────────────────────────────────────────────────────
   const domain_proof_policy: DomainProofPolicy =
     role_family === "people_analytics" ||
     role_family === "laboratory_qc" ||
@@ -511,27 +531,19 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
       ? "strict"
       : "moderate"
 
-  // ─ Seniority ────────────────────────────────────────────────────────────────────
   const seniority = detectSeniority(jobDetails)
-
-  // ─ Exact terms (from job description) ─────────────────────────────────────────────
-  const exact_terms = extractExactTerms(allText)
-
-  // ─ Preferred + forbidden terms ────────────────────────────────────────────────────
+  const exact_terms = extractExactTerms(rawText)
   const preferred_terms = buildPreferredTerms(role_family, role_mode)
   const forbidden_terms = buildForbiddenTerms(role_family, role_mode)
-
-  // ─ Excel policy ────────────────────────────────────────────────────────────────────
-  const { policy: excel_term_policy, exactLabel: excel_exact_label } = detectExcel(allText, role_family)
-
-  // ─ Location statement ───────────────────────────────────────────────────────────
+  const { policy: excel_term_policy, exactLabel: excel_exact_label } = detectExcel(exact_terms, role_family)
   const require_location_statement = detectLocationStatement(jobDetails)
-
-  // ─ Summary anchors ───────────────────────────────────────────────────────────
-  const summary_anchors = buildSummaryAnchors(role_family, role_mode, seniority)
-
-  // ─ Legacy context mapping ─────────────────────────────────────────────────────────
+  const summary_topics = buildSummaryTopics(role_family, role_mode)
   const legacyContext = resolveLegacyContext(role_family)
+
+  explanations.push(`resolved role_family=${role_family} (highScore=${highScore.toFixed(1)})`)
+  explanations.push(`resolved role_mode=${role_mode}`)
+  explanations.push(`resolved seniority=${seniority}`)
+  explanations.push(`require_location_statement=${require_location_statement}`)
 
   const profile: JobProfile = {
     role_family,
@@ -546,12 +558,13 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
     excel_term_policy,
     excel_exact_label,
     require_location_statement,
-    summary_anchors,
+    summary_topics,
     legacyContext,
+    ...(process.env.NODE_ENV !== "production" ? { explanations } : {}),
   }
 
   console.log(
-    `[JobProfile] 🎯 family=${role_family} mode=${role_mode} seniority=${seniority} pack=${role_pack_id} policy=${domain_proof_policy}`
+    `[JobProfile] family=${role_family} mode=${role_mode} seniority=${seniority} pack=${role_pack_id} policy=${domain_proof_policy}`
   )
 
   return profile
