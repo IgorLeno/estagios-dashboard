@@ -75,19 +75,50 @@ function isAuthorizedRename(returnedSkill: string, allowedSkills: string[]): boo
     "uma",
   ])
 
+  const OPERATIONAL_KEYWORDS = new Set([
+    "acompanhamento",
+    "administracao",
+    "analise",
+    "analytics",
+    "bases",
+    "controle",
+    "coordenacao",
+    "dados",
+    "documentacao",
+    "estrutura",
+    "estruturacao",
+    "gestao",
+    "indicadores",
+    "kpi",
+    "kpis",
+    "melhoria",
+    "monitoramento",
+    "organizacao",
+    "processo",
+    "processos",
+    "projetos",
+    "qualidade",
+    "quality",
+    "rastreamento",
+    "reporting",
+    "tracking",
+  ])
+
   const meaningfulWords = (s: string) =>
     normalize(s)
       .split(/\s+/)
       .filter((w) => w.length > 2 && !STOPWORDS.has(w))
 
   const returnedWords = meaningfulWords(returnedSkill)
+  const isOperationalSkill = (words: string[]) => words.some((word) => OPERATIONAL_KEYWORDS.has(word))
 
   return allowedSkills.some((allowed) => {
     const allowedWords = meaningfulWords(allowed)
     const overlap = returnedWords.filter((w) =>
       allowedWords.some((a) => a.includes(w) || w.includes(a))
     )
-    return overlap.length >= 1
+
+    return overlap.length >= 1 && isOperationalSkill(returnedWords) && isOperationalSkill(allowedWords)
   })
 }
 

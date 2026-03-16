@@ -105,6 +105,19 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      ❌ NEVER: "para aplicar habilidades analíticas"
      ❌ NEVER: cite company name in objective
      ❌ NEVER: "visualizações estratégicas" → use "visualizações de indicadores"
+   - PEOPLE ANALYTICS FRAMING (MANDATORY): When job is in People Analytics but
+     candidate has no direct People Analytics experience (only BI/data projects):
+     ❌ NEVER write: "conhecimento em People Analytics"
+     ❌ NEVER write: "experiência em People Analytics"
+     ✅ CORRECT: "conhecimento em BI, análise e visualização de dados, com interesse em
+        People Analytics"
+     ✅ CORRECT: "prática em BI e análise de dados, com interesse na área de People Analytics"
+
+     Rule: "People Analytics" may appear ONCE in the summary (in the objective sentence),
+     but the opening sentence must lead with what IS proven: BI, SQL, Python, Excel, dashboards.
+     Interest language ("interesse em", "com foco em transição para") is always safer
+     than implied expertise ("conhecimento em People Analytics") for roles the candidate
+     hasn't worked in directly.
    - DO NOT name the company inside the resume body — the company name belongs in cover letters,
      not in the CV objective line. Use area/function instead.
      ❌ WRONG: "Busco oportunidade na Aegea Saneamento para..."
@@ -113,12 +126,21 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - NEVER inject job domain into unrelated project descriptions
    - Keep all original metrics; if none exist, use qualitative descriptors
 
-6. LOCATION AWARENESS:
-   - If job location differs from candidate's city, explicitly add availability for relocation
-     or on-site work at the end of the summary.
-   - Format: "Disponível para atuação presencial em [city]." or "Com disponibilidade para
-     mudança/atuação presencial em [job city]."
-   - Only add if job has a specific city different from candidate location.
+6. LOCATION AWARENESS (ALWAYS CHECK — MANDATORY):
+   - ALWAYS compare job location with candidate location before writing summary.
+   - If job city differs from candidate city OR if job city is not in the same metro area:
+     * MANDATORY: Add availability statement as the LAST sentence of the summary.
+     * Format: "Disponível para atuação presencial e mobilidade para realocação."
+     * OR: "Com disponibilidade para atuação presencial em [job city] e mobilidade."
+   - If same city: no need to add.
+   - DEFAULT BEHAVIOR: When in doubt (cities are different), ALWAYS add the statement.
+     It is much better to add unnecessarily than to omit when it is needed.
+   - This sentence replaces "período integral" if present — "disponibilidade para
+     realocação" is more universally understood and does not raise scheduling doubts.
+
+   ⚠️ NOTE: "período integral" can raise concerns for recruiters when candidate is still
+   enrolled in university. Prefer "disponibilidade para atuação presencial e mobilidade"
+   as it answers the practical concern without opening a scheduling question.
 
 7. NEW TECHNOLOGY INTEREST:
    - If the job mentions a specific tool the candidate doesn't have in their CV but is clearly
@@ -167,9 +189,12 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - MINIMUM: Always keep at least 3 skills total per category kept
    - OPERATIONAL ROLE FILTER: For internship/junior roles in BI, People Analytics, Data Support,
      or Documentation, apply these filters:
-     * DEPRIORITIZE or REMOVE: Deep Learning, neural networks, TensorFlow, advanced ML libraries
-       (Scikit-learn is ok; keep if explicitly required, otherwise move to last or omit)
-     * DEPRIORITIZE: Typer, GAMESS, MOPAC, CREST, Avogadro, OpenBabel (niche/research tools)
+     * REMOVE (do not include in any category): Scikit-learn — for BI/People Analytics/
+       Data Support operational internship roles, Scikit-learn implies ML focus which
+       contradicts the operational profile being presented. ALWAYS remove for these roles,
+       even if moving to last position is tempting. Omit entirely.
+     * REMOVE: Deep Learning, neural networks, TensorFlow (same reason)
+     * DEPRIORITIZE: Typer, GAMESS, MOPAC, CREST, Avogadro, OpenBabel (niche tools)
      * REMOVE: Self-assessed soft skill proficiency levels — NEVER write "Comunicação técnica
        (Avançado)" or "Pensamento analítico (Avançado)"; write just "Comunicação técnica",
        "Pensamento analítico". Soft skills are NEVER rated with proficiency levels.
@@ -256,9 +281,22 @@ AFTER (QHSE-optimized):
 
 OUTPUT FORMAT RULES FOR SOFT SKILLS:
    - If the CV contains soft skills, split them into TWO separate categories:
-     1. "Competências de Processo": technical activities that are transferable
-        (ex: "Elaboração de relatórios técnicos", "Validação de dados",
-        "Documentação técnica", "Acompanhamento de KPIs", "Organização de bases")
+     1. "Competências de Processo": technical process activities that are transferable.
+        For BI/Analytics/People Analytics roles, PRIORITIZE these items (in order):
+        ✅ PRIORITY 1 (data operations): "Validação de dados", "Organização de bases de dados",
+           "Padronização de informações", "Documentação técnica",
+           "Atualização e manutenção de bases"
+        ✅ PRIORITY 2 (reporting): "Elaboração de relatórios técnicos",
+           "Acompanhamento de KPIs", "Controle de indicadores"
+        ✅ PRIORITY 3 (general process): "Acompanhamento de projetos",
+           "Organização de atividades"
+        ❌ DEPRIORITIZE for BI/Analytics roles (move to last or remove):
+           "Controle de não-conformidades" — too industrial/quality-management, not BI
+           "Acompanhamento de indicadores de qualidade" — implies manufacturing QA, not data
+           "Gestão de processos industriais" — clearly wrong domain
+
+        Select 3-5 items that best match the job. For BI/People Analytics roles, the
+        section MUST contain at least 2 items from PRIORITY 1.
      2. "Competências Comportamentais": pure behavioral traits
         (ex: "Pensamento analítico", "Atenção a detalhes", "Comunicação técnica",
         "Resolução de problemas", "Organização")
@@ -268,7 +306,8 @@ OUTPUT FORMAT RULES FOR SOFT SKILLS:
    - "Rastreamento de KPIs" → rename to "Acompanhamento de KPIs"
    - "Administração de bases de dados" → rename to "Organização e estruturação de bases de dados"
    - "Visualizações estratégicas" → rename to "Visualização de indicadores"
-   - "Controle de não-conformidades" → keep as-is (standard quality management term)
+   - "Controle de não-conformidades" → remove for BI/Analytics/People Analytics outputs unless
+     the job is explicitly quality/compliance-focused
 
 Return JSON format:
 {
@@ -556,6 +595,26 @@ export function buildSkillsPrompt(
   // Combined allowed skills
   const allAllowedSkills = [...cvSkillItems, ...bankSkillItems]
 
+  // Compute certification order at prompt-build time (more reliable than asking LLM to sort)
+  const cvCertifications = currentSkills
+    .filter((cat) => cat.category.toLowerCase().includes("certif"))
+    .flatMap((cat) => cat.items)
+
+  const certRankOrder = ["google data analytics", "power bi", "sql", "excel"]
+
+  const sortedCerts = [...cvCertifications].sort((a, b) => {
+    const rankA = certRankOrder.findIndex((keyword) => a.toLowerCase().includes(keyword))
+    const rankB = certRankOrder.findIndex((keyword) => b.toLowerCase().includes(keyword))
+    const effectiveRankA = rankA === -1 ? certRankOrder.length : rankA
+    const effectiveRankB = rankB === -1 ? certRankOrder.length : rankB
+    return effectiveRankA - effectiveRankB
+  })
+
+  const certOrderInstruction =
+    sortedCerts.length > 0
+      ? `\nCERTIFICATIONS MUST BE IN THIS EXACT ORDER (pre-computed, do not reorder):\n${sortedCerts.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n`
+      : ""
+
   const languageInstruction =
     language === "pt"
       ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
@@ -588,6 +647,8 @@ Bank Skills: ${bankSkillItems.join(", ")}
 
 EXACT PHRASES TO MATCH (from job):
 ${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
+
+${certOrderInstruction}
 
 ${SKILLS_PROMPT_INSTRUCTIONS}`
 }
