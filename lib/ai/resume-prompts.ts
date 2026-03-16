@@ -91,11 +91,20 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Avoid fluff words - every word should add value
 
 5. TRUTHFULNESS (see global rules in System Prompt):
-   - FUNCTION-FIRST OBJECTIVE: The final sentence (objective) must describe WHAT THE CANDIDATE
-     WILL DO, not what they want to get.
-     ❌ WRONG: "Busco estágio na [company] para aplicar habilidades analíticas."
-     ✅ CORRECT: "Busco estágio em [area] para apoiar rotinas de [specific activities from job]."
-     Use the job's RESPONSABILIDADES to fill [specific activities].
+   - FUNCTION-FIRST OBJECTIVE (MANDATORY): The final sentence MUST follow this structure:
+     "Busco estágio em [área] para apoiar rotinas de [ANCHOR 1], [ANCHOR 2] e [ANCHOR 3]."
+     
+     ANCHOR selection rules:
+     * ANCHOR 1 (always operational): choose from → "organização, validação e atualização de bases
+       de dados" / "estruturação e manutenção de bases" / "atualização e consistência de dados"
+     * ANCHOR 2 (always visual/reporting): choose from → "criação de visualizações de indicadores"
+       / "desenvolvimento de dashboards" / "elaboração de relatórios técnicos"
+     * ANCHOR 3 (always tracking): choose from → "acompanhamento de KPIs" / "monitoramento de
+       indicadores" / "controle de métricas"
+     
+     ❌ NEVER: "para aplicar habilidades analíticas"
+     ❌ NEVER: cite company name in objective
+     ❌ NEVER: "visualizações estratégicas" → use "visualizações de indicadores"
    - DO NOT name the company inside the resume body — the company name belongs in cover letters,
      not in the CV objective line. Use area/function instead.
      ❌ WRONG: "Busco oportunidade na Aegea Saneamento para..."
@@ -166,6 +175,12 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
        "Pensamento analítico". Soft skills are NEVER rated with proficiency levels.
      * KEEP AND PROMOTE: organização de bases, validação de dados, padronização, Excel (with
        specific functions), Power BI, SQL, relatórios técnicos, documentação
+   - LANGUAGE CONSISTENCY: When output language is PT (Portuguese), translate skill
+     display terms that are commonly used in Portuguese CVs:
+     * "KPI tracking" → "acompanhamento de KPIs"
+     * "KPI monitoring" → "monitoramento de KPIs"
+     * Keep tool names as-is (Power BI, Excel, Python, SQL — these are proper nouns)
+     * Keep certification names as-is (Google Data Analytics, etc.)
    - MAXIMUM: 6-8 items per category (remove excess irrelevant skills)
 
 5. EXACT TERMINOLOGY (CRITICAL FOR ATS):
@@ -182,18 +197,26 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - REMOVE entire categories if 0 of their skills are relevant to the job
    - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
      in analytics/BI/HR/data roles — they are noise, not signal
-   - DEDUPLICATION (MANDATORY): Before returning, scan every category for duplicate skill names.
-     If the same skill appears twice (from CV + Bank), keep ONLY the more descriptive version.
-     Example: "Power BI (dashboards, KPI tracking)" + "Power BI (Intermediário)" → keep only
-     "Power BI (dashboards, KPI tracking)". ZERO duplicate skill names allowed.
-   - CERTIFICATION ORDER (MANDATORY): Sort certifications by job relevance score:
-     * Score 5 (most relevant): certifications explicitly matching job required skills
-     * Score 4: certifications matching job desired skills
-     * Score 3: general data/analytics certifications (Google Data Analytics)
-     * Score 2: tool-specific certifications (Power BI, SQL courses)
-     * Score 1: adjacent certifications (adjacent domain, not required by job)
-     * Score 0 (last): certifications with no relevance to job (e.g., Deep Learning for BI ops role)
-     Return certifications sorted descending by score. If tie, use original CV order.
+   - DEDUPLICATION (MANDATORY — CROSS-CATEGORY):
+     After building all categories, scan the ENTIRE skills section (all categories combined)
+     for duplicate skill names.
+     * If the same skill appears in TWO different categories: keep it ONLY in the most
+       relevant category for the job — remove from the less relevant one.
+     * Example: "Excel Avançado" in "Visualização & BI" AND in "Linguagens & Análise de Dados"
+       → keep ONLY in "Visualização & BI" (more relevant for BI roles), remove from Linguagens.
+     * Within same category: keep most descriptive version (existing rule — keep as is).
+     * Apply this check AFTER all categories are built, as a final pass.
+   - CERTIFICATION ORDER (STRICT): Sort certifications using this priority for
+     BI/Analytics/People Analytics/Data Support roles:
+     1st: "Google Data Analytics" — broad analytics foundation
+     2nd: "Power BI" related certifications — direct tool match
+     3rd: "SQL" related certifications — direct tool match
+     4th: "Excel" related certifications — direct tool match
+     5th: Other analytics/data certifications
+     LAST: Deep Learning, ML, AI certifications (unless job explicitly requires)
+     
+     Apply this sort BEFORE outputting the certifications array.
+     If a certification matches multiple levels, use the highest applicable.
 
 7. TRUTHFULNESS (see global rules in System Prompt):
    - ONLY describe work that was actually done — reframe HOW, never WHAT
@@ -222,9 +245,9 @@ AFTER (QHSE-optimized):
     "category": "Gestão de Qualidade & QHSE",
     "items": [
       "Excel Avançado (Tabelas Dinâmicas, Macros)", // EXACT match from job
-      "Power BI (dashboards, KPI tracking)", // EXACT match
+      "Power BI (dashboards, acompanhamento de KPIs)", // EXACT match
       "Relatórios técnicos", // Related to job
-      "Gestão de projetos (KPIs/qualidade)", // Related
+      "Acompanhamento de indicadores de qualidade", // Related
       "ISO 17025 (Familiar)" // Added from skills bank
     ]
   },
@@ -240,10 +263,12 @@ OUTPUT FORMAT RULES FOR SOFT SKILLS:
         (ex: "Pensamento analítico", "Atenção a detalhes", "Comunicação técnica",
         "Resolução de problemas", "Organização")
    - NEVER mix process activities with behavioral traits in the same category
-   - "Gestão de projetos" → rename to "Acompanhamento de projetos" for internship roles
+   - "Gestão de projetos" → rename to "Acompanhamento de projetos" (for ALL internship roles, mandatory)
+   - "Gestão de projetos (KPIs/qualidade)" → "Acompanhamento de indicadores de qualidade"
    - "Rastreamento de KPIs" → rename to "Acompanhamento de KPIs"
    - "Administração de bases de dados" → rename to "Organização e estruturação de bases de dados"
    - "Visualizações estratégicas" → rename to "Visualização de indicadores"
+   - "Controle de não-conformidades" → keep as-is (standard quality management term)
 
 Return JSON format:
 {
@@ -341,6 +366,31 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    ✅ "documentação de fontes e regras" (if methodology documentation exists)
    ❌ NEVER add: "controle de acessos", "políticas de governança", "gestão de TI"
       (these require explicit professional experience, cannot be inferred from academic work)
+   FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI/Analytics roles — MANDATORY REFRAME:
+   
+   RULE: The first bullet of ANY scientific project MUST NOT mention the chemical/scientific
+   technique as the main subject. Lead with the data activity, not the chemistry.
+   
+   Forbidden first-bullet patterns:
+   ❌ "Realização de modelagem molecular..."
+   ❌ "Execução de simulações físico-químicas..."
+   ❌ "Desenvolvimento de cálculos termodinâmicos..."
+   
+   Required first-bullet patterns (lead with data):
+   ✅ "Análise e estruturação de dados experimentais de [process] para avaliação de [outcome]."
+   ✅ "Organização e tratamento de dados de simulação para [purpose]."
+   ✅ "Estruturação de base de dados de [domain] para análise de [business outcome]."
+   
+   Remaining bullets: use governance vocabulary naturally:
+   ✅ "Estruturação e padronização de dados experimentais com foco em consistência e rastreabilidade."
+   ✅ "Documentação técnica de fontes, metodologia e resultados para apoio à tomada de decisão."
+   ✅ "Validação e controle de qualidade dos dados obtidos, garantindo confiabilidade das análises."
+   
+   NEVER in scientific project for BI role:
+   ❌ "modelagem molecular" as main subject of bullet
+   ❌ "simulações físico-químicas" as main subject of bullet
+   ❌ "cálculos termodinâmicos" as main subject of bullet
+   These MAY appear as parenthetical context: "...dados de simulações físico-químicas..."
 
 6. ATS BEST PRACTICES:
    - Use industry-standard terminology (no academic jargon)
