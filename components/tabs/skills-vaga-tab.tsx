@@ -13,6 +13,8 @@ interface SkillsVagaTabProps {
   isLoaded: boolean
   onChange: (skills: JobSkillReview[]) => void
   onLoad: () => Promise<void>
+  onSave?: () => Promise<void>
+  isSaving?: boolean
   onNextTab?: () => void
 }
 
@@ -23,6 +25,8 @@ export function SkillsVagaTab({
   isLoaded,
   onChange,
   onLoad,
+  onSave,
+  isSaving = false,
 }: SkillsVagaTabProps) {
   function handleModeChange(skill: JobSkillReview, newMode: SkillUsageMode) {
     onChange(
@@ -171,6 +175,19 @@ export function SkillsVagaTab({
               )}
             </div>
           ))}
+
+          {isLoaded && skills.length > 0 && onSave ? (
+            <Button onClick={() => void onSave()} disabled={isSaving} className="w-full mt-4">
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Skills"
+              )}
+            </Button>
+          ) : null}
         </div>
       )}
 

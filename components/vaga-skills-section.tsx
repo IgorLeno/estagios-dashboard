@@ -16,19 +16,18 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
   const [skills, setSkills] = useState<JobSkillReview[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
     async function loadSkills() {
       setIsLoading(true)
+      setLoadError(null)
 
       try {
-        const response = await fetch("/api/ai/extract-job-skills", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ vagaId }),
-        })
+        const response = await fetch(`/api/vagas/${vagaId}/skills`)
 
         const data = (await response.json()) as
           | { success: true; skills: JobSkillReview[] }
@@ -47,7 +46,8 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
         if (!isMounted) return
 
         setSkills([])
-        setIsLoaded(false)
+        setIsLoaded(true)
+        setLoadError(error instanceof Error ? error.message : "Erro ao carregar skills da vaga")
         toast.error(error instanceof Error ? error.message : "Erro ao carregar skills da vaga")
       } finally {
         if (isMounted) {
@@ -120,15 +120,14 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
     }
   }
 
-  async function handleRetryLoad() {
-    setIsLoaded(false)
-    setIsLoading(true)
+  async function handleSaveSkills() {
+    setIsSaving(true)
 
     try {
-      const response = await fetch("/api/ai/extract-job-skills", {
+      const response = await fetch(`/api/vagas/${vagaId}/skills`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vagaId }),
+        body: JSON.stringify({ skills }),
       })
 
       const data = (await response.json()) as
@@ -136,18 +135,16 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
         | { success: false; error?: string }
 
       if (!response.ok || !data.success) {
-        throw new Error(data.success ? "Erro ao carregar skills da vaga" : data.error || "Erro ao carregar skills da vaga")
+        throw new Error(data.success ? "Erro ao salvar skills da vaga" : data.error || "Erro ao salvar skills da vaga")
       }
 
       setSkills(data.skills)
-      setIsLoaded(true)
+      toast.success("Skills salvas com sucesso!")
     } catch (error) {
-      console.error("[VagaSkillsSection] Error retrying skills load:", error)
-      setSkills([])
-      setIsLoaded(false)
-      toast.error(error instanceof Error ? error.message : "Erro ao carregar skills da vaga")
+      console.error("[VagaSkillsSection] Error saving skills:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar skills da vaga")
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
@@ -177,18 +174,12 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
             <div key={index} className="h-12 bg-muted/50 animate-pulse rounded-lg" />
           ))}
         </div>
+      ) : loadError ? (
+        <p className="text-sm text-destructive text-center py-8">{loadError}</p>
       ) : isLoaded && skills.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Nenhuma skill encontrada na descrição desta vaga.
+          Nenhuma skill configurada. Configure as skills na aba Skills ao editar a vaga.
         </p>
-      ) : !isLoaded ? (
-        <div className="flex flex-col items-start gap-2">
-          <Button onClick={() => void handleRetryLoad()} variant="outline">
-            <Loader2 className="w-4 h-4 mr-2" />
-            Recarregar skills da vaga
-          </Button>
-          <p className="text-xs text-muted-foreground">A extração usa a descrição da vaga já salva no banco.</p>
-        </div>
       ) : (
         <div className="space-y-2">
           {skills.map((skill) => (
@@ -248,6 +239,17 @@ export function VagaSkillsSection({ vagaId, onSkillsChange }: VagaSkillsSectionP
               )}
             </div>
           ))}
+
+          <Button onClick={() => void handleSaveSkills()} disabled={isSaving} className="w-full mt-4">
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar alterações"
+            )}
+          </Button>
         </div>
       )}
     </section>

@@ -74,6 +74,15 @@ const CONTEXT_KEYWORDS = {
       "data engineer",
       "etl",
       "big data",
+      "people analytics",
+      "bi",
+      "power bi",
+      "dashboard",
+      "analytics",
+      "relatório",
+      "tableau",
+      "databricks",
+      "dbt",
     ],
     weight: 1.0,
   },
@@ -156,10 +165,20 @@ const CONTEXT_KEYWORDS = {
 export function detectJobContext(jobDetails: JobDetails): JobContext {
   // Combine all relevant text for analysis
   const allText = [
-    jobDetails.cargo || "",
-    ...(jobDetails.requisitos_obrigatorios || []),
-    ...(jobDetails.requisitos_desejaveis || []),
-    ...(jobDetails.responsabilidades || []),
+    jobDetails.empresa ?? "",
+    jobDetails.cargo ?? "",
+    jobDetails.local ?? "",
+    jobDetails.modalidade ?? "",
+    jobDetails.tipo_vaga ?? "",
+    jobDetails.salario ?? "",
+    jobDetails.idioma_vaga ?? "",
+    jobDetails.etapa ?? "",
+    jobDetails.status ?? "",
+    jobDetails.observacoes ?? "",
+    ...(jobDetails.requisitos_obrigatorios ?? []),
+    ...(jobDetails.requisitos_desejaveis ?? []),
+    ...(jobDetails.responsabilidades ?? []),
+    ...(jobDetails.beneficios ?? []),
   ]
     .join(" ")
     .toLowerCase()

@@ -34,6 +34,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [loading, setLoading] = useState(false)
   const [config, setConfig] = useState<Configuracao | null>(null)
   const [activeTab, setActiveTab] = useState("descricao")
+  const [vagaId, setVagaId] = useState<string | null>(null)
+  const [isDraftVaga, setIsDraftVaga] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     empresa: "",
     cargo: "",
@@ -64,11 +66,81 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [jobSkills, setJobSkills] = useState<JobSkillReview[]>([])
   const [skillsLoaded, setSkillsLoaded] = useState(false)
   const [skillsLoading, setSkillsLoading] = useState(false)
+  const [isSavingSkills, setIsSavingSkills] = useState(false)
 
   const supabase = createClient()
   const approvedSkills = jobSkills
     .filter((skill) => skill.mode === "use" || skill.mode === "rename")
     .map((skill) => skill.displayName)
+
+  function buildVagaPayload() {
+    const empresa = formData.empresa.trim()
+    const cargo = formData.cargo.trim()
+    const local = formData.local.trim()
+    const observacoes = formData.observacoes.trim()
+    const looksLikeE2ETest = [empresa, cargo, observacoes].some(
+      (value) => value.includes("[E2E-TEST]") || value.includes("E2E-TEST")
+    )
+    const dataInscricao = getDataInscricao(new Date(), config || undefined)
+    const cvDataUrl = resumePdfBase64 ? `data:application/pdf;base64,${resumePdfBase64}` : null
+    const cvDataUrlPt = resumePdfBase64Pt ? `data:application/pdf;base64,${resumePdfBase64Pt}` : null
+    const cvDataUrlEn = resumePdfBase64En ? `data:application/pdf;base64,${resumePdfBase64En}` : null
+
+    return {
+      empresa,
+      cargo,
+      local,
+      modalidade: formData.modalidade,
+      requisitos: normalizeRatingForSave(formData.requisitos),
+      perfil: normalizeRatingForSave(formData.perfil),
+      etapa: formData.etapa || null,
+      status: formData.status,
+      observacoes: observacoes || null,
+      arquivo_analise_url: formData.arquivo_analise_url || null,
+      arquivo_cv_url: cvDataUrl,
+      arquivo_cv_url_pt: cvDataUrlPt,
+      arquivo_cv_url_en: cvDataUrlEn,
+      curriculo_text_pt: resumeContentPt || null,
+      curriculo_text_en: resumeContentEn || null,
+      data_inscricao: dataInscricao,
+      is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true" || looksLikeE2ETest,
+    }
+  }
+
+  async function ensurePersistedVagaId() {
+    if (vagaId) return vagaId
+
+    const empresa = formData.empresa.trim()
+    const cargo = formData.cargo.trim()
+    const local = formData.local.trim()
+
+    if (!empresa || !cargo || !local) {
+      toast.error("Preencha empresa, cargo e local antes de salvar skills.")
+      return null
+    }
+
+    const { data, error } = await supabase.from("vagas_estagio").insert(buildVagaPayload()).select("id").single()
+
+    if (error) {
+      console.error("[AddVagaDialog] Draft insert error:", error)
+      throw error
+    }
+
+    setVagaId(data.id)
+    setIsDraftVaga(true)
+
+    return data.id
+  }
+
+  async function cleanupDraftVaga() {
+    if (!isDraftVaga || !vagaId) return
+
+    const { error } = await supabase.from("vagas_estagio").delete().eq("id", vagaId)
+
+    if (error) {
+      console.error("[AddVagaDialog] Error deleting draft vaga:", error)
+    }
+  }
 
   // Load config on mount
   useEffect(() => {
@@ -257,6 +329,34 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     }
   }
 
+  async function handleSaveSkills() {
+    if (jobSkills.length === 0) return
+
+    setIsSavingSkills(true)
+
+    try {
+      const currentVagaId = await ensurePersistedVagaId()
+      if (!currentVagaId) return
+
+      const response = await fetch(`/api/vagas/${currentVagaId}/skills`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skills: jobSkills }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save skills")
+      }
+
+      toast.success("Skills salvas com sucesso!")
+    } catch (error) {
+      console.error("[AddVagaDialog] Error saving skills:", error)
+      toast.error("Erro ao salvar skills")
+    } finally {
+      setIsSavingSkills(false)
+    }
+  }
+
   // Download PDF
   function handleDownloadPDF() {
     if (!resumePdfBase64 || !resumeFilename) return
@@ -273,60 +373,42 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setLoading(true)
 
     try {
-      const empresa = formData.empresa.trim()
-      const cargo = formData.cargo.trim()
-      const local = formData.local.trim()
-      const observacoes = formData.observacoes.trim()
-      const looksLikeE2ETest = [empresa, cargo, observacoes].some(
-        (value) => value.includes("[E2E-TEST]") || value.includes("E2E-TEST")
-      )
+      const { empresa } = buildVagaPayload()
 
       if (!empresa) {
         toast.error("Preencha o nome da empresa antes de salvar.")
         return
       }
 
-      const dataInscricao = getDataInscricao(new Date(), config || undefined)
       if (process.env.NODE_ENV === "development") {
-        console.log("[AddVagaDialog] Criando vaga com data_inscricao:", dataInscricao, "Config:", config)
+        console.log("[AddVagaDialog] Salvando vaga. Config:", config)
       }
 
-      const cvDataUrl = resumePdfBase64 ? `data:application/pdf;base64,${resumePdfBase64}` : null
-      const cvDataUrlPt = resumePdfBase64Pt ? `data:application/pdf;base64,${resumePdfBase64Pt}` : null
-      const cvDataUrlEn = resumePdfBase64En ? `data:application/pdf;base64,${resumePdfBase64En}` : null
+      const payload = buildVagaPayload()
+      const query = vagaId
+        ? supabase
+            .from("vagas_estagio")
+            .update({
+              ...payload,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", vagaId)
+        : supabase.from("vagas_estagio").insert(payload)
 
-      const insertData = {
-        empresa,
-        cargo,
-        local,
-        modalidade: formData.modalidade,
-        requisitos: normalizeRatingForSave(formData.requisitos),
-        perfil: normalizeRatingForSave(formData.perfil),
-        etapa: formData.etapa || null,
-        status: formData.status,
-        observacoes: observacoes || null,
-        arquivo_analise_url: formData.arquivo_analise_url || null,
-        arquivo_cv_url: cvDataUrl, // Legacy field
-        arquivo_cv_url_pt: cvDataUrlPt,
-        arquivo_cv_url_en: cvDataUrlEn,
-        curriculo_text_pt: resumeContentPt || null,
-        curriculo_text_en: resumeContentEn || null,
-        data_inscricao: dataInscricao,
-        is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true" || looksLikeE2ETest,
-      }
-
-      // Insert with .select() to ensure operation completes and returns data
-      const { data, error } = await supabase.from("vagas_estagio").insert(insertData).select()
+      const { data, error } = await query.select()
 
       if (error) {
-        console.error("[AddVagaDialog] Insert error:", error)
+        console.error("[AddVagaDialog] Save error:", error)
         throw error
       }
 
       if (!data || data.length === 0) {
-        console.error("[AddVagaDialog] Insert returned no data - silent failure detected")
+        console.error("[AddVagaDialog] Save returned no data - silent failure detected")
         throw new Error("Failed to save vaga - no data returned from database")
       }
+
+      setVagaId(data[0].id)
+      setIsDraftVaga(false)
       toast.success("✓ Vaga salva com sucesso!")
       resetForm()
       onOpenChange(false)
@@ -363,13 +445,32 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
     setJobSkills([])
+    setVagaId(null)
+    setIsDraftVaga(false)
     setSkillsLoaded(false)
     setSkillsLoading(false)
+    setIsSavingSkills(false)
     setActiveTab("descricao")
   }
 
+  async function handleCloseDialog() {
+    await cleanupDraftVaga()
+    resetForm()
+    onOpenChange(false)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onOpenChange(true)
+          return
+        }
+
+        void handleCloseDialog()
+      }}
+    >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Vaga</DialogTitle>
@@ -432,12 +533,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
           <TabsContent value="skills" className="mt-4">
             <SkillsVagaTab
-              vagaId={undefined}
+              vagaId={vagaId ?? undefined}
               skills={jobSkills}
               isLoading={skillsLoading}
               isLoaded={skillsLoaded}
               onChange={setJobSkills}
               onLoad={handleLoadSkills}
+              onSave={handleSaveSkills}
+              isSaving={isSavingSkills}
             />
           </TabsContent>
 
@@ -475,7 +578,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               onDownloadPDF={handleDownloadPDF}
               onSaveVaga={handleSaveVaga}
               jobDescription={lastAnalyzedDescription || jobDescription}
-              vagaId={undefined}
+              vagaId={vagaId ?? undefined}
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
               approvedSkills={approvedSkills}
@@ -505,7 +608,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => void handleCloseDialog()}
               disabled={loading || analyzing || generatingResume}
             >
               Cancelar
