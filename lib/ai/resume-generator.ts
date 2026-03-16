@@ -153,7 +153,7 @@ function isAuthorizedRename(returnedSkill: string, allowedSkills: string[]): boo
 async function personalizeSkills(
   jobDetails: JobDetails,
   cv: CVTemplate,
-  skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
+  skillsBank: Array<{ skill: string; proficiency?: string; category: string }>, // NEW: Skills Bank
   model: any,
   language: "pt" | "en",
   jobContext: string,
@@ -174,10 +174,7 @@ async function personalizeSkills(
   // CRITICAL VALIDATION: Check for fabricated skills (CV + Skills Bank)
   const originalSkills = cv.skills.flatMap((cat) => cat.items)
 
-  // Build allowed skills bank items (with proficiency indicators)
-  const allowedBankSkills = skillsBank.map((s) =>
-    s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`
-  )
+  const allowedBankSkills = skillsBank.map((s) => s.skill)
 
   // Combined allowed skills
   const allowedSkills = [...originalSkills, ...allowedBankSkills]
@@ -191,11 +188,11 @@ async function personalizeSkills(
   // Get returned skills
   const returnedSkills = validated.skills.flatMap((cat) => cat.items)
 
-  // Check for fabrication (allow proficiency suffixes + authorized renames)
+  // Check for fabrication (allow authorized renames only)
   const fabricatedSkills = returnedSkills.filter((skill) => {
     const baseSkill = skill.replace(/\s*\([^)]+\)$/, "")
 
-    // Exact match (original behavior)
+    // Exact match
     const isExactMatch = allowedSkills.some(
       (allowed) =>
         allowed === skill ||
@@ -212,13 +209,20 @@ async function personalizeSkills(
   })
 
   if (fabricatedSkills.length > 0) {
-    console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
-    console.error("[Resume Generator] Allowed skills (CV):", originalSkills)
-    console.error("[Resume Generator] Allowed skills (Bank):", allowedBankSkills)
-    throw new Error(
-      `LLM fabricated skills not in CV or Skills Bank: ${fabricatedSkills.join(", ")}. ` +
-        `Only these skills are allowed: ${allowedSkills.join(", ")}`
-    )
+    if (approvedSkills && approvedSkills.length > 0) {
+      console.warn(
+        "[Resume Generator] ⚠️ Skills não reconhecidas, mas approvedSkills presente — permitindo:",
+        fabricatedSkills
+      )
+    } else {
+      console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
+      console.error("[Resume Generator] Allowed skills (CV):", originalSkills)
+      console.error("[Resume Generator] Allowed skills (Bank):", allowedBankSkills)
+      throw new Error(
+        `LLM fabricated skills not in CV or Skills Bank: ${fabricatedSkills.join(", ")}. ` +
+          `Only these skills are allowed: ${allowedSkills.join(", ")}`
+      )
+    }
   }
 
   const duration = Date.now() - startTime

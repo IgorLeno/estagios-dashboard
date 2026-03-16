@@ -169,10 +169,8 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 2. SKILLS BANK USAGE:
    - ADD skills from bank ONLY if job explicitly requires or strongly implies them
-   - ALWAYS add with proficiency indicator if not "Expert":
-     * Example: "Docker (Familiar)", "ISO 17025 (Learning)", "TensorFlow (Proficient)"
    - Maximum 3 skills from bank per category (don't overload)
-   - Prioritize higher proficiency levels: "Proficient" > "Familiar" > "Learning"
+   - KEEP the bank skill name exactly as stored; do NOT append proficiency suffixes
    - When adding bank skill, place it in appropriate category based on its category field
 
 3. CATEGORY REORDERING:
@@ -216,7 +214,7 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 6. ATS BEST PRACTICES:
    - Put 5-7 most relevant skills in top 2 categories (ATS scans top first)
-   - Include certifications as skills if job mentions them (e.g., "ISO 17025 (Familiar)")
+   - Include certifications as skills if job mentions them (e.g., "ISO 17025")
    - Aim for 6-8 most relevant skills per category (remove irrelevant, don't stuff)
    - If job required skill not in CV or bank, DON'T add it (maintain truthfulness)
    - REMOVE entire categories if 0 of their skills are relevant to the job
@@ -273,7 +271,7 @@ AFTER (QHSE-optimized):
       "Power BI (dashboards, acompanhamento de KPIs)", // EXACT match
       "Relatórios técnicos", // Related to job
       "Acompanhamento de indicadores de qualidade", // Related
-      "ISO 17025 (Familiar)" // Added from skills bank
+      "ISO 17025" // Added from skills bank
     ]
   },
   { "category": "Linguagens & Análise de Dados", "items": ["SQL", "Python", "R"] }
@@ -314,7 +312,7 @@ Return JSON format:
   "skills": [
     {
       "category": "Exact category name (can create new by combining existing skills)",
-      "items": ["Skill1", "Skill2 (Proficiency)", ...]  // ONLY from ALLOWED SKILLS
+      "items": ["Skill1", "Skill2", ...]  // ONLY from ALLOWED SKILLS
     },
     ...
   ]
@@ -572,7 +570,7 @@ ${SUMMARY_PROMPT_INSTRUCTIONS}`
 export function buildSkillsPrompt(
   jobDetails: JobDetails,
   currentSkills: Array<{ category: string; items: string[] }>,
-  skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
+  skillsBank: Array<{ skill: string; proficiency?: string; category: string }>, // NEW: Skills Bank
   projects: Array<{ title: string; description: string[] }>,
   language: "pt" | "en",
   jobContext: JobContext
@@ -589,11 +587,7 @@ export function buildSkillsPrompt(
   // Extract all skill items from CV
   const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
 
-  // Build allowed skills bank items (with proficiency indicators)
-  const bankSkillItems = skillsBank.map((s) => (s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`))
-
-  // Combined allowed skills
-  const allAllowedSkills = [...cvSkillItems, ...bankSkillItems]
+  const bankSkillItems = skillsBank.map((s) => s.skill)
 
   // Compute certification order at prompt-build time (more reliable than asking LLM to sort)
   const cvCertifications = currentSkills
@@ -618,7 +612,12 @@ export function buildSkillsPrompt(
   const languageInstruction =
     language === "pt"
       ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
-      : "⚠️ MANDATORY: Keep category and skill names EXACTLY as they are (they may be in Portuguese or English). DO NOT translate tool, software, or technology names."
+      : "⚠️ MANDATORY: Keep tool, software, and technology names EXACTLY as they are. You may translate non-tool descriptive skill labels to natural English when needed."
+
+  const bankLanguageNote =
+    language === "en"
+      ? `\nNOTE: Skills bank items may be in Portuguese. Translate them naturally to English when including in the CV. Example: "Documentação técnica" → "Technical documentation".\n`
+      : ""
 
   // Get context-specific instructions
   const contextInstructions = getSkillsContextInstructions(jobContext, language)
@@ -637,6 +636,8 @@ ${requisitosDesejaveis}
 
 USER'S CV SKILLS (always included):
 ${JSON.stringify(currentSkills, null, 2)}
+
+${bankLanguageNote}
 
 USER'S SKILLS BANK (can add if job-relevant):
 ${JSON.stringify(skillsBank, null, 2)}

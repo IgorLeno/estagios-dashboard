@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
 import { Database, Plus, X, Sparkles, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { SkillsImportDialog } from "@/components/skills-import-dialog"
@@ -17,19 +16,9 @@ import { SkillsImportDialog } from "@/components/skills-import-dialog"
 interface Skill {
   id: string
   skill: string
-  proficiency: "Básico" | "Intermediário" | "Avançado"
   category: "Linguagens & Análise de Dados" | "Ferramentas de Engenharia" | "Visualização & BI" | "Soft Skills"
   createdAt: string
 }
-
-/**
- * Proficiency levels with colors
- */
-const PROFICIENCY_COLORS = {
-  Básico: "bg-blue-100 text-blue-800 border-blue-300",
-  Intermediário: "bg-purple-100 text-purple-800 border-purple-300",
-  Avançado: "bg-green-100 text-green-800 border-green-300",
-} as const
 
 /**
  * Available categories
@@ -41,11 +30,6 @@ const CATEGORIES = [
   "Soft Skills",
 ] as const
 
-/**
- * Proficiency levels
- */
-const PROFICIENCY_LEVELS = ["Básico", "Intermediário", "Avançado"] as const
-
 export function SkillsBankManager() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,15 +38,12 @@ export function SkillsBankManager() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null)
   const [editSkill, setEditSkill] = useState("")
-  const [editProficiency, setEditProficiency] =
-    useState<"Básico" | "Intermediário" | "Avançado">("Intermediário")
   const [editCategory, setEditCategory] =
     useState<(typeof CATEGORIES)[number]>("Linguagens & Análise de Dados")
   const [saving, setSaving] = useState(false)
 
   // Form state
   const [newSkill, setNewSkill] = useState("")
-  const [newProficiency, setNewProficiency] = useState<"Básico" | "Intermediário" | "Avançado">("Intermediário")
   const [newCategory, setNewCategory] = useState<(typeof CATEGORIES)[number]>("Linguagens & Análise de Dados")
 
   // Load skills on mount
@@ -105,7 +86,6 @@ export function SkillsBankManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           skill: newSkill.trim(),
-          proficiency: newProficiency,
           category: newCategory,
         }),
       })
@@ -118,7 +98,6 @@ export function SkillsBankManager() {
 
       toast.success("Skill adicionada com sucesso!")
       setNewSkill("")
-      setNewProficiency("Intermediário")
       setNewCategory("Linguagens & Análise de Dados")
       setShowAddForm(false)
       loadSkills()
@@ -133,7 +112,6 @@ export function SkillsBankManager() {
   function handleStartEdit(skill: Skill) {
     setEditingSkillId(skill.id)
     setEditSkill(skill.skill)
-    setEditProficiency(skill.proficiency)
     setEditCategory(skill.category)
     setShowAddForm(false)
   }
@@ -157,7 +135,6 @@ export function SkillsBankManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           skill: editSkill.trim(),
-          proficiency: editProficiency,
           category: editCategory,
         }),
       })
@@ -293,22 +270,6 @@ export function SkillsBankManager() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <Select
-                          value={editProficiency}
-                          onValueChange={(val) => setEditProficiency(val as (typeof PROFICIENCY_LEVELS)[number])}
-                          disabled={saving}
-                        >
-                          <SelectTrigger className="bg-background h-8 text-xs w-36">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PROFICIENCY_LEVELS.map((level) => (
-                              <SelectItem key={level} value={level} className="text-xs">
-                                {level}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                       </div>
                       <div className="flex gap-2">
                         <Button type="submit" size="sm" disabled={saving} className="flex-1 h-8 text-xs">
@@ -332,9 +293,6 @@ export function SkillsBankManager() {
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border"
                     >
                       <span className="text-sm font-medium text-foreground">{skill.skill}</span>
-                      <Badge variant="outline" className={`text-xs ${PROFICIENCY_COLORS[skill.proficiency]}`}>
-                        {skill.proficiency}
-                      </Badge>
                       <button
                         onClick={() => handleStartEdit(skill)}
                         className="ml-1 text-muted-foreground hover:text-primary transition-colors"
@@ -399,46 +357,24 @@ export function SkillsBankManager() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="skill-category">Categoria</Label>
-                <Select
-                  value={newCategory}
-                  onValueChange={(val) => setNewCategory(val as (typeof CATEGORIES)[number])}
-                  disabled={adding}
-                >
-                  <SelectTrigger id="skill-category" className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="skill-proficiency">Proficiência</Label>
-                <Select
-                  value={newProficiency}
-                  onValueChange={(val) => setNewProficiency(val as (typeof PROFICIENCY_LEVELS)[number])}
-                  disabled={adding}
-                >
-                  <SelectTrigger id="skill-proficiency" className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROFICIENCY_LEVELS.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="skill-category">Categoria</Label>
+              <Select
+                value={newCategory}
+                onValueChange={(val) => setNewCategory(val as (typeof CATEGORIES)[number])}
+                disabled={adding}
+              >
+                <SelectTrigger id="skill-category" className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex gap-2 pt-2">

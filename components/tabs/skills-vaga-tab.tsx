@@ -47,7 +47,6 @@ export function SkillsVagaTab({ vagaId, skills, isLoading, isLoaded, onChange, o
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           skill: skill.displayName,
-          proficiency: "Básico",
           category: skill.category ?? "Soft Skills",
         }),
       })

@@ -14,7 +14,6 @@ interface SkillBankRow {
   user_id: string
   skill_name: string
   category: string
-  proficiency: string
   // NOTE: frequency and description are extracted but not currently stored in DB
   // Consider adding these columns to user_skills_bank for richer skill profiles
 }
@@ -74,7 +73,6 @@ export async function seedSkillsBankFromProfile(userId: string, profileText: str
           user_id: userId,
           skill_name: skill.skill_name,
           category: dbCategory,
-          proficiency: skill.proficiency,
           // NOTE: frequency and description not stored in current schema
         })
       }
@@ -176,7 +174,6 @@ export async function mergeSkillsFromProfile(
             user_id: userId,
             skill_name: skill.skill_name,
             category: dbCategory,
-            proficiency: skill.proficiency,
           })
         }
       }

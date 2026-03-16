@@ -2,13 +2,13 @@ import { createClient } from "@/lib/supabase/server"
 
 /**
  * Skills Bank Entry Interface
- * Represents a skill with proficiency level in user's skills bank
+ * Represents a skill in user's skills bank
  */
 export interface SkillsBankEntry {
   id: string
   user_id: string
   skill: string
-  proficiency: "Básico" | "Intermediário" | "Avançado"
+  proficiency?: string
   category: "Linguagens & Análise de Dados" | "Ferramentas de Engenharia" | "Visualização & BI" | "Soft Skills"
   created_at: string
 }
@@ -18,7 +18,7 @@ export interface SkillsBankEntry {
  */
 export interface SkillsBankItem {
   skill: string
-  proficiency: string
+  proficiency?: string
   category: string
 }
 
@@ -48,7 +48,7 @@ export async function loadUserSkillsBank(userId?: string): Promise<SkillsBankIte
 
     const { data, error } = await supabase
       .from("user_skills_bank")
-      .select("skill_name, proficiency, category")
+      .select("skill_name, category")
       .eq("user_id", effectiveUserId)
       .order("created_at", { ascending: false })
 
@@ -59,7 +59,6 @@ export async function loadUserSkillsBank(userId?: string): Promise<SkillsBankIte
 
     return (data || []).map((row) => ({
       skill: row.skill_name,
-      proficiency: row.proficiency,
       category: row.category,
     }))
   } catch (error) {
@@ -72,14 +71,12 @@ export async function loadUserSkillsBank(userId?: string): Promise<SkillsBankIte
  * Add skill to user's skills bank
  *
  * @param skill - Skill name
- * @param proficiency - Proficiency level
  * @param category - Skill category
  * @param userId - Optional user ID (uses auth session if not provided)
  * @returns Success status with optional error message
  */
 export async function addSkillToBank(
   skill: string,
-  proficiency: SkillsBankEntry["proficiency"],
   category: string,
   userId?: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -101,7 +98,6 @@ export async function addSkillToBank(
     const { error } = await supabase.from("user_skills_bank").insert({
       user_id: effectiveUserId,
       skill_name: skill,
-      proficiency: proficiency,
       category,
     })
 
@@ -113,7 +109,7 @@ export async function addSkillToBank(
       return { success: false, error: error.message }
     }
 
-    console.log(`[Skills Bank] Added skill: ${skill} (${proficiency})`)
+    console.log(`[Skills Bank] Added skill: ${skill}`)
     return { success: true }
   } catch (error) {
     console.error("[Skills Bank] Error adding skill:", error)
@@ -165,14 +161,14 @@ export async function removeSkillFromBank(
  * Update skill in user's skills bank
  *
  * @param skillId - UUID of skill to update
- * @param updates - Fields to update (proficiency and/or category)
+ * @param updates - Fields to update
  * @param userId - Optional user ID (uses auth session if not provided)
  * @returns Success status with optional error message
  */
 export async function updateSkillInBank(
   skillId: string,
   updates: {
-    proficiency?: SkillsBankEntry["proficiency"]
+    skill?: string
     category?: string
   },
   userId?: string
@@ -193,7 +189,7 @@ export async function updateSkillInBank(
     }
 
     const updateData: Record<string, unknown> = {}
-    if (updates.proficiency) updateData.proficiency = updates.proficiency
+    if (updates.skill) updateData.skill_name = updates.skill
     if (updates.category) updateData.category = updates.category
 
     const { error } = await supabase

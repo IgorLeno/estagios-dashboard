@@ -7,9 +7,6 @@ import { z } from "zod"
  */
 const AddSkillSchema = z.object({
   skill: z.string().min(1, "Skill name is required").max(100, "Skill name too long"),
-  proficiency: z.enum(["Básico", "Intermediário", "Avançado"], {
-    errorMap: () => ({ message: "Invalid proficiency level" }),
-  }),
   category: z.enum(["Linguagens & Análise de Dados", "Ferramentas de Engenharia", "Visualização & BI", "Soft Skills"], {
     errorMap: () => ({ message: "Invalid category" }),
   }),
@@ -19,7 +16,7 @@ const AddSkillSchema = z.object({
  * GET /api/skills-bank
  * Load user's skills bank
  *
- * Returns array of skills with proficiency levels
+ * Returns array of skills
  */
 export async function GET(req: NextRequest) {
   try {
@@ -34,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from("user_skills_bank")
-      .select("id, skill_name, proficiency, category, created_at")
+      .select("id, skill_name, category, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
 
@@ -47,7 +44,6 @@ export async function GET(req: NextRequest) {
     const skills = (data || []).map((row) => ({
       id: row.id,
       skill: row.skill_name,
-      proficiency: row.proficiency,
       category: row.category,
       createdAt: row.created_at,
     }))
@@ -63,7 +59,7 @@ export async function GET(req: NextRequest) {
  * POST /api/skills-bank
  * Add skill to user's bank
  *
- * Body: { skill: string, proficiency: "Básico" | "Intermediário" | "Avançado", category: string }
+ * Body: { skill: string, category: string }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -84,7 +80,6 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from("user_skills_bank").insert({
       user_id: user.id,
       skill_name: validated.skill,
-      proficiency: validated.proficiency,
       category: validated.category,
     })
 
@@ -98,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log(`[Skills Bank API] ✅ Added skill: ${validated.skill} (${validated.proficiency}) for user ${user.id}`)
+    console.log(`[Skills Bank API] ✅ Added skill: ${validated.skill} for user ${user.id}`)
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
@@ -116,7 +111,7 @@ export async function POST(req: NextRequest) {
  * Update skill in user's bank
  *
  * Query param: id (skill UUID)
- * Body: { skill: string, proficiency: "Básico" | "Intermediário" | "Avançado", category: string }
+ * Body: { skill: string, category: string }
  */
 export async function PUT(req: NextRequest): Promise<NextResponse> {
   try {
@@ -141,13 +136,12 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
       .from("user_skills_bank")
       .update({
         skill_name: validated.skill.trim(),
-        proficiency: validated.proficiency,
         category: validated.category,
         updated_at: new Date().toISOString(),
       })
       .eq("id", skillId)
       .eq("user_id", user.id)
-      .select("id, skill_name, proficiency, category, created_at")
+      .select("id, skill_name, category, created_at")
       .single()
 
     if (error) {
@@ -164,7 +158,6 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
       skill: {
         id: data.id,
         skill: data.skill_name,
-        proficiency: data.proficiency,
         category: data.category,
         createdAt: data.created_at,
       },
