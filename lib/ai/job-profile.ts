@@ -7,7 +7,7 @@
  * - Allowed / preferred / forbidden terminology
  * - Excel label policy
  * - Location statement requirement
- * - Objective anchors for the summary section
+ * - Summary anchors for the summary section
  *
  * The profile is produced by buildJobProfile() and consumed by:
  * - Evidence Selector (Etapa 3)
@@ -112,8 +112,14 @@ export interface JobProfile {
    * "descriptive"      → Job does not specify level — describe capabilities instead
    *                      (e.g. "Excel com fórmulas avançadas, tabelas dinâmicas e Power Query").
    * "basic_only"       → Job is laboratory/QHSE and does not highlight Excel — use "Excel" only.
-   */
+  */
   excel_term_policy: "use_exact_label" | "descriptive" | "basic_only"
+  /**
+   * The exact Excel label found in normalized job text when excel_term_policy === "use_exact_label".
+   * e.g. "excel avançado", "advanced excel", "excel intermediário"
+   * Undefined when policy is "descriptive" or "basic_only".
+   */
+  excel_exact_label?: string
 
   // ─ Location statement ──────────────────────────────────────────────────────────
   /**
@@ -123,11 +129,14 @@ export interface JobProfile {
   require_location_statement: boolean
 
   // ─ Summary anchors ──────────────────────────────────────────────────────────
-  /** Three topic anchors the summary must address, in order of importance. */
-  objective_anchors: {
-    anchor1: string  // Primary: what the candidate brings to this specific role
-    anchor2: string  // Secondary: most relevant technical capability
-    anchor3: string  // Tertiary: soft skill / complementary differentiator
+  /** Three topic anchors that structure the summary section, in order of importance. */
+  summary_anchors: {
+    /** Primary focus: role + domain + candidate positioning */
+    primary: string
+    /** Secondary focus: most relevant technical capability */
+    secondary: string
+    /** Tertiary focus: process discipline or complementary differentiator */
+    tertiary: string
   }
 
   // ─ Backward compatibility ────────────────────────────────────────────────────────
@@ -185,9 +194,17 @@ const ENGINEERING_KEYWORDS = [
   "plant", "planta", "equipamento", "equipment",
 ]
 
-const EXCEL_AVANCADO_LABELS = [
+const EXCEL_LABELS = [
   "excel avançado", "advanced excel", "excel intermediário",
   "excel with vba", "excel com vba",
+]
+
+const CANDIDATE_CITIES_NORMALIZED = [
+  "bertioga",
+  "santos",
+  "guaruja",
+  "cubatao",
+  "sao paulo",
 ]
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -206,9 +223,18 @@ function extractExactTerms(text: string): string[] {
   return KNOWN_EXACT_LABELS.filter((label) => text.includes(label.toLowerCase()))
 }
 
+function normalizeCityName(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+}
+
 function detectSeniority(jobDetails: JobDetails): Seniority {
   const text = (jobDetails.cargo ?? "").toLowerCase()
-  const tipo = jobDetails.tipo_vaga ?? "Estaégio"
+  const tipo = jobDetails.tipo_vaga ?? "Estágio"
   if (tipo === "Estágio" || text.includes("estágio") || text.includes("estagiario") || text.includes("intern")) {
     return "internship"
   }
@@ -218,23 +244,40 @@ function detectSeniority(jobDetails: JobDetails): Seniority {
   return "pleno"
 }
 
-function detectExcelPolicy(
+function detectExcel(
   text: string,
   roleFamily: RoleFamily
-): JobProfile["excel_term_policy"] {
-  const hasExactLabel = EXCEL_AVANCADO_LABELS.some((label) => text.includes(label))
-  if (hasExactLabel) return "use_exact_label"
-  if (roleFamily === "laboratory_qc" || roleFamily === "qhse_quality") return "basic_only"
-  return "descriptive"
+): {
+  policy: JobProfile["excel_term_policy"]
+  exactLabel: string | undefined
+} {
+  const foundLabel = EXCEL_LABELS.find((label) => text.includes(label))
+  if (foundLabel) return { policy: "use_exact_label", exactLabel: foundLabel }
+  if (roleFamily === "laboratory_qc" || roleFamily === "qhse_quality") {
+    return { policy: "basic_only", exactLabel: undefined }
+  }
+  return { policy: "descriptive", exactLabel: undefined }
 }
 
 function detectLocationStatement(jobDetails: JobDetails): boolean {
-  const CANDIDATE_CITIES = ["bertioga", "santos", "guarujá", "cubatão", "são paulo", "sao paulo", "sp"]
-  const jobCity = (jobDetails.local ?? "").toLowerCase()
+  const normalizedJobCity = normalizeCityName(jobDetails.local ?? "")
   // If job location is blank or explicitly remote, no statement needed
-  if (!jobCity || jobCity === "indefinido" || jobDetails.modalidade === "Remoto") return false
+  if (
+    !normalizedJobCity ||
+    normalizedJobCity === "indefinido" ||
+    normalizedJobCity.startsWith("remoto") ||
+    jobDetails.modalidade === "Remoto"
+  ) {
+    return false
+  }
   // If any candidate city matches the job city, no statement needed
-  if (CANDIDATE_CITIES.some((city) => jobCity.includes(city))) return false
+  if (
+    CANDIDATE_CITIES_NORMALIZED.some((city) =>
+      normalizedJobCity === city || normalizedJobCity.startsWith(`${city} `)
+    )
+  ) {
+    return false
+  }
   return true
 }
 
@@ -286,67 +329,67 @@ function buildPreferredTerms(family: RoleFamily, mode: RoleMode): string[] {
   return []
 }
 
-function buildObjectiveAnchors(
+function buildSummaryAnchors(
   family: RoleFamily,
   mode: RoleMode,
   seniority: Seniority
-): JobProfile["objective_anchors"] {
+): JobProfile["summary_anchors"] {
   const seniorityLabel = seniority === "internship" ? "estudante" : seniority === "junior" ? "recém-formado" : "profissional"
 
   if (family === "people_analytics" && mode === "operational_support") {
     return {
-      anchor1: `${seniorityLabel} com interesse em People Analytics e operações de RH`,
-      anchor2: "organização e validação de bases de dados com Excel, SQL e Power BI",
-      anchor3: "pensamento analítico e atenção a detalhes na documentação de processos",
+      primary: `${seniorityLabel} com interesse em People Analytics e operações de RH`,
+      secondary: "organização e validação de bases de dados com Excel, SQL e Power BI",
+      tertiary: "pensamento analítico e atenção a detalhes na documentação de processos",
     }
   }
   if (family === "bi_reporting" && mode === "analytical_reporting") {
     return {
-      anchor1: `${seniorityLabel} com interesse em Business Intelligence e visualização de dados`,
-      anchor2: "desenvolvimento de dashboards e relatórios com Power BI e SQL",
-      anchor3: "capacidade analítica e comunicação de insights para tomada de decisão",
+      primary: `${seniorityLabel} com interesse em Business Intelligence e visualização de dados`,
+      secondary: "desenvolvimento de dashboards e relatórios com Power BI e SQL",
+      tertiary: "capacidade analítica e comunicação de insights para tomada de decisão",
     }
   }
   if (family === "bi_reporting" && mode === "operational_support") {
     return {
-      anchor1: `${seniorityLabel} com interesse em suporte operacional a dados e relatórios`,
-      anchor2: "manutenção e atualização de bases, dashboards e indicadores com Excel e Power BI",
-      anchor3: "organização, padronização e consistência de informações",
+      primary: `${seniorityLabel} com interesse em suporte operacional a dados e relatórios`,
+      secondary: "manutenção e atualização de bases, dashboards e indicadores com Excel e Power BI",
+      tertiary: "organização, padronização e consistência de informações",
     }
   }
   if (family === "data_science_ml") {
     return {
-      anchor1: `${seniorityLabel} com interesse em Ciência de Dados e Aprendizado de Máquina`,
-      anchor2: "desenvolvimento de modelos preditivos e pipelines em Python e SQL",
-      anchor3: "pensamento estatístico e orientação a resultados mensuráveis",
+      primary: `${seniorityLabel} com interesse em Ciência de Dados e Aprendizado de Máquina`,
+      secondary: "desenvolvimento de modelos preditivos e pipelines em Python e SQL",
+      tertiary: "pensamento estatístico e orientação a resultados mensuráveis",
     }
   }
   if (family === "laboratory_qc") {
     return {
-      anchor1: `${seniorityLabel} com interesse em laboratório analítico e controle de qualidade`,
-      anchor2: "preparação de soluções, controle de amostras e técnicas analíticas",
-      anchor3: "organização laboratorial e atenção a normas e boas práticas",
+      primary: `${seniorityLabel} com interesse em laboratório analítico e controle de qualidade`,
+      secondary: "preparação de soluções, controle de amostras e técnicas analíticas",
+      tertiary: "organização laboratorial e atenção a normas e boas práticas",
     }
   }
   if (family === "qhse_quality") {
     return {
-      anchor1: `${seniorityLabel} com interesse em Qualidade, Saúde, Segurança e Meio Ambiente`,
-      anchor2: "acompanhamento de KPIs, controle de não-conformidades e Excel/Power BI",
-      anchor3: "interesse em normas ISO e melhoria contínua de processos",
+      primary: `${seniorityLabel} com interesse em Qualidade, Saúde, Segurança e Meio Ambiente`,
+      secondary: "acompanhamento de KPIs, controle de não-conformidades e Excel/Power BI",
+      tertiary: "interesse em normas ISO e melhoria contínua de processos",
     }
   }
   if (family === "process_engineering") {
     return {
-      anchor1: `${seniorityLabel} com interesse em engenharia de processos e simulação`,
-      anchor2: "simulação e modelagem de processos com Aspen Plus e Python",
-      anchor3: "orientação técnica e rigor nos balanços de massa e energia",
+      primary: `${seniorityLabel} com interesse em engenharia de processos e simulação`,
+      secondary: "simulação e modelagem de processos com Aspen Plus e Python",
+      tertiary: "orientação técnica e rigor nos balanços de massa e energia",
     }
   }
   // general
   return {
-    anchor1: `${seniorityLabel} com perfil analítico e interesse naárea de atuação da vaga`,
-    anchor2: "habilidades técnicas em análise de dados, Python e ferramentas de visualização",
-    anchor3: "capacidade de aprendizado rápido e trabalho com dados e processos",
+    primary: `${seniorityLabel} com perfil analítico e interesse naárea de atuação da vaga`,
+    secondary: "habilidades técnicas em análise de dados, Python e ferramentas de visualização",
+    tertiary: "capacidade de aprendizado rápido e trabalho com dados e processos",
   }
 }
 
@@ -479,13 +522,13 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
   const forbidden_terms = buildForbiddenTerms(role_family, role_mode)
 
   // ─ Excel policy ────────────────────────────────────────────────────────────────────
-  const excel_term_policy = detectExcelPolicy(allText, role_family)
+  const { policy: excel_term_policy, exactLabel: excel_exact_label } = detectExcel(allText, role_family)
 
   // ─ Location statement ───────────────────────────────────────────────────────────
   const require_location_statement = detectLocationStatement(jobDetails)
 
-  // ─ Objective anchors ───────────────────────────────────────────────────────────
-  const objective_anchors = buildObjectiveAnchors(role_family, role_mode, seniority)
+  // ─ Summary anchors ───────────────────────────────────────────────────────────
+  const summary_anchors = buildSummaryAnchors(role_family, role_mode, seniority)
 
   // ─ Legacy context mapping ─────────────────────────────────────────────────────────
   const legacyContext = resolveLegacyContext(role_family)
@@ -501,8 +544,9 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
     preferred_terms,
     forbidden_terms,
     excel_term_policy,
+    excel_exact_label,
     require_location_statement,
-    objective_anchors,
+    summary_anchors,
     legacyContext,
   }
 

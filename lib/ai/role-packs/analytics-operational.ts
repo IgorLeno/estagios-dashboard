@@ -26,7 +26,7 @@ export const ANALYTICS_OPERATIONAL_PACK = {
   allowed_skills: [
     "Excel", "Excel Avançado", "Power Query", "Power BI", "SQL",
     "Python", "Pandas", "NumPy",
-    "Power BI", "Tableau", "Looker",
+    "Tableau", "Looker",
     "Google Sheets", "Google Data Studio",
     "Comunicação", "Atenção a detalhes", "Organização",
   ],
