@@ -26,7 +26,7 @@ export type EmphasisArea = "bi" | "people_analytics" | "laboratory" | "qhse" | "
 export interface UserStylePreferences {
   /** Overall tone of the resume text */
   tone?: ResumeTone
-  /** Target word count for the summary section (default: 100) */
+  /** Target word count for the summary section (default: 100, range: 70–130) */
   summaryWordTarget?: number
   /** Output language (default: "pt-BR") */
   language?: ResumeLanguage
@@ -55,8 +55,8 @@ export interface UserStylePreferences {
 
 // ─── Constraints ─────────────────────────────────────────────────────────────
 
-const WORD_TARGET_MIN = 70
-const WORD_TARGET_MAX = 130
+export const SUMMARY_WORD_TARGET_MIN = 70
+export const SUMMARY_WORD_TARGET_MAX = 130
 
 /**
  * Validates and sanitizes user preferences.
@@ -70,7 +70,7 @@ export function sanitizeUserPreferences(raw: Partial<UserStylePreferences>): Use
   }
 
   if (typeof raw.summaryWordTarget === "number") {
-    safe.summaryWordTarget = Math.max(WORD_TARGET_MIN, Math.min(WORD_TARGET_MAX, raw.summaryWordTarget))
+    safe.summaryWordTarget = Math.max(SUMMARY_WORD_TARGET_MIN, Math.min(SUMMARY_WORD_TARGET_MAX, raw.summaryWordTarget))
   }
 
   if (raw.language && ["pt-BR", "en"].includes(raw.language)) {
@@ -157,11 +157,15 @@ function formatUserPreferenceAddendum(prefs: UserStylePreferences): string {
 /**
  * Parses the raw curriculo_prompt string from the database into UserStylePreferences.
  *
- * During the transition period, the database may still contain the old full
- * system prompt. This function detects legacy content and ignores it, returning
- * empty preferences (which means the core policy is used as-is).
+ * MIGRATION LOGIC:
+ * - Legacy system prompts (containing critical policy markers) are silently ignored.
+ *   The core policy takes over immediately, with no user preferences applied.
+ * - JSON strings are parsed and sanitized into UserStylePreferences.
+ * - Free-form text strings (non-JSON, non-legacy) are discarded.
+ *   They cannot be safely interpreted as structured preferences.
+ *   The user should migrate to JSON preferences via the settings UI.
  *
- * Once all users have migrated, this function can be simplified.
+ * @returns Parsed and sanitized preferences, or {} if input cannot be used.
  */
 export function parseUserStylePrompt(rawPrompt: string | undefined | null): UserStylePreferences {
   if (!rawPrompt || rawPrompt.trim().length === 0) return {}
@@ -177,22 +181,23 @@ export function parseUserStylePrompt(rawPrompt: string | undefined | null): User
   ]
   const isLegacy = legacyMarkers.some((marker) => rawPrompt.includes(marker))
   if (isLegacy) {
-    // Legacy prompt — silently ignore, use core policy only
-    console.log("[UserPreferences] Legacy curriculo_prompt detected — ignoring, using core policy only")
+    console.log(
+      "[UserPreferences] Legacy curriculo_prompt detected — ignoring, using core policy only"
+    )
     return {}
   }
 
-  // If it's a JSON preferences object, parse it
+  // Try to parse as JSON preferences
   try {
     const parsed = JSON.parse(rawPrompt) as Partial<UserStylePreferences>
     return sanitizeUserPreferences(parsed)
   } catch {
-    // Not JSON — treat as free-form tone instruction (legacy text preference)
-    // Wrap as a tone note if short enough
-    if (rawPrompt.trim().length <= 300) {
-      console.log("[UserPreferences] Free-form style note detected, preserving as-is")
-      return {}
-    }
+    // Not JSON and not a legacy prompt.
+    // Free-form text cannot be safely mapped to structured preferences.
+    // Discard it and rely on core policy only.
+    console.log(
+      "[UserPreferences] Free-form curriculo_prompt cannot be mapped to structured preferences — discarding, using core policy only"
+    )
     return {}
   }
 }
