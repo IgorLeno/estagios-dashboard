@@ -107,6 +107,20 @@ CORRECT EXAMPLE (Natural):
 
 EXEMPLO:
 "Estudante de Engenharia Química (UNESP) com forte perfil analítico e domínio de Python (Pandas, Scikit-learn), SQL e Machine Learning. Experiência em desenvolvimento de pipelines automatizados de dados, treinamento de modelos preditivos e análise exploratória."
+
+⚠️ SE A VAGA FOR OPERACIONAL (People Analytics, BI Support, Data Maintenance, não ML/Research):
+PRIORIZAR vocabulário operacional:
+✅ Usar: organização de bases, validação de dados, padronização, atualização de dashboards,
+   documentação técnica, rastreabilidade, consistência de dados, governança da informação,
+   controle de acessos, elaboração de relatórios, acompanhamento de indicadores
+❌ EVITAR como destaque: deep learning, redes neurais, algoritmos avançados, feature engineering
+   (podem aparecer em posição secundária se estiverem no CV, não como diferencial principal)
+
+ESTRUTURA DO PERFIL para vaga operacional:
+-  Frase 1: Formação + interesse em organização/análise de dados
+-  Frase 2: Ferramentas operacionais (Excel Avançado com funções específicas, Power BI, SQL)
+-  Frase 3: Competências de processo (validação, padronização, documentação, rastreabilidade)
+-  Frase 4: Objetivo focado na FUNÇÃO (o que vai fazer), não na empresa
 `,
       en: `
 📊 DATA SCIENCE CONTEXT DETECTED - CRITICAL ADJUSTMENTS:
@@ -474,6 +488,15 @@ PARA PROJETOS DE DADOS/COMPUTAÇÃO:
 PARA PROJETOS DE ENGENHARIA/QUÍMICA:
 ✅ ENFATIZAR: "Modelagem preditiva", "simulação computacional"
 ✅ MENCIONAR: Ferramentas em Python, se usadas
+
+⚠️ SE A VAGA FOR OPERACIONAL (BI, suporte a dados, documentação):
+✅ ENFATIZAR: estruturação de bases, padronização, validação, documentação de fontes,
+   rastreabilidade, elaboração de relatórios técnicos
+❌ EVITAR como destaque: Machine Learning, feature engineering, hiperparâmetros, algoritmos
+USE noun phrases no lugar de infinitivos:
+✅ "Estruturação e padronização de bases de dados para..."
+✅ "Implementação de rotinas de validação e controle de consistência..."
+✅ "Elaboração de relatórios técnicos com documentação de fontes e resultados."
 `,
       en: `
 📊 DATA SCIENCE CONTEXT - PROJECT REFRAMING:

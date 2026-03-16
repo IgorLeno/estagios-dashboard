@@ -49,6 +49,10 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 1. STRUCTURE (5-part professional profile):
    - Opening: Education level + current status (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
    - Technical expertise: List 2-3 EXACT skills from "Required Skills" above
+   - CALIBRATE TO ROLE LEVEL: For operational internship roles (BI support, data maintenance,
+     documentation), lead with OPERATIONAL skills (Excel, Power BI, SQL, relatórios) NOT
+     research/ML skills (Deep Learning, neural networks, advanced algorithms).
+     The goal is to convey: "organized, reliable, detail-oriented" — not "technically impressive".
    - ⚠️ INTERNSHIP/TRAINEE TONE: If the position is an internship (estágio) or junior role,
      NEVER use "expertise" — use "conhecimento em", "experiência acadêmica com", "vivência em",
      or "prática com" instead. "Expertise" implies senior-level mastery.
@@ -78,6 +82,15 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Avoid fluff words - every word should add value
 
 5. TRUTHFULNESS (see global rules in System Prompt):
+   - FUNCTION-FIRST OBJECTIVE: The final sentence (objective) must describe WHAT THE CANDIDATE
+     WILL DO, not what they want to get.
+     ❌ WRONG: "Busco estágio na [company] para aplicar habilidades analíticas."
+     ✅ CORRECT: "Busco estágio em [area] para apoiar rotinas de [specific activities from job]."
+     Use the job's RESPONSABILIDADES to fill [specific activities].
+   - DO NOT name the company inside the resume body — the company name belongs in cover letters,
+     not in the CV objective line. Use area/function instead.
+     ❌ WRONG: "Busco oportunidade na Aegea Saneamento para..."
+     ✅ CORRECT: "Busco estágio em People Analytics e BI para apoiar rotinas de..."
    - ONLY describe work that was actually done — reframe HOW, never WHAT
    - NEVER inject job domain into unrelated project descriptions
    - Keep all original metrics; if none exist, use qualitative descriptors
@@ -97,7 +110,7 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Maximum 1 tool — don't list multiple "interests" (looks like padding).
 
 EXAMPLE STRUCTURE (Portuguese):
-"Estudante de Engenharia Química (UNESP) em fase de conclusão com conhecimento em [EXACT SKILL 1], [EXACT SKILL 2] e [EXACT SKILL 3]. Experiência acadêmica com [ACTION VERB 1] [job duty] e [ACTION VERB 2] [job duty] através de projetos com [tool/method]. Vivência em [technical terms/certifications] para [application area]. Busco oportunidade na [company] para aplicar conhecimentos em [job area]."
+"Estudante de Engenharia Química (UNESP) em fase de conclusão com conhecimento em [EXACT SKILL 1], [EXACT SKILL 2] e [EXACT SKILL 3]. Experiência acadêmica com [ACTION VERB 1] [job duty] e [ACTION VERB 2] [job duty] através de projetos com [tool/method]. Vivência em [technical terms/certifications] para [application area]. Busco estágio em [area/function] para apoiar rotinas de [specific activities from job responsibilities]."
 
 CRITICAL FOR ATS: This summary will be scanned by Applicant Tracking Systems. Exact keyword matches are ESSENTIAL for passing automated screening.
 
@@ -134,6 +147,16 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - REMOVE skills that have zero relevance to this specific job (e.g. specialized lab tools for an analytics job)
    - Keep soft skills category with most relevant items only (max 4-5)
    - MINIMUM: Always keep at least 3 skills total per category kept
+   - OPERATIONAL ROLE FILTER: For internship/junior roles in BI, People Analytics, Data Support,
+     or Documentation, apply these filters:
+     * DEPRIORITIZE or REMOVE: Deep Learning, neural networks, TensorFlow, advanced ML libraries
+       (Scikit-learn is ok; keep if explicitly required, otherwise move to last or omit)
+     * DEPRIORITIZE: Typer, GAMESS, MOPAC, CREST, Avogadro, OpenBabel (niche/research tools)
+     * REMOVE: Self-assessed soft skill proficiency levels — NEVER write "Comunicação técnica
+       (Avançado)" or "Pensamento analítico (Avançado)"; write just "Comunicação técnica",
+       "Pensamento analítico". Soft skills are NEVER rated with proficiency levels.
+     * KEEP AND PROMOTE: organização de bases, validação de dados, padronização, Excel (with
+       specific functions), Power BI, SQL, relatórios técnicos, documentação
    - MAXIMUM: 6-8 items per category (remove excess irrelevant skills)
 
 5. EXACT TERMINOLOGY (CRITICAL FOR ATS):
@@ -150,6 +173,13 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - REMOVE entire categories if 0 of their skills are relevant to the job
    - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
      in analytics/BI/HR/data roles — they are noise, not signal
+   - DEDUPLICATION (MANDATORY): Before returning, scan every category for duplicate skill names.
+     If the same skill appears twice (from CV + Bank), keep ONLY the more descriptive version.
+     Example: "Power BI (dashboards, KPI tracking)" + "Power BI (Intermediário)" → keep only
+     "Power BI (dashboards, KPI tracking)". ZERO duplicate skill names allowed.
+   - CERTIFICATION ORDER: When job is BI/Analytics/People Analytics, reorder certifications
+     to lead with most job-relevant (e.g., Google Data Analytics, Power BI, SQL before
+     Deep Learning Specialization).
 
 7. TRUTHFULNESS (see global rules in System Prompt):
    - ONLY describe work that was actually done — reframe HOW, never WHAT
@@ -214,9 +244,18 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Match acronyms EXACTLY (case-sensitive)
 
 3. DESCRIPTION STRUCTURE (per bullet point):
-   - Format: [Action verb] + [Technical task] + [Tool/methodology] + [Measurable outcome/relevance]
-   - Example: "Implementar sistema de controle de qualidade usando Python e SQL para monitoramento de KPIs (5000+ registros)"
-   - Example: "Desenvolver pipeline de Machine Learning com Random Forest para predição de propriedades, alcançando 35% de redução no erro"
+   - Format: [Past/present action verb in PAST TENSE or NOUN PHRASE] + [specific task] +
+     [tool/method] + [outcome/relevance]
+   - USE PAST TENSE or NOUN PHRASE — NEVER infinitive verbs:
+     ❌ WRONG: "Desenvolver pipeline automatizado..."
+     ✅ CORRECT: "Desenvolvimento de pipeline automatizado..." OR "Desenvolveu pipeline..."
+     ✅ CORRECT (noun phrase): "Estruturação e padronização de bases de dados para..."
+   - Each bullet MUST end with a period (.)
+   - AVOID REDUNDANT PHRASES: "análises analíticas", "dados de dados", "resultado de resultados"
+     — read each bullet aloud and remove obvious redundancies
+   - TARGET LENGTH: 15-25 words per bullet (concise, scannable — not a paragraph)
+   - If original description has 3 concepts, split into exactly 3 short bullets — do NOT
+     merge everything into one dense run-on bullet
 
 4. KEYWORD DENSITY PER PROJECT:
    - Each project should include 3-5 job keywords
@@ -300,9 +339,9 @@ PROJECT: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Estruturar e organizar bases de dados termodinâmicos em Python (Pandas, NumPy) para análises recorrentes, com automação de rotinas de processamento e atualização de informações",
-    "Automatizar controle de consistência e validação de dados experimentais, reduzindo erros de registro e garantindo qualidade das informações para treinamento de modelos",
-    "Elaborar relatórios analíticos documentando fontes, regras de processamento e resultados, com padronização de dados para apoio à tomada de decisão"
+    "Estruturação e padronização de bases de dados termodinâmicos para processamento recorrente em Python (Pandas, NumPy).",
+    "Implementação de rotinas de validação e controle de consistência para garantir qualidade das informações.",
+    "Elaboração de relatórios técnicos com documentação de fontes, regras de processamento e resultados."
   ]
 }
 ✅ Why it works: Uses transferable skills vocabulary (organizar, validar, automatizar, documentar,
