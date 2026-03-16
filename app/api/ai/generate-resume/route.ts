@@ -172,8 +172,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         return successResponse
       })(),
-      60000,
-      "Resume generation exceeded 60s timeout"
+      100000,
+      "Resume generation exceeded 100s timeout"
     )
 
     return NextResponse.json(result)
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       console.error(`[Resume API] Timeout: ${timeoutError.message}`)
       const errorResponse: GenerateResumeErrorResponse = {
         success: false,
-        error: "Resume generation timed out (>60s)",
+        error: "Resume generation timed out (>100s)",
       }
       return NextResponse.json(errorResponse, { status: 504 })
     }

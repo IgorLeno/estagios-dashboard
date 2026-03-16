@@ -1,4 +1,12 @@
-import type { JobDetails } from "./types"
+Fix the following issues. The issues can be from different files or can overlap on same lines in one file.
+
+- Verify each finding against the current code and only fix it if needed.
+
+In @lib/ai/resume-generator.ts around lines 357 - 361, Wrap the two diagnostic console.log calls that print the raw response length and JSON extraction success in the same NODE_ENV === "development" guard used elsewhere to avoid emitting debug logs in production; locate the console.log lines that reference text and extractJsonFromResponse(text) in resume-generator.ts and surround them with the environment check (or call through the same debug-only logging helper used at lines ~455-458) so these messages only run in development.
+
+- Verify each finding against the current code and only fix it if needed.
+
+In @lib/ai/resume-prompts.ts around lines 186 - 189, The translation mappings use English keys ("Lab organization", "Sample control", "Lab documentation") while the exclusion list uses Portuguese (e.g., "organização de laboratório"), causing mismatches; update the left-hand keys to Portuguese equivalents so both sides match—replace "Lab organization" with "organização de laboratório" → "organização e estruturação de bases de dados", "Sample control" with "controle de amostras" (or "controle e rastreabilidade de amostras") → "validação e consistência de dados", and "Lab documentation" with "documentação de laboratório" → "documentação técnica" so the AI can correctly associate excluded terms with their translations.import type { JobDetails } from "./types"
 import type { CVTemplate } from "./types"
 import type { JobContext } from "./job-context-detector"
 import {
@@ -184,9 +192,9 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Even if the candidate has laboratory background, the summary must reflect
      the TARGET role, not the candidate's full history.
    - For non-lab roles, translate lab experience into data terms:
-     * Lab organization → "organização e estruturação de bases de dados"
-     * Sample control → "validação e consistência de dados"
-     * Lab documentation → "documentação técnica"
+     * organização de laboratório → "organização e estruturação de bases de dados"
+     * controle de amostras → "validação e consistência de dados"
+     * documentação de laboratório → "documentação técnica"
    - This filter applies even if lab terms appear in the original summary.
 
 EXAMPLE STRUCTURE (Portuguese):

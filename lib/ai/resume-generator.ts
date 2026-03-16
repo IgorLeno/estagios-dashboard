@@ -355,10 +355,15 @@ async function runConsistencyAgent(
   const response = result.response
   const text = response.text()
 
-  console.log(`[ConsistencyAgent] Raw response length: ${text.length} chars`)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[ConsistencyAgent] Raw response length: ${text.length} chars`)
+  }
 
   const jsonData = extractJsonFromResponse(text)
-  console.log("[ConsistencyAgent] JSON extraction successful")
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("[ConsistencyAgent] JSON extraction successful")
+  }
 
   const parsed = ConsistencyAgentResultSchema.parse(jsonData)
 
