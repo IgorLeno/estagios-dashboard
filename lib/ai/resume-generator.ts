@@ -76,32 +76,57 @@ function isAuthorizedRename(returnedSkill: string, allowedSkills: string[]): boo
   ])
 
   const OPERATIONAL_KEYWORDS = new Set([
+    // Gestão e acompanhamento
     "acompanhamento",
     "administracao",
+    "coordenacao",
+    "gestao",
+    "monitoramento",
+    "organizacao",
+    "rastreamento",
+    "tracking",
+
+    // Dados e BI
     "analise",
     "analytics",
     "bases",
-    "controle",
-    "coordenacao",
+    "bi",
+    "consistencia",
     "dados",
     "documentacao",
     "estrutura",
     "estruturacao",
-    "gestao",
+    "governanca",
     "indicadores",
+    "informacoes",
     "kpi",
     "kpis",
+    "padronizacao",
+    "rastreabilidade",
+    "relatorio",
+    "relatorios",
+    "reporting",
+    "validacao",
+    "visualizacao",
+
+    // Processo e qualidade
+    "controle",
+    "elaboracao",
     "melhoria",
-    "monitoramento",
-    "organizacao",
     "processo",
     "processos",
     "projetos",
     "qualidade",
     "quality",
-    "rastreamento",
-    "reporting",
-    "tracking",
+
+    // Comportamentais
+    "analitico",
+    "atencao",
+    "comunicacao",
+    "detalhes",
+    "pensamento",
+    "proatividade",
+    "resolucao",
   ])
 
   const meaningfulWords = (s: string) =>
