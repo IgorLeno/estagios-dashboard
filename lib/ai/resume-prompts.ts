@@ -174,6 +174,21 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Format: "Interesse em [tool] e em ambientes modernos de [domain]."
    - Maximum 1 tool — don't list multiple "interests" (looks like padding).
 
+8. LABORATORY CONTENT FILTER (MANDATORY):
+   - When the job is NOT in a laboratory, engineering lab, or wet-lab context:
+     * NEVER include "organização de laboratório" in the summary
+     * NEVER include "controle de amostras" in the summary
+     * NEVER include "vivência laboratorial" in the summary
+     * NEVER include "rotinas laboratoriais" in the summary
+     * NEVER include "práticas de laboratório" in the summary
+   - Even if the candidate has laboratory background, the summary must reflect
+     the TARGET role, not the candidate's full history.
+   - For non-lab roles, translate lab experience into data terms:
+     * Lab organization → "organização e estruturação de bases de dados"
+     * Sample control → "validação e consistência de dados"
+     * Lab documentation → "documentação técnica"
+   - This filter applies even if lab terms appear in the original summary.
+
 EXAMPLE STRUCTURE (Portuguese):
 "Estudante de Engenharia Química (UNESP) em fase de conclusão com conhecimento em [EXACT SKILL 1], [EXACT SKILL 2] e [EXACT SKILL 3]. Experiência acadêmica com [ACTION VERB 1] [job duty] e [ACTION VERB 2] [job duty] através de projetos com [tool/method]. Vivência em [technical terms/certifications] para [application area]. Busco estágio em [area/function] para apoiar rotinas de [specific activities from job responsibilities]."
 

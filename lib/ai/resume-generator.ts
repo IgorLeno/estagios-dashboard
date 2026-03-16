@@ -343,7 +343,7 @@ async function runConsistencyAgent(
     generationConfig: {
       ...baseGenerationConfig,
       temperature: 0.1,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 4096,
     },
     systemInstruction: CONSISTENCY_SYSTEM_PROMPT,
   })
@@ -354,7 +354,12 @@ async function runConsistencyAgent(
   const result = await consistencyModel.generateContent(prompt)
   const response = result.response
   const text = response.text()
+
+  console.log(`[ConsistencyAgent] Raw response length: ${text.length} chars`)
+
   const jsonData = extractJsonFromResponse(text)
+  console.log("[ConsistencyAgent] JSON extraction successful")
+
   const parsed = ConsistencyAgentResultSchema.parse(jsonData)
 
   const correctedDraft: CVDraft = {
@@ -452,7 +457,16 @@ export async function generateTailoredResume(
       console.log("[ConsistencyAgent] Corrections applied:", consistencyResult.report.corrections)
     }
   } catch (error) {
-    console.warn("[ConsistencyAgent] Failed, using uncorrected draft:", error)
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    const errorType = errorMsg.includes("Unexpected end of JSON")
+      ? "TRUNCATION"
+      : errorMsg.includes("Expected") || errorMsg.includes("parse")
+        ? "VALIDATION"
+        : "OTHER"
+    console.warn(
+      `[ConsistencyAgent] ❌ Failed (${errorType}), using uncorrected draft:`,
+      errorMsg
+    )
   }
 
   // Merge personalized sections into CV

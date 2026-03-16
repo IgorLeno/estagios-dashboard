@@ -78,16 +78,16 @@ ${JSON.stringify(draft, null, 2)}
 ***
 CONSISTENCY RULES - apply ALL of these in a single pass:
 
-## RULE 1: Excel Level Consistency
+## RULE 1: Excel Level Consistency (DETERMINISTIC)
 Scan summary + skills for Excel level mentions.
 Collect all Excel level terms found:
 - "Excel Avançado", "Excel intermediário", "Excel Básico", "Excel (tabelas...)" etc.
-If more than ONE different level label exists across the document:
-  a) Count which level has MORE occurrences in the skills section
-  b) Standardize ALL occurrences to that level
-  c) If tied: prefer the descriptive form WITHOUT a level label:
-     "Excel (tabelas, fórmulas, organização de bases, Tabelas Dinâmicas, Power Query)"
-  d) Apply the chosen form consistently in BOTH summary AND skills
+If ANY level disagreement exists (e.g. summary says "intermediário" but skills says "Avançado"):
+  a) REMOVE all level labels ("Avançado", "Intermediário", "Básico") from ALL mentions
+  b) Replace with descriptive form EVERYWHERE:
+     "Excel (Tabelas Dinâmicas, Macros, Power Query)"
+  c) This is UNCONDITIONAL — do NOT pick the "most common" level, always use descriptive form
+  d) Apply in BOTH summary AND skills sections
 
 ## RULE 2: Language Consistency in PT documents
 If language is PT, scan the summary for English phrases inside parentheses.
@@ -98,18 +98,16 @@ Known violations to fix:
 Fix ALL English descriptors inside parentheses in the summary.
 Tool names (Power BI, Excel, SQL, Python) are proper nouns - keep as-is.
 
-## RULE 3: Credential Calibration
-Scan skills for terms that imply expertise the projects/summary do not support.
-Apply these rules for BI/People Analytics/Data Support roles:
-- "Modelagem de dados" -> REMOVE from skills if no project shows formal data modeling
-  (organizing bases != data modeling; pipeline != ER diagram)
-- "Governança da informação" -> if present as a skill item, DOWNGRADE:
-  move it from skills section to a parenthetical in the summary only
-  (e.g., "alinhada a práticas de governança da informação")
-  OR keep it only if the job explicitly requires it AND summary already mentions it
-- "Análise de dados" in "Competências de Processo" -> REMOVE (too generic,
-  already implied by the entire CV)
-- "Visualização de dados" as standalone item -> REMOVE if Power BI is already listed
+## RULE 3: Credential Calibration (UNCONDITIONAL)
+Scan skills for inflated credential terms. Apply these ALWAYS — do not check role type:
+- "Modelagem de dados" → ALWAYS REMOVE from skills
+  UNLESS a project description explicitly mentions ER diagrams, schema design, or database modeling.
+  (organizing bases ≠ data modeling; pipeline ≠ ER diagram)
+- "Governança da informação" → ALWAYS REMOVE from skills.
+  Do NOT move to summary. Simply remove.
+- "Análise de dados" in "Competências de Processo" → ALWAYS REMOVE
+  (too generic, already implied by the entire CV)
+- "Visualização de dados" as standalone item → REMOVE if Power BI is already listed
   with descriptors (redundant)
 
 ## RULE 4: Certification Order
@@ -122,12 +120,17 @@ Reorder the certifications array using this priority (lower index = higher prior
 LAST. Deep Learning, Machine Learning, AI, Neural Network certifications
 
 ## RULE 5: Summary naturalness - remove constructed phrases
-In the summary, if you find phrases that sound artificial:
+In the summary, if you find phrases that sound artificial, apply these replacements:
 - "alinhada a rotinas de BI e governança da informação" ->
   "em projetos acadêmicos de análise de dados"
 - "para apoio à tomada de decisão estratégica" ->
   "para suporte analítico"
 - "resultados otimizados" -> "resultados obtidos"
+- "Vivência em organização de laboratório" -> REMOVE entirely (unless job is laboratory/engineering)
+- "aplicáveis à validação de dados, padronização de dados" ->
+  "em validação e padronização de dados"
+- "em alinhamento a diretrizes de governança" -> REMOVE entirely
+- "com vivência laboratorial aplicável a" -> REMOVE entirely (unless job is laboratory/engineering)
 These specific replacements only - do not paraphrase freely.
 
 ## RULE 6: Cross-section term consistency
@@ -136,6 +139,20 @@ Pick the most common form of each term across sections and standardize:
 - "Relatórios técnicos" vs "Elaboração de relatórios técnicos" -> "Relatórios técnicos"
 - "Organização de bases" vs "Organização de bases de dados" -> longer form
 - "Validação de dados" vs "Validação de informações" -> "Validação de dados"
+
+## RULE 7: Project first-bullet reframe (NON-LAB CONTEXTS ONLY)
+For each project, inspect ONLY the FIRST bullet of its description array.
+If the first bullet's grammatical subject is a chemical/scientific technique
+(e.g. "modelagem molecular", "simulações físico-químicas", "síntese orgânica",
+"espectroscopia", "cromatografia", "termodinâmica") AND the job context is NOT
+laboratory or engineering:
+  a) REWRITE that first bullet so the grammatical subject is the DATA activity
+     (e.g. "Análise de dados de simulações moleculares" instead of
+     "Modelagem molecular com análise de dados")
+  b) NEVER touch project TITLES — only descriptions
+  c) Only rewrite the FIRST bullet of each project, leave other bullets unchanged
+  d) If uncertain whether a term is chemical/scientific → do NOT alter (conservative default)
+  e) Keep the same information — only change what leads the sentence
 
 ***
 Return JSON:

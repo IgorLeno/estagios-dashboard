@@ -553,8 +553,8 @@ describe("generateTailoredResume", () => {
     expect(result.cv.summary).toBe(mockSummaryResponse.summary)
     expect(result.cv.certifications).toEqual(mockBaseCertifications)
     expect(warnSpy).toHaveBeenCalledWith(
-      "[ConsistencyAgent] Failed, using uncorrected draft:",
-      expect.any(Error)
+      "[ConsistencyAgent] ❌ Failed (OTHER), using uncorrected draft:",
+      "Consistency timeout"
     )
   })
 
