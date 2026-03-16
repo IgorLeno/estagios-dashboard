@@ -17,23 +17,10 @@ const SaveJobSkillsSchema = z.object({
 
 async function getAuthorizedVagaId(id: string) {
   const supabase = await createClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-
-  if (authError || !user) {
-    return {
-      supabase,
-      errorResponse: NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }),
-    }
-  }
-
   const { data: vaga, error } = await supabase
     .from("vagas_estagio")
     .select("id")
     .eq("id", id)
-    .eq("user_id", user.id)
     .single()
 
   if (error || !vaga) {

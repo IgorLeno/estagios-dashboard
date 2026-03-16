@@ -345,7 +345,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       })
 
       if (!response.ok) {
-        throw new Error("Failed to save skills")
+        const errorData = (await response.json().catch(() => null)) as { error?: string } | null
+        throw new Error(errorData?.error || "Failed to save skills")
       }
 
       toast.success("Skills salvas com sucesso!")
