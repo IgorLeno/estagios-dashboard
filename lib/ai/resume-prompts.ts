@@ -89,9 +89,16 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      — these are inferred from academic project work and are not fabrication.
    - TERMINOLOGY CORRECTIONS (mandatory):
      * "rastreamento de KPIs" → "acompanhamento de KPIs"
+     * "KPI tracking" → "acompanhamento de KPIs"
+     * "KPI monitoring" → "monitoramento de KPIs"
      * "gestão de projetos" → "acompanhamento de projetos" (for internship roles)
      * "visualizações estratégicas" → "visualização de indicadores"
      * "administração de bases" → "organização e estruturação de bases"
+     * ⚠️ GENERAL RULE: When output language is PT, NEVER use English phrases
+       inside parentheses of tool names in the summary.
+       ❌ WRONG: "Power BI (dashboards, KPI tracking)"
+       ✅ CORRECT: "Power BI (dashboards, acompanhamento de KPIs)"
+       This applies to ALL parenthetical descriptors in the summary — keep them in PT.
 
 4. ATS BEST PRACTICES:
    - Write 100-120 words (optimal ATS length - not too short, not too long)
@@ -127,6 +134,15 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      Interest language ("interesse em", "com foco em transição para") is always safer
      than implied expertise ("conhecimento em People Analytics") for roles the candidate
      hasn't worked in directly.
+   - PEOPLE ANALYTICS OBJECTIVE (MANDATORY): When job is People Analytics or
+     People Analytics + BI, the objective sentence MUST include both:
+     ✅ CORRECT: "Busco estágio em People Analytics e BI para apoiar rotinas de..."
+     ❌ WRONG:   "Busco estágio em People Analytics para apoiar rotinas de..."
+     The "e BI" is mandatory because: (a) it more accurately describes the role scope,
+     (b) it strengthens ATS matching for BI-related keywords in the job description,
+     (c) it signals broader applicability to related openings.
+     Apply this rule whenever job title, tipo_vaga, or responsabilidades mention
+     both People Analytics AND BI/Power BI/dashboards/dados.
    - DO NOT name the company inside the resume body — the company name belongs in cover letters,
      not in the CV objective line. Use area/function instead.
      ❌ WRONG: "Busco oportunidade na Aegea Saneamento para..."
@@ -205,8 +221,13 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      * REMOVE: Self-assessed soft skill proficiency levels — NEVER write "Comunicação técnica
        (Avançado)" or "Pensamento analítico (Avançado)"; write just "Comunicação técnica",
        "Pensamento analítico". Soft skills are NEVER rated with proficiency levels.
-     * KEEP AND PROMOTE: organização de bases, validação de dados, padronização, Excel (with
-       specific functions), Power BI, SQL, relatórios técnicos, documentação
+     * KEEP AND PROMOTE: organização de bases, validação de dados, atualização de bases,
+       padronização, Excel (with specific functions), Power BI, SQL,
+       relatórios técnicos, documentação técnica
+     * REMOVE from "Competências de Processo" for BI/People Analytics/Data Support roles:
+       "Análise de dados" — too broad, already implied by the entire CV.
+       Replace with more specific operational terms like "Validação de dados" or
+       "Atualização de bases de dados" if not already present.
    - LANGUAGE CONSISTENCY: When output language is PT (Portuguese), translate skill
      display terms that are commonly used in Portuguese CVs:
      * "KPI tracking" → "acompanhamento de KPIs"
@@ -609,8 +630,12 @@ export function buildSkillsPrompt(
   const bankSkillItems = skillsBank.map((s) => s.skill)
 
   // Compute certification order at prompt-build time (more reliable than asking LLM to sort)
+  // Broader match: capture any certification/course category regardless of exact name
+  const CERT_CATEGORY_KEYWORDS = ["certif", "curso", "course", "formação", "training", "qualificaç"]
   const cvCertifications = currentSkills
-    .filter((cat) => cat.category.toLowerCase().includes("certif"))
+    .filter((cat) =>
+      CERT_CATEGORY_KEYWORDS.some((keyword) => cat.category.toLowerCase().includes(keyword))
+    )
     .flatMap((cat) => cat.items)
 
   const certRankOrder = ["google data analytics", "power bi", "sql", "excel"]
