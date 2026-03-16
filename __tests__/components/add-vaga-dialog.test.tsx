@@ -91,6 +91,46 @@ describe("AddVagaDialog", () => {
     )
   })
 
+  it("should navigate from skills tab to curriculo tab using next button", async () => {
+    const user = userEvent.setup()
+
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
+
+    await user.click(screen.getByText(/skills/i))
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole("button", { name: /continuar para currículo/i })).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+
+    await user.click(screen.getByRole("button", { name: /continuar para currículo/i }))
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole("button", { name: /gerar pt/i })).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+  })
+
+  it("should show shared footer actions on dados tab", async () => {
+    const user = userEvent.setup()
+
+    render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
+
+    await user.click(screen.getByText(/dados da vaga/i))
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole("button", { name: /continuar para skills/i })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /cancelar/i })).toBeInTheDocument()
+      },
+      { timeout: 2000 }
+    )
+  })
+
   it("should share formData across tabs", async () => {
     const user = userEvent.setup()
 

@@ -7,6 +7,7 @@ import type { Configuracao } from "@/lib/types"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChevronRight, RotateCcw } from "lucide-react"
 import { DescricaoTab } from "@/components/tabs/descricao-tab"
 import { DadosVagaTab } from "@/components/tabs/dados-vaga-tab"
 import { CurriculoTab } from "@/components/tabs/curriculo-tab"
@@ -385,12 +386,35 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           }}
         >
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="descricao">📝 Descrição</TabsTrigger>
-            <TabsTrigger value="dados">📊 Dados da Vaga</TabsTrigger>
-            <TabsTrigger value="skills" onClick={() => void handleLoadSkills()}>
-              Skills
+            <TabsTrigger
+              value="descricao"
+              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
+            >
+              <span>📝</span>
+              <span>Descrição</span>
             </TabsTrigger>
-            <TabsTrigger value="curriculo">📄 Currículo</TabsTrigger>
+            <TabsTrigger
+              value="dados"
+              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
+            >
+              <span>📊</span>
+              <span>Dados da Vaga</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="skills"
+              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
+              onClick={() => void handleLoadSkills()}
+            >
+              <span>🎯</span>
+              <span>Skills</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="curriculo"
+              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
+            >
+              <span>📄</span>
+              <span>Currículo</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="descricao" className="mt-4">
@@ -403,14 +427,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           </TabsContent>
 
           <TabsContent value="dados" className="mt-4">
-            <DadosVagaTab
-              formData={formData}
-              setFormData={setFormData}
-              jobAnalysisData={jobAnalysisData}
-              onRefreshAnalysis={handleRefreshAnalysis}
-              refreshing={refreshing}
-              onNextTab={() => setActiveTab("skills")}
-            />
+            <DadosVagaTab formData={formData} setFormData={setFormData} jobAnalysisData={jobAnalysisData} />
           </TabsContent>
 
           <TabsContent value="skills" className="mt-4">
@@ -466,14 +483,46 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading || analyzing || generatingResume}
-          >
-            Cancelar
-          </Button>
+        <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-h-10 items-center">
+            {activeTab === "dados" && jobAnalysisData && (
+              <Button onClick={handleRefreshAnalysis} variant="ghost" disabled={refreshing} type="button">
+                {refreshing ? (
+                  <>
+                    <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Refazendo análise...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Refazer análise
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading || analyzing || generatingResume}
+            >
+              Cancelar
+            </Button>
+            {activeTab === "dados" && (
+              <Button onClick={() => setActiveTab("skills")} disabled={loading || analyzing || generatingResume}>
+                Continuar para Skills
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+            {activeTab === "skills" && (
+              <Button onClick={() => setActiveTab("curriculo")} disabled={loading || analyzing || generatingResume}>
+                Continuar para Currículo
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

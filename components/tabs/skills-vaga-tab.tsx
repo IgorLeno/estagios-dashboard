@@ -13,9 +13,17 @@ interface SkillsVagaTabProps {
   isLoaded: boolean
   onChange: (skills: JobSkillReview[]) => void
   onLoad: () => Promise<void>
+  onNextTab?: () => void
 }
 
-export function SkillsVagaTab({ vagaId, skills, isLoading, isLoaded, onChange, onLoad }: SkillsVagaTabProps) {
+export function SkillsVagaTab({
+  vagaId,
+  skills,
+  isLoading,
+  isLoaded,
+  onChange,
+  onLoad,
+}: SkillsVagaTabProps) {
   function handleModeChange(skill: JobSkillReview, newMode: SkillUsageMode) {
     onChange(
       skills.map((s) =>
@@ -165,6 +173,7 @@ export function SkillsVagaTab({ vagaId, skills, isLoading, isLoaded, onChange, o
           ))}
         </div>
       )}
+
     </div>
   )
 }

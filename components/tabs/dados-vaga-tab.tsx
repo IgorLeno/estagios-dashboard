@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { RotateCcw, ChevronRight } from "lucide-react"
 import type { FormData } from "@/lib/utils/ai-mapper"
 import type { JobDetails } from "@/lib/ai/types"
 
@@ -13,21 +11,9 @@ interface DadosVagaTabProps {
   formData: FormData
   setFormData: (data: FormData | ((prev: FormData) => FormData)) => void
   jobAnalysisData: JobDetails | null
-  onRefreshAnalysis: () => Promise<void>
-  refreshing: boolean
-  onNextTab: () => void
-  onCancel?: () => void
 }
 
-export function DadosVagaTab({
-  formData,
-  setFormData,
-  jobAnalysisData,
-  onRefreshAnalysis,
-  refreshing,
-  onNextTab,
-  onCancel,
-}: DadosVagaTabProps) {
+export function DadosVagaTab({ formData, setFormData, jobAnalysisData }: DadosVagaTabProps) {
   return (
     <div className="space-y-4">
       {/* Form fields section */}
@@ -208,38 +194,6 @@ export function DadosVagaTab({
         </div>
       )}
 
-      {/* Footer with all action buttons aligned horizontally */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t mt-6">
-        {/* Refazer Análise button */}
-        {jobAnalysisData && (
-          <Button onClick={onRefreshAnalysis} variant="outline" disabled={refreshing}>
-            {refreshing ? (
-              <>
-                <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                Refazendo...
-              </>
-            ) : (
-              <>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Refazer Análise
-              </>
-            )}
-          </Button>
-        )}
-
-        {/* Cancelar button */}
-        {onCancel && (
-          <Button variant="outline" onClick={onCancel} type="button">
-            Cancelar
-          </Button>
-        )}
-
-        {/* Próximo button */}
-        <Button onClick={onNextTab} type="button">
-          Próximo
-          <ChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
     </div>
   )
 }
