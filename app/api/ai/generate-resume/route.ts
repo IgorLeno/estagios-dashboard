@@ -43,7 +43,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
 
-    const { vagaId, jobDescription, language } = validatedInput
+    const { vagaId, jobDescription, language, approvedSkills } = validatedInput
 
     console.log(`[Resume API] Request: ${vagaId ? `vaga ${vagaId}` : "job description"}, language: ${language}`)
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
 
         // Generate tailored resume
-        const resumeResult = await generateTailoredResume(jobDetails, language, userId)
+        const resumeResult = await generateTailoredResume(jobDetails, language, userId, approvedSkills)
 
         // Generate PDF
         const pdfBuffer = await generateResumePDF(resumeResult.cv)

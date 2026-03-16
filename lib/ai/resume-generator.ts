@@ -156,7 +156,8 @@ async function personalizeSkills(
   skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
   model: any,
   language: "pt" | "en",
-  jobContext: string
+  jobContext: string,
+  approvedSkills?: string[]
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
@@ -180,6 +181,12 @@ async function personalizeSkills(
 
   // Combined allowed skills
   const allowedSkills = [...originalSkills, ...allowedBankSkills]
+
+  // Skills aprovadas manualmente pelo usuário na aba de revisão
+  // São confiáveis por definição — o usuário as curou
+  if (approvedSkills && approvedSkills.length > 0) {
+    allowedSkills.push(...approvedSkills)
+  }
 
   // Get returned skills
   const returnedSkills = validated.skills.flatMap((cat) => cat.items)
@@ -305,7 +312,8 @@ function extractTokenUsage(response: any): {
 export async function generateTailoredResume(
   jobDetails: JobDetails,
   language: "pt" | "en",
-  userId?: string
+  userId?: string,
+  approvedSkills?: string[]
 ): Promise<{
   cv: CVTemplate
   duration: number
@@ -345,7 +353,7 @@ export async function generateTailoredResume(
   // STEP 2: Personalize 3 sections in parallel (pass jobContext to all)
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     personalizeSummary(jobDetails, baseCv, model, language, jobContext),
-    personalizeSkills(jobDetails, baseCv, skillsBank, model, language, jobContext), // Pass skillsBank + jobContext
+    personalizeSkills(jobDetails, baseCv, skillsBank, model, language, jobContext, approvedSkills), // Pass skillsBank + jobContext
     personalizeProjects(jobDetails, baseCv, model, language, jobContext),
   ])
 

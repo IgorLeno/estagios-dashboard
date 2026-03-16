@@ -253,6 +253,7 @@ export const GenerateResumeRequestSchema = z
     vagaId: z.string().uuid().optional(),
     jobDescription: z.string().min(50).max(50000).optional(),
     language: z.enum(["pt", "en"]),
+    approvedSkills: z.array(z.string().min(1).max(100)).optional(),
   })
   .refine((data) => data.vagaId || data.jobDescription, "Either vagaId or jobDescription must be provided")
 
@@ -292,3 +293,30 @@ export const GenerateResumeErrorResponseSchema = z.object({
 })
 
 export type GenerateResumeErrorResponse = z.infer<typeof GenerateResumeErrorResponseSchema>
+
+// ─── Job Skills Review (feature: aba de skills da vaga) ───────────────────
+
+export type SkillUsageMode = "use" | "skip" | "rename"
+
+export interface JobSkillReview {
+  /** Nome exato como aparece na descrição da vaga */
+  originalName: string
+  /** Nome a usar no currículo — editável pelo usuário quando mode === "rename" */
+  displayName: string
+  /** Decisão do usuário sobre esta skill */
+  mode: SkillUsageMode
+  /** true se existe em user_skills_bank com correspondência exata (normalizada) */
+  inBank: boolean
+  /** Categoria herdada do banco de skills, se existir */
+  category?: string
+}
+
+export interface ExtractJobSkillsResponse {
+  success: true
+  skills: JobSkillReview[]
+}
+
+export interface ExtractJobSkillsErrorResponse {
+  success: false
+  error: string
+}
