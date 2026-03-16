@@ -226,6 +226,11 @@ export interface PersonalizedSections {
   }>
 }
 
+export interface ConsistencyReport {
+  issues: string[]
+  corrections: string[]
+}
+
 /**
  * Schema for validating personalized sections from LLM
  */

@@ -1,4 +1,10 @@
 import { createGeminiClient, loadUserAIConfig, getGenerationConfig } from "./config"
+import {
+  buildConsistencyPrompt,
+  CONSISTENCY_SYSTEM_PROMPT,
+  ConsistencyAgentResultSchema,
+  type CVDraft,
+} from "./consistency-agent"
 import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./resume-prompts"
 import { getCVTemplate } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
@@ -6,7 +12,7 @@ import { extractJsonFromResponse } from "./job-parser"
 import { loadUserSkillsBank } from "./skills-bank" // NEW: Skills Bank
 import { calculateATSScore } from "./ats-scorer" // NEW: ATS Scorer
 import { detectJobContext, getContextDescription } from "./job-context-detector" // NEW: Job Context Detection
-import type { JobDetails, CVTemplate, PersonalizedSections } from "./types"
+import type { JobDetails, CVTemplate, PersonalizedSections, TokenUsage } from "./types"
 
 /**
  * Personalize CV summary section using LLM
@@ -309,6 +315,62 @@ function extractTokenUsage(response: any): {
   return { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
 }
 
+function validateConsistencyDraft(originalDraft: CVDraft, correctedDraft: CVDraft): void {
+  const originalTitles = originalDraft.projects.map((project) => project.title)
+  const correctedTitles = correctedDraft.projects.map((project) => project.title)
+
+  if (correctedTitles.length !== originalTitles.length) {
+    throw new Error(
+      `Consistency agent changed project count. Expected ${originalTitles.length}, got ${correctedTitles.length}.`
+    )
+  }
+
+  const changedTitles = correctedTitles.filter((title) => !originalTitles.includes(title))
+  if (changedTitles.length > 0) {
+    throw new Error(`Consistency agent changed project titles: ${changedTitles.join(", ")}`)
+  }
+}
+
+async function runConsistencyAgent(
+  draft: CVDraft,
+  jobDetails: JobDetails,
+  genAI: ReturnType<typeof createGeminiClient>,
+  modelName: string,
+  baseGenerationConfig: ReturnType<typeof getGenerationConfig>
+): Promise<{ draft: CVDraft; report: { issues: string[]; corrections: string[] }; tokenUsage: TokenUsage }> {
+  const consistencyModel = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      ...baseGenerationConfig,
+      temperature: 0.1,
+      maxOutputTokens: 2000,
+    },
+    systemInstruction: CONSISTENCY_SYSTEM_PROMPT,
+  })
+
+  const jobDescriptionContext = JSON.stringify(jobDetails, null, 2)
+  const prompt = buildConsistencyPrompt(draft, jobDescriptionContext)
+
+  const result = await consistencyModel.generateContent(prompt)
+  const response = result.response
+  const text = response.text()
+  const jsonData = extractJsonFromResponse(text)
+  const parsed = ConsistencyAgentResultSchema.parse(jsonData)
+
+  const correctedDraft: CVDraft = {
+    ...parsed.draft,
+    certifications: parsed.draft.certifications ?? draft.certifications,
+  }
+
+  validateConsistencyDraft(draft, correctedDraft)
+
+  return {
+    draft: correctedDraft,
+    report: parsed.report,
+    tokenUsage: extractTokenUsage(response),
+  }
+}
+
 /**
  * Generate tailored resume from job details
  * Personalizes 3 sections in parallel using LLM
@@ -348,9 +410,10 @@ export async function generateTailoredResume(
 
   // Create Gemini model with user config
   const genAI = createGeminiClient()
+  const generationConfig = getGenerationConfig(config)
   const model = genAI.getGenerativeModel({
     model: config.modelo_gemini,
-    generationConfig: getGenerationConfig(config),
+    generationConfig,
     systemInstruction: config.curriculo_prompt,
   })
 
@@ -361,12 +424,44 @@ export async function generateTailoredResume(
     personalizeProjects(jobDetails, baseCv, model, language, jobContext),
   ])
 
-  // Merge personalized sections into CV
-  const personalizedCv: CVTemplate = {
-    ...baseCv,
+  const uncorrectedDraft: CVDraft = {
     summary: summaryResult.summary,
     skills: skillsResult.skills,
     projects: projectsResult.projects,
+    certifications: baseCv.certifications,
+    language,
+  }
+
+  let finalDraft = uncorrectedDraft
+  let consistencyTokenUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
+
+  try {
+    const consistencyResult = await runConsistencyAgent(
+      uncorrectedDraft,
+      jobDetails,
+      genAI,
+      config.modelo_gemini,
+      generationConfig
+    )
+
+    finalDraft = consistencyResult.draft
+    consistencyTokenUsage = consistencyResult.tokenUsage
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("[ConsistencyAgent] Issues found:", consistencyResult.report.issues)
+      console.log("[ConsistencyAgent] Corrections applied:", consistencyResult.report.corrections)
+    }
+  } catch (error) {
+    console.warn("[ConsistencyAgent] Failed, using uncorrected draft:", error)
+  }
+
+  // Merge personalized sections into CV
+  const personalizedCv: CVTemplate = {
+    ...baseCv,
+    summary: finalDraft.summary,
+    skills: finalDraft.skills,
+    projects: finalDraft.projects,
+    certifications: finalDraft.certifications ?? baseCv.certifications,
   }
 
   // Calculate ATS compatibility score (NEW)
@@ -377,15 +472,18 @@ export async function generateTailoredResume(
     inputTokens:
       summaryResult.tokenUsage.inputTokens +
       skillsResult.tokenUsage.inputTokens +
-      projectsResult.tokenUsage.inputTokens,
+      projectsResult.tokenUsage.inputTokens +
+      consistencyTokenUsage.inputTokens,
     outputTokens:
       summaryResult.tokenUsage.outputTokens +
       skillsResult.tokenUsage.outputTokens +
-      projectsResult.tokenUsage.outputTokens,
+      projectsResult.tokenUsage.outputTokens +
+      consistencyTokenUsage.outputTokens,
     totalTokens:
       summaryResult.tokenUsage.totalTokens +
       skillsResult.tokenUsage.totalTokens +
-      projectsResult.tokenUsage.totalTokens,
+      projectsResult.tokenUsage.totalTokens +
+      consistencyTokenUsage.totalTokens,
   }
 
   const duration = Date.now() - startTime

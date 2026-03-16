@@ -71,6 +71,38 @@ const mockProjectsResponse = {
   ],
 }
 
+const mockBaseCertifications = [
+  "Deep Learning Specialization - (Coursera, 2024)",
+  "Power BI Impressionador - (Hashtag Treinamentos, 2023)",
+  "SQL Impressionador - (Hashtag Treinamentos, 2023)",
+  "Google Data Analytics - (Coursera, 2023)",
+]
+
+const mockSortedCertifications = [
+  "Google Data Analytics - (Coursera, 2023)",
+  "Power BI Impressionador - (Hashtag Treinamentos, 2023)",
+  "SQL Impressionador - (Hashtag Treinamentos, 2023)",
+  "Deep Learning Specialization - (Coursera, 2024)",
+]
+
+const mockConsistencyResponse = {
+  draft: {
+    summary: mockSummaryResponse.summary,
+    skills: mockSkillsResponse.skills,
+    projects: mockProjectsResponse.projects,
+    certifications: mockSortedCertifications,
+    language: "pt" as const,
+  },
+  report: {
+    issues: [
+      "Certification order inconsistent with resume prompt priority",
+    ],
+    corrections: [
+      "Reordered certifications to prioritize Google Data Analytics and move Deep Learning to the end",
+    ],
+  },
+}
+
 // Mock Gemini client
 const mockGenerateContent = vi.fn()
 
@@ -154,7 +186,7 @@ vi.mock("@/lib/ai/cv-templates", () => ({
       },
     ],
     languages: [],
-    certifications: [],
+    certifications: mockBaseCertifications,
   })),
 }))
 
@@ -244,6 +276,17 @@ describe("generateTailoredResume", () => {
           },
         },
       })
+      .mockResolvedValueOnce({
+        // Consistency response
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockConsistencyResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 250,
+            candidatesTokenCount: 120,
+            totalTokenCount: 370,
+          },
+        },
+      })
   })
 
   it("should generate tailored resume with personalized sections", async () => {
@@ -268,9 +311,9 @@ describe("generateTailoredResume", () => {
     const result = await generateTailoredResume(mockJobDetails, "pt")
 
     expect(result.tokenUsage).toBeDefined()
-    expect(result.tokenUsage.inputTokens).toBe(500 + 400 + 600) // 1500
-    expect(result.tokenUsage.outputTokens).toBe(150 + 200 + 300) // 650
-    expect(result.tokenUsage.totalTokens).toBe(650 + 600 + 900) // 2150
+    expect(result.tokenUsage.inputTokens).toBe(500 + 400 + 600 + 250) // 1750
+    expect(result.tokenUsage.outputTokens).toBe(150 + 200 + 300 + 120) // 770
+    expect(result.tokenUsage.totalTokens).toBe(650 + 600 + 900 + 370) // 2520
   })
 
   it("should preserve static CV sections", async () => {
@@ -294,7 +337,7 @@ describe("generateTailoredResume", () => {
 
     // If calls were sequential, duration would be sum of all calls
     // Parallel execution should be faster (not strictly testable but we verify all were called)
-    expect(mockGenerateContent).toHaveBeenCalledTimes(3)
+    expect(mockGenerateContent).toHaveBeenCalledTimes(4)
 
     // Duration should be reasonable (less than 5 seconds for mocked responses)
     expect(duration).toBeLessThan(5000)
@@ -317,6 +360,11 @@ describe("generateTailoredResume", () => {
       .mockResolvedValueOnce({
         response: {
           text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockConsistencyResponse)}\n\`\`\``,
         },
       })
 
@@ -389,6 +437,16 @@ describe("generateTailoredResume", () => {
           },
         },
       })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockConsistencyResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 100,
+            candidatesTokenCount: 50,
+            totalTokenCount: 150,
+          },
+        },
+      })
 
     const result = await generateTailoredResume(mockJobDetails, "pt")
 
@@ -419,6 +477,107 @@ describe("generateTailoredResume", () => {
       })
 
     await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow()
+  })
+
+  it("should apply consistency corrections to the final draft", async () => {
+    const correctedSummary =
+      "Engenheiro Químico com especialização em Machine Learning e Python. Experiência comprovada em desenvolvimento de modelos preditivos usando TensorFlow e análise de dados. Habilidades em Docker e Git para versionamento de código. Busco oportunidade em Tech Corp para aplicar conhecimentos em projetos de ML com narrativa consistente entre perfil, competências e projetos."
+
+    mockGenerateContent.mockReset()
+    mockGenerateContent
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () =>
+            `\`\`\`json\n${JSON.stringify({
+              ...mockConsistencyResponse,
+              draft: {
+                ...mockConsistencyResponse.draft,
+                summary: correctedSummary,
+              },
+            })}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+
+    const result = await generateTailoredResume(mockJobDetails, "pt")
+
+    expect(result.cv.summary).toBe(correctedSummary)
+    expect(result.cv.certifications).toEqual(mockSortedCertifications)
+  })
+
+  it("should fall back to uncorrected draft when consistency agent fails", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    mockGenerateContent.mockReset()
+    mockGenerateContent
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
+          usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+        },
+      })
+      .mockRejectedValueOnce(new Error("Consistency timeout"))
+
+    const result = await generateTailoredResume(mockJobDetails, "pt")
+
+    expect(result.cv.summary).toBe(mockSummaryResponse.summary)
+    expect(result.cv.certifications).toEqual(mockBaseCertifications)
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[ConsistencyAgent] Failed, using uncorrected draft:",
+      expect.any(Error)
+    )
+  })
+
+  it("should log consistency issues and corrections in development", async () => {
+    const originalNodeEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = "development"
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+
+    try {
+      await generateTailoredResume(mockJobDetails, "pt")
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[ConsistencyAgent] Issues found:",
+        mockConsistencyResponse.report.issues
+      )
+      expect(logSpy).toHaveBeenCalledWith(
+        "[ConsistencyAgent] Corrections applied:",
+        mockConsistencyResponse.report.corrections
+      )
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv
+      logSpy.mockRestore()
+    }
   })
 
   it("should measure execution duration", async () => {
