@@ -66,6 +66,15 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - ⚠️ CRITICAL: Use technical terms NATURALLY - mention each term ONCE (max 1-2x total in summary)
    - If job mentions "ISO 17025" repeatedly, you should still mention it ONLY ONCE in summary
    - NO KEYWORD STUFFING - quality over quantity
+   - EXCEL LEVEL CONSISTENCY (MANDATORY): Do NOT self-assign an Excel proficiency level
+     in the summary unless the exact level term ("Excel Intermediário", "Excel Avançado",
+     "Excel Básico") appears literally in the job description.
+     * If job says "Excel Avançado" literally → you MAY use "Excel Avançado" in summary.
+     * If job says "conhecimento intermediário em Excel" → use descriptive form:
+       "Excel (tabelas, fórmulas, organização de bases)" — NO level label.
+     * If job says only "Excel" with no level → use descriptive form with specific functions.
+     * DEFAULT: When in doubt, use descriptive form. Never invent or infer a level label.
+     This prevents contradictions between the summary and the skills section.
 
 3. KEYWORD DENSITY (USE NATURALLY - NO STUFFING):
    - Include 6-8 job keywords naturally distributed across sentences
@@ -229,6 +238,16 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
        → keep ONLY in "Visualização & BI" (more relevant for BI roles), remove from Linguagens.
      * Within same category: keep most descriptive version (existing rule — keep as is).
      * Apply this check AFTER all categories are built, as a final pass.
+   - SEMANTIC DEDUPLICATION (MANDATORY — SAME AND CROSS-CATEGORY):
+     After exact deduplication, scan for skills that mean the same thing even if worded
+     differently. Known redundant pairs — when both appear, KEEP only the first listed:
+     * "Relatórios técnicos" vs "Elaboração de Relatórios" → keep "Relatórios técnicos"
+     * "Elaboração de relatórios técnicos" vs "Relatórios técnicos" → keep "Relatórios técnicos"
+     * "Organização de bases" vs "Organização de bases de dados" → keep longer form
+     * "Análise de dados" vs "Análise exploratória de dados" → keep more specific one
+     * "Acompanhamento de KPIs" vs "Monitoramento de KPIs" → keep "Acompanhamento de KPIs"
+     * "Documentação técnica" vs "Documentação de processos" → keep "Documentação técnica"
+     Apply this check as a FINAL pass after all other deduplication.
    - CERTIFICATION ORDER (STRICT): Sort certifications using this priority for
      BI/Analytics/People Analytics/Data Support roles:
      1st: "Google Data Analytics" — broad analytics foundation
@@ -890,7 +909,7 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
   const titleCaseMatches = allText.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g) || []
   exact_phrases.push(...titleCaseMatches)
 
-  // Add known multi-word tools/technologies
+  // Add known multi-word tools/technologies — ONLY when full phrase is literally present
   const KNOWN_PHRASES = [
     "Excel Avançado",
     "Power BI",
@@ -901,7 +920,10 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
     "Controle de Qualidade",
   ]
   KNOWN_PHRASES.forEach((phrase) => {
-    if (allText.toLowerCase().includes(phrase.toLowerCase())) {
+    // Require the FULL phrase to appear literally (not just one word from it)
+    const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")
+    const regex = new RegExp(`\\b${escapedPhrase}\\b`, "i")
+    if (regex.test(allText)) {
       exact_phrases.push(phrase)
     }
   })
