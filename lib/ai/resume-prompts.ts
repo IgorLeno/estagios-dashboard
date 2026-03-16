@@ -74,6 +74,15 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Front-load most important keywords in FIRST SENTENCE (ATS scans top first)
    - ⚠️ CRITICAL: Each keyword should appear MAX 1-2 times in ENTIRE summary (no repetition)
    - Use keywords in context, not forced or stuffed
+   - GOVERNANCE TERMS: For BI/Analytics/People Analytics roles, naturally include in
+     sentence 3 (competencies) at least one of: "organização de bases", "validação de dados",
+     "padronização de informações", "documentação técnica", "consistência de dados"
+     — these are inferred from academic project work and are not fabrication.
+   - TERMINOLOGY CORRECTIONS (mandatory):
+     * "rastreamento de KPIs" → "acompanhamento de KPIs"
+     * "gestão de projetos" → "acompanhamento de projetos" (for internship roles)
+     * "visualizações estratégicas" → "visualização de indicadores"
+     * "administração de bases" → "organização e estruturação de bases"
 
 4. ATS BEST PRACTICES:
    - Write 100-120 words (optimal ATS length - not too short, not too long)
@@ -177,9 +186,14 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      If the same skill appears twice (from CV + Bank), keep ONLY the more descriptive version.
      Example: "Power BI (dashboards, KPI tracking)" + "Power BI (Intermediário)" → keep only
      "Power BI (dashboards, KPI tracking)". ZERO duplicate skill names allowed.
-   - CERTIFICATION ORDER: When job is BI/Analytics/People Analytics, reorder certifications
-     to lead with most job-relevant (e.g., Google Data Analytics, Power BI, SQL before
-     Deep Learning Specialization).
+   - CERTIFICATION ORDER (MANDATORY): Sort certifications by job relevance score:
+     * Score 5 (most relevant): certifications explicitly matching job required skills
+     * Score 4: certifications matching job desired skills
+     * Score 3: general data/analytics certifications (Google Data Analytics)
+     * Score 2: tool-specific certifications (Power BI, SQL courses)
+     * Score 1: adjacent certifications (adjacent domain, not required by job)
+     * Score 0 (last): certifications with no relevance to job (e.g., Deep Learning for BI ops role)
+     Return certifications sorted descending by score. If tie, use original CV order.
 
 7. TRUTHFULNESS (see global rules in System Prompt):
    - ONLY describe work that was actually done — reframe HOW, never WHAT
@@ -216,6 +230,20 @@ AFTER (QHSE-optimized):
   },
   { "category": "Linguagens & Análise de Dados", "items": ["SQL", "Python", "R"] }
 ]
+
+OUTPUT FORMAT RULES FOR SOFT SKILLS:
+   - If the CV contains soft skills, split them into TWO separate categories:
+     1. "Competências de Processo": technical activities that are transferable
+        (ex: "Elaboração de relatórios técnicos", "Validação de dados",
+        "Documentação técnica", "Acompanhamento de KPIs", "Organização de bases")
+     2. "Competências Comportamentais": pure behavioral traits
+        (ex: "Pensamento analítico", "Atenção a detalhes", "Comunicação técnica",
+        "Resolução de problemas", "Organização")
+   - NEVER mix process activities with behavioral traits in the same category
+   - "Gestão de projetos" → rename to "Acompanhamento de projetos" for internship roles
+   - "Rastreamento de KPIs" → rename to "Acompanhamento de KPIs"
+   - "Administração de bases de dados" → rename to "Organização e estruturação de bases de dados"
+   - "Visualizações estratégicas" → rename to "Visualização de indicadores"
 
 Return JSON format:
 {
@@ -304,6 +332,15 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    RULE: If a connection between project and job area feels forced, describe only the
    PROCESS SKILLS (organizar, validar, automatizar, documentar, padronizar, elaborar relatórios)
    without claiming domain expertise the project doesn't have.
+   GOVERNANCE VOCABULARY INFERENCE (authorized inferences — not fabrication):
+   When project involves: data collection, organization, processing pipelines, validation →
+   you MAY add these descriptors if they are natural consequences of the described activity:
+   ✅ "rastreabilidade de dados" (if traceability is implied by the pipeline structure)
+   ✅ "padronização de informações" (if standardization is part of processing)
+   ✅ "consistência de dados" (if validation routines exist)
+   ✅ "documentação de fontes e regras" (if methodology documentation exists)
+   ❌ NEVER add: "controle de acessos", "políticas de governança", "gestão de TI"
+      (these require explicit professional experience, cannot be inferred from academic work)
 
 6. ATS BEST PRACTICES:
    - Use industry-standard terminology (no academic jargon)

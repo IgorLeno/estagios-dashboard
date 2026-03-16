@@ -111,10 +111,15 @@ EXEMPLO:
 ⚠️ SE A VAGA FOR OPERACIONAL (People Analytics, BI Support, Data Maintenance, não ML/Research):
 PRIORIZAR vocabulário operacional:
 ✅ Usar: organização de bases, validação de dados, padronização, atualização de dashboards,
-   documentação técnica, rastreabilidade, consistência de dados, governança da informação,
-   controle de acessos, elaboração de relatórios, acompanhamento de indicadores
+   documentação técnica, rastreabilidade, consistência de dados, elaboração de relatórios,
+   acompanhamento de indicadores
 ❌ EVITAR como destaque: deep learning, redes neurais, algoritmos avançados, feature engineering
    (podem aparecer em posição secundária se estiverem no CV, não como diferencial principal)
+CORREÇÕES DE TERMINOLOGIA:
+✅ Usar "acompanhamento de KPIs" no lugar de "rastreamento de KPIs"
+✅ Usar "acompanhamento de projetos" no lugar de "gestão de projetos" em vagas de estágio
+✅ Usar "visualização de indicadores" no lugar de "visualizações estratégicas"
+✅ Usar "organização e estruturação de bases" no lugar de "administração de bases"
 
 ESTRUTURA DO PERFIL para vaga operacional:
 -  Frase 1: Formação + interesse em organização/análise de dados
@@ -497,6 +502,21 @@ USE noun phrases no lugar de infinitivos:
 ✅ "Estruturação e padronização de bases de dados para..."
 ✅ "Implementação de rotinas de validação e controle de consistência..."
 ✅ "Elaboração de relatórios técnicos com documentação de fontes e resultados."
+
+PARA PROJETOS QUÍMICOS/CIENTÍFICOS em vagas operacionais de BI:
+O objetivo é traduzir trabalho químico/científico para linguagem de processos de dados.
+Reformule seguindo este padrão:
+
+Conceito original → Reframe operacional:
+"modelagem molecular" → "estruturação e análise de dados de propriedades físico-químicas"
+"simulação de equilíbrio" → "organização e validação de resultados de simulação"
+"análise de eficiência de processos" → "comparação e padronização de dados de processo"
+"otimização ambiental" → "organização de indicadores de desempenho ambiental"
+
+Cada bullet de projeto científico DEVE terminar com um outcome de dados/processo:
+✅ "...para suporte à tomada de decisão técnica."
+✅ "...garantindo consistência e rastreabilidade dos resultados."
+✅ "...com documentação estruturada de fontes, metodologia e resultados."
 `,
       en: `
 📊 DATA SCIENCE CONTEXT - PROJECT REFRAMING:
@@ -510,6 +530,30 @@ FOR DATA/COMPUTING PROJECTS:
 FOR ENGINEERING/CHEMISTRY PROJECTS:
 ✅ EMPHASIZE: "Predictive modeling", "computational simulation"
 ✅ MENTION: Python tools if used
+
+⚠️ IF THE ROLE IS OPERATIONAL (BI, data support, documentation):
+✅ EMPHASIZE: database structuring, standardization, validation, source documentation,
+   traceability, technical reporting
+❌ AVOID as primary emphasis: Machine Learning, feature engineering, hyperparameters, algorithms
+USE noun phrases instead of infinitives:
+✅ "Structuring and standardizing data sets for..."
+✅ "Implementing validation and consistency-control routines..."
+✅ "Preparing technical reports with documentation of sources and results."
+
+FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI roles:
+The goal is to translate chemical/scientific work into data process language.
+Reframe following this pattern:
+
+Original concept → Operational reframe:
+"molecular modeling" → "structuring and analyzing physicochemical property data"
+"equilibrium simulation" → "organizing and validating simulation results"
+"process efficiency analysis" → "comparing and standardizing process data"
+"environmental optimization" → "organizing environmental performance indicators"
+
+Each bullet of a scientific project MUST end with a data/process outcome:
+✅ "...to support technical decision-making."
+✅ "...ensuring result consistency and traceability."
+✅ "...with structured documentation of sources, methodology, and results."
 `,
     },
 
