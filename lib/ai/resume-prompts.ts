@@ -44,64 +44,7 @@ VALIDATION:
 Your output will be validated against strict schemas. Any fabricated content will be rejected.
 If job requirements ask for skills not in the CV, DO NOT add them - just emphasize related existing skills.`
 
-/**
- * Build prompt for personalizing professional summary
- */
-export function buildSummaryPrompt(
-  jobDetails: JobDetails,
-  originalSummary: string,
-  userSkills: string[],
-  language: "pt" | "en",
-  jobContext: JobContext
-): string {
-  // Extract ATS keywords (6 types)
-  const atsKeywords = extractATSKeywords(jobDetails)
-
-  // Handle undefined/Indefinido values
-  const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
-  const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
-  const requisitosDesejaveis =
-    jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
-  const responsabilidades =
-    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
-
-  const languageInstruction =
-    language === "pt"
-      ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
-      : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
-
-  // Get context-specific instructions
-  const contextInstructions = getSummaryContextInstructions(jobContext, language)
-
-  return `${languageInstruction}
-
-${contextInstructions}
-
-Rewrite the professional summary to be HIGHLY OPTIMIZED FOR ATS (Applicant Tracking Systems).
-
-JOB DETAILS:
-Company: ${jobDetails.empresa}
-Position: ${cargo}
-Required Skills: ${requisitosObrigatorios}
-Desired Skills: ${requisitosDesejaveis}
-Responsibilities: ${responsabilidades}
-
-ORIGINAL SUMMARY:
-${originalSummary}
-
-USER'S SKILLS (you can ONLY mention skills from this list):
-${userSkills.join(", ")}
-
-ATS KEYWORDS EXTRACTED FROM JOB:
-Technical Terms (repeated in job): ${atsKeywords.technical_terms.slice(0, 5).join(", ")}
-Required Skills (PRIORITIZE these): ${atsKeywords.required_skills.slice(0, 3).join(", ")}
-Action Verbs (use these verbs): ${atsKeywords.action_verbs.slice(0, 3).join(", ")}
-Certifications/Standards: ${atsKeywords.certifications.join(", ")}
-Exact Phrases (use EXACTLY as written): ${atsKeywords.exact_phrases.join(", ")}
-Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
-
-INSTRUCTIONS - ATS OPTIMIZATION:
+export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 1. STRUCTURE (5-part professional profile):
    - Opening: Education level + current status (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
@@ -163,71 +106,8 @@ Return JSON format:
 {
   "summary": "Your highly ATS-optimized summary here (100-120 words)..."
 }`
-}
 
-/**
- * Build prompt for personalizing skills section with Skills Bank integration
- */
-export function buildSkillsPrompt(
-  jobDetails: JobDetails,
-  currentSkills: Array<{ category: string; items: string[] }>,
-  skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
-  projects: Array<{ title: string; description: string[] }>,
-  language: "pt" | "en",
-  jobContext: JobContext
-): string {
-  // Extract ATS keywords
-  const atsKeywords = extractATSKeywords(jobDetails)
-
-  // Handle undefined/empty arrays
-  const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
-  const requisitosDesejaveis =
-    jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
-
-  // Extract all skill items from CV
-  const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
-
-  // Build allowed skills bank items (with proficiency indicators)
-  const bankSkillItems = skillsBank.map((s) => (s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`))
-
-  // Combined allowed skills
-  const allAllowedSkills = [...cvSkillItems, ...bankSkillItems]
-
-  const languageInstruction =
-    language === "pt"
-      ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
-      : "⚠️ MANDATORY: Keep category and skill names EXACTLY as they are (they may be in Portuguese or English). DO NOT translate tool, software, or technology names."
-
-  // Get context-specific instructions
-  const contextInstructions = getSkillsContextInstructions(jobContext, language)
-
-  return `${languageInstruction}
-
-${contextInstructions}
-
-⚠️  CRITICAL: REORDER + SELECT FROM SKILLS BANK (ATS OPTIMIZATION)
-
-JOB REQUIRED SKILLS (PRIORITIZE THESE):
-${requisitosObrigatorios}
-
-JOB DESIRED SKILLS (secondary priority):
-${requisitosDesejaveis}
-
-USER'S CV SKILLS (always included):
-${JSON.stringify(currentSkills, null, 2)}
-
-USER'S SKILLS BANK (can add if job-relevant):
-${JSON.stringify(skillsBank, null, 2)}
-
-ALLOWED SKILLS (you MUST use ONLY these exact items):
-CV Skills: ${cvSkillItems.join(", ")}
-Bank Skills: ${bankSkillItems.join(", ")}
-
-EXACT PHRASES TO MATCH (from job):
-${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
-
-INSTRUCTIONS - ATS OPTIMIZATION:
+export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 1. SKILL MATCHING LOGIC (prioritize in this order):
    - EXACT matches: job requires "Excel Avançado" → move to top, use exactly as written
@@ -313,68 +193,8 @@ Return JSON format:
     ...
   ]
 }`
-}
 
-/**
- * Build prompt for personalizing projects section
- */
-export function buildProjectsPrompt(
-  jobDetails: JobDetails,
-  currentProjects: Array<{ title: string; description: string[] }>,
-  language: "pt" | "en",
-  jobContext: JobContext
-): string {
-  const jobKeywords = extractTopKeywords(jobDetails, 10)
-
-  // Handle undefined/Indefinido values
-  const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
-  const responsabilidades =
-    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
-  const requisitosObrigatorios =
-    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
-
-  // Extract exact project titles for validation
-  const projectTitles = currentProjects.map((p) => p.title)
-
-  const languageInstruction =
-    language === "pt"
-      ? "⚠️ OBRIGATÓRIO: As DESCRIÇÕES dos projetos DEVEM estar em PORTUGUÊS BRASILEIRO. Mantenha os títulos EXATAMENTE como estão (não traduza datas ou nomes técnicos nos títulos)."
-      : "⚠️ MANDATORY: Project DESCRIPTIONS MUST be in ENGLISH. Keep titles EXACTLY as they are (do not translate dates or technical names in titles)."
-
-  // Extract ATS keywords (6 types)
-  const atsKeywords = extractATSKeywords(jobDetails)
-
-  // Get context-specific instructions
-  const contextInstructions = getProjectsContextInstructions(jobContext, language)
-
-  return `${languageInstruction}
-
-${contextInstructions}
-
-⚠️  CRITICAL: KEEP TITLES UNCHANGED - REWRITE DESCRIPTIONS FOR ATS OPTIMIZATION
-
-JOB DETAILS:
-Company: ${jobDetails.empresa}
-Position: ${cargo}
-Responsibilities: ${responsabilidades}
-Required Skills: ${requisitosObrigatorios}
-Job Type/Area: ${jobDetails.tipo_vaga || "Not specified"}
-
-CURRENT PROJECTS (with exact titles you MUST preserve):
-${JSON.stringify(currentProjects, null, 2)}
-
-REQUIRED PROJECT TITLES (copy these EXACTLY, character-by-character):
-${projectTitles.map((t, i) => `${i + 1}. "${t}"`).join("\n")}
-
-ATS KEYWORDS EXTRACTED FROM JOB:
-Technical Terms: ${atsKeywords.technical_terms.slice(0, 5).join(", ")}
-Required Skills: ${atsKeywords.required_skills.slice(0, 3).join(", ")}
-Action Verbs (use in descriptions): ${atsKeywords.action_verbs.slice(0, 3).join(", ")}
-Certifications/Standards: ${atsKeywords.certifications.join(", ")}
-Exact Phrases (use EXACTLY): ${atsKeywords.exact_phrases.join(", ")}
-Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
-
-INSTRUCTIONS - ATS OPTIMIZATION:
+export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 1. PROJECT-TO-JOB-DUTY MAPPING:
    - Identify which job responsibilities each project can address
@@ -520,6 +340,192 @@ Return JSON format:
     ...
   ]
 }`
+
+/**
+ * Build prompt for personalizing professional summary
+ */
+export function buildSummaryPrompt(
+  jobDetails: JobDetails,
+  originalSummary: string,
+  userSkills: string[],
+  language: "pt" | "en",
+  jobContext: JobContext
+): string {
+  // Extract ATS keywords (6 types)
+  const atsKeywords = extractATSKeywords(jobDetails)
+
+  // Handle undefined/Indefinido values
+  const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
+  const requisitosObrigatorios =
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
+  const requisitosDesejaveis =
+    jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
+  const responsabilidades =
+    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
+
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
+      : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
+
+  // Get context-specific instructions
+  const contextInstructions = getSummaryContextInstructions(jobContext, language)
+
+  return `${languageInstruction}
+
+${contextInstructions}
+
+Rewrite the professional summary to be HIGHLY OPTIMIZED FOR ATS (Applicant Tracking Systems).
+
+JOB DETAILS:
+Company: ${jobDetails.empresa}
+Position: ${cargo}
+Required Skills: ${requisitosObrigatorios}
+Desired Skills: ${requisitosDesejaveis}
+Responsibilities: ${responsabilidades}
+
+ORIGINAL SUMMARY:
+${originalSummary}
+
+USER'S SKILLS (you can ONLY mention skills from this list):
+${userSkills.join(", ")}
+
+ATS KEYWORDS EXTRACTED FROM JOB:
+Technical Terms (repeated in job): ${atsKeywords.technical_terms.slice(0, 5).join(", ")}
+Required Skills (PRIORITIZE these): ${atsKeywords.required_skills.slice(0, 3).join(", ")}
+Action Verbs (use these verbs): ${atsKeywords.action_verbs.slice(0, 3).join(", ")}
+Certifications/Standards: ${atsKeywords.certifications.join(", ")}
+Exact Phrases (use EXACTLY as written): ${atsKeywords.exact_phrases.join(", ")}
+Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
+
+${SUMMARY_PROMPT_INSTRUCTIONS}`
+}
+
+/**
+ * Build prompt for personalizing skills section with Skills Bank integration
+ */
+export function buildSkillsPrompt(
+  jobDetails: JobDetails,
+  currentSkills: Array<{ category: string; items: string[] }>,
+  skillsBank: Array<{ skill: string; proficiency: string; category: string }>, // NEW: Skills Bank
+  projects: Array<{ title: string; description: string[] }>,
+  language: "pt" | "en",
+  jobContext: JobContext
+): string {
+  // Extract ATS keywords
+  const atsKeywords = extractATSKeywords(jobDetails)
+
+  // Handle undefined/empty arrays
+  const requisitosObrigatorios =
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
+  const requisitosDesejaveis =
+    jobDetails.requisitos_desejaveis.length > 0 ? jobDetails.requisitos_desejaveis.join(", ") : "Not specified"
+
+  // Extract all skill items from CV
+  const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
+
+  // Build allowed skills bank items (with proficiency indicators)
+  const bankSkillItems = skillsBank.map((s) => (s.proficiency === "Expert" ? s.skill : `${s.skill} (${s.proficiency})`))
+
+  // Combined allowed skills
+  const allAllowedSkills = [...cvSkillItems, ...bankSkillItems]
+
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
+      : "⚠️ MANDATORY: Keep category and skill names EXACTLY as they are (they may be in Portuguese or English). DO NOT translate tool, software, or technology names."
+
+  // Get context-specific instructions
+  const contextInstructions = getSkillsContextInstructions(jobContext, language)
+
+  return `${languageInstruction}
+
+${contextInstructions}
+
+⚠️  CRITICAL: REORDER + SELECT FROM SKILLS BANK (ATS OPTIMIZATION)
+
+JOB REQUIRED SKILLS (PRIORITIZE THESE):
+${requisitosObrigatorios}
+
+JOB DESIRED SKILLS (secondary priority):
+${requisitosDesejaveis}
+
+USER'S CV SKILLS (always included):
+${JSON.stringify(currentSkills, null, 2)}
+
+USER'S SKILLS BANK (can add if job-relevant):
+${JSON.stringify(skillsBank, null, 2)}
+
+ALLOWED SKILLS (you MUST use ONLY these exact items):
+CV Skills: ${cvSkillItems.join(", ")}
+Bank Skills: ${bankSkillItems.join(", ")}
+
+EXACT PHRASES TO MATCH (from job):
+${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
+
+${SKILLS_PROMPT_INSTRUCTIONS}`
+}
+
+/**
+ * Build prompt for personalizing projects section
+ */
+export function buildProjectsPrompt(
+  jobDetails: JobDetails,
+  currentProjects: Array<{ title: string; description: string[] }>,
+  language: "pt" | "en",
+  jobContext: JobContext
+): string {
+  const jobKeywords = extractTopKeywords(jobDetails, 10)
+
+  // Handle undefined/Indefinido values
+  const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
+  const responsabilidades =
+    jobDetails.responsabilidades.length > 0 ? jobDetails.responsabilidades.slice(0, 5).join("; ") : "Not specified"
+  const requisitosObrigatorios =
+    jobDetails.requisitos_obrigatorios.length > 0 ? jobDetails.requisitos_obrigatorios.join(", ") : "Not specified"
+
+  // Extract exact project titles for validation
+  const projectTitles = currentProjects.map((p) => p.title)
+
+  const languageInstruction =
+    language === "pt"
+      ? "⚠️ OBRIGATÓRIO: As DESCRIÇÕES dos projetos DEVEM estar em PORTUGUÊS BRASILEIRO. Mantenha os títulos EXATAMENTE como estão (não traduza datas ou nomes técnicos nos títulos)."
+      : "⚠️ MANDATORY: Project DESCRIPTIONS MUST be in ENGLISH. Keep titles EXACTLY as they are (do not translate dates or technical names in titles)."
+
+  // Extract ATS keywords (6 types)
+  const atsKeywords = extractATSKeywords(jobDetails)
+
+  // Get context-specific instructions
+  const contextInstructions = getProjectsContextInstructions(jobContext, language)
+
+  return `${languageInstruction}
+
+${contextInstructions}
+
+⚠️  CRITICAL: KEEP TITLES UNCHANGED - REWRITE DESCRIPTIONS FOR ATS OPTIMIZATION
+
+JOB DETAILS:
+Company: ${jobDetails.empresa}
+Position: ${cargo}
+Responsibilities: ${responsabilidades}
+Required Skills: ${requisitosObrigatorios}
+Job Type/Area: ${jobDetails.tipo_vaga || "Not specified"}
+
+CURRENT PROJECTS (with exact titles you MUST preserve):
+${JSON.stringify(currentProjects, null, 2)}
+
+REQUIRED PROJECT TITLES (copy these EXACTLY, character-by-character):
+${projectTitles.map((t, i) => `${i + 1}. "${t}"`).join("\n")}
+
+ATS KEYWORDS EXTRACTED FROM JOB:
+Technical Terms: ${atsKeywords.technical_terms.slice(0, 5).join(", ")}
+Required Skills: ${atsKeywords.required_skills.slice(0, 3).join(", ")}
+Action Verbs (use in descriptions): ${atsKeywords.action_verbs.slice(0, 3).join(", ")}
+Certifications/Standards: ${atsKeywords.certifications.join(", ")}
+Exact Phrases (use EXACTLY): ${atsKeywords.exact_phrases.join(", ")}
+Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
+
+${PROJECTS_PROMPT_INSTRUCTIONS}`
 }
 
 /**

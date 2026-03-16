@@ -10,10 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Sparkles, RotateCcw, Save, Info, LogIn, Bot, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { SystemPromptsViewer } from "./system-prompts-viewer"
+import { getSystemPromptsRegistry } from "@/lib/ai/system-prompts-registry"
 import type { PromptsConfig } from "@/lib/types"
 import { useRouter } from "next/navigation"
 
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
+const systemPrompts = getSystemPromptsRegistry()
 
 export function ConfiguracoesPrompts() {
   const [config, setConfig] = useState<Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> | null>(null)
@@ -275,11 +278,12 @@ export function ConfiguracoesPrompts() {
           )}
 
           <Tabs defaultValue="modelo" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
               <TabsTrigger value="modelo">Modelo</TabsTrigger>
               <TabsTrigger value="dossie">Dossiê</TabsTrigger>
               <TabsTrigger value="analise">Análise</TabsTrigger>
               <TabsTrigger value="curriculo">Currículo</TabsTrigger>
+              <TabsTrigger value="sistema">Sistema</TabsTrigger>
             </TabsList>
 
             {/* Tab: Modelo */}
@@ -524,6 +528,17 @@ export function ConfiguracoesPrompts() {
                 <p className="text-xs text-muted-foreground">
                   ⚠️ IMPORTANTE: Mantenha as regras anti-invenção para evitar fabricação de informações.
                 </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="sistema" className="space-y-4 mt-4">
+              <div>
+                <h3 className="mb-1 text-sm font-medium">Prompts do Sistema (Somente Leitura)</h3>
+                <p className="mb-4 text-xs text-muted-foreground">
+                  Prompts hardcoded que controlam o comportamento interno do gerador de currículos, parser de vagas e
+                  extração de skills. Visíveis para auditoria, transparência e debugging.
+                </p>
+                <SystemPromptsViewer prompts={systemPrompts} />
               </div>
             </TabsContent>
           </Tabs>

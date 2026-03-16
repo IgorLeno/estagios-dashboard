@@ -14,6 +14,8 @@ import { isQuotaError } from "./errors"
 import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "./analysis-prompts"
 import { validateAnalysisMarkdown } from "./validation"
 
+export const JOB_PARSER_SYSTEM_PROMPT = SYSTEM_PROMPT
+
 /**
  * Repairs common JSON syntax errors from LLM responses
  * Specifically handles unescaped newlines and quotes in string values

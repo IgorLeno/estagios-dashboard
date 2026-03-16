@@ -99,3 +99,7 @@ ${profileText}
 
 Return ONLY valid JSON with extracted skills organized by category.`
 }
+
+export function getSkillsExtractionPrompt(profileText: string): string {
+  return generateSkillsExtractionPrompt(profileText)
+}
