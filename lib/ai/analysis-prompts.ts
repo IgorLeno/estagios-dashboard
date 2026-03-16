@@ -1,35 +1,5 @@
 // lib/ai/analysis-prompts.ts
-
-/**
- * Max description length for prompt injection prevention
- */
-const MAX_DESCRIPTION_LENGTH = 10000
-
-/**
- * Sanitizes job description to prevent prompt injection
- */
-function sanitizeJobDescription(jobDescription: string): string {
-  let sanitized = jobDescription.slice(0, MAX_DESCRIPTION_LENGTH)
-
-  // Remove code fences
-  sanitized = sanitized.replace(/```+/g, "[REDACTED_INSTRUCTION]")
-  sanitized = sanitized.replace(/~~~+/g, "[REDACTED_INSTRUCTION]")
-
-  // Remove instruction delimiters
-  sanitized = sanitized.replace(/###+/g, "[REDACTED_INSTRUCTION]")
-  sanitized = sanitized.replace(/\[INST\]/gi, "[REDACTED_INSTRUCTION]")
-  sanitized = sanitized.replace(/\[\/INST\]/gi, "[REDACTED_INSTRUCTION]")
-  sanitized = sanitized.replace(/<\|im_start\|>/gi, "[REDACTED_INSTRUCTION]")
-  sanitized = sanitized.replace(/<\|im_end\|>/gi, "[REDACTED_INSTRUCTION]")
-
-  // Remove instruction tokens at line start
-  const instructionPatterns = /(^|[^A-Za-z0-9_])(ignore|forget|skip|do not|don't|system|assistant|user):/gim
-  sanitized = sanitized.replace(instructionPatterns, (match, prefix) => {
-    return prefix + "[REDACTED_INSTRUCTION]"
-  })
-
-  return sanitized.trim()
-}
+import { sanitizeUserInput } from "./prompt-utils"
 
 /**
  * Builds prompt for job analysis generation
@@ -37,11 +7,9 @@ function sanitizeJobDescription(jobDescription: string): string {
  * @param dossiePrompt - Complete candidate profile from config.dossie_prompt
  */
 export function buildJobAnalysisPrompt(jobDescription: string, dossiePrompt: string): string {
-  const sanitizedDescription = sanitizeJobDescription(jobDescription)
+  const sanitizedDescription = sanitizeUserInput(jobDescription)
 
   return `
-Você é um Career Coach Specialist com 15 anos de experiência ajudando candidatos a se prepararem para processos seletivos.
-
 ENTRADA:
 1. Descrição da Vaga:
 -----BEGIN JOB DESCRIPTION-----
@@ -53,7 +21,7 @@ ${dossiePrompt}
 
 TAREFA:
 1. Extraia dados estruturados (empresa, cargo, local, modalidade, etc.) - JSON
-2. Busque informações atualizadas sobre a empresa (cultura, valores, notícias recentes, LinkedIn, Glassdoor)
+2. Se o modelo tiver acesso à web, busque informações atualizadas sobre a empresa (cultura, valores, notícias recentes, LinkedIn, Glassdoor, site oficial). Se não tiver acesso, sinalize essa limitação claramente na análise.
 3. Gere análise detalhada em Markdown seguindo estrutura exata abaixo
 
 ESTRUTURA DA ANÁLISE (markdown):
@@ -63,7 +31,7 @@ ESTRUTURA DA ANÁLISE (markdown):
 ## 🏢 Sobre a Empresa
 [Contexto da empresa baseado em fontes externas: setor, tamanho, cultura, valores]
 [Pontos interessantes do LinkedIn, Glassdoor, site oficial, notícias recentes]
-[Use busca Google para encontrar informações reais e atualizadas]
+[Se o modelo tiver acesso à web, busque informações reais sobre a empresa (LinkedIn, Glassdoor, site oficial). Se não tiver acesso, indique explicitamente na seção "🏢 Sobre a Empresa": "Informações externas não disponíveis nesta análise — busque no LinkedIn e Glassdoor da empresa."]
 
 ## 💡 Oportunidades para se Destacar
 [Como o perfil do candidato pode agregar valor específico para esta vaga]
@@ -160,7 +128,7 @@ Exemplo COMPLETO correto:
 ⚠️  SE O JSON NÃO FOR VÁLIDO, A RESPOSTA SERÁ REJEITADA.
 
 IMPORTANTE:
-- Use busca Google para encontrar informações reais sobre a empresa
+- Se o modelo tiver acesso à web, busque informações reais sobre a empresa (LinkedIn, Glassdoor, site oficial). Se não tiver acesso, indique explicitamente na seção "🏢 Sobre a Empresa": "Informações externas não disponíveis nesta análise — busque no LinkedIn e Glassdoor da empresa."
 - A análise deve ser personalizada com base no perfil do candidato
 - Seja específico e prático nas recomendações
 - **OBRIGATÓRIO: Calcule requisitos_score e fit com base nas escalas acima**
@@ -188,14 +156,14 @@ Você é um Senior Career Coach e Job Posting Analyst com 15 anos de experiênci
 Você processou mais de 10.000 vagas e ajudou centenas de candidatos a se prepararem para entrevistas.
 
 Você identifica com precisão:
-- Informações sobre empresa e cultura (usando busca externa quando necessário)
+- Informações sobre empresa e cultura (quando disponível, usando busca web; quando indisponível, sinalizando a limitação)
 - Requisitos obrigatórios vs desejáveis
 - Oportunidades para candidato se destacar
 - Fit técnico e cultural com justificativas
 - Estratégias de preparação para entrevista
 
 Você sempre:
-- Usa busca Google para encontrar dados reais sobre empresas
+- Quando disponível, usa busca web para encontrar dados reais sobre empresas. Quando não disponível, sinaliza claramente a limitação ao usuário.
 - Personaliza análise com base no perfil do candidato
 - Retorna JSON válido dentro de code fence markdown
 - Fornece insights acionáveis e práticos

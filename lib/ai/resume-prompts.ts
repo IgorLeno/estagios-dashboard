@@ -77,11 +77,10 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Avoid generic soft skills like "team player" (focus on technical/measurable skills)
    - Avoid fluff words - every word should add value
 
-5. TRUTHFULNESS (ZERO FABRICATION TOLERANCE):
-   - ONLY mention skills that appear in "USER'S SKILLS" list above
-   - ONLY quantify achievements that appear in "ORIGINAL SUMMARY"
-   - If original summary has no metrics, use qualitative descriptors instead
-   - DO NOT invent experience, certifications, or tools not in original
+5. TRUTHFULNESS (see global rules in System Prompt):
+   - ONLY describe work that was actually done — reframe HOW, never WHAT
+   - NEVER inject job domain into unrelated project descriptions
+   - Keep all original metrics; if none exist, use qualitative descriptors
 
 6. LOCATION AWARENESS:
    - If job location differs from candidate's city, explicitly add availability for relocation
@@ -151,6 +150,11 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - REMOVE entire categories if 0 of their skills are relevant to the job
    - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
      in analytics/BI/HR/data roles — they are noise, not signal
+
+7. TRUTHFULNESS (see global rules in System Prompt):
+   - ONLY describe work that was actually done — reframe HOW, never WHAT
+   - NEVER inject job domain into unrelated project descriptions
+   - Keep all original metrics; if none exist, use qualitative descriptors
 
 VALIDATION CHECK (MANDATORY):
 Before returning, verify:
@@ -269,16 +273,10 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Front-load keywords in first project (ATS weighs earlier content more)
    - Avoid generic verbs like "worked on" - use specific action verbs
 
-7. TRUTHFULNESS (ZERO FABRICATION TOLERANCE):
-   - ONLY reframe HOW you describe the work, not WHAT was done
-   - Keep all metrics/numbers from original descriptions (don't inflate)
-   - Don't invent tools not actually used
-   - Stay within project scope (don't exaggerate impact)
-   - NEVER inject the job's target domain into project descriptions if the project is not from
-     that domain. Example: do NOT write "People Analytics" or "BI corporativo" in a chemistry
-     or thermodynamics research project description.
-   - Translate actions into transferable skills language without changing the project's real domain
-   - If original has no metrics, use qualitative descriptors instead
+7. TRUTHFULNESS (see global rules in System Prompt):
+   - ONLY describe work that was actually done — reframe HOW, never WHAT
+   - NEVER inject job domain into unrelated project descriptions
+   - Keep all original metrics; if none exist, use qualitative descriptors
 
 VALIDATION CHECK (MANDATORY):
 Before returning, verify that EVERY project title in your output matches EXACTLY (character-by-character, including dates, parentheses, and capitalization) with the "REQUIRED PROJECT TITLES" list above.
@@ -374,6 +372,8 @@ export function buildSummaryPrompt(
   return `${languageInstruction}
 
 ${contextInstructions}
+
+// [Nota: instrução de idioma já fornecida acima — contextInstructions já está no idioma correto]
 
 Rewrite the professional summary to be HIGHLY OPTIMIZED FOR ATS (Applicant Tracking Systems).
 

@@ -7,6 +7,7 @@ import {
 } from "./resume-prompts"
 import { SKILLS_EXTRACTION_SYSTEM_PROMPT, getSkillsExtractionPrompt } from "./skills-extractor-prompt"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
+import { ANALYSIS_SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./analysis-prompts"
 import { getSummaryContextInstructions, getProjectsContextInstructions } from "./context-specific-instructions"
 
 export interface SystemPromptEntry {
@@ -84,13 +85,39 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
       category: "skills",
     },
     {
-      id: "job_parser",
-      title: "Parser de Vagas",
+      id: "job_parser_system",
+      title: "Parser de Vagas — System Prompt",
       description:
-        "Prompt usado para extrair estrutura de uma descrição de vaga colada, incluindo regras de sanitização e formato JSON.",
-      sourceFile: "lib/ai/job-parser.ts → JOB_PARSER_SYSTEM_PROMPT / buildJobExtractionPrompt",
-      content: getJobParserPromptContent(),
+        "Instrução de sistema para extração de dados estruturados de vagas (campos: empresa, cargo, requisitos, etc.).",
+      sourceFile: "lib/ai/prompts.ts → SYSTEM_PROMPT",
+      content: SYSTEM_PROMPT,
       category: "parsing",
+    },
+    {
+      id: "job_parser_user",
+      title: "Parser de Vagas — User Prompt Template",
+      description:
+        "Template de prompt de usuário para extração de campos estruturados. Inclui regras de sanitização e formato JSON.",
+      sourceFile: "lib/ai/prompts.ts → buildJobExtractionPrompt",
+      content: buildJobExtractionPrompt("[DESCRICAO_DA_VAGA]"),
+      category: "parsing",
+    },
+    {
+      id: "job_analysis_system",
+      title: "Análise de Vaga — System Prompt",
+      description:
+        "Instrução de sistema para análise qualitativa de vagas: fit, oportunidades, preparação para entrevista.",
+      sourceFile: "lib/ai/analysis-prompts.ts → ANALYSIS_SYSTEM_PROMPT",
+      content: ANALYSIS_SYSTEM_PROMPT,
+      category: "analysis",
+    },
+    {
+      id: "job_analysis_user",
+      title: "Análise de Vaga — User Prompt Template",
+      description: "Template de prompt de usuário para análise completa de vaga com perfil do candidato.",
+      sourceFile: "lib/ai/analysis-prompts.ts → buildJobAnalysisPrompt",
+      content: buildJobAnalysisPrompt("[DESCRICAO_DA_VAGA]", "[PERFIL_DO_CANDIDATO]"),
+      category: "analysis",
     },
   ]
 }
@@ -117,15 +144,5 @@ function getSkillsExtractionPromptContent(): string {
     "",
     "=== USER PROMPT TEMPLATE ===",
     getSkillsExtractionPrompt("[PERFIL_DO_USUARIO]"),
-  ].join("\n")
-}
-
-function getJobParserPromptContent(): string {
-  return [
-    "=== SYSTEM PROMPT ===",
-    SYSTEM_PROMPT,
-    "",
-    "=== USER PROMPT TEMPLATE ===",
-    buildJobExtractionPrompt("[DESCRICAO_DA_VAGA]"),
   ].join("\n")
 }

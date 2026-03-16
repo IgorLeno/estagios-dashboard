@@ -236,11 +236,11 @@ export function getSkillsContextInstructions(context: JobContext, language: "pt"
   const instructions: Record<JobContext, { pt: string; en: string }> = {
     laboratory: {
       pt: `
-🧪 LABORATORY CONTEXT - SKILLS REORDERING:
+🧪 CONTEXTO LABORATORIAL — REORDENAÇÃO DE SKILLS:
 
-CRITICAL: Move laboratory skills to TOP priority position
+CRÍTICO: Mova as skills de laboratório para o topo da prioridade.
 
-1. CREATE/PRIORITIZE "Química Analítica & Laboratório" category FIRST:
+1. CRIAR/PRIORIZAR a categoria "Química Analítica & Laboratório" PRIMEIRO:
    - Preparação de soluções e reagentes
    - Titulações volumétricas
    - Síntese química
@@ -248,21 +248,21 @@ CRITICAL: Move laboratory skills to TOP priority position
    - Organização de laboratório
    - BPL (Boas Práticas de Laboratório)
 
-2. SECOND: "Gestão de Qualidade & Normas" (if relevant):
-   - Excel (basic, not "Avançado + VBA" unless job requires)
-   - Power BI (if quality dashboards mentioned)
+2. SEGUNDO: "Gestão de Qualidade & Normas" (se relevante):
+   - Excel (básico, não "Avançado + VBA" salvo exigência explícita)
+   - Power BI (se dashboards de qualidade forem relevantes)
    - ISO 17025, controle de qualidade
    - Relatórios técnicos
 
-3. MINIMIZE OR MOVE TO END:
-   - Programming (Python, SQL) → move to last position or omit
-   - Data science tools → move to last or omit
-   - Keep only if job explicitly requires programming
+3. MINIMIZAR OU MOVER PARA O FINAL:
+   - Programação (Python, SQL) → mover para o fim ou omitir
+   - Ferramentas de data science → mover para o fim ou omitir
+   - Manter apenas se a vaga exigir programação explicitamente
 
-4. SKILLS BANK USAGE:
-   - ADD lab skills from bank if available
-   - Prioritize "Preparação de soluções", "Titulações", "Síntese"
-   - Use proficiency indicators: (básico/intermediário/avançado)
+4. USO DO BANCO DE SKILLS:
+   - Adicionar skills laboratoriais do banco se estiverem disponíveis
+   - Priorizar "Preparação de soluções", "Titulações", "Síntese"
+   - Usar indicadores de proficiência: (básico/intermediário/avançado)
 `,
       en: `
 🧪 LABORATORY CONTEXT - SKILLS REORDERING:
@@ -297,16 +297,16 @@ CRITICAL: Move laboratory skills to TOP priority position
 
     data_science: {
       pt: `
-📊 DATA SCIENCE CONTEXT - SKILLS REORDERING:
+📊 CONTEXTO DATA SCIENCE — REORDENAÇÃO DE SKILLS:
 
-1. PRIORITIZE "Linguagens & Análise de Dados" FIRST:
+1. PRIORIZAR "Linguagens & Análise de Dados" PRIMEIRO:
    - Python (Pandas, NumPy, Scikit-learn)
    - SQL
-   - ML libraries
+   - Bibliotecas de ML
 
-2. SECOND: Tools (Power BI, visualization)
+2. SEGUNDO: Ferramentas de visualização (Power BI, etc.)
 
-3. MINIMIZE: Lab skills (unless data from experiments)
+3. MINIMIZAR: Skills de laboratório (exceto se os dados vierem de experimentos)
 `,
       en: `
 📊 DATA SCIENCE CONTEXT - SKILLS REORDERING:
@@ -324,15 +324,15 @@ CRITICAL: Move laboratory skills to TOP priority position
 
     qhse: {
       pt: `
-🛡️ QHSE CONTEXT - SKILLS REORDERING:
+🛡️ CONTEXTO QHSE — REORDENAÇÃO DE SKILLS:
 
-1. PRIORITIZE "Gestão de Qualidade & QHSE" FIRST:
+1. PRIORIZAR "Gestão de Qualidade & QHSE" PRIMEIRO:
    - Excel, Power BI
    - KPIs, relatórios técnicos
-   - ISO standards
+   - Normas ISO
    - Controle de não-conformidades
 
-2. MINIMIZE: Programming (unless quality automation required)
+2. MINIMIZAR: Programação (exceto quando a vaga exigir automação de qualidade)
 `,
       en: `
 🛡️ QHSE CONTEXT - SKILLS REORDERING:
@@ -348,13 +348,59 @@ CRITICAL: Move laboratory skills to TOP priority position
     },
 
     engineering: {
-      pt: `⚙️ ENGINEERING CONTEXT: Prioritize "Ferramentas de Engenharia" (Aspen Plus, MATLAB, CAD)`,
-      en: `⚙️ ENGINEERING CONTEXT: Prioritize "Engineering Tools" (Aspen Plus, MATLAB, CAD)`,
+      pt: `
+⚙️ CONTEXTO DE ENGENHARIA — REORDENAÇÃO DE SKILLS:
+
+1. PRIORIZAR "Ferramentas de Engenharia" PRIMEIRO:
+   - Aspen Plus
+   - MATLAB
+   - CAD
+   - Simulação e modelagem de processos
+
+2. SEGUNDO: "Análise Técnica & Otimização":
+   - Balanços de massa e energia
+   - Otimização de processos
+   - Análise de eficiência
+
+3. MINIMIZAR:
+   - Skills genéricas de escritório, salvo exigência explícita
+   - Ferramentas de dados que não apoiem a engenharia da vaga
+`,
+      en: `
+⚙️ ENGINEERING CONTEXT - SKILLS REORDERING:
+
+1. PRIORITIZE "Engineering Tools" FIRST:
+   - Aspen Plus
+   - MATLAB
+   - CAD
+   - Process simulation and modeling
+
+2. SECOND: "Technical Analysis & Optimization":
+   - Mass and energy balances
+   - Process optimization
+   - Efficiency analysis
+
+3. MINIMIZE:
+   - Generic office skills unless explicitly required
+   - Data tools that do not support the engineering scope of the role
+`,
     },
 
     general: {
-      pt: `GENERAL CONTEXT: Balance skills based on job requirements`,
-      en: `GENERAL CONTEXT: Balance skills based on job requirements`,
+      pt: `
+CONTEXTO GERAL — REORDENAÇÃO DE SKILLS:
+
+1. PRIORIZAR as skills com match exato com a vaga.
+2. MANTER um conjunto equilibrado entre skills técnicas, analíticas e operacionais.
+3. REMOVER ou mover para o final skills sem relação direta com os requisitos.
+`,
+      en: `
+GENERAL CONTEXT - SKILLS REORDERING:
+
+1. PRIORITIZE skills with exact job match first.
+2. KEEP a balanced mix of technical, analytical, and operational skills.
+3. REMOVE or move to the end skills with no direct relationship to the requirements.
+`,
     },
   }
 
@@ -368,75 +414,77 @@ export function getProjectsContextInstructions(context: JobContext, language: "p
   const instructions: Record<JobContext, { pt: string; en: string }> = {
     laboratory: {
       pt: `
-🧪 LABORATORY CONTEXT - PROJECT REFRAMING:
+🧪 CONTEXTO LABORATORIAL — REFORMULAÇÃO DE PROJETOS:
 
-CRITICAL: Reframe projects to emphasize QUALITY CONTROL and LAB PRACTICES, not code/algorithms
+CRÍTICO: Reescreva os projetos para enfatizar CONTROLE DE QUALIDADE e BOAS PRÁTICAS LABORATORIAIS,
+não código ou algoritmos.
 
-GRIMPERIUM PROJECT (Thermodynamic Data Pipeline):
-❌ AVOID: "Desenvolvimento de pipeline em Python..."
-❌ AVOID: "Machine Learning", "automação de código"
-✅ EMPHASIZE: "Desenvolvimento de metodologia sistematizada para coleta, organização e CONTROLE DE QUALIDADE de dados termodinâmicos"
-✅ EMPHASIZE: "Rastreabilidade", "validação de dados", "boas práticas laboratoriais"
-✅ EMPHASIZE: "Controle de qualidade de informações analíticas"
+PARA PROJETOS DE PROGRAMAÇÃO/DADOS (ex: pipelines, scripts, automações):
+❌ EVITAR: Mencionar Python, Machine Learning, automação de código como destaque
+✅ ENFATIZAR: "Desenvolvimento de metodologia sistematizada para coleta, organização e
+   CONTROLE DE QUALIDADE de dados"
+✅ ENFATIZAR: Rastreabilidade, validação de dados, boas práticas laboratoriais
+✅ ENFATIZAR: Controle de qualidade de informações analíticas
 
-STRUCTURE PER PROJECT:
-- Bullet 1: Quality control, data validation, traceability
-- Bullet 2: Laboratory organization, documentation
-- Bullet 3: Standards compliance (ISO if relevant)
+PARA PROJETOS DE QUÍMICA/ENGENHARIA (ex: síntese, modelagem molecular, simulação):
+✅ ENFATIZAR: Modelagem molecular e análise físico-química
+✅ ENFATIZAR: Otimização de processos com foco ambiental/industrial
+✅ MENCIONAR: Ferramentas de engenharia usadas (Aspen Plus, GAMESS, etc.)
 
-BIODIESEL PROJECT:
-✅ EMPHASIZE: "Modelagem molecular e análise físico-química"
-✅ EMPHASIZE: "Otimização de processos industriais com foco ambiental"
-❌ AVOID: Python code, programming details
+ESTRUTURA POR PROJETO:
+- Bullet 1: Controle de qualidade, validação de dados, rastreabilidade
+- Bullet 2: Organização laboratorial, documentação
+- Bullet 3: Conformidade com normas (ISO se relevante)
 `,
       en: `
 🧪 LABORATORY CONTEXT - PROJECT REFRAMING:
 
-CRITICAL: Reframe projects to emphasize QUALITY CONTROL and LAB PRACTICES, not code/algorithms
+CRITICAL: Rewrite projects to emphasize QUALITY CONTROL and GOOD LABORATORY PRACTICES,
+not code or algorithms.
 
-GRIMPERIUM PROJECT (Thermodynamic Data Pipeline):
-❌ AVOID: "Developed Python pipeline..."
-❌ AVOID: "Machine Learning", "code automation"
-✅ EMPHASIZE: "Developed systematic methodology for collection, organization and QUALITY CONTROL of thermodynamic data"
-✅ EMPHASIZE: "Traceability", "data validation", "good laboratory practices"
-✅ EMPHASIZE: "Quality control of analytical information"
+FOR PROGRAMMING/DATA PROJECTS (e.g. pipelines, scripts, automations):
+❌ AVOID: Highlighting Python, Machine Learning, or code automation
+✅ EMPHASIZE: "Developed a systematic methodology for collecting, organizing, and
+   QUALITY-CONTROLLING data"
+✅ EMPHASIZE: Traceability, data validation, good laboratory practices
+✅ EMPHASIZE: Quality control of analytical information
+
+FOR CHEMISTRY/ENGINEERING PROJECTS (e.g. synthesis, molecular modeling, simulation):
+✅ EMPHASIZE: Molecular modeling and physicochemical analysis
+✅ EMPHASIZE: Process optimization with environmental/industrial focus
+✅ MENTION: Engineering tools used (Aspen Plus, GAMESS, etc.)
 
 STRUCTURE PER PROJECT:
 - Bullet 1: Quality control, data validation, traceability
 - Bullet 2: Laboratory organization, documentation
 - Bullet 3: Standards compliance (ISO if relevant)
-
-BIODIESEL PROJECT:
-✅ EMPHASIZE: "Molecular modeling and physicochemical analysis"
-✅ EMPHASIZE: "Industrial process optimization with environmental focus"
-❌ AVOID: Python code, programming details
 `,
     },
 
     data_science: {
       pt: `
-📊 DATA SCIENCE CONTEXT - PROJECT REFRAMING:
+📊 CONTEXTO DATA SCIENCE — REFORMULAÇÃO DE PROJETOS:
 
-GRIMPERIUM PROJECT:
-✅ EMPHASIZE: "Pipeline de dados end-to-end em Python"
-✅ EMPHASIZE: "Machine Learning", "feature engineering", "treinamento de modelos"
-✅ EMPHASIZE: "Algoritmos preditivos", "otimização de hiperparâmetros"
-✅ MENTION: Libraries (Pandas, NumPy, Scikit-learn)
+PARA PROJETOS DE DADOS/COMPUTAÇÃO:
+✅ ENFATIZAR: "Pipeline de dados end-to-end em Python"
+✅ ENFATIZAR: "Machine Learning", "feature engineering", "treinamento de modelos"
+✅ ENFATIZAR: "Algoritmos preditivos", "otimização de hiperparâmetros"
+✅ MENCIONAR: Bibliotecas (Pandas, NumPy, Scikit-learn)
 
-BIODIESEL PROJECT:
-✅ EMPHASIZE: "Modelagem preditiva", "simulação computacional"
-✅ MENTION: Python tools if used
+PARA PROJETOS DE ENGENHARIA/QUÍMICA:
+✅ ENFATIZAR: "Modelagem preditiva", "simulação computacional"
+✅ MENCIONAR: Ferramentas em Python, se usadas
 `,
       en: `
 📊 DATA SCIENCE CONTEXT - PROJECT REFRAMING:
 
-GRIMPERIUM PROJECT:
+FOR DATA/COMPUTING PROJECTS:
 ✅ EMPHASIZE: "End-to-end data pipeline in Python"
 ✅ EMPHASIZE: "Machine Learning", "feature engineering", "model training"
 ✅ EMPHASIZE: "Predictive algorithms", "hyperparameter optimization"
 ✅ MENTION: Libraries (Pandas, NumPy, Scikit-learn)
 
-BIODIESEL PROJECT:
+FOR ENGINEERING/CHEMISTRY PROJECTS:
 ✅ EMPHASIZE: "Predictive modeling", "computational simulation"
 ✅ MENTION: Python tools if used
 `,
@@ -444,26 +492,26 @@ BIODIESEL PROJECT:
 
     qhse: {
       pt: `
-🛡️ QHSE CONTEXT - PROJECT REFRAMING:
+🛡️ CONTEXTO QHSE — REFORMULAÇÃO DE PROJETOS:
 
-GRIMPERIUM:
-✅ EMPHASIZE: "Sistema de controle de qualidade de dados"
-✅ EMPHASIZE: "Monitoramento de KPIs", "dashboards em Power BI"
-✅ EMPHASIZE: "Identificação de não-conformidades"
+PARA PROJETOS DE DADOS/COMPUTAÇÃO:
+✅ ENFATIZAR: "Sistema de controle de qualidade de dados"
+✅ ENFATIZAR: "Monitoramento de KPIs", "dashboards em Power BI"
+✅ ENFATIZAR: "Identificação de não-conformidades"
 
-BIODIESEL:
-✅ EMPHASIZE: "Análise de eficiência ambiental"
-✅ EMPHASIZE: "Conformidade com padrões técnicos"
+PARA PROJETOS DE ENGENHARIA/QUÍMICA:
+✅ ENFATIZAR: "Análise de eficiência ambiental"
+✅ ENFATIZAR: "Conformidade com padrões técnicos"
 `,
       en: `
 🛡️ QHSE CONTEXT - PROJECT REFRAMING:
 
-GRIMPERIUM:
+FOR DATA/COMPUTING PROJECTS:
 ✅ EMPHASIZE: "Data quality control system"
 ✅ EMPHASIZE: "KPI monitoring", "Power BI dashboards"
 ✅ EMPHASIZE: "Non-conformance identification"
 
-BIODIESEL:
+FOR ENGINEERING/CHEMISTRY PROJECTS:
 ✅ EMPHASIZE: "Environmental efficiency analysis"
 ✅ EMPHASIZE: "Compliance with technical standards"
 `,
@@ -471,9 +519,9 @@ BIODIESEL:
 
     engineering: {
       pt: `
-⚙️ ENGINEERING CONTEXT:
-✅ EMPHASIZE: Simulação, modelagem, otimização de processos
-✅ MENTION: Aspen Plus, MATLAB, ferramentas técnicas
+⚙️ CONTEXTO DE ENGENHARIA:
+✅ ENFATIZAR: Simulação, modelagem, otimização de processos
+✅ MENCIONAR: Aspen Plus, MATLAB, ferramentas técnicas
 `,
       en: `
 ⚙️ ENGINEERING CONTEXT:
@@ -483,7 +531,7 @@ BIODIESEL:
     },
 
     general: {
-      pt: `GENERAL: Balance technical and practical aspects`,
+      pt: `CONTEXTO GERAL: Equilibrar aspectos técnicos e práticos`,
       en: `GENERAL: Balance technical and practical aspects`,
     },
   }
