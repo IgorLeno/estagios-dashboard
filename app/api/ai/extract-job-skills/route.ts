@@ -4,9 +4,14 @@ import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-cl
 import { createClient } from "@/lib/supabase/server"
 import type { ExtractJobSkillsErrorResponse, ExtractJobSkillsResponse, JobSkillReview } from "@/lib/ai/types"
 
-const ExtractJobSkillsRequestSchema = z.object({
-  vagaId: z.string().uuid(),
-})
+const ExtractJobSkillsRequestSchema = z
+  .object({
+    vagaId: z.string().uuid().optional(),
+    jobDescription: z.string().min(50).max(50000).optional(),
+    cargo: z.string().optional(),
+    empresa: z.string().optional(),
+  })
+  .refine((data) => data.vagaId || data.jobDescription, "Either vagaId or jobDescription must be provided")
 
 type JobRow = {
   cargo: string | null
@@ -96,19 +101,30 @@ export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSki
       throw error
     }
 
-    const { vagaId } = ExtractJobSkillsRequestSchema.parse(body)
+    const { vagaId, jobDescription, cargo, empresa } = ExtractJobSkillsRequestSchema.parse(body)
 
-    const { data: vagaData, error: vagaError } = await supabase
-      .from("vagas_estagio")
-      .select("cargo, empresa, descricao, requisitos")
-      .eq("id", vagaId)
-      .eq("user_id", user.id)
-      .single()
+    let vaga: JobRow | null = null
 
-    const vaga = vagaData as JobRow | null
+    if (vagaId) {
+      const { data: vagaData, error: vagaError } = await supabase
+        .from("vagas_estagio")
+        .select("cargo, empresa, descricao, requisitos")
+        .eq("id", vagaId)
+        .eq("user_id", user.id)
+        .single()
 
-    if (vagaError || !vaga) {
-      return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
+      vaga = vagaData as JobRow | null
+
+      if (vagaError || !vaga) {
+        return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
+      }
+    } else {
+      vaga = {
+        cargo: cargo ?? null,
+        empresa: empresa ?? null,
+        descricao: jobDescription ?? "",
+        requisitos: "",
+      }
     }
 
     const { data: bankSkillsData, error: bankSkillsError } = await supabase
@@ -122,7 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSki
       throw new Error(`Failed to load skills bank: ${bankSkillsError.message}`)
     }
 
-    const jobDescription = `${stringifyJobField(vaga.descricao)} ${stringifyJobField(vaga.requisitos)}`.trim()
+    const jobDescriptionText = `${stringifyJobField(vaga.descricao)} ${stringifyJobField(vaga.requisitos)}`.trim()
 
     const messages: GrokMessage[] = [
       {
@@ -139,7 +155,7 @@ Retorne EXATAMENTE neste formato JSON:
 { "skills": ["habilidade 1", "habilidade 2", ...] }
 
 Descrição da vaga (${vaga.cargo || ""} — ${vaga.empresa || ""}):
-${jobDescription}`,
+${jobDescriptionText}`,
       },
     ]
 

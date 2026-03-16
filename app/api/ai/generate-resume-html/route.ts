@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { generateTailoredResume } from "@/lib/ai/resume-generator"
 import { generateResumeHTML } from "@/lib/ai/resume-html-template"
-import { JobDetailsSchema, JobDetails } from "@/lib/ai/types"
+import { GenerateResumeRequestSchema, JobDetailsSchema, JobDetails } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
 import { validateAIConfig } from "@/lib/ai/config"
 import { ZodError } from "zod"
@@ -11,18 +11,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     validateAIConfig()
 
-    const body = await req.json()
-    const { vagaId, jobDescription, language } = body
-
-    if (!language || !["pt", "en"].includes(language)) {
-      return NextResponse.json({ success: false, error: "Invalid language" }, { status: 400 })
+    let body
+    try {
+      body = await req.json()
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 })
+      }
+      throw error
     }
+    const validatedInput = GenerateResumeRequestSchema.parse(body)
+    const { vagaId, jobDescription, language, approvedSkills } = validatedInput
+
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     // Get job details (igual ao endpoint original)
     let jobDetails: JobDetails | undefined
 
     if (vagaId) {
-      const supabase = await createClient()
       const { data: vaga, error } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
       if (error || !vaga) {
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // Gerar currículo personalizado (só CV object, sem PDF)
-    const resumeResult = await generateTailoredResume(jobDetails, language)
+    const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills)
 
     // Gerar HTML a partir do CV object
     const html = generateResumeHTML(resumeResult.cv)

@@ -29,6 +29,7 @@ interface CurriculoTabProps {
   onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
   initialMarkdownPt?: string
   initialMarkdownEn?: string
+  approvedSkills?: string[]
 }
 
 export function CurriculoTab({
@@ -41,6 +42,7 @@ export function CurriculoTab({
   onMarkdownGenerated,
   initialMarkdownPt = "",
   initialMarkdownEn = "",
+  approvedSkills,
 }: CurriculoTabProps) {
   console.log("[CurriculoTab] Rendering", { jobAnalysisData, vagaId, isInPage })
 
@@ -150,6 +152,7 @@ export function CurriculoTab({
           vagaId,
           jobDescription,
           language: "pt",
+          approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
         }
         console.log("[CurriculoTab] PT payload:", payload)
 
@@ -218,6 +221,7 @@ export function CurriculoTab({
           vagaId,
           jobDescription,
           language: "en",
+          approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
         }
         console.log("[CurriculoTab] EN payload:", payload)
 

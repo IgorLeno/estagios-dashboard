@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DescricaoTab } from "@/components/tabs/descricao-tab"
 import { DadosVagaTab } from "@/components/tabs/dados-vaga-tab"
 import { CurriculoTab } from "@/components/tabs/curriculo-tab"
+import { SkillsVagaTab } from "@/components/tabs/skills-vaga-tab"
 import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
@@ -19,6 +20,7 @@ import type {
   JobDetails,
   GenerateResumeResponse,
   GenerateResumeErrorResponse,
+  JobSkillReview,
 } from "@/lib/ai/types"
 
 interface AddVagaDialogProps {
@@ -58,8 +60,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [resumeFilename, setResumeFilename] = useState<string | null>(null)
   const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
   const [resumePdfBase64En, setResumePdfBase64En] = useState<string | null>(null)
+  const [jobSkills, setJobSkills] = useState<JobSkillReview[]>([])
+  const [skillsLoaded, setSkillsLoaded] = useState(false)
+  const [skillsLoading, setSkillsLoading] = useState(false)
 
   const supabase = createClient()
+  const approvedSkills = jobSkills
+    .filter((skill) => skill.mode === "use" || skill.mode === "rename")
+    .map((skill) => skill.displayName)
 
   // Load config on mount
   useEffect(() => {
@@ -178,6 +186,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         body: JSON.stringify({
           jobDescription: description,
           language: "pt",
+          approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
         }),
       })
 
@@ -208,6 +217,42 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     const confirmed = window.confirm("Deseja gerar um novo currículo? O atual será substituído.")
     if (confirmed) {
       await handleGenerateResume()
+    }
+  }
+
+  async function handleLoadSkills() {
+    if (skillsLoaded || skillsLoading) return
+
+    const description = (lastAnalyzedDescription || jobDescription).trim()
+    if (!description) {
+      toast.error("Descrição da vaga necessária para extrair skills")
+      return
+    }
+
+    setSkillsLoading(true)
+    try {
+      const payload = {
+        jobDescription: description,
+        cargo: jobAnalysisData?.cargo || formData.cargo || undefined,
+        empresa: jobAnalysisData?.empresa || formData.empresa || undefined,
+      }
+
+      const res = await fetch("/api/ai/extract-job-skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setJobSkills(data.skills)
+      } else {
+        toast.error("Erro ao carregar skills da vaga")
+      }
+    } catch {
+      toast.error("Erro ao carregar skills da vaga")
+    } finally {
+      setSkillsLoaded(true)
+      setSkillsLoading(false)
     }
   }
 
@@ -316,6 +361,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumeFilename(null)
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
+    setJobSkills([])
+    setSkillsLoaded(false)
+    setSkillsLoading(false)
     setActiveTab("descricao")
   }
 
@@ -327,10 +375,21 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           <DialogDescription>Preencha automaticamente com IA ou insira manualmente os dados</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value)
+            if (value === "skills") {
+              void handleLoadSkills()
+            }
+          }}
+        >
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="descricao">📝 Descrição</TabsTrigger>
             <TabsTrigger value="dados">📊 Dados da Vaga</TabsTrigger>
+            <TabsTrigger value="skills" onClick={() => void handleLoadSkills()}>
+              Skills
+            </TabsTrigger>
             <TabsTrigger value="curriculo">📄 Currículo</TabsTrigger>
           </TabsList>
 
@@ -350,7 +409,18 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               jobAnalysisData={jobAnalysisData}
               onRefreshAnalysis={handleRefreshAnalysis}
               refreshing={refreshing}
-              onNextTab={() => setActiveTab("curriculo")}
+              onNextTab={() => setActiveTab("skills")}
+            />
+          </TabsContent>
+
+          <TabsContent value="skills" className="mt-4">
+            <SkillsVagaTab
+              vagaId={undefined}
+              skills={jobSkills}
+              isLoading={skillsLoading}
+              isLoaded={skillsLoaded}
+              onChange={setJobSkills}
+              onLoad={handleLoadSkills}
             />
           </TabsContent>
 
@@ -391,6 +461,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               vagaId={undefined}
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
+              approvedSkills={approvedSkills}
             />
           </TabsContent>
         </Tabs>
