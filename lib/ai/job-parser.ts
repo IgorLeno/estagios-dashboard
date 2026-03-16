@@ -460,7 +460,7 @@ export async function parseJobWithAnalysis(
       const text = response.text()
 
       // Log response size for debugging
-      console.log(`[Job Parser] Gemini response: ${text.length} characters`)
+      console.log(`[Job Parser] LLM response: ${text.length} characters`)
 
       // Extract token usage
       const tokenUsage = extractTokenUsage(response)

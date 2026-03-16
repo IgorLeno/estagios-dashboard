@@ -15,15 +15,14 @@ export const AI_MODEL_CONFIG = {
 
 /**
  * Configuração de timeout para operações AI
- * Timeout padrão de 60 segundos para parsing de vagas com análise completa
+ * Timeout interno de 55 segundos para parsing de vagas com análise completa
  */
 export const AI_TIMEOUT_CONFIG = {
   /**
    * Timeout em milissegundos para operações de parsing
-   * Pode ser sobrescrito via variável de ambiente AI_PARSING_TIMEOUT_MS
-   * Default: 60s para acomodar análises longas (7000+ tokens)
+   * Dispara antes do corte da Vercel no plano Hobby (60s)
    */
-  parsingTimeoutMs: Number.parseInt(process.env.AI_PARSING_TIMEOUT_MS || "60000", 10),
+  parsingTimeoutMs: 55000, // 55s — dispara antes do corte da Vercel (60s)
 } as const
 
 /**
