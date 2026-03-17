@@ -1,6 +1,6 @@
 import type { JobDetails } from "./types"
 import type { CVTemplate } from "./types"
-import type { JobContext } from "./job-context-detector"
+import type { JobProfile } from "./job-profile"
 import {
   getSummaryContextInstructions,
   getSkillsContextInstructions,
@@ -543,6 +543,45 @@ Return JSON format:
 }`
 
 /**
+ * Serializa JobProfile para bloco de texto injetado nos prompts.
+ * Traduz campos estruturados em instruções diretas para o LLM.
+ */
+function buildProfileBlock(profile: JobProfile): string {
+  const lines: string[] = []
+
+  lines.push(`Role family: ${profile.role_family} | Mode: ${profile.role_mode} | Seniority: ${profile.seniority}`)
+  lines.push(`Domain proof policy: ${profile.domain_proof_policy}`)
+
+  if (profile.exact_terms.length > 0) {
+    lines.push(`Exact terms to use (copy verbatim): ${profile.exact_terms.join(", ")}`)
+  }
+
+  if (profile.preferred_terms.length > 0) {
+    lines.push(`Preferred terms (use these over alternatives): ${profile.preferred_terms.join(", ")}`)
+  }
+
+  if (profile.forbidden_terms.length > 0) {
+    lines.push(`⛔ FORBIDDEN — must NOT appear in output: ${profile.forbidden_terms.join(", ")}`)
+  }
+
+  if (profile.excel_term_policy === "use_exact_label" && profile.excel_exact_label) {
+    lines.push(`Excel label: use exactly "${profile.excel_exact_label}" — no other form allowed`)
+  } else if (profile.excel_term_policy === "descriptive") {
+    lines.push(`Excel label: use descriptive form only (e.g. "Excel (tabelas, fórmulas, Power Query)") — do NOT self-assign a proficiency level`)
+  } else if (profile.excel_term_policy === "basic_only") {
+    lines.push(`Excel label: plain "Excel" only — no level suffix`)
+  }
+
+  if (profile.require_location_statement) {
+    lines.push(
+      "Location: job city differs from candidate base — MANDATORY: add relocation availability sentence as last sentence of summary"
+    )
+  }
+
+  return lines.join("\n")
+}
+
+/**
  * Build prompt for personalizing professional summary
  */
 export function buildSummaryPrompt(
@@ -550,7 +589,7 @@ export function buildSummaryPrompt(
   originalSummary: string,
   userSkills: string[],
   language: "pt" | "en",
-  jobContext: JobContext
+  jobProfile: JobProfile
 ): string {
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
@@ -569,8 +608,10 @@ export function buildSummaryPrompt(
       ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
       : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
 
+  const profileBlock = buildProfileBlock(jobProfile)
+
   // Get context-specific instructions
-  const contextInstructions = getSummaryContextInstructions(jobContext, language)
+  const contextInstructions = getSummaryContextInstructions(jobProfile.legacyContext, language)
 
   return `${languageInstruction}
 
@@ -601,6 +642,9 @@ Certifications/Standards: ${atsKeywords.certifications.join(", ")}
 Exact Phrases (use EXACTLY as written): ${atsKeywords.exact_phrases.join(", ")}
 Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
 
+STRUCTURED JOB PROFILE:
+${profileBlock}
+
 ${SUMMARY_PROMPT_INSTRUCTIONS}`
 }
 
@@ -613,7 +657,7 @@ export function buildSkillsPrompt(
   skillsBank: Array<{ skill: string; proficiency?: string; category: string }>, // NEW: Skills Bank
   projects: Array<{ title: string; description: string[] }>,
   language: "pt" | "en",
-  jobContext: JobContext
+  jobProfile: JobProfile
 ): string {
   // Extract ATS keywords
   const atsKeywords = extractATSKeywords(jobDetails)
@@ -663,8 +707,10 @@ export function buildSkillsPrompt(
       ? `\nNOTE: Skills bank items may be in Portuguese. Translate them naturally to English when including in the CV. Example: "Documentação técnica" → "Technical documentation".\n`
       : ""
 
+  const profileBlock = buildProfileBlock(jobProfile)
+
   // Get context-specific instructions
-  const contextInstructions = getSkillsContextInstructions(jobContext, language)
+  const contextInstructions = getSkillsContextInstructions(jobProfile.legacyContext, language)
 
   return `${languageInstruction}
 
@@ -693,6 +739,9 @@ Bank Skills: ${bankSkillItems.join(", ")}
 EXACT PHRASES TO MATCH (from job):
 ${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
 
+STRUCTURED JOB PROFILE:
+${profileBlock}
+
 ${certOrderInstruction}
 
 ${SKILLS_PROMPT_INSTRUCTIONS}`
@@ -705,7 +754,7 @@ export function buildProjectsPrompt(
   jobDetails: JobDetails,
   currentProjects: Array<{ title: string; description: string[] }>,
   language: "pt" | "en",
-  jobContext: JobContext
+  jobProfile: JobProfile
 ): string {
   const jobKeywords = extractTopKeywords(jobDetails, 10)
 
@@ -727,8 +776,10 @@ export function buildProjectsPrompt(
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
 
+  const profileBlock = buildProfileBlock(jobProfile)
+
   // Get context-specific instructions
-  const contextInstructions = getProjectsContextInstructions(jobContext, language)
+  const contextInstructions = getProjectsContextInstructions(jobProfile.legacyContext, language)
 
   return `${languageInstruction}
 
@@ -756,6 +807,9 @@ Action Verbs (use in descriptions): ${atsKeywords.action_verbs.slice(0, 3).join(
 Certifications/Standards: ${atsKeywords.certifications.join(", ")}
 Exact Phrases (use EXACTLY): ${atsKeywords.exact_phrases.join(", ")}
 Acronyms (match EXACTLY): ${atsKeywords.acronyms.join(", ")}
+
+STRUCTURED JOB PROFILE:
+${profileBlock}
 
 ${PROJECTS_PROMPT_INSTRUCTIONS}`
 }

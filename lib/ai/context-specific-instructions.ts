@@ -1,11 +1,9 @@
-import type { JobContext } from "./job-context-detector"
-
 /**
  * Context-specific instructions for professional summary personalization
  * Provides domain-specific guidance to LLM for natural, targeted reframing
  */
-export function getSummaryContextInstructions(context: JobContext, language: "pt" | "en"): string {
-  const instructions: Record<JobContext, { pt: string; en: string }> = {
+export function getSummaryContextInstructions(context: string, language: "pt" | "en"): string {
+  const instructions: Record<string, { pt: string; en: string }> = {
     laboratory: {
       pt: `
 🧪 CONTEXTO DE LABORATÓRIO DETECTADO - AJUSTES CRÍTICOS:
@@ -251,8 +249,8 @@ Use balanced approach:
 /**
  * Context-specific instructions for skills section personalization
  */
-export function getSkillsContextInstructions(context: JobContext, language: "pt" | "en"): string {
-  const instructions: Record<JobContext, { pt: string; en: string }> = {
+export function getSkillsContextInstructions(context: string, language: "pt" | "en"): string {
+  const instructions: Record<string, { pt: string; en: string }> = {
     laboratory: {
       pt: `
 🧪 CONTEXTO LABORATORIAL — REORDENAÇÃO DE SKILLS:
@@ -429,8 +427,8 @@ GENERAL CONTEXT - SKILLS REORDERING:
 /**
  * Context-specific instructions for projects section personalization
  */
-export function getProjectsContextInstructions(context: JobContext, language: "pt" | "en"): string {
-  const instructions: Record<JobContext, { pt: string; en: string }> = {
+export function getProjectsContextInstructions(context: string, language: "pt" | "en"): string {
+  const instructions: Record<string, { pt: string; en: string }> = {
     laboratory: {
       pt: `
 🧪 CONTEXTO LABORATORIAL — REFORMULAÇÃO DE PROJETOS:
