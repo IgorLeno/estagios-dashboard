@@ -107,6 +107,9 @@ const mockConsistencyResponse = {
 const mockGenerateContent = vi.fn()
 
 vi.mock("@/lib/ai/config", () => ({
+  createAIModel: vi.fn(() => ({
+    generateContent: mockGenerateContent,
+  })),
   createGeminiClient: vi.fn(() => ({
     getGenerativeModel: vi.fn(() => ({
       generateContent: mockGenerateContent,

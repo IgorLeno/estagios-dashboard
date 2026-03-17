@@ -13,6 +13,25 @@ export const ANALYTICS_OPERATIONAL_PACK = {
 
   description: "People Analytics / HR Analytics / BI Operational Support roles",
 
+  /**
+   * Semantic governance flags consumed by the Evidence Selector (Etapa 3).
+   * These replace string-list governance for code-facing logic while keeping
+   * prompt-facing compatibility until Etapa 5.
+   */
+  governance: {
+    blockConcepts: {
+      labAnalogy: true,
+      mlAsPrimaryPitch: true,
+      seniorityInflation: true,
+    },
+    promoteConcepts: {
+      dataValidation: true,
+      documentation: true,
+      baseOrganization: true,
+      kpiTracking: true,
+    },
+  } as const,
+
   // ─ Summary framing ─────────────────────────────────────────────────────────
   lead_with: [
     "organização e validação de bases de dados",
@@ -26,7 +45,7 @@ export const ANALYTICS_OPERATIONAL_PACK = {
   allowed_skills: [
     "Excel", "Excel Avançado", "Power Query", "Power BI", "SQL",
     "Python", "Pandas", "NumPy",
-    "Power BI", "Tableau", "Looker",
+    "Tableau", "Looker",
     "Google Sheets", "Google Data Studio",
     "Comunicação", "Atenção a detalhes", "Organização",
   ],
