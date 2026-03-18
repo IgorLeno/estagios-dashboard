@@ -31,6 +31,15 @@ vi.mock("../ats-scorer", () => ({
 }))
 
 import { getCVTemplate } from "../cv-templates"
+
+// Mock getCVTemplateForUser to use the synchronous getCVTemplate (avoids Supabase cookies error)
+vi.mock("../cv-templates", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../cv-templates")>()
+  return {
+    ...actual,
+    getCVTemplateForUser: vi.fn(async (language: "pt" | "en") => actual.getCVTemplate(language)),
+  }
+})
 import { buildJobProfile } from "../job-profile"
 import { buildSummaryPrompt } from "../resume-prompts"
 import { generateTailoredResume } from "../resume-generator"

@@ -1,11 +1,9 @@
 /**
- * CANDIDATE DATA — Single source of editable candidate content
+ * CANDIDATE DATA — Legacy hardcoded candidate content
  *
- * All candidate-specific data lives here. cv-templates.ts imports from this file
- * and maps to the CVTemplate interface used by the resume pipeline.
- *
- * Future path: replace CANDIDATE const with a database-backed loader:
- *   export async function loadCandidateData(userId: string): Promise<CandidateData>
+ * @deprecated Use loadCandidateData() from candidate-profile-adapter.ts instead.
+ * This file is kept for backward compatibility with tests and deprecated getCVTemplate().
+ * New code should load candidate data from the candidate_profile Supabase table.
  */
 
 export interface CandidateData {
@@ -50,6 +48,7 @@ export interface CandidateData {
   summary_en: string
 }
 
+/** @deprecated Use loadCandidateData() from candidate-profile-adapter.ts instead */
 export const CANDIDATE: CandidateData = {
   identity: {
     name: "IGOR LENO DE SOUZA FERNANDES",

@@ -13,6 +13,8 @@ import { JobDetails, JobDetailsSchema, JobAnalysisResponseSchema } from "./types
 import { isQuotaError } from "./errors"
 import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "./analysis-prompts"
 import { validateAnalysisMarkdown } from "./validation"
+import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
+import { buildDossieFromProfile } from "./dossie-builder"
 
 export const JOB_PARSER_SYSTEM_PROMPT = SYSTEM_PROMPT
 
@@ -450,8 +452,12 @@ export async function parseJobWithAnalysis(
         systemInstruction: ANALYSIS_SYSTEM_PROMPT,
       })
 
-      // Build prompt with user's dossie
-      const prompt = buildJobAnalysisPrompt(jobDescription, config.dossie_prompt)
+      // Build dossie from candidate profile (DB), fallback to config.dossie_prompt
+      const candidateProfile = await getCandidateProfile(userId)
+      const dynamicDossie = buildDossieFromProfile(candidateProfile)
+      const isProfileEmpty = candidateProfile.id === "empty" || !candidateProfile.nome
+      const dossie = isProfileEmpty && config.dossie_prompt ? config.dossie_prompt : dynamicDossie
+      const prompt = buildJobAnalysisPrompt(jobDescription, dossie)
 
       // Call Gemini with timeout protection
       const result = await Promise.race([model.generateContent(prompt), createTimeoutPromise(timeoutMs)])

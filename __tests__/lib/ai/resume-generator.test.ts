@@ -135,7 +135,7 @@ vi.mock("@/lib/ai/config", () => ({
 
 // Mock CV templates
 vi.mock("@/lib/ai/cv-templates", () => ({
-  getCVTemplate: vi.fn((language: "pt" | "en") => ({
+  getCVTemplateForUser: vi.fn(async (language: "pt" | "en") => ({
     language,
     header: {
       name: "Igor Fernandes",

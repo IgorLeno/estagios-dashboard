@@ -11,27 +11,107 @@ import { Sparkles, RotateCcw, Save, Info, LogIn, Bot, Plus, X } from "lucide-rea
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { SystemPromptsViewer } from "./system-prompts-viewer"
+import { ProfileTab } from "./ai-settings/profile-tab"
+import { SkillsTab } from "./ai-settings/skills-tab"
+import { ProjectsTab } from "./ai-settings/projects-tab"
+import { CertificationsTab } from "./ai-settings/certifications-tab"
+import { DossieInfoTab } from "./ai-settings/dossie-info-tab"
 import { getSystemPromptsRegistry } from "@/lib/ai/system-prompts-registry"
-import type { PromptsConfig } from "@/lib/types"
+import type { PromptsConfig, CandidateProfile } from "@/lib/types"
+import { EMPTY_CANDIDATE_PROFILE } from "@/lib/types"
 import { useRouter } from "next/navigation"
 
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 const systemPrompts = getSystemPromptsRegistry()
 
+type ProfileData = Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at">
+
 export function ConfiguracoesPrompts() {
   const [config, setConfig] = useState<Omit<PromptsConfig, "id" | "user_id" | "created_at" | "updated_at"> | null>(null)
+  const [candidateProfile, setCandidateProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
-  const [isReadOnly, setIsReadOnly] = useState(false) // True se usuário não está autenticado
+  const [isReadOnly, setIsReadOnly] = useState(false)
   const [modelHistory, setModelHistory] = useState<string[]>([])
   const [showModelInput, setShowModelInput] = useState(false)
   const [newModelInput, setNewModelInput] = useState("")
   const router = useRouter()
 
-  // Load config on mount
+  // Load config + profile in parallel on mount
   useEffect(() => {
-    loadConfig()
+    async function loadAll() {
+      setLoading(true)
+      try {
+        const [configResult, profileResult] = await Promise.all([
+          fetch("/api/prompts").then((r) => r.json()),
+          fetch("/api/candidate-profile").then((r) => r.json()),
+        ])
+
+        // Config
+        if (configResult.success && configResult.data) {
+          const data = configResult.data
+          setConfig({
+            modelo_gemini: data.modelo_gemini,
+            temperatura: data.temperatura,
+            max_tokens: data.max_tokens,
+            top_p: data.top_p,
+            top_k: data.top_k,
+            dossie_prompt: data.dossie_prompt,
+            analise_prompt: data.analise_prompt,
+            curriculo_prompt: data.curriculo_prompt,
+          })
+          setLastSaved(data.updated_at)
+          setIsReadOnly(configResult.isReadOnly || false)
+
+          try {
+            const history = readModelHistory()
+            const currentModel = data.modelo_gemini?.trim()
+            const updatedHistory = currentModel
+              ? [currentModel, ...history.filter((model: string) => model !== currentModel)].slice(0, 20)
+              : history
+
+            if (updatedHistory.length !== history.length || updatedHistory.some((model: string, index: number) => model !== history[index])) {
+              persistModelHistory(updatedHistory)
+            }
+
+            setModelHistory(updatedHistory)
+          } catch {
+            setModelHistory(data.modelo_gemini ? [data.modelo_gemini] : [])
+          }
+        }
+
+        // Profile
+        if (profileResult.success && profileResult.data) {
+          const p = profileResult.data
+          setCandidateProfile({
+            nome: p.nome ?? "",
+            email: p.email ?? "",
+            telefone: p.telefone ?? "",
+            linkedin: p.linkedin ?? "",
+            github: p.github ?? "",
+            localizacao_pt: p.localizacao_pt ?? "",
+            localizacao_en: p.localizacao_en ?? "",
+            disponibilidade: p.disponibilidade ?? "",
+            educacao: p.educacao ?? [],
+            idiomas: p.idiomas ?? [],
+            objetivo_pt: p.objetivo_pt ?? "",
+            objetivo_en: p.objetivo_en ?? "",
+            habilidades: p.habilidades ?? [],
+            projetos: p.projetos ?? [],
+            certificacoes: p.certificacoes ?? [],
+          })
+        } else {
+          setCandidateProfile({ ...EMPTY_CANDIDATE_PROFILE })
+        }
+      } catch (error) {
+        console.error("[ConfiguracoesPrompts] Error loading:", error)
+        toast.error("Erro ao carregar configurações")
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadAll()
   }, [])
 
   function persistModelHistory(history: string[]) {
@@ -40,15 +120,9 @@ export function ConfiguracoesPrompts() {
 
   function readModelHistory(): string[] {
     const stored = localStorage.getItem(MODEL_HISTORY_STORAGE_KEY)
-    if (!stored) {
-      return []
-    }
-
+    if (!stored) return []
     const parsed: unknown = JSON.parse(stored)
-    if (!Array.isArray(parsed)) {
-      return []
-    }
-
+    if (!Array.isArray(parsed)) return []
     return parsed
       .filter((model): model is string => typeof model === "string")
       .map((model) => model.trim())
@@ -59,7 +133,6 @@ export function ConfiguracoesPrompts() {
   function addModelToHistory(model: string) {
     const trimmed = model.trim()
     if (!trimmed) return
-
     setModelHistory((prev) => {
       const updated = [trimmed, ...prev.filter((entry) => entry !== trimmed)].slice(0, 20)
       persistModelHistory(updated)
@@ -68,10 +141,7 @@ export function ConfiguracoesPrompts() {
   }
 
   function removeModelFromHistory(model: string) {
-    if (model === config?.modelo_gemini) {
-      return
-    }
-
+    if (model === config?.modelo_gemini) return
     setModelHistory((prev) => {
       const updated = prev.filter((entry) => entry !== model)
       persistModelHistory(updated)
@@ -81,7 +151,6 @@ export function ConfiguracoesPrompts() {
 
   function selectModel(model: string) {
     if (!config) return
-
     setConfig({ ...config, modelo_gemini: model })
     addModelToHistory(model)
     setShowModelInput(false)
@@ -94,18 +163,89 @@ export function ConfiguracoesPrompts() {
     selectModel(trimmed)
   }
 
-  async function loadConfig() {
-    setLoading(true)
-    try {
-      const response = await fetch("/api/prompts")
-      const result = await response.json()
+  async function handleSave() {
+    if (!config || !candidateProfile) return
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to load config")
+    if (isReadOnly) {
+      toast.error("Faça login para salvar configurações personalizadas")
+      return
+    }
+
+    if (!config.analise_prompt.trim() || !config.curriculo_prompt.trim()) {
+      toast.error("Nenhum prompt pode estar vazio")
+      return
+    }
+
+    setSaving(true)
+    try {
+      const [configRes, profileRes] = await Promise.all([
+        fetch("/api/prompts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            modelo_gemini: config.modelo_gemini,
+            temperatura: config.temperatura,
+            max_tokens: config.max_tokens,
+            top_p: config.top_p,
+            top_k: config.top_k,
+            dossie_prompt: config.dossie_prompt,
+            analise_prompt: config.analise_prompt,
+            curriculo_prompt: config.curriculo_prompt,
+          }),
+        }),
+        fetch("/api/candidate-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(candidateProfile),
+        }),
+      ])
+
+      const [configResult, profileResult] = await Promise.all([configRes.json(), profileRes.json()])
+
+      if (!configRes.ok) throw new Error(configResult.error || "Failed to save config")
+      if (!profileRes.ok) throw new Error(profileResult.error || "Failed to save profile")
+
+      if (configResult.success && configResult.data) {
+        setLastSaved(configResult.data.updated_at)
+        addModelToHistory(config.modelo_gemini)
       }
 
-      if (result.success && result.data) {
-        const data = result.data
+      toast.success("Configurações salvas com sucesso!")
+    } catch (error) {
+      console.error("[ConfiguracoesPrompts] Error saving:", error)
+      toast.error("Erro ao salvar configurações")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleReset() {
+    if (isReadOnly) {
+      toast.error("Faça login para restaurar configurações")
+      return
+    }
+
+    const resetPrompts = window.confirm("Restaurar configurações de IA (prompts/modelo) para o padrão?")
+    const resetProfile = window.confirm("Restaurar perfil do candidato (apagar todos os dados)?")
+
+    if (!resetPrompts && !resetProfile) return
+
+    setSaving(true)
+    try {
+      const promises: Promise<Response>[] = []
+      if (resetProfile) {
+        promises.push(fetch("/api/candidate-profile", { method: "DELETE" }))
+      }
+      await Promise.all(promises)
+
+      // Reload everything
+      const [configResult, profileResult] = await Promise.all([
+        fetch("/api/prompts").then((r) => r.json()),
+        fetch("/api/candidate-profile").then((r) => r.json()),
+      ])
+
+      if (configResult.success && configResult.data) {
+        const data = configResult.data
         setConfig({
           modelo_gemini: data.modelo_gemini,
           temperatura: data.temperatura,
@@ -117,111 +257,39 @@ export function ConfiguracoesPrompts() {
           curriculo_prompt: data.curriculo_prompt,
         })
         setLastSaved(data.updated_at)
-        setIsReadOnly(result.isReadOnly || false)
-
-        try {
-          const history = readModelHistory()
-          const currentModel = data.modelo_gemini?.trim()
-          const updatedHistory = currentModel
-            ? [currentModel, ...history.filter((model) => model !== currentModel)].slice(0, 20)
-            : history
-
-          if (updatedHistory.length !== history.length || updatedHistory.some((model, index) => model !== history[index])) {
-            persistModelHistory(updatedHistory)
-          }
-
-          setModelHistory(updatedHistory)
-        } catch {
-          setModelHistory(data.modelo_gemini ? [data.modelo_gemini] : [])
-        }
-      }
-    } catch (error) {
-      console.error("[ConfiguracoesPrompts] Error loading config:", error)
-      toast.error("Erro ao carregar configurações")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleSave() {
-    if (!config) return
-
-    // Verificar se está em modo read-only
-    if (isReadOnly) {
-      toast.error("Faça login para salvar configurações personalizadas")
-      return
-    }
-
-    // Validação básica
-    if (!config.dossie_prompt.trim() || !config.analise_prompt.trim() || !config.curriculo_prompt.trim()) {
-      toast.error("Nenhum prompt pode estar vazio")
-      return
-    }
-
-    setSaving(true)
-    try {
-      const response = await fetch("/api/prompts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          modelo_gemini: config.modelo_gemini,
-          temperatura: config.temperatura,
-          max_tokens: config.max_tokens,
-          top_p: config.top_p,
-          top_k: config.top_k,
-          dossie_prompt: config.dossie_prompt,
-          analise_prompt: config.analise_prompt,
-          curriculo_prompt: config.curriculo_prompt,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to save config")
       }
 
-      if (result.success && result.data) {
-        setLastSaved(result.data.updated_at)
-        addModelToHistory(config.modelo_gemini)
-        toast.success("Configurações salvas com sucesso!")
+      if (profileResult.success && profileResult.data) {
+        const p = profileResult.data
+        setCandidateProfile({
+          nome: p.nome ?? "",
+          email: p.email ?? "",
+          telefone: p.telefone ?? "",
+          linkedin: p.linkedin ?? "",
+          github: p.github ?? "",
+          localizacao_pt: p.localizacao_pt ?? "",
+          localizacao_en: p.localizacao_en ?? "",
+          disponibilidade: p.disponibilidade ?? "",
+          educacao: p.educacao ?? [],
+          idiomas: p.idiomas ?? [],
+          objetivo_pt: p.objetivo_pt ?? "",
+          objetivo_en: p.objetivo_en ?? "",
+          habilidades: p.habilidades ?? [],
+          projetos: p.projetos ?? [],
+          certificacoes: p.certificacoes ?? [],
+        })
       }
+
+      toast.success("Configurações restauradas!")
     } catch (error) {
-      console.error("[ConfiguracoesPrompts] Error saving config:", error)
-      toast.error("Erro ao salvar configurações")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleReset() {
-    // Verificar se está em modo read-only
-    if (isReadOnly) {
-      toast.error("Faça login para restaurar configurações")
-      return
-    }
-
-    if (!window.confirm("Tem certeza que deseja restaurar as configurações padrão?")) {
-      return
-    }
-
-    setSaving(true)
-    try {
-      // Delete user config via API (will be implemented if needed)
-      // For now, just reload to get defaults
-      await loadConfig()
-      toast.success("Configurações restauradas para o padrão!")
-    } catch (error) {
-      console.error("[ConfiguracoesPrompts] Error resetting config:", error)
+      console.error("[ConfiguracoesPrompts] Error resetting:", error)
       toast.error("Erro ao restaurar configurações")
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading || !config) {
+  if (loading || !config || !candidateProfile) {
     return (
       <div className="max-w-4xl space-y-6">
         <Card className="glass-card-intense">
@@ -278,12 +346,16 @@ export function ConfiguracoesPrompts() {
           )}
 
           <Tabs defaultValue="modelo" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-              <TabsTrigger value="modelo">Modelo</TabsTrigger>
-              <TabsTrigger value="dossie">Dossiê</TabsTrigger>
-              <TabsTrigger value="analise">Análise</TabsTrigger>
-              <TabsTrigger value="curriculo">Currículo</TabsTrigger>
-              <TabsTrigger value="sistema">Sistema</TabsTrigger>
+            <TabsList className="flex w-full overflow-x-auto">
+              <TabsTrigger value="modelo" className="text-xs sm:text-sm">Modelo</TabsTrigger>
+              <TabsTrigger value="perfil" className="text-xs sm:text-sm">Perfil</TabsTrigger>
+              <TabsTrigger value="habilidades" className="text-xs sm:text-sm">Habilidades</TabsTrigger>
+              <TabsTrigger value="projetos" className="text-xs sm:text-sm">Projetos</TabsTrigger>
+              <TabsTrigger value="certificacoes" className="text-xs sm:text-sm">Certificações</TabsTrigger>
+              <TabsTrigger value="dossie" className="text-xs sm:text-sm">Dossiê</TabsTrigger>
+              <TabsTrigger value="analise" className="text-xs sm:text-sm">Análise</TabsTrigger>
+              <TabsTrigger value="curriculo" className="text-xs sm:text-sm">Currículo</TabsTrigger>
+              <TabsTrigger value="sistema" className="text-xs sm:text-sm">Sistema</TabsTrigger>
             </TabsList>
 
             {/* Tab: Modelo */}
@@ -349,7 +421,6 @@ export function ConfiguracoesPrompts() {
                             e.preventDefault()
                             handleAddNewModel()
                           }
-
                           if (e.key === "Escape") {
                             e.preventDefault()
                             setShowModelInput(false)
@@ -477,22 +548,45 @@ export function ConfiguracoesPrompts() {
               </div>
             </TabsContent>
 
-            {/* Tab: Dossiê */}
+            {/* Tab: Perfil */}
+            <TabsContent value="perfil" className="space-y-4 mt-4">
+              <ProfileTab
+                profile={candidateProfile}
+                onChange={setCandidateProfile}
+                disabled={isReadOnly}
+              />
+            </TabsContent>
+
+            {/* Tab: Habilidades */}
+            <TabsContent value="habilidades" className="space-y-4 mt-4">
+              <SkillsTab
+                profile={candidateProfile}
+                onChange={setCandidateProfile}
+                disabled={isReadOnly}
+              />
+            </TabsContent>
+
+            {/* Tab: Projetos */}
+            <TabsContent value="projetos" className="space-y-4 mt-4">
+              <ProjectsTab
+                profile={candidateProfile}
+                onChange={setCandidateProfile}
+                disabled={isReadOnly}
+              />
+            </TabsContent>
+
+            {/* Tab: Certificações */}
+            <TabsContent value="certificacoes" className="space-y-4 mt-4">
+              <CertificationsTab
+                profile={candidateProfile}
+                onChange={setCandidateProfile}
+                disabled={isReadOnly}
+              />
+            </TabsContent>
+
+            {/* Tab: Dossiê (now auto-generated) */}
             <TabsContent value="dossie" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="dossie_prompt">Prompt do Dossiê</Label>
-                <Textarea
-                  id="dossie_prompt"
-                  value={config.dossie_prompt}
-                  onChange={(e) => setConfig({ ...config, dossie_prompt: e.target.value })}
-                  rows={16}
-                  className="bg-background font-mono text-sm"
-                  placeholder="Perfil completo do candidato para análise de fit..."
-                />
-                <p className="text-xs text-muted-foreground">
-                  Este prompt contém o perfil do candidato e critérios de compatibilidade para análise de vagas.
-                </p>
-              </div>
+              <DossieInfoTab profile={candidateProfile} />
             </TabsContent>
 
             {/* Tab: Análise */}
@@ -526,7 +620,7 @@ export function ConfiguracoesPrompts() {
                   placeholder="Regras para personalização do currículo..."
                 />
                 <p className="text-xs text-muted-foreground">
-                  ⚠️ IMPORTANTE: Mantenha as regras anti-invenção para evitar fabricação de informações.
+                  IMPORTANTE: Mantenha as regras anti-invenção para evitar fabricação de informações.
                 </p>
               </div>
             </TabsContent>

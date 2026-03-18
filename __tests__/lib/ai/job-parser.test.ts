@@ -232,6 +232,19 @@ Score: 4/5 estrelas. Excelente match técnico.
   ANALYSIS_MODEL_CONFIG: { model: "x-ai/grok-4.1-fast" },
 }))
 
+// Mock candidate profile (avoids Supabase cookies error in tests)
+vi.mock("@/lib/supabase/candidate-profile", () => ({
+  getCandidateProfile: vi.fn(async () => ({
+    id: "empty",
+    nome: "",
+    educacao: [],
+    habilidades: [],
+    projetos: [],
+    certificacoes: [],
+    idiomas: [],
+  })),
+}))
+
 describe("parseJobWithAnalysis", () => {
   it("should parse job and generate analysis", async () => {
     const jobDescription = "Vaga de Dev React na Tech Corp"

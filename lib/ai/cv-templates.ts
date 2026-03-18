@@ -1,18 +1,17 @@
 import type { CVTemplate } from "./types"
+import type { CandidateData } from "./candidate-data"
 import { CANDIDATE } from "./candidate-data"
+import { loadCandidateData } from "./candidate-profile-adapter"
 
 /**
  * CV Templates — Maps bilingual CandidateData to language-specific CVTemplate
- *
- * All candidate content is sourced from candidate-data.ts (single source of truth).
- * This file only handles the PT/EN mapping.
  *
  * Sections marked FIXED are never modified by LLM personalization.
  * Sections marked PERSONALIZABLE are rewritten/reordered by the resume pipeline.
  */
 
-function buildTemplate(language: "pt" | "en"): CVTemplate {
-  const c = CANDIDATE
+function buildTemplate(language: "pt" | "en", candidateData: CandidateData): CVTemplate {
+  const c = candidateData
   const isPt = language === "pt"
 
   return {
@@ -65,17 +64,24 @@ function buildTemplate(language: "pt" | "en"): CVTemplate {
   }
 }
 
-/** Portuguese CV Template — derived from CANDIDATE data */
-export const CV_TEMPLATE_PT: CVTemplate = buildTemplate("pt")
+/** @deprecated Use getCVTemplateForUser() instead — loads from DB */
+export const CV_TEMPLATE_PT: CVTemplate = buildTemplate("pt", CANDIDATE)
 
-/** English CV Template — derived from CANDIDATE data */
-export const CV_TEMPLATE_EN: CVTemplate = buildTemplate("en")
+/** @deprecated Use getCVTemplateForUser() instead — loads from DB */
+export const CV_TEMPLATE_EN: CVTemplate = buildTemplate("en", CANDIDATE)
 
 /**
- * Get CV template by language
- * @param language - Target language (pt or en)
- * @returns CV template for the specified language
+ * @deprecated Use getCVTemplateForUser() instead — loads from DB
  */
 export function getCVTemplate(language: "pt" | "en"): CVTemplate {
   return language === "pt" ? CV_TEMPLATE_PT : CV_TEMPLATE_EN
+}
+
+/**
+ * Get CV template for a specific user, loading their profile from DB.
+ * New users get empty templates (not hardcoded data).
+ */
+export async function getCVTemplateForUser(language: "pt" | "en", userId?: string): Promise<CVTemplate> {
+  const candidateData = await loadCandidateData(userId)
+  return buildTemplate(language, candidateData)
 }

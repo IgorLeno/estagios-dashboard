@@ -110,27 +110,7 @@ export const DEFAULT_PROMPTS_CONFIG: Omit<PromptsConfig, "id" | "user_id" | "cre
   top_p: 0.95,
   top_k: 40,
 
-  dossie_prompt: `Você é um analisador de compatibilidade entre candidatos e vagas de emprego.
-
-PERFIL DO CANDIDATO:
-- Nome: Igor Leno de Souza Fernandes
-- Formação: Engenharia Química (UNESP) - Conclusão prevista: 12/2026
-- Localização: Bertioga/SP
-- Principais Habilidades: Excel Avançado, Python, SQL, Power BI, Aspen Plus
-- Experiência: Pesquisa acadêmica em Machine Learning aplicado a processos químicos
-- Certificações: Deep Learning (Coursera), Power BI, SQL, Google Data Analytics
-- Idiomas: Inglês Avançado
-- Interesses: QHSE (Qualidade, Saúde, Segurança, Meio Ambiente), Controle Técnico, Análise de Dados
-
-OBJETIVO:
-Analisar vagas de estágio/emprego e calcular fit (0-5 estrelas) entre o candidato e a vaga.
-
-CRITÉRIOS DE FIT:
-✅ 5.0 estrelas: Match perfeito (90%+ dos requisitos atendidos)
-✅ 4.0-4.5 estrelas: Muito bom (70-89% dos requisitos)
-✅ 3.0-3.5 estrelas: Bom (50-69% dos requisitos)
-✅ 2.0-2.5 estrelas: Razoável (30-49% dos requisitos)
-✅ 0.5-1.5 estrelas: Baixo (0-29% dos requisitos)`,
+  dossie_prompt: `[Perfil do candidato carregado automaticamente das configuracoes de perfil]`,
 
   analise_prompt: `Analise a compatibilidade entre o candidato e a vaga fornecida.
 
@@ -185,4 +165,71 @@ export interface QuickFillField {
   label: string
   value: string
   order: number
+}
+
+/**
+ * Candidate Profile — editable user data stored in Supabase
+ * Replaces hardcoded CANDIDATE const from candidate-data.ts
+ */
+export interface CandidateProfile {
+  id: string
+  user_id?: string
+  created_at: string
+  updated_at: string
+  nome: string
+  email: string
+  telefone: string
+  linkedin: string
+  github: string
+  localizacao_pt: string
+  localizacao_en: string
+  disponibilidade: string
+  educacao: Array<{
+    degree_pt: string
+    degree_en?: string
+    institution_pt: string
+    institution_en?: string
+    period_pt: string
+    period_en?: string
+    location?: string
+  }>
+  idiomas: Array<{
+    language_pt: string
+    language_en?: string
+    proficiency_pt: string
+    proficiency_en?: string
+  }>
+  objetivo_pt: string
+  objetivo_en: string
+  habilidades: Array<{
+    category_pt: string
+    category_en?: string
+    items_pt: string[]
+    items_en?: string[]
+  }>
+  projetos: Array<{
+    title_pt: string
+    title_en?: string
+    description_pt: string[]
+    description_en?: string[]
+  }>
+  certificacoes: Array<{ text_pt: string; text_en?: string }>
+}
+
+export const EMPTY_CANDIDATE_PROFILE: Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at"> = {
+  nome: "",
+  email: "",
+  telefone: "",
+  linkedin: "",
+  github: "",
+  localizacao_pt: "",
+  localizacao_en: "",
+  disponibilidade: "",
+  educacao: [],
+  idiomas: [],
+  objetivo_pt: "",
+  objetivo_en: "",
+  habilidades: [],
+  projetos: [],
+  certificacoes: [],
 }

@@ -7,7 +7,7 @@ import {
   type CVDraft,
 } from "./consistency-agent"
 import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./resume-prompts"
-import { getCVTemplate } from "./cv-templates"
+import { getCVTemplateForUser } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
 import { loadUserSkillsBank } from "./skills-bank"
@@ -355,7 +355,7 @@ export async function generateTailoredResume(
   const skillsBank = await loadUserSkillsBank(userId)
   console.log(`[Resume Generator] Loaded ${skillsBank.length} skills from bank`)
 
-  const baseCv = getCVTemplate(language)
+  const baseCv = await getCVTemplateForUser(language, userId)
 
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation

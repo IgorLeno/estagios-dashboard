@@ -7,6 +7,10 @@ import {
 import { SKILLS_EXTRACTION_SYSTEM_PROMPT, getSkillsExtractionPrompt } from "./skills-extractor-prompt"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
 import { ANALYSIS_SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./analysis-prompts"
+import { CONSISTENCY_SYSTEM_PROMPT, buildConsistencyPrompt } from "./consistency-agent"
+import { buildDossieFromProfile } from "./dossie-builder"
+import { EMPTY_CANDIDATE_PROFILE } from "@/lib/types"
+import type { CandidateProfile } from "@/lib/types"
 
 export interface SystemPromptEntry {
   id: string
@@ -96,6 +100,46 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
       description: "Template de prompt de usuário para análise completa de vaga com perfil do candidato.",
       sourceFile: "lib/ai/analysis-prompts.ts → buildJobAnalysisPrompt",
       content: buildJobAnalysisPrompt("[DESCRICAO_DA_VAGA]", "[PERFIL_DO_CANDIDATO]"),
+      category: "analysis",
+    },
+    {
+      id: "consistency_system",
+      title: "Agente de Consistência — System Prompt",
+      description: "System prompt do agente que valida coerência entre seções do CV personalizado.",
+      sourceFile: "lib/ai/consistency-agent.ts → CONSISTENCY_SYSTEM_PROMPT",
+      content: CONSISTENCY_SYSTEM_PROMPT,
+      category: "resume",
+    },
+    {
+      id: "consistency_rules",
+      title: "Agente de Consistência — Regras",
+      description: "Template de validação com 7 regras de consistência aplicadas ao draft do CV.",
+      sourceFile: "lib/ai/consistency-agent.ts → buildConsistencyPrompt",
+      content: buildConsistencyPrompt(
+        { summary: "[RESUMO]", skills: [], projects: [], certifications: [], language: "pt" },
+        "[DESCRICAO_DA_VAGA]"
+      ),
+      category: "resume",
+    },
+    {
+      id: "dossie_auto_template",
+      title: "Dossiê — Template Automático",
+      description: "Template usado por buildDossieFromProfile para gerar o dossiê do candidato a partir do perfil.",
+      sourceFile: "lib/ai/dossie-builder.ts → buildDossieFromProfile",
+      content: buildDossieFromProfile({
+        ...EMPTY_CANDIDATE_PROFILE,
+        id: "example",
+        created_at: "",
+        updated_at: "",
+        nome: "[NOME]",
+        localizacao_pt: "[LOCALIZACAO]",
+        educacao: [{ degree_pt: "[CURSO]", institution_pt: "[INSTITUICAO]", period_pt: "[PERIODO]" }],
+        habilidades: [{ category_pt: "[CATEGORIA]", items_pt: ["[HABILIDADE_1]", "[HABILIDADE_2]"] }],
+        projetos: [{ title_pt: "[PROJETO]", description_pt: ["[DESCRICAO]"] }],
+        certificacoes: [{ text_pt: "[CERTIFICACAO]" }],
+        idiomas: [{ language_pt: "[IDIOMA]", proficiency_pt: "[NIVEL]" }],
+        objetivo_pt: "[OBJETIVO PROFISSIONAL]",
+      } as CandidateProfile),
       category: "analysis",
     },
   ]
