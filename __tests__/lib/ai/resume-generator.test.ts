@@ -232,13 +232,6 @@ vi.mock("@/lib/ai/ats-scorer", () => ({
   })),
 }))
 
-// Mock job context detector (pure functions, but need to be consistent with implementation)
-vi.mock("@/lib/ai/job-context-detector", async (importOriginal) => {
-  const actual = await importOriginal()
-  return {
-    ...actual,
-  }
-})
 
 describe("generateTailoredResume", () => {
   beforeEach(() => {

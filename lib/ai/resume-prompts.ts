@@ -1,11 +1,6 @@
 import type { JobDetails } from "./types"
 import type { CVTemplate } from "./types"
 import type { JobProfile } from "./job-profile"
-import {
-  getSummaryContextInstructions,
-  getSkillsContextInstructions,
-  getProjectsContextInstructions,
-} from "./context-specific-instructions"
 
 /**
  * System instruction for resume personalization
@@ -546,7 +541,7 @@ Return JSON format:
  * Serializa JobProfile para bloco de texto injetado nos prompts.
  * Traduz campos estruturados em instruções diretas para o LLM.
  */
-function buildProfileBlock(profile: JobProfile): string {
+function buildProfileBlock(profile: JobProfile, section?: "summary" | "skills" | "projects"): string {
   const lines: string[] = []
 
   lines.push(`Role family: ${profile.role_family} | Mode: ${profile.role_mode} | Seniority: ${profile.seniority}`)
@@ -576,6 +571,19 @@ function buildProfileBlock(profile: JobProfile): string {
     lines.push(
       "Location: job city differs from candidate base — MANDATORY: add relocation availability sentence as last sentence of summary"
     )
+  }
+
+  // Section-specific domain hints
+  const hints =
+    section === "summary" ? profile.summary_structure_hints
+    : section === "skills" ? profile.skill_reordering_hints
+    : section === "projects" ? profile.project_reframing_hints
+    : undefined
+
+  if (hints && hints.length > 0) {
+    lines.push("")
+    lines.push("DOMAIN-SPECIFIC GUIDANCE:")
+    hints.forEach((hint, i) => lines.push(`${i + 1}. ${hint}`))
   }
 
   return lines.join("\n")
@@ -608,16 +616,9 @@ export function buildSummaryPrompt(
       ? "⚠️ OBRIGATÓRIO: TODO o conteúdo DEVE estar em PORTUGUÊS BRASILEIRO. Não use palavras em inglês, traduza tudo."
       : "⚠️ MANDATORY: ALL content MUST be in ENGLISH. Do not use Portuguese words, translate everything."
 
-  const profileBlock = buildProfileBlock(jobProfile)
-
-  // Get context-specific instructions
-  const contextInstructions = getSummaryContextInstructions(jobProfile.legacyContext, language)
+  const profileBlock = buildProfileBlock(jobProfile, "summary")
 
   return `${languageInstruction}
-
-${contextInstructions}
-
-// [Nota: instrução de idioma já fornecida acima — contextInstructions já está no idioma correto]
 
 Rewrite the professional summary to be HIGHLY OPTIMIZED FOR ATS (Applicant Tracking Systems).
 
@@ -657,7 +658,8 @@ export function buildSkillsPrompt(
   skillsBank: Array<{ skill: string; proficiency?: string; category: string }>, // NEW: Skills Bank
   projects: Array<{ title: string; description: string[] }>,
   language: "pt" | "en",
-  jobProfile: JobProfile
+  jobProfile: JobProfile,
+  approvedSkills?: string[]
 ): string {
   // Extract ATS keywords
   const atsKeywords = extractATSKeywords(jobDetails)
@@ -707,14 +709,9 @@ export function buildSkillsPrompt(
       ? `\nNOTE: Skills bank items may be in Portuguese. Translate them naturally to English when including in the CV. Example: "Documentação técnica" → "Technical documentation".\n`
       : ""
 
-  const profileBlock = buildProfileBlock(jobProfile)
-
-  // Get context-specific instructions
-  const contextInstructions = getSkillsContextInstructions(jobProfile.legacyContext, language)
+  const profileBlock = buildProfileBlock(jobProfile, "skills")
 
   return `${languageInstruction}
-
-${contextInstructions}
 
 ⚠️  CRITICAL: REORDER + SELECT FROM SKILLS BANK (ATS OPTIMIZATION)
 
@@ -734,7 +731,7 @@ ${JSON.stringify(skillsBank, null, 2)}
 
 ALLOWED SKILLS (you MUST use ONLY these exact items):
 CV Skills: ${cvSkillItems.join(", ")}
-Bank Skills: ${bankSkillItems.join(", ")}
+Bank Skills: ${bankSkillItems.join(", ")}${approvedSkills && approvedSkills.length > 0 ? `\nUser-Approved Skills: ${approvedSkills.join(", ")}` : ""}
 
 EXACT PHRASES TO MATCH (from job):
 ${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
@@ -776,14 +773,9 @@ export function buildProjectsPrompt(
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
 
-  const profileBlock = buildProfileBlock(jobProfile)
-
-  // Get context-specific instructions
-  const contextInstructions = getProjectsContextInstructions(jobProfile.legacyContext, language)
+  const profileBlock = buildProfileBlock(jobProfile, "projects")
 
   return `${languageInstruction}
-
-${contextInstructions}
 
 ⚠️  CRITICAL: KEEP TITLES UNCHANGED - REWRITE DESCRIPTIONS FOR ATS OPTIMIZATION
 

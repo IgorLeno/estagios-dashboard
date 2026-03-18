@@ -107,7 +107,7 @@ async function personalizeSkills(
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language, jobProfile)
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language, jobProfile, approvedSkills)
 
   const result = await model.generateContent(prompt)
   const response = result.response

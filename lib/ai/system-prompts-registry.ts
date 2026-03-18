@@ -1,4 +1,3 @@
-import type { JobContext } from "./job-context-detector"
 import {
   RESUME_SYSTEM_PROMPT,
   SUMMARY_PROMPT_INSTRUCTIONS,
@@ -8,7 +7,6 @@ import {
 import { SKILLS_EXTRACTION_SYSTEM_PROMPT, getSkillsExtractionPrompt } from "./skills-extractor-prompt"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
 import { ANALYSIS_SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./analysis-prompts"
-import { getSummaryContextInstructions, getProjectsContextInstructions } from "./context-specific-instructions"
 
 export interface SystemPromptEntry {
   id: string
@@ -18,8 +16,6 @@ export interface SystemPromptEntry {
   content: string
   category: "resume" | "analysis" | "skills" | "parsing"
 }
-
-const CONTEXTS: JobContext[] = ["laboratory", "data_science", "qhse", "engineering", "general"]
 
 export function getSystemPromptsRegistry(): SystemPromptEntry[] {
   return [
@@ -57,23 +53,6 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
         "Instruções de como selecionar e reordenar habilidades por relevância à vaga, incluindo integração com o Banco de Skills.",
       sourceFile: "lib/ai/resume-prompts.ts → SKILLS_PROMPT_INSTRUCTIONS",
       content: SKILLS_PROMPT_INSTRUCTIONS,
-      category: "resume",
-    },
-    {
-      id: "context_instructions_summary",
-      title: "Contexto — Perfil (por tipo de vaga)",
-      description:
-        "Instruções específicas por contexto detectado aplicadas ao perfil profissional, com exemplos por domínio.",
-      sourceFile: "lib/ai/context-specific-instructions.ts → getSummaryContextInstructions",
-      content: getAllContextInstructions("summary"),
-      category: "resume",
-    },
-    {
-      id: "context_instructions_projects",
-      title: "Contexto — Projetos (por tipo de vaga)",
-      description: "Instruções específicas por contexto aplicadas à reescrita de projetos.",
-      sourceFile: "lib/ai/context-specific-instructions.ts → getProjectsContextInstructions",
-      content: getAllContextInstructions("projects"),
       category: "resume",
     },
     {
@@ -120,21 +99,6 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
       category: "analysis",
     },
   ]
-}
-
-function getAllContextInstructions(type: "summary" | "projects"): string {
-  const fn = type === "summary" ? getSummaryContextInstructions : getProjectsContextInstructions
-
-  return CONTEXTS.map((context) => {
-    const title = context.toUpperCase()
-    return [
-      `=== CONTEXTO: ${title} | PT ===`,
-      fn(context, "pt").trim(),
-      "",
-      `=== CONTEXTO: ${title} | EN ===`,
-      fn(context, "en").trim(),
-    ].join("\n")
-  }).join("\n\n")
 }
 
 function getSkillsExtractionPromptContent(): string {

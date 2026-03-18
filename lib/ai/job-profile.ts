@@ -1,22 +1,19 @@
 /**
  * JOB PROFILE — STRUCTURED JOB CONTEXT
  *
- * Replaces the flat JobContext string with a structured profile that carries:
+ * Carries all domain-specific configuration for resume generation:
  * - Role classification (family + mode + seniority)
  * - Domain proof policy
  * - Allowed / preferred / forbidden terminology
  * - Excel label policy
  * - Location statement requirement
  * - Summary topics for the summary section
+ * - Domain-specific hints for skills, projects, and summary sections
  *
  * The profile is produced by buildJobProfile() and consumed by:
  * - Evidence Selector (Etapa 3)
- * - Summary / Skills / Projects prompts (Etapa 5)
+ * - Summary / Skills / Projects prompts via buildProfileBlock()
  * - Normalizers (Etapa 7)
- *
- * Backward compatibility:
- * - legacyContext maps JobProfile back to the old JobContext string
- *   so existing callers of detectJobContext() keep working during the transition.
  */
 
 import type { JobDetails } from "./types"
@@ -93,19 +90,30 @@ export interface JobProfile {
   }
 
   /**
+   * Domain-specific hints for skill category ordering and selection.
+   * Consumed by buildProfileBlock() and rendered into the skills prompt.
+   */
+  skill_reordering_hints: string[]
+
+  /**
+   * Domain-specific hints for project description reframing.
+   * Consumed by buildProfileBlock() and rendered into the projects prompt.
+   */
+  project_reframing_hints: string[]
+
+  /**
+   * Domain-specific hints for summary structure and emphasis.
+   * Consumed by buildProfileBlock() and rendered into the summary prompt.
+   */
+  summary_structure_hints: string[]
+
+  /**
    * Human-readable reasons for classification decisions.
    * Populated only when process.env.NODE_ENV !== "production".
    *
    * Must not be passed to prompt builders, persisted, or sent to the LLM.
    */
   explanations?: string[]
-
-  /**
-   * Maps JobProfile back to the legacy JobContext string.
-   * Used during the transition period while prompt builders still accept JobContext.
-   * Will be removed in Etapa 5 when prompts are rewritten to accept JobProfile directly.
-   */
-  legacyContext: "laboratory" | "data_science" | "qhse" | "engineering" | "general"
 }
 
 const SHORT_TOKEN_WHITELIST = new Set(["bi", "rh", "ml", "etl", "sql", "vba"])
@@ -424,14 +432,166 @@ function buildSummaryTopics(
   }
 }
 
-function resolveLegacyContext(
-  family: RoleFamily
-): JobProfile["legacyContext"] {
-  if (family === "laboratory_qc") return "laboratory"
-  if (family === "data_science_ml" || family === "people_analytics" || family === "bi_reporting") return "data_science"
-  if (family === "qhse_quality") return "qhse"
-  if (family === "process_engineering") return "engineering"
-  return "general"
+function buildSkillReorderingHints(family: RoleFamily, mode: RoleMode): string[] {
+  if (family === "laboratory_qc") {
+    return [
+      "PRIORITIZE category 'Química Analítica & Laboratório' FIRST: solution preparation, titrations, synthesis, sample control, GLP",
+      "SECOND: 'Gestão de Qualidade & Normas' — Excel (basic level), ISO 17025, technical reports",
+      "MINIMIZE or move to end: programming (Python, SQL), data science tools — only keep if job explicitly requires",
+      "ADD lab skills from bank if available; use proficiency indicators (básico/intermediário/avançado)",
+    ]
+  }
+  if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
+    return [
+      "PRIORITIZE 'Visualização & BI' FIRST: Power BI, Excel (with specific functions), SQL",
+      "SECOND: 'Competências de Processo' — validação de dados, organização de bases, padronização, documentação técnica",
+      "REMOVE entirely: Scikit-learn, Deep Learning, TensorFlow, neural networks — contradicts operational profile",
+      "REMOVE: specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)",
+      "DEPRIORITIZE: niche tools not relevant to BI/analytics",
+      "For soft skills: split into 'Competências de Processo' (technical process) and 'Competências Comportamentais' (behavioral traits)",
+      "RENAME: 'Gestão de projetos' → 'Acompanhamento de projetos' for internship roles",
+    ]
+  }
+  if (family === "data_science_ml") {
+    return [
+      "PRIORITIZE 'Linguagens & Análise de Dados' FIRST: Python (Pandas, NumPy, Scikit-learn), SQL, ML libraries",
+      "SECOND: Visualization tools (Power BI, Matplotlib)",
+      "MINIMIZE: Lab skills unless data comes from experiments",
+    ]
+  }
+  if (family === "bi_reporting" && mode === "analytical_reporting") {
+    return [
+      "PRIORITIZE 'Visualização & BI' FIRST: Power BI, Tableau, SQL, Excel",
+      "SECOND: data analysis tools (Python, pandas) — position as reporting support, not ML",
+      "MINIMIZE: Lab skills, engineering tools",
+    ]
+  }
+  if (family === "qhse_quality") {
+    return [
+      "PRIORITIZE 'Gestão de Qualidade & QHSE' FIRST: Excel, Power BI, KPIs, technical reports, ISO standards, non-conformance control",
+      "MINIMIZE: Programming (except when job requires quality automation)",
+    ]
+  }
+  if (family === "process_engineering") {
+    return [
+      "PRIORITIZE 'Ferramentas de Engenharia' FIRST: Aspen Plus, MATLAB, CAD, process simulation",
+      "SECOND: 'Análise Técnica & Otimização' — mass/energy balances, process optimization, efficiency analysis",
+      "MINIMIZE: generic office skills unless explicitly required; data tools only if they support engineering scope",
+    ]
+  }
+  return [
+    "PRIORITIZE skills with exact job match first",
+    "KEEP a balanced mix of technical, analytical, and operational skills",
+    "REMOVE or move to end skills with no direct relationship to requirements",
+  ]
+}
+
+function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[] {
+  if (family === "laboratory_qc") {
+    return [
+      "Rewrite projects to emphasize QUALITY CONTROL and GOOD LABORATORY PRACTICES, not code or algorithms",
+      "For programming/data projects: reframe as 'systematic methodology for data quality control and traceability'",
+      "For chemistry projects: emphasize molecular modeling, physicochemical analysis, process optimization",
+      "Each bullet should highlight: quality control, data validation, traceability, lab organization, standards compliance",
+    ]
+  }
+  if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
+    return [
+      "Reframe scientific/chemical work into data process language",
+      "'molecular modeling' → 'structuring and analyzing physicochemical property data'",
+      "'equilibrium simulation' → 'organizing and validating simulation results'",
+      "'process efficiency analysis' → 'comparing and standardizing process data'",
+      "Each bullet MUST end with a data/process outcome: '...ensuring result consistency and traceability'",
+      "PRIORITIZE: structuring databases, standardization, validation, source documentation, technical reporting",
+      "AVOID as primary emphasis: Machine Learning, feature engineering, hyperparameters",
+    ]
+  }
+  if (family === "data_science_ml") {
+    return [
+      "For data/computing projects: emphasize 'end-to-end data pipeline', 'ML', 'feature engineering', 'model training'",
+      "For engineering projects: emphasize 'predictive modeling', 'computational simulation'",
+      "Mention libraries (Pandas, NumPy, Scikit-learn) when used",
+    ]
+  }
+  if (family === "qhse_quality") {
+    return [
+      "For data projects: reframe as 'data quality control system', 'KPI monitoring', 'Power BI dashboards'",
+      "For engineering projects: emphasize 'environmental efficiency analysis', 'compliance with technical standards'",
+    ]
+  }
+  if (family === "process_engineering") {
+    return [
+      "Emphasize simulation, modeling, process optimization",
+      "Mention engineering tools: Aspen Plus, MATLAB, CAD",
+    ]
+  }
+  return [
+    "Balance technical and practical aspects",
+    "Emphasize aspects most relevant to job requirements",
+  ]
+}
+
+function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniority: Seniority): string[] {
+  const internshipTone = seniority === "internship"
+    ? "Use 'conhecimento em', 'experiência acadêmica com', 'prática com' — NEVER 'expertise'"
+    : ""
+
+  if (family === "laboratory_qc") {
+    return [
+      "Sentence 1: Education + interest in laboratory activities",
+      "Sentence 2: Practical lab skills (solution preparation, analytical techniques, sample control)",
+      "Sentence 3: Quality standards (ISO 17025 mentioned MAX 1x) + laboratory organization",
+      "Sentence 4: Objective aligned to company function",
+      "MINIMIZE: programming skills, data science tools — only mention if job explicitly requires",
+      "MAXIMIZE: practical lab experience from academic courses (Analytical Chemistry, Physical Chemistry)",
+      internshipTone,
+    ].filter(Boolean)
+  }
+  if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
+    return [
+      "Sentence 1: Education + interest in data organization/analysis (lead with BI, SQL, Python, Excel)",
+      "Sentence 2: Operational tools (Excel with specific functions, Power BI, SQL)",
+      "Sentence 3: Process competencies (validation, standardization, documentation, traceability)",
+      "Sentence 4: Function-focused objective: 'Busco estágio em [area] para apoiar rotinas de...'",
+      "NEVER claim 'expertise' or 'knowledge in People Analytics' without direct experience — use 'interest in' instead",
+      "If People Analytics job: include 'e BI' in objective for broader ATS matching",
+      "NEVER name the company in the objective — use area/function instead",
+      internshipTone,
+    ].filter(Boolean)
+  }
+  if (family === "data_science_ml") {
+    return [
+      "Sentence 1: Education + interest in data/ML",
+      "Sentence 2: Technical skills (Python, SQL, ML libraries)",
+      "Sentence 3: Project experience (pipelines, models, analysis)",
+      "Sentence 4: Objective at company",
+      internshipTone,
+    ].filter(Boolean)
+  }
+  if (family === "qhse_quality") {
+    return [
+      "Sentence 1: Education + interest in QHSE",
+      "Sentence 2: Management skills (Excel, Power BI, KPIs)",
+      "Sentence 3: Standards and quality control knowledge",
+      "Sentence 4: Objective at company",
+      internshipTone,
+    ].filter(Boolean)
+  }
+  if (family === "process_engineering") {
+    return [
+      "Sentence 1: Education + interest in processes/engineering",
+      "Sentence 2: Technical tools (Aspen, simulation, MATLAB)",
+      "Sentence 3: Project experience/optimization",
+      "Sentence 4: Objective at company",
+      internshipTone,
+    ].filter(Boolean)
+  }
+  return [
+    "Use balanced approach: mention skills most relevant to job requirements",
+    "Avoid over-specialization in one domain",
+    "Keep profile generalist and adaptable",
+    internshipTone,
+  ].filter(Boolean)
 }
 
 export function buildJobProfile(jobDetails: JobDetails): JobProfile {
@@ -538,7 +698,9 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
   const { policy: excel_term_policy, exactLabel: excel_exact_label } = detectExcel(exact_terms, role_family)
   const require_location_statement = detectLocationStatement(jobDetails)
   const summary_topics = buildSummaryTopics(role_family, role_mode)
-  const legacyContext = resolveLegacyContext(role_family)
+  const skill_reordering_hints = buildSkillReorderingHints(role_family, role_mode)
+  const project_reframing_hints = buildProjectReframingHints(role_family, role_mode)
+  const summary_structure_hints = buildSummaryStructureHints(role_family, role_mode, seniority)
 
   explanations.push(`resolved role_family=${role_family} (highScore=${highScore.toFixed(1)})`)
   explanations.push(`resolved role_mode=${role_mode}`)
@@ -559,7 +721,9 @@ export function buildJobProfile(jobDetails: JobDetails): JobProfile {
     excel_exact_label,
     require_location_statement,
     summary_topics,
-    legacyContext,
+    skill_reordering_hints,
+    project_reframing_hints,
+    summary_structure_hints,
     ...(process.env.NODE_ENV !== "production" ? { explanations } : {}),
   }
 
