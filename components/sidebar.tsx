@@ -1,9 +1,9 @@
 "use client"
 
-import { LayoutDashboard, BarChart3, Settings2, LogOut, LogIn, Briefcase } from "lucide-react"
+import { LayoutDashboard, BarChart3, Settings2, LogOut, LogIn, Briefcase, User as UserIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { useEffect, useState } from "react"
@@ -11,12 +11,13 @@ import type { User } from "@supabase/supabase-js"
 
 interface SidebarProps {
   activeTab?: string
-  onTabChange: (tab: string) => void
+  onTabChange?: (tab: string) => void
 }
 
 const menuItems = [
   { id: "vagas", label: "Estágios", icon: LayoutDashboard },
   { id: "resumo", label: "Resumo", icon: BarChart3 },
+  { id: "perfil", label: "Perfil", icon: UserIcon },
   { id: "configuracoes", label: "Configurações", icon: Settings2 },
 ]
 
@@ -24,6 +25,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   // Check user auth status
@@ -63,6 +65,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     router.push("/admin/login")
   }
 
+  const handleItemClick = (itemId: string) => {
+    if (itemId === "perfil") {
+      router.push("/perfil")
+      return
+    }
+
+    if (pathname !== "/") {
+      const target = itemId === "vagas" ? "/" : `/?tab=${itemId}`
+      router.push(target)
+      return
+    }
+
+    onTabChange?.(itemId)
+  }
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-50 border-r border-sidebar-border">
       <div className="absolute inset-0 mesh-bg pointer-events-none" />
@@ -88,11 +105,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <nav className="relative flex-1 flex flex-col px-3 gap-0.5">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = activeTab === item.id
+          const isActive = item.id === "perfil" ? pathname === "/perfil" : activeTab === item.id
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
+              onClick={() => handleItemClick(item.id)}
               data-testid={`sidebar-${item.id}`}
               className={cn(
                 "w-full h-10 rounded-lg flex items-center gap-3 px-3 transition-all duration-200 group relative",

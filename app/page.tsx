@@ -12,6 +12,9 @@ import { QuickFillPanel } from "@/components/quick-fill-panel"
 import { VagasTable } from "@/components/vagas-table"
 import { ResumoPage } from "@/components/resumo-page"
 import { ConfiguracoesPage } from "@/components/configuracoes-page"
+import { useSearchParams } from "next/navigation"
+
+const VALID_HOME_TABS = new Set(["vagas", "resumo", "configuracoes"])
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("vagas") // Start with main vagas tab
@@ -21,6 +24,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
 
   const supabase = useMemo(() => createClient(), [])
+  const searchParams = useSearchParams()
 
   // Initialize current date on mount
   useEffect(() => {
@@ -30,6 +34,13 @@ export default function Page() {
     const dataInscricaoDate = new Date(Date.UTC(year, month - 1, day))
     setCurrentDate(dataInscricaoDate)
   }, [])
+
+  useEffect(() => {
+    const tab = searchParams.get("tab")
+    if (tab && VALID_HOME_TABS.has(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   const loadData = useCallback(async () => {
     if (!currentDate) return
