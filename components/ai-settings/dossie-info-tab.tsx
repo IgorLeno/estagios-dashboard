@@ -9,11 +9,13 @@ import type { CandidateProfile } from "@/lib/types"
 type ProfileData = Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at">
 
 interface DossieInfoTabProps {
-  profile: ProfileData
+  profile?: ProfileData
 }
 
 export function DossieInfoTab({ profile }: DossieInfoTabProps) {
   const dossiePreview = useMemo(() => {
+    if (!profile) return ""
+
     const fakeProfile = {
       id: "preview",
       created_at: "",
@@ -39,9 +41,15 @@ export function DossieInfoTab({ profile }: DossieInfoTabProps) {
         <p className="text-xs text-muted-foreground">
           Este texto e enviado ao modelo de IA durante a analise de vagas.
         </p>
-        <pre className="whitespace-pre-wrap rounded-lg border bg-muted/50 p-4 text-xs font-mono leading-relaxed">
-          {dossiePreview}
-        </pre>
+        {profile ? (
+          <pre className="whitespace-pre-wrap rounded-lg border bg-muted/50 p-4 text-xs font-mono leading-relaxed">
+            {dossiePreview}
+          </pre>
+        ) : (
+          <div className="rounded-lg border bg-muted/50 p-4 text-xs text-muted-foreground">
+            O dossie e gerado a partir dos dados da pagina de Perfil. Acesse Perfil para revisar o conteudo-fonte.
+          </div>
+        )}
       </div>
     </div>
   )

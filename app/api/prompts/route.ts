@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getPromptsConfig, savePromptsConfig } from "@/lib/supabase/prompts"
+import { getPromptsConfig, resetPromptsConfig, savePromptsConfig } from "@/lib/supabase/prompts"
 import type { PromptsConfig } from "@/lib/types"
 
 /**
@@ -16,7 +16,6 @@ export async function GET() {
     // Verificar autenticação (opcional para GET)
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser()
 
     // Buscar config - se usuário autenticado, passa user.id, senão passa undefined
@@ -110,6 +109,37 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error saving prompts config:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/prompts
+ * Remove configuração customizada do usuário autenticado e volta ao default global
+ */
+export async function DELETE() {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+    }
+
+    await resetPromptsConfig(user.id)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error resetting prompts config:", error)
     return NextResponse.json(
       {
         success: false,
