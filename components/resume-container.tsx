@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, FileText, Pencil, Trash2, FileDown, Download } from "lucide-react"
+import { Loader2, FileText, Pencil, Trash2, FileDown, Download, Wand2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
 
@@ -10,9 +10,11 @@ interface ResumeContainerProps {
   pdfUrl?: string | null
   isGenerating: boolean
   isGeneratingPdf?: boolean
+  isRefining?: boolean
   onGenerate: () => void
   onGeneratePdf?: () => void
   onDownloadPdf?: () => void
+  onRefine?: () => void
   onEdit: () => void
   onDelete: () => void
 }
@@ -23,9 +25,11 @@ export function ResumeContainer({
   pdfUrl,
   isGenerating,
   isGeneratingPdf,
+  isRefining,
   onGenerate,
   onGeneratePdf,
   onDownloadPdf,
+  onRefine,
   onEdit,
   onDelete,
 }: ResumeContainerProps) {
@@ -39,10 +43,12 @@ export function ResumeContainer({
       editLabel: "Editar",
       generatePdfLabel: "Gerar PDF",
       downloadLabel: "Baixar",
+      refineLabel: "Refinar",
       deleteLabel: "Excluir",
       emptyMessage: "Currículo ainda não foi gerado",
       generatingLabel: "Gerando...",
       generatingPdfLabel: "Gerando PDF...",
+      refiningLabel: "Refinando...",
     },
     en: {
       flag: "🇺🇸",
@@ -51,10 +57,12 @@ export function ResumeContainer({
       editLabel: "Edit",
       generatePdfLabel: "Generate PDF",
       downloadLabel: "Download",
+      refineLabel: "Refine",
       deleteLabel: "Delete",
       emptyMessage: "Resume has not been generated yet",
       generatingLabel: "Generating...",
       generatingPdfLabel: "Generating PDF...",
+      refiningLabel: "Refining...",
     },
   }
 
@@ -150,6 +158,33 @@ export function ResumeContainer({
             >
               <Download size={16} />
               {config.downloadLabel}
+            </button>
+          )}
+
+          {/* Botão Refinar */}
+          {hasContent && onRefine && (
+            <button
+              onClick={onRefine}
+              disabled={Boolean(isRefining) || isGenerating}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
+                "border border-violet-300 dark:border-violet-600 text-violet-700 dark:text-violet-300",
+                "hover:bg-violet-50 dark:hover:bg-violet-950/30",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-colors"
+              )}
+            >
+              {isRefining ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  {config.refiningLabel}
+                </>
+              ) : (
+                <>
+                  <Wand2 size={16} />
+                  {config.refineLabel}
+                </>
+              )}
             </button>
           )}
 

@@ -5,6 +5,9 @@
     },
     "app/api/ai/generate-resume/route.ts": {
       "maxDuration": 120
+    },
+    "app/api/ai/refine-resume/route.ts": {
+      "maxDuration": 60
     }
   },
   "crons": [

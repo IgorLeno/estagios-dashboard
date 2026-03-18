@@ -265,6 +265,18 @@ export const GenerateResumeRequestSchema = z
 export type GenerateResumeRequest = z.infer<typeof GenerateResumeRequestSchema>
 
 /**
+ * Request schema for resume refinement API
+ */
+export const RefineResumeRequestSchema = z.object({
+  vagaId: z.string().uuid(),
+  language: z.enum(["pt", "en"]),
+  instructions: z.string().min(10).max(2000),
+  model: z.string().optional(),
+})
+
+export type RefineResumeRequest = z.infer<typeof RefineResumeRequestSchema>
+
+/**
  * Response schema for resume generation API (success)
  */
 export const GenerateResumeResponseSchema = z.object({

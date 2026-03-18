@@ -13,6 +13,7 @@ import { Sidebar } from "@/components/sidebar"
 import { StarRating } from "@/components/ui/star-rating"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { ResumeContainer } from "@/components/resume-container"
+import { RefineResumeDialog } from "@/components/refine-resume-dialog"
 import { VagaSkillsSection } from "@/components/vaga-skills-section"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -32,6 +33,9 @@ export default function VagaDetailPage() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<"pt" | "en" | null>(null)
   const [isGeneratingPdfPT, setIsGeneratingPdfPT] = useState(false)
   const [isGeneratingPdfEN, setIsGeneratingPdfEN] = useState(false)
+  const [refineDialogLanguage, setRefineDialogLanguage] = useState<"pt" | "en" | null>(null)
+  const [isRefiningResume, setIsRefiningResume] = useState<"pt" | "en" | null>(null)
+  const [activeModel, setActiveModel] = useState<string>("x-ai/grok-4.1-fast")
   const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
   const [editingResumeContent, setEditingResumeContent] = useState("")
   const [approvedSkills, setApprovedSkills] = useState<string[]>([])
@@ -40,6 +44,35 @@ export default function VagaDetailPage() {
     loadVaga()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadActiveModel() {
+      try {
+        const response = await fetch("/api/prompts")
+
+        if (!response.ok) {
+          throw new Error(`Failed to load prompts config: ${response.status}`)
+        }
+
+        const result = await response.json()
+        const model = result?.data?.modelo_gemini
+
+        if (isMounted && typeof model === "string" && model.trim() !== "") {
+          setActiveModel(model)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar modelo ativo:", error)
+      }
+    }
+
+    loadActiveModel()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function loadVaga() {
     try {
@@ -148,6 +181,43 @@ export default function VagaDetailPage() {
       toast.error(errorMessage)
     } finally {
       setIsGeneratingPDF(null)
+    }
+  }
+
+  async function handleRefineResume(instructions: string, model: string) {
+    if (!vaga || !refineDialogLanguage) return
+
+    try {
+      setIsRefiningResume(refineDialogLanguage)
+
+      const response = await fetch("/api/ai/refine-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vagaId: vaga.id,
+          language: refineDialogLanguage,
+          instructions,
+          model,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Erro ao refinar currículo: ${response.status}`)
+      }
+
+      toast.success(
+        `Currículo em ${refineDialogLanguage.toUpperCase()} refinado com sucesso! PDF invalidado, gere novamente para baixar a versão atualizada.`
+      )
+      setRefineDialogLanguage(null)
+      await loadVaga()
+    } catch (error) {
+      console.error("Erro ao refinar currículo:", error)
+      const errorMessage = error instanceof Error ? error.message : "Erro ao refinar currículo"
+      toast.error(errorMessage)
+    } finally {
+      setIsRefiningResume(null)
     }
   }
 
@@ -493,9 +563,11 @@ export default function VagaDetailPage() {
               pdfUrl={vaga.arquivo_cv_url_pt}
               isGenerating={isGeneratingPDF === "pt"}
               isGeneratingPdf={isGeneratingPdfPT}
+              isRefining={isRefiningResume === "pt"}
               onGenerate={() => handleGenerateResume("pt")}
               onGeneratePdf={() => handleGeneratePdf("pt")}
               onDownloadPdf={() => handleDownloadPdf("pt")}
+              onRefine={() => setRefineDialogLanguage("pt")}
               onEdit={() => handleEditResume("pt")}
               onDelete={() => handleDeleteResume("pt")}
             />
@@ -507,13 +579,28 @@ export default function VagaDetailPage() {
               pdfUrl={vaga.arquivo_cv_url_en}
               isGenerating={isGeneratingPDF === "en"}
               isGeneratingPdf={isGeneratingPdfEN}
+              isRefining={isRefiningResume === "en"}
               onGenerate={() => handleGenerateResume("en")}
               onGeneratePdf={() => handleGeneratePdf("en")}
               onDownloadPdf={() => handleDownloadPdf("en")}
+              onRefine={() => setRefineDialogLanguage("en")}
               onEdit={() => handleEditResume("en")}
               onDelete={() => handleDeleteResume("en")}
             />
           </section>
+
+          <RefineResumeDialog
+            language={refineDialogLanguage ?? "pt"}
+            open={refineDialogLanguage !== null}
+            onOpenChange={(open) => {
+              if (!open && !isRefiningResume) {
+                setRefineDialogLanguage(null)
+              }
+            }}
+            isRefining={isRefiningResume !== null}
+            onConfirm={handleRefineResume}
+            activeModel={activeModel}
+          />
 
           <EditVagaDialog vaga={vaga} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={loadVaga} />
 
