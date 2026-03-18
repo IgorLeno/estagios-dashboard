@@ -3,6 +3,7 @@ import {
   buildConsistencyPrompt,
   CONSISTENCY_SYSTEM_PROMPT,
   ConsistencyAgentResultSchema,
+  localConsistencyCheck,
   type CVDraft,
 } from "./consistency-agent"
 import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./resume-prompts"
@@ -260,11 +261,23 @@ async function runConsistencyAgent(
   const consistencyModel = createAIModel(CONSISTENCY_SYSTEM_PROMPT, {
     ...generationConfig,
     temperature: 0.1,
-    maxOutputTokens: 4096,
+    maxOutputTokens: 2048,
   })
 
-  const jobDescriptionContext = JSON.stringify(jobDetails, null, 2)
-  const prompt = buildConsistencyPrompt(draft, jobDescriptionContext)
+  // Build compact job context — avoids pretty-printed JSON that wastes token budget
+  const jobContext = [
+    `Empresa: ${jobDetails.empresa}`,
+    `Cargo: ${jobDetails.cargo}`,
+    `Modalidade: ${jobDetails.modalidade}`,
+    `Tipo: ${jobDetails.tipo_vaga}`,
+    jobDetails.requisitos_obrigatorios.length > 0
+      ? `Requisitos: ${jobDetails.requisitos_obrigatorios.join("; ")}`
+      : "",
+    jobDetails.responsabilidades.length > 0
+      ? `Responsabilidades: ${jobDetails.responsabilidades.slice(0, 8).join("; ")}`
+      : "",
+  ].filter(Boolean).join("\n")
+  const prompt = buildConsistencyPrompt(draft, jobContext)
 
   const result = await consistencyModel.generateContent(prompt)
   const response = result.response
@@ -344,15 +357,18 @@ export async function generateTailoredResume(
 
   const baseCv = getCVTemplate(language)
 
-  // STEP 5: Create model with merged system instruction
+  // STEP 5: Create per-section models with capped maxOutputTokens
+  // Each section has a different expected output size; capping prevents runaway generation
   const generationConfig = getGenerationConfig(config)
-  const model = createAIModel(systemInstruction, generationConfig)
+  const summaryModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 })
+  const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 })
+  const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 })
 
   // STEP 6: Personalize 3 sections in parallel
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
-    personalizeSummary(jobDetails, baseCv, model, language, jobProfile),
-    personalizeSkills(jobDetails, baseCv, skillsBank, model, language, jobProfile, approvedSkills),
-    personalizeProjects(jobDetails, baseCv, model, language, jobProfile),
+    personalizeSummary(jobDetails, baseCv, summaryModel, language, jobProfile),
+    personalizeSkills(jobDetails, baseCv, skillsBank, skillsModel, language, jobProfile, approvedSkills),
+    personalizeProjects(jobDetails, baseCv, projectsModel, language, jobProfile),
   ])
 
   const uncorrectedDraft: CVDraft = {
@@ -363,36 +379,46 @@ export async function generateTailoredResume(
     language,
   }
 
-  // STEP 7: Run consistency agent
+  // STEP 7: Run consistency agent (conditionally — skip if local validator finds no issues)
   let finalDraft = uncorrectedDraft
   let consistencyTokenUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
 
-  try {
-    const consistencyResult = await runConsistencyAgent(
-      uncorrectedDraft,
-      jobDetails,
-      systemInstruction,
-      generationConfig
+  const localCheck = localConsistencyCheck(uncorrectedDraft)
+
+  if (!localCheck.needsLLM) {
+    console.log("[ConsistencyAgent] ✅ Local validator passed — skipping LLM consistency agent")
+  } else {
+    console.log(
+      `[ConsistencyAgent] ⚠️ Local validator found ${localCheck.issues.length} issue(s) — running LLM agent:`,
+      localCheck.issues
     )
+    try {
+      const consistencyResult = await runConsistencyAgent(
+        uncorrectedDraft,
+        jobDetails,
+        systemInstruction,
+        generationConfig
+      )
 
-    finalDraft = consistencyResult.draft
-    consistencyTokenUsage = consistencyResult.tokenUsage
+      finalDraft = consistencyResult.draft
+      consistencyTokenUsage = consistencyResult.tokenUsage
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("[ConsistencyAgent] Issues found:", consistencyResult.report.issues)
-      console.log("[ConsistencyAgent] Corrections applied:", consistencyResult.report.corrections)
+      if (process.env.NODE_ENV === "development") {
+        console.log("[ConsistencyAgent] Issues found:", consistencyResult.report.issues)
+        console.log("[ConsistencyAgent] Corrections applied:", consistencyResult.report.corrections)
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      const errorType = errorMsg.includes("Unexpected end of JSON")
+        ? "TRUNCATION"
+        : errorMsg.includes("Expected") || errorMsg.includes("parse")
+          ? "VALIDATION"
+          : "OTHER"
+      console.warn(
+        `[ConsistencyAgent] ❌ Failed (${errorType}), using uncorrected draft:`,
+        errorMsg
+      )
     }
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    const errorType = errorMsg.includes("Unexpected end of JSON")
-      ? "TRUNCATION"
-      : errorMsg.includes("Expected") || errorMsg.includes("parse")
-        ? "VALIDATION"
-        : "OTHER"
-    console.warn(
-      `[ConsistencyAgent] ❌ Failed (${errorType}), using uncorrected draft:`,
-      errorMsg
-    )
   }
 
   // STEP 8: Merge into final CV

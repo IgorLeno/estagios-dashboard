@@ -69,7 +69,7 @@ export function buildConsistencyPrompt(draft: CVDraft, jobDescription: string): 
 
   return `Language: ${lang}
 Job description context (for calibration only):
-${jobDescription.slice(0, 800)}
+${jobDescription}
 
 ***
 COMPLETE CV DRAFT TO AUDIT:
@@ -169,4 +169,88 @@ Return JSON:
     "corrections": ["list of changes made, one per item"]
   }
 }`
+}
+
+/**
+ * Lightweight local consistency validator.
+ *
+ * Checks the 3 most deterministic consistency rules in TypeScript
+ * to decide whether the full LLM consistency agent is needed.
+ *
+ * Returns { needsLLM: true, issues: [...] } if any check fails,
+ * or { needsLLM: false, issues: [] } if draft is already consistent.
+ */
+export function localConsistencyCheck(draft: CVDraft): { needsLLM: boolean; issues: string[] } {
+  const issues: string[] = []
+
+  // --- RULE 1: Excel level consistency ---
+  // Collect all Excel level mentions from summary + skills
+  const EXCEL_LEVELS = /excel\s+(avan[cç]ado|intermedi[aá]rio|b[aá]sico)/gi
+  const summaryLevels = [...draft.summary.matchAll(EXCEL_LEVELS)].map((m) => m[1].toLowerCase())
+  const skillsText = draft.skills.flatMap((cat) => cat.items).join(" ")
+  const skillsLevels = [...skillsText.matchAll(EXCEL_LEVELS)].map((m) => m[1].toLowerCase())
+  const allLevels = [...summaryLevels, ...skillsLevels]
+
+  if (allLevels.length >= 2) {
+    const uniqueLevels = new Set(allLevels)
+    if (uniqueLevels.size > 1) {
+      issues.push(`Excel level mismatch: found ${[...uniqueLevels].join(", ")} across sections`)
+    }
+  }
+
+  // --- RULE 2: Language consistency (PT documents) ---
+  if (draft.language === "pt") {
+    // Check for English phrases in parentheses (excluding tool names)
+    const TOOL_NAMES = new Set(["power bi", "excel", "sql", "python", "pandas", "numpy", "scikit-learn", "power query"])
+    const parenContent = [...draft.summary.matchAll(/\(([^)]+)\)/g)].map((m) => m[1])
+    for (const content of parenContent) {
+      const words = content.toLowerCase().split(/[,;]\s*/).map((w) => w.trim())
+      for (const word of words) {
+        if (TOOL_NAMES.has(word)) continue
+        // Check for known English phrases that should be in PT
+        if (/\bkpi\s+tracking\b/i.test(word) || /\bkpi\s+monitoring\b/i.test(word)) {
+          issues.push(`English phrase in PT summary parentheses: "${word}"`)
+        }
+      }
+    }
+  }
+
+  // --- RULE 3: Credential calibration ---
+  const allSkillItems = draft.skills.flatMap((cat) => cat.items).map((s) => s.toLowerCase())
+  const processCategory = draft.skills.find((cat) =>
+    cat.category.toLowerCase().includes("processo") || cat.category.toLowerCase().includes("process")
+  )
+
+  const FORBIDDEN_SKILLS: Array<{ pattern: RegExp; label: string; categoryFilter?: string }> = [
+    { pattern: /^governan[cç]a\s+(da\s+)?informa[cç][aã]o$/i, label: "Governança da informação" },
+    { pattern: /^an[aá]lise\s+de\s+dados$/i, label: "Análise de dados (in process skills)", categoryFilter: "processo" },
+  ]
+
+  for (const forbidden of FORBIDDEN_SKILLS) {
+    const checkItems = forbidden.categoryFilter && processCategory
+      ? processCategory.items
+      : draft.skills.flatMap((cat) => cat.items)
+    if (checkItems.some((item) => forbidden.pattern.test(item))) {
+      issues.push(`Forbidden skill found: ${forbidden.label}`)
+    }
+  }
+
+  // Check "Modelagem de dados" — only allowed if projects mention ER/schema/database modeling
+  if (allSkillItems.some((s) => /modelagem\s+de\s+dados/i.test(s))) {
+    const projectText = draft.projects.flatMap((p) => p.description).join(" ").toLowerCase()
+    const hasEREvidence = /\b(er\s+diagram|schema\s+design|database\s+model)/i.test(projectText)
+    if (!hasEREvidence) {
+      issues.push('Forbidden skill found: "Modelagem de dados" without ER/schema evidence in projects')
+    }
+  }
+
+  // Check "Visualização de dados" redundancy with Power BI
+  const hasPowerBIWithDescriptors = allSkillItems.some(
+    (s) => s.includes("power bi") && s.includes("(")
+  )
+  if (hasPowerBIWithDescriptors && allSkillItems.some((s) => /^visualiza[cç][aã]o\s+de\s+dados$/i.test(s))) {
+    issues.push('"Visualização de dados" is redundant with Power BI (already has descriptors)')
+  }
+
+  return { needsLLM: issues.length > 0, issues }
 }

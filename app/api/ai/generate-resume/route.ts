@@ -91,7 +91,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw new Error("Either vagaId or jobDescription is required")
     }
 
-    // Main processing pipeline with timeout protection (60s)
+    // Main processing pipeline with timeout protection (55s — fits Vercel Hobby 60s limit)
     // Wrap job parsing (if needed) + resume generation + PDF creation in timeout
     const result = await withTimeout(
       (async () => {
@@ -172,8 +172,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         return successResponse
       })(),
-      100000,
-      "Resume generation exceeded 100s timeout"
+      55000,
+      "Resume generation exceeded 55s timeout"
     )
 
     return NextResponse.json(result)
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       console.error(`[Resume API] Timeout: ${timeoutError.message}`)
       const errorResponse: GenerateResumeErrorResponse = {
         success: false,
-        error: "Resume generation timed out (>100s)",
+        error: "Resume generation timed out (>55s)",
       }
       return NextResponse.json(errorResponse, { status: 504 })
     }

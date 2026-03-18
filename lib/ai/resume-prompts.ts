@@ -78,22 +78,25 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Front-load most important keywords in FIRST SENTENCE (ATS scans top first)
    - ⚠️ CRITICAL: Each keyword should appear MAX 1-2 times in ENTIRE summary (no repetition)
    - Use keywords in context, not forced or stuffed
-   - GOVERNANCE TERMS: For BI/Analytics/People Analytics roles, naturally include in
-     sentence 3 (competencies) at least one of: "organização de bases", "validação de dados",
-     "padronização de informações", "documentação técnica", "consistência de dados"
-     — these are inferred from academic project work and are not fabrication.
-   - TERMINOLOGY CORRECTIONS (mandatory):
-     * "rastreamento de KPIs" → "acompanhamento de KPIs"
-     * "KPI tracking" → "acompanhamento de KPIs"
-     * "KPI monitoring" → "monitoramento de KPIs"
-     * "gestão de projetos" → "acompanhamento de projetos" (for internship roles)
-     * "visualizações estratégicas" → "visualização de indicadores"
-     * "administração de bases" → "organização e estruturação de bases"
-     * ⚠️ GENERAL RULE: When output language is PT, NEVER use English phrases
-       inside parentheses of tool names in the summary.
-       ❌ WRONG: "Power BI (dashboards, KPI tracking)"
-       ✅ CORRECT: "Power BI (dashboards, acompanhamento de KPIs)"
-       This applies to ALL parenthetical descriptors in the summary — keep them in PT.
+   - GOVERNANCE TERMS: For BI/Analytics/People Analytics roles, prefer using process
+     competency terms when describing skills in sentence 3 — choose from:
+     "organização de bases", "validação de dados", "padronização de informações",
+     "documentação técnica", "consistência de dados". These are inferred from academic
+     project work and are not fabrication. Use where they fit naturally.
+   - ⚠️ LANGUAGE RULE: When output language is PT, NEVER use English phrases inside
+     parentheses of tool names in the summary.
+     ❌ WRONG: "Power BI (dashboards, KPI tracking)"
+     ✅ CORRECT: "Power BI (dashboards, acompanhamento de KPIs)"
+
+   TERMINOLOGY TABLE (apply these substitutions when the left-hand term appears):
+     | Original | Corrected |
+     |---|---|
+     | rastreamento de KPIs | acompanhamento de KPIs |
+     | KPI tracking | acompanhamento de KPIs |
+     | KPI monitoring | monitoramento de KPIs |
+     | gestão de projetos (internship) | acompanhamento de projetos |
+     | visualizações estratégicas | visualização de indicadores |
+     | administração de bases | organização e estruturação de bases |
 
 4. ATS BEST PRACTICES:
    - Write 100-120 words (optimal ATS length - not too short, not too long)
@@ -102,20 +105,19 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Avoid fluff words - every word should add value
 
 5. TRUTHFULNESS (see global rules in System Prompt):
-   - FUNCTION-FIRST OBJECTIVE (MANDATORY): The final sentence MUST follow this structure:
-     "Busco estágio em [área] para apoiar rotinas de [ANCHOR 1], [ANCHOR 2] e [ANCHOR 3]."
-     
-     ANCHOR selection rules:
-     * ANCHOR 1 (always operational): choose from → "organização, validação e atualização de bases
-       de dados" / "estruturação e manutenção de bases" / "atualização e consistência de dados"
-     * ANCHOR 2 (always visual/reporting): choose from → "criação de visualizações de indicadores"
-       / "desenvolvimento de dashboards" / "elaboração de relatórios técnicos"
-     * ANCHOR 3 (always tracking): choose from → "acompanhamento de KPIs" / "monitoramento de
-       indicadores" / "controle de métricas"
-     
-     ❌ NEVER: "para aplicar habilidades analíticas"
+   - FUNCTION-FIRST OBJECTIVE (MANDATORY): The final sentence must express a concrete,
+     function-focused objective. Use 2-3 specific activities drawn from the job's
+     responsibilities — paraphrase naturally, do not copy verbatim.
+
+     Structure guidance (vary the phrasing — do NOT repeat the same template every time):
+     * "Busco contribuir com [activity 1] e [activity 2] em contextos de [domain]."
+     * "Busco estágio em [área] para apoiar [activity 1], [activity 2] e [activity 3]."
+     * Activities should be concrete and operational (e.g., "organização de bases de dados",
+       "elaboração de relatórios", "acompanhamento de indicadores") — not abstract goals.
+
+     ❌ NEVER: "para aplicar habilidades analíticas" (too vague)
      ❌ NEVER: cite company name in objective
-     ❌ NEVER: "visualizações estratégicas" → use "visualizações de indicadores"
+     ❌ NEVER: "visualizações estratégicas" → use "visualização de indicadores"
    - PEOPLE ANALYTICS FRAMING (MANDATORY): When job is in People Analytics but
      candidate has no direct People Analytics experience (only BI/data projects):
      ❌ NEVER write: "conhecimento em People Analytics"
@@ -438,31 +440,18 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    ✅ "documentação de fontes e regras" (if methodology documentation exists)
    ❌ NEVER add: "controle de acessos", "políticas de governança", "gestão de TI"
       (these require explicit professional experience, cannot be inferred from academic work)
-   FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI/Analytics roles — MANDATORY REFRAME:
-   
-   RULE: The first bullet of ANY scientific project MUST NOT mention the chemical/scientific
-   technique as the main subject. Lead with the data activity, not the chemistry.
-   
-   Forbidden first-bullet patterns:
-   ❌ "Realização de modelagem molecular..."
-   ❌ "Execução de simulações físico-químicas..."
-   ❌ "Desenvolvimento de cálculos termodinâmicos..."
-   
-   Required first-bullet patterns (lead with data):
-   ✅ "Análise e estruturação de dados experimentais de [process] para avaliação de [outcome]."
-   ✅ "Organização e tratamento de dados de simulação para [purpose]."
-   ✅ "Estruturação de base de dados de [domain] para análise de [business outcome]."
-   
-   Remaining bullets: use governance vocabulary naturally:
-   ✅ "Estruturação e padronização de dados experimentais com foco em consistência e rastreabilidade."
-   ✅ "Documentação técnica de fontes, metodologia e resultados para apoio à tomada de decisão."
-   ✅ "Validação e controle de qualidade dos dados obtidos, garantindo confiabilidade das análises."
-   
-   NEVER in scientific project for BI role:
-   ❌ "modelagem molecular" as main subject of bullet
-   ❌ "simulações físico-químicas" as main subject of bullet
-   ❌ "cálculos termodinâmicos" as main subject of bullet
-   These MAY appear as parenthetical context: "...dados de simulações físico-químicas..."
+   FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI/Analytics roles — REFRAMING PRINCIPLE:
+
+   For non-lab/non-engineering roles, the first bullet of each project should lead with the
+   DATA or PROCESS activity, not the scientific technique. The scientific domain may appear
+   as context (e.g., "...dados de simulações físico-químicas...") but should NOT be the
+   grammatical subject of the sentence.
+
+   Example: instead of "Modelagem molecular com análise de dados...", write
+   "Estruturação e análise de dados experimentais obtidos via simulação molecular..."
+
+   Remaining bullets: use transferable process vocabulary naturally (padronização,
+   documentação, validação, rastreabilidade) — do not force a rigid template.
 
 6. ATS BEST PRACTICES:
    - Use industry-standard terminology (no academic jargon)

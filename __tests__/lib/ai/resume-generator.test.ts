@@ -209,6 +209,16 @@ vi.mock("@/lib/ai/skills-bank", () => ({
   ]),
 }))
 
+// Mock localConsistencyCheck to always trigger LLM consistency agent
+// (the real check with mock data would pass, skipping the agent and breaking tests)
+vi.mock("@/lib/ai/consistency-agent", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/ai/consistency-agent")>("@/lib/ai/consistency-agent")
+  return {
+    ...actual,
+    localConsistencyCheck: vi.fn(() => ({ needsLLM: true, issues: ["test trigger"] })),
+  }
+})
+
 // Mock ATS functions (to avoid require() errors in ats-scorer.ts)
 vi.mock("@/lib/ai/ats-scorer", () => ({
   calculateATSScore: vi.fn(() => ({
