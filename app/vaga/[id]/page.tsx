@@ -14,6 +14,7 @@ import { StarRating } from "@/components/ui/star-rating"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { ResumeContainer } from "@/components/resume-container"
 import { RefineResumeDialog } from "@/components/refine-resume-dialog"
+import { GenerateResumeDialog } from "@/components/generate-resume-dialog"
 import { VagaSkillsSection } from "@/components/vaga-skills-section"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -33,6 +34,7 @@ export default function VagaDetailPage() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<"pt" | "en" | null>(null)
   const [isGeneratingPdfPT, setIsGeneratingPdfPT] = useState(false)
   const [isGeneratingPdfEN, setIsGeneratingPdfEN] = useState(false)
+  const [generateDialogOpen, setGenerateDialogOpen] = useState<"pt" | "en" | null>(null)
   const [refineDialogLanguage, setRefineDialogLanguage] = useState<"pt" | "en" | null>(null)
   const [isRefiningResume, setIsRefiningResume] = useState<"pt" | "en" | null>(null)
   const [activeModel, setActiveModel] = useState<string>("x-ai/grok-4.1-fast")
@@ -152,7 +154,7 @@ export default function VagaDetailPage() {
     }
   }
 
-  async function handleGenerateResume(language: "pt" | "en") {
+  async function handleGenerateResume(language: "pt" | "en", model?: string) {
     if (!vaga) return
 
     try {
@@ -165,6 +167,7 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
+          model,
         }),
       })
 
@@ -564,7 +567,7 @@ export default function VagaDetailPage() {
               isGenerating={isGeneratingPDF === "pt"}
               isGeneratingPdf={isGeneratingPdfPT}
               isRefining={isRefiningResume === "pt"}
-              onGenerate={() => handleGenerateResume("pt")}
+              onGenerate={() => setGenerateDialogOpen("pt")}
               onGeneratePdf={() => handleGeneratePdf("pt")}
               onDownloadPdf={() => handleDownloadPdf("pt")}
               onRefine={() => setRefineDialogLanguage("pt")}
@@ -580,7 +583,7 @@ export default function VagaDetailPage() {
               isGenerating={isGeneratingPDF === "en"}
               isGeneratingPdf={isGeneratingPdfEN}
               isRefining={isRefiningResume === "en"}
-              onGenerate={() => handleGenerateResume("en")}
+              onGenerate={() => setGenerateDialogOpen("en")}
               onGeneratePdf={() => handleGeneratePdf("en")}
               onDownloadPdf={() => handleDownloadPdf("en")}
               onRefine={() => setRefineDialogLanguage("en")}
@@ -588,6 +591,31 @@ export default function VagaDetailPage() {
               onDelete={() => handleDeleteResume("en")}
             />
           </section>
+
+          <GenerateResumeDialog
+            open={generateDialogOpen === "pt"}
+            onOpenChange={(open) => !open && setGenerateDialogOpen(null)}
+            language="pt"
+            vagaEmpresa={vaga.empresa}
+            activeModel={activeModel}
+            onConfirm={(model) => {
+              setGenerateDialogOpen(null)
+              handleGenerateResume("pt", model)
+            }}
+            isGenerating={isGeneratingPDF === "pt"}
+          />
+          <GenerateResumeDialog
+            open={generateDialogOpen === "en"}
+            onOpenChange={(open) => !open && setGenerateDialogOpen(null)}
+            language="en"
+            vagaEmpresa={vaga.empresa}
+            activeModel={activeModel}
+            onConfirm={(model) => {
+              setGenerateDialogOpen(null)
+              handleGenerateResume("en", model)
+            }}
+            isGenerating={isGeneratingPDF === "en"}
+          />
 
           <RefineResumeDialog
             language={refineDialogLanguage ?? "pt"}

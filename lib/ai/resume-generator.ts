@@ -322,7 +322,8 @@ export async function generateTailoredResume(
   jobDetails: JobDetails,
   language: "pt" | "en",
   userId?: string,
-  approvedSkills?: string[]
+  approvedSkills?: string[],
+  model?: string
 ): Promise<{
   cv: CVTemplate
   duration: number
@@ -359,7 +360,8 @@ export async function generateTailoredResume(
 
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation
-  const generationConfig = getGenerationConfig(config)
+  const resolvedModel = model ?? config.modelo_gemini
+  const generationConfig = { ...getGenerationConfig(config), model: resolvedModel }
   const summaryModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 })
   const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 })
   const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 })
@@ -461,7 +463,7 @@ export async function generateTailoredResume(
   return {
     cv: personalizedCv,
     duration,
-    model: config.modelo_gemini,
+    model: resolvedModel,
     tokenUsage: totalTokenUsage,
     personalizedSections: ["summary", "skills", "projects"],
     atsScore,

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { POST, GET } from "@/app/api/ai/generate-resume/route"
 import { NextRequest } from "next/server"
 
@@ -82,6 +82,10 @@ vi.mock("@/lib/supabase/server", () => ({
 }))
 
 describe("POST /api/ai/generate-resume", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it("should return 400 for invalid request (missing both vagaId and jobDescription)", async () => {
     const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
       method: "POST",
@@ -111,6 +115,63 @@ describe("POST /api/ai/generate-resume", () => {
     expect(data.success).toBe(true)
     expect(data.data.pdfBase64).toBeDefined()
     expect(data.metadata.personalizedSections).toEqual(["summary", "skills", "projects"])
+  })
+
+  it("should pass model override to downstream functions", async () => {
+    const { parseJobWithGemini } = await import("@/lib/ai/job-parser")
+    const { generateTailoredResume } = await import("@/lib/ai/resume-generator")
+
+    const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
+      method: "POST",
+      body: JSON.stringify({
+        jobDescription: "Test job description with more than 50 characters to pass validation",
+        language: "en",
+        model: "openai/gpt-5.4-nano",
+      }),
+    })
+
+    const response = await POST(req)
+    expect(response.status).toBe(200)
+
+    expect(parseJobWithGemini).toHaveBeenCalledWith(
+      expect.any(String),
+      "openai/gpt-5.4-nano"
+    )
+    expect(generateTailoredResume).toHaveBeenCalledWith(
+      expect.any(Object),
+      "en",
+      "test-user-id",
+      undefined,
+      "openai/gpt-5.4-nano"
+    )
+  })
+
+  it("should work without model (backward compatibility)", async () => {
+    const { parseJobWithGemini } = await import("@/lib/ai/job-parser")
+    const { generateTailoredResume } = await import("@/lib/ai/resume-generator")
+
+    const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
+      method: "POST",
+      body: JSON.stringify({
+        jobDescription: "Test job description with more than 50 characters to pass validation",
+        language: "pt",
+      }),
+    })
+
+    const response = await POST(req)
+    expect(response.status).toBe(200)
+
+    expect(parseJobWithGemini).toHaveBeenCalledWith(
+      expect.any(String),
+      undefined
+    )
+    expect(generateTailoredResume).toHaveBeenCalledWith(
+      expect.any(Object),
+      "pt",
+      "test-user-id",
+      undefined,
+      undefined
+    )
   })
 })
 

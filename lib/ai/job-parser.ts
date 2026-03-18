@@ -326,7 +326,7 @@ function extractTokenUsage(response: any): {
  * Parseia descrição de vaga usando Gemini com fallback automático
  * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
  */
-export async function parseJobWithGemini(jobDescription: string): Promise<{
+export async function parseJobWithGemini(jobDescription: string, model?: string): Promise<{
   data: JobDetails
   duration: number
   model: string
@@ -339,8 +339,11 @@ export async function parseJobWithGemini(jobDescription: string): Promise<{
   // Criar cliente Gemini uma única vez (fora do loop)
   const genAI = createGeminiClient()
 
+  // If a specific model is requested, use only that; otherwise use fallback chain
+  const modelsToTry = model ? [model] : MODEL_FALLBACK_CHAIN
+
   // Try each model in fallback chain
-  for (const modelName of MODEL_FALLBACK_CHAIN) {
+  for (const modelName of modelsToTry) {
     try {
       console.log(`[Job Parser] Attempting with model: ${modelName}`)
 
