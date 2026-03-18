@@ -44,6 +44,53 @@ function normalizeProfileData(data?: Partial<CandidateProfile> | null): ProfileD
   }
 }
 
+function mergeSkillCategories(
+  existing: ProfileData["habilidades"],
+  extracted: ProfileData["habilidades"]
+): ProfileData["habilidades"] {
+  const merged = existing.map((e) => ({ ...e }))
+  for (const ext of extracted) {
+    const matchIndex = merged.findIndex((e) => e.category_pt.toLowerCase() === ext.category_pt.toLowerCase())
+    if (matchIndex !== -1) {
+      const match = merged[matchIndex]
+      const existingItems = new Set(match.items_pt.map((i) => i.toLowerCase()))
+      const newItems = ext.items_pt.filter((i) => !existingItems.has(i.toLowerCase()))
+
+      const existingEn = new Set((match.items_en ?? []).map((i) => i.toLowerCase()))
+      const newEn = (ext.items_en ?? []).filter((i) => !existingEn.has(i.toLowerCase()))
+
+      merged[matchIndex] = {
+        ...match,
+        items_pt: [...match.items_pt, ...newItems],
+        items_en: [...(match.items_en ?? []), ...newEn],
+      }
+    } else {
+      merged.push(ext)
+    }
+  }
+  return merged
+}
+
+function mergeProfiles(existing: ProfileData, extracted: ProfileData): ProfileData {
+  return {
+    nome: existing.nome || extracted.nome,
+    email: existing.email || extracted.email,
+    telefone: existing.telefone || extracted.telefone,
+    linkedin: existing.linkedin || extracted.linkedin,
+    github: existing.github || extracted.github,
+    localizacao_pt: existing.localizacao_pt || extracted.localizacao_pt,
+    localizacao_en: existing.localizacao_en || extracted.localizacao_en,
+    disponibilidade: existing.disponibilidade || extracted.disponibilidade,
+    objetivo_pt: existing.objetivo_pt || extracted.objetivo_pt,
+    objetivo_en: existing.objetivo_en || extracted.objetivo_en,
+    educacao: [...existing.educacao, ...extracted.educacao],
+    idiomas: [...existing.idiomas, ...extracted.idiomas],
+    habilidades: mergeSkillCategories(existing.habilidades, extracted.habilidades),
+    projetos: [...existing.projetos, ...extracted.projetos],
+    certificacoes: [...existing.certificacoes, ...extracted.certificacoes],
+  }
+}
+
 function readModelHistory(): string[] {
   const stored = localStorage.getItem(MODEL_HISTORY_STORAGE_KEY)
   if (!stored) return []
@@ -75,6 +122,7 @@ export default function PerfilPage() {
   const [modelHistory, setModelHistory] = useState<string[]>([])
   const [showModelInput, setShowModelInput] = useState(false)
   const [newModelInput, setNewModelInput] = useState("")
+  const [fillMode, setFillMode] = useState<"substituir" | "acrescentar">("substituir")
 
   const router = useRouter()
 
@@ -223,7 +271,12 @@ export default function PerfilPage() {
       const response = await fetch("/api/ai/extract-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawText, ...(selectedModel ? { model: selectedModel } : {}) }),
+        body: JSON.stringify({
+          rawText,
+          ...(selectedModel ? { model: selectedModel } : {}),
+          mode: fillMode,
+          ...(fillMode === "acrescentar" && candidateProfile ? { existingProfile: candidateProfile } : {}),
+        }),
       })
 
       if (!response.ok) {
@@ -231,7 +284,15 @@ export default function PerfilPage() {
       }
 
       const result = await response.json()
-      setCandidateProfile((prev) => normalizeProfileData({ ...(prev ?? EMPTY_CANDIDATE_PROFILE), ...(result.data ?? {}) }))
+      const extracted = normalizeProfileData(result.data)
+
+      if (fillMode === "acrescentar") {
+        setCandidateProfile((prev) => mergeProfiles(prev ?? normalizeProfileData(), extracted))
+      } else {
+        setCandidateProfile((prev) =>
+          normalizeProfileData({ ...(prev ?? EMPTY_CANDIDATE_PROFILE), ...(result.data ?? {}) })
+        )
+      }
       setActiveTab("perfil")
       toast.success("Perfil extraído! Revise os dados e clique em Salvar Perfil.")
     } catch (error) {
@@ -473,10 +534,41 @@ export default function PerfilPage() {
                       <CardTitle>Ação</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      <div className="flex justify-end">
+                        <div className="inline-flex rounded-lg border border-border overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => setFillMode("substituir")}
+                            disabled={isReadOnly}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                              fillMode === "substituir"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            Substituir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFillMode("acrescentar")}
+                            disabled={isReadOnly}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                              fillMode === "acrescentar"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            Acrescentar
+                          </button>
+                        </div>
+                      </div>
+
                       <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
                         <Info className="h-4 w-4 text-blue-500" />
                         <AlertDescription>
-                          O preenchimento automático irá substituir os dados atuais do perfil. Revise os campos antes de salvar.
+                          {fillMode === "substituir"
+                            ? "O preenchimento automático irá substituir os dados atuais do perfil. Revise os campos antes de salvar."
+                            : "O preenchimento automático irá acrescentar novos dados ao perfil existente, sem remover informações já cadastradas."}
                         </AlertDescription>
                       </Alert>
 

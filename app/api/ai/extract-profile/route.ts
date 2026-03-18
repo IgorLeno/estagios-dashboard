@@ -8,6 +8,8 @@ import type { CandidateProfile } from "@/lib/types"
 const ExtractProfileRequestSchema = z.object({
   rawText: z.string().min(1).max(50000),
   model: z.string().trim().min(1).optional(),
+  mode: z.enum(["substituir", "acrescentar"]).optional(),
+  existingProfile: z.record(z.unknown()).optional(),
 })
 
 type ExtractedProfileResponse = {
@@ -58,20 +60,12 @@ function cleanStringArray(value: unknown): string[] {
     .filter(Boolean)
 }
 
-function buildMessages(rawText: string): GrokMessage[] {
-  return [
-    {
-      role: "system",
-      content: SYSTEM_PROMPT,
-    },
-    {
-      role: "user",
-      content: `Analyze the following text and extract profile information:
-
-${rawText}
-
-Return JSON with this exact structure:
-{
+function buildMessages(
+  rawText: string,
+  mode?: "substituir" | "acrescentar",
+  existingProfile?: Record<string, unknown>
+): GrokMessage[] {
+  const jsonSchema = `{
   "nome": "",
   "email": "",
   "telefone": "",
@@ -102,7 +96,48 @@ Return JSON with this exact structure:
     }
   ],
   "certificacoes": []
-}
+}`
+
+  if (mode === "acrescentar" && existingProfile) {
+    return [
+      {
+        role: "system",
+        content: `${SYSTEM_PROMPT}
+
+MERGE MODE: The user already has a profile. Extract ONLY new information from the text that is NOT already present in the existing profile. For fields that already have values, return empty strings. For arrays (skills, projects, certifications, education, languages), return ONLY new entries not semantically duplicated in the existing data. Use case-insensitive comparison for deduplication.`,
+      },
+      {
+        role: "user",
+        content: `EXISTING PROFILE:
+${JSON.stringify(existingProfile)}
+
+NEW TEXT TO EXTRACT FROM:
+${rawText}
+
+Return JSON with this exact structure (include ONLY new information not already in the existing profile):
+${jsonSchema}
+
+For skills: group into logical categories. Do NOT repeat skills already present in the existing profile.
+For projects: do NOT repeat projects with similar titles already present.
+For certifications: do NOT repeat certifications already present.
+For scalar fields (nome, email, etc.): return empty string if the existing profile already has a value.`,
+      },
+    ]
+  }
+
+  return [
+    {
+      role: "system",
+      content: SYSTEM_PROMPT,
+    },
+    {
+      role: "user",
+      content: `Analyze the following text and extract profile information:
+
+${rawText}
+
+Return JSON with this exact structure:
+${jsonSchema}
 
 For skills: group into logical categories (e.g. "Ferramentas / Tools", "Programação / Programming").
 For projects: if text is in PT, copy title/description to EN fields as fallback.
@@ -263,9 +298,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw error
     }
 
-    const { rawText, model } = ExtractProfileRequestSchema.parse(body)
+    const { rawText, model, mode, existingProfile } = ExtractProfileRequestSchema.parse(body)
     const config = await getPromptsConfig(user.id)
-    const response = await callGrok(buildMessages(rawText), {
+    const response = await callGrok(buildMessages(rawText, mode, existingProfile), {
       model: model ?? config.modelo_gemini,
       temperature: 0.1,
       max_tokens: Math.min(config.max_tokens, 4000),
