@@ -270,7 +270,7 @@ export type GenerateResumeRequest = z.infer<typeof GenerateResumeRequestSchema>
 export const RefineResumeRequestSchema = z.object({
   vagaId: z.string().uuid(),
   language: z.enum(["pt", "en"]),
-  instructions: z.string().min(10).max(2000),
+  instructions: z.string().min(10),
   model: z.string().optional(),
 })
 
