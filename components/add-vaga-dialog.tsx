@@ -30,6 +30,38 @@ interface AddVagaDialogProps {
   onSuccess: () => void
 }
 
+const ANALYSIS_MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
+
+type AnalysisConfigData = Configuracao & {
+  modelo_gemini?: string | null
+}
+
+function readAnalysisModelHistory(): string[] {
+  try {
+    const stored = localStorage.getItem(ANALYSIS_MODEL_HISTORY_STORAGE_KEY)
+    if (!stored) return []
+
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .filter((model): model is string => typeof model === "string")
+      .map((model) => model.trim())
+      .filter(Boolean)
+      .slice(0, 20)
+  } catch {
+    return []
+  }
+}
+
+function persistAnalysisModelHistory(history: string[]) {
+  try {
+    localStorage.setItem(ANALYSIS_MODEL_HISTORY_STORAGE_KEY, JSON.stringify(history))
+  } catch {
+    // Ignore localStorage errors in client-only enhancement flow
+  }
+}
+
 export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogProps) {
   const [loading, setLoading] = useState(false)
   const [config, setConfig] = useState<Configuracao | null>(null)
@@ -54,6 +86,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [jobDescription, setJobDescription] = useState("")
   const [lastAnalyzedDescription, setLastAnalyzedDescription] = useState("")
   const [jobAnalysisData, setJobAnalysisData] = useState<JobDetails | null>(null)
+  const [selectedAnalysisModel, setSelectedAnalysisModel] = useState<string>("")
+  const [analysisModelHistory, setAnalysisModelHistory] = useState<string[]>([])
+  const [analysisModelConfigLoaded, setAnalysisModelConfigLoaded] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [generatingResume, setGeneratingResume] = useState(false)
@@ -145,16 +180,39 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   // Load config on mount
   useEffect(() => {
     async function fetchConfig() {
+      const storedHistory = readAnalysisModelHistory()
+
       try {
         const { data } = await supabase.from("configuracoes").select("*").single()
-        if (data) setConfig(data)
+        if (data) {
+          const typedData = data as AnalysisConfigData
+          const currentModel = typedData.modelo_gemini?.trim() ?? ""
+          const updatedHistory = currentModel
+            ? [currentModel, ...storedHistory.filter((model) => model !== currentModel)].slice(0, 20)
+            : storedHistory
+
+          setConfig(typedData)
+          setSelectedAnalysisModel(currentModel)
+          setAnalysisModelHistory(updatedHistory)
+          persistAnalysisModelHistory(updatedHistory)
+        } else {
+          setAnalysisModelHistory(storedHistory)
+        }
       } catch (error) {
         console.error("Erro ao carregar configurações:", error)
+        setAnalysisModelHistory(storedHistory)
+      } finally {
+        setAnalysisModelConfigLoaded(true)
       }
     }
     fetchConfig()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!analysisModelConfigLoaded) return
+    persistAnalysisModelHistory(analysisModelHistory)
+  }, [analysisModelConfigLoaded, analysisModelHistory])
 
   // Fill job data from AI parsing
   async function handleFillJobData() {
@@ -164,7 +222,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const response = await fetch("/api/ai/parse-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription }),
+        body: JSON.stringify({
+          jobDescription,
+          model: selectedAnalysisModel || undefined,
+        }),
       })
 
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
@@ -217,7 +278,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const response = await fetch("/api/ai/parse-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription: lastAnalyzedDescription }),
+        body: JSON.stringify({
+          jobDescription: lastAnalyzedDescription,
+          model: selectedAnalysisModel || undefined,
+        }),
       })
 
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
@@ -525,6 +589,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               setDescription={setJobDescription}
               analyzing={analyzing}
               onFillJobData={handleFillJobData}
+              activeModel={selectedAnalysisModel}
+              modelHistory={analysisModelHistory}
+              onModelChange={setSelectedAnalysisModel}
+              onModelHistoryChange={setAnalysisModelHistory}
             />
           </TabsContent>
 

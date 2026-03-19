@@ -423,7 +423,8 @@ function createTimeoutPromise(timeoutMs: number): Promise<never> {
 export async function parseJobWithAnalysis(
   jobDescription: string,
   userId?: string,
-  timeoutMs: number = 90000
+  timeoutMs: number = 90000,
+  model?: string
 ): Promise<{
   data: JobDetails
   analise: string
@@ -436,12 +437,13 @@ export async function parseJobWithAnalysis(
 
   // Load user AI config (or global defaults)
   const config = await loadUserAIConfig(userId)
+  const resolvedModel = model ?? config.modelo_gemini
   console.log(`[Job Parser] Loaded AI config for user: ${userId || "global"}`)
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       console.log(
-        `[Job Parser] Starting analysis with model: ${config.modelo_gemini} (attempt ${attempt}/${MAX_RETRIES})`
+        `[Job Parser] Starting analysis with model: ${resolvedModel} (attempt ${attempt}/${MAX_RETRIES})`
       )
 
       // Get generation config from loaded settings
@@ -450,7 +452,7 @@ export async function parseJobWithAnalysis(
       // Create Gemini client
       const genAI = createGeminiClient()
       const model = genAI.getGenerativeModel({
-        model: config.modelo_gemini,
+        model: resolvedModel,
         generationConfig,
         systemInstruction: ANALYSIS_SYSTEM_PROMPT,
       })
@@ -491,14 +493,14 @@ export async function parseJobWithAnalysis(
       const duration = Date.now() - startTime
 
       console.log(
-        `[Job Parser] ✅ Analysis complete: ${config.modelo_gemini} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
+        `[Job Parser] ✅ Analysis complete: ${resolvedModel} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
       )
 
       return {
         data: validated.structured_data,
         analise: validated.analise_markdown,
         duration,
-        model: config.modelo_gemini,
+        model: resolvedModel,
         tokenUsage,
       }
     } catch (error: unknown) {

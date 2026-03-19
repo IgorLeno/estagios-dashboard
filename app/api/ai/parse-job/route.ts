@@ -110,7 +110,9 @@ export async function POST(request: NextRequest) {
 
     // Parse e validar body
     const body = await request.json()
-    const { jobDescription } = ParseJobRequestSchema.parse(body)
+    const { jobDescription, model }: { jobDescription: string; model?: string } = body
+    ParseJobRequestSchema.parse({ jobDescription })
+    const requestedModel = typeof model === "string" && model.trim() ? model.trim() : undefined
 
     // Get user ID from session (if authenticated)
     const supabase = await createClient()
@@ -120,14 +122,14 @@ export async function POST(request: NextRequest) {
     console.log(`[AI Parser] Starting job parsing for user: ${userId || "unauthenticated"}`)
 
     // Chamar serviço de análise com timeout protection (passa userId para carregar config personalizada)
-    const { data, analise, duration, model, tokenUsage } = await withTimeout(
-      parseJobWithAnalysis(jobDescription, userId),
+    const { data, analise, duration, model: usedModel, tokenUsage } = await withTimeout(
+      parseJobWithAnalysis(jobDescription, userId, undefined, requestedModel),
       AI_TIMEOUT_CONFIG.parsingTimeoutMs,
       `Analysis took longer than ${AI_TIMEOUT_CONFIG.parsingTimeoutMs}ms`
     )
 
     console.log(
-      `[AI Parser] Parsing completed in ${duration}ms with model: ${model} (${tokenUsage.totalTokens} tokens)`
+      `[AI Parser] Parsing completed in ${duration}ms with model: ${usedModel} (${tokenUsage.totalTokens} tokens)`
     )
 
     // Consumir tokens do budget
@@ -144,7 +146,7 @@ export async function POST(request: NextRequest) {
         analise, // Include analysis markdown
         metadata: {
           duration,
-          model,
+          model: usedModel,
           tokenUsage,
           timestamp: new Date().toISOString(),
         },
