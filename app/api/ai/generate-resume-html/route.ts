@@ -21,7 +21,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw error
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
-    const { vagaId, jobDescription, language, approvedSkills } = validatedInput
+    const { vagaId, jobDescription, language, approvedSkills, model } = validatedInput
 
     const supabase = await createClient()
     const {
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         idioma_vaga: vaga.idioma_vaga || "pt",
       })
     } else if (jobDescription) {
-      const parseResult = await parseJobWithGemini(jobDescription)
+      const parseResult = await parseJobWithGemini(jobDescription, model)
       jobDetails = parseResult.data
     } else {
       throw new Error("Either vagaId or jobDescription is required")
     }
 
     // Gerar currículo personalizado (só CV object, sem PDF)
-    const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills)
+    const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills, model)
 
     // Gerar HTML a partir do CV object
     const html = generateResumeHTML(resumeResult.cv)

@@ -88,6 +88,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [jobAnalysisData, setJobAnalysisData] = useState<JobDetails | null>(null)
   const [selectedAnalysisModel, setSelectedAnalysisModel] = useState<string>("")
   const [analysisModelHistory, setAnalysisModelHistory] = useState<string[]>([])
+  const [selectedResumeModel, setSelectedResumeModel] = useState<string>("")
+  const [resumeModelHistory, setResumeModelHistory] = useState<string[]>([])
   const [analysisModelConfigLoaded, setAnalysisModelConfigLoaded] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -194,13 +196,17 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           setConfig(typedData)
           setSelectedAnalysisModel(currentModel)
           setAnalysisModelHistory(updatedHistory)
+          setSelectedResumeModel(currentModel)
+          setResumeModelHistory(updatedHistory)
           persistAnalysisModelHistory(updatedHistory)
         } else {
           setAnalysisModelHistory(storedHistory)
+          setResumeModelHistory(storedHistory)
         }
       } catch (error) {
         console.error("Erro ao carregar configurações:", error)
         setAnalysisModelHistory(storedHistory)
+        setResumeModelHistory(storedHistory)
       } finally {
         setAnalysisModelConfigLoaded(true)
       }
@@ -324,6 +330,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           jobDescription: description,
           language: "pt",
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
+          model: selectedResumeModel || undefined,
         }),
       })
 
@@ -651,6 +658,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
               approvedSkills={approvedSkills}
+              activeModel={selectedResumeModel}
+              modelHistory={resumeModelHistory}
+              onModelChange={setSelectedResumeModel}
+              onModelHistoryChange={setResumeModelHistory}
             />
           </TabsContent>
         </Tabs>
