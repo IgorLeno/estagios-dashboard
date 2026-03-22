@@ -11,18 +11,10 @@ import { ChevronRight, RotateCcw } from "lucide-react"
 import { DescricaoTab } from "@/components/tabs/descricao-tab"
 import { DadosVagaTab } from "@/components/tabs/dados-vaga-tab"
 import { CurriculoTab } from "@/components/tabs/curriculo-tab"
-import { SkillsVagaTab } from "@/components/tabs/skills-vaga-tab"
 import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
-import type {
-  ParseJobResponse,
-  ParseJobErrorResponse,
-  JobDetails,
-  GenerateResumeResponse,
-  GenerateResumeErrorResponse,
-  JobSkillReview,
-} from "@/lib/ai/types"
+import type { ParseJobResponse, ParseJobErrorResponse, JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse } from "@/lib/ai/types"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -66,8 +58,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [loading, setLoading] = useState(false)
   const [config, setConfig] = useState<Configuracao | null>(null)
   const [activeTab, setActiveTab] = useState("descricao")
-  const [vagaId, setVagaId] = useState<string | null>(null)
-  const [isDraftVaga, setIsDraftVaga] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     empresa: "",
     cargo: "",
@@ -100,15 +90,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [resumeFilename, setResumeFilename] = useState<string | null>(null)
   const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
   const [resumePdfBase64En, setResumePdfBase64En] = useState<string | null>(null)
-  const [jobSkills, setJobSkills] = useState<JobSkillReview[]>([])
-  const [skillsLoaded, setSkillsLoaded] = useState(false)
-  const [skillsLoading, setSkillsLoading] = useState(false)
-  const [isSavingSkills, setIsSavingSkills] = useState(false)
 
   const supabase = createClient()
-  const approvedSkills = jobSkills
-    .filter((skill) => skill.mode === "use" || skill.mode === "rename")
-    .map((skill) => skill.displayName)
 
   function buildVagaPayload() {
     const empresa = formData.empresa.trim()
@@ -141,41 +124,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       curriculo_text_en: resumeContentEn || null,
       data_inscricao: dataInscricao,
       is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true" || looksLikeE2ETest,
-    }
-  }
-
-  async function ensurePersistedVagaId() {
-    if (vagaId) return vagaId
-
-    const empresa = formData.empresa.trim()
-    const cargo = formData.cargo.trim()
-    const local = formData.local.trim()
-
-    if (!empresa || !cargo || !local) {
-      toast.error("Preencha empresa, cargo e local antes de salvar skills.")
-      return null
-    }
-
-    const { data, error } = await supabase.from("vagas_estagio").insert(buildVagaPayload()).select("id").single()
-
-    if (error) {
-      console.error("[AddVagaDialog] Draft insert error:", error)
-      throw error
-    }
-
-    setVagaId(data.id)
-    setIsDraftVaga(true)
-
-    return data.id
-  }
-
-  async function cleanupDraftVaga() {
-    if (!isDraftVaga || !vagaId) return
-
-    const { error } = await supabase.from("vagas_estagio").delete().eq("id", vagaId)
-
-    if (error) {
-      console.error("[AddVagaDialog] Error deleting draft vaga:", error)
     }
   }
 
@@ -329,7 +277,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         body: JSON.stringify({
           jobDescription: description,
           language: "pt",
-          approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           model: selectedResumeModel || undefined,
         }),
       })
@@ -364,71 +311,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     }
   }
 
-  async function handleLoadSkills() {
-    if (skillsLoaded || skillsLoading) return
-
-    const description = (lastAnalyzedDescription || jobDescription).trim()
-    if (!description) {
-      toast.error("Descrição da vaga necessária para extrair skills")
-      return
-    }
-
-    setSkillsLoading(true)
-    try {
-      const payload = {
-        jobDescription: description,
-        cargo: jobAnalysisData?.cargo || formData.cargo || undefined,
-        empresa: jobAnalysisData?.empresa || formData.empresa || undefined,
-      }
-
-      const res = await fetch("/api/ai/extract-job-skills", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setJobSkills(data.skills)
-      } else {
-        toast.error("Erro ao carregar skills da vaga")
-      }
-    } catch {
-      toast.error("Erro ao carregar skills da vaga")
-    } finally {
-      setSkillsLoaded(true)
-      setSkillsLoading(false)
-    }
-  }
-
-  async function handleSaveSkills() {
-    if (jobSkills.length === 0) return
-
-    setIsSavingSkills(true)
-
-    try {
-      const currentVagaId = await ensurePersistedVagaId()
-      if (!currentVagaId) return
-
-      const response = await fetch(`/api/vagas/${currentVagaId}/skills`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skills: jobSkills }),
-      })
-
-      if (!response.ok) {
-        const errorData = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(errorData?.error || "Failed to save skills")
-      }
-
-      toast.success("Skills salvas com sucesso!")
-    } catch (error) {
-      console.error("[AddVagaDialog] Error saving skills:", error)
-      toast.error("Erro ao salvar skills")
-    } finally {
-      setIsSavingSkills(false)
-    }
-  }
-
   // Download PDF
   function handleDownloadPDF() {
     if (!resumePdfBase64 || !resumeFilename) return
@@ -457,17 +339,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       }
 
       const payload = buildVagaPayload()
-      const query = vagaId
-        ? supabase
-            .from("vagas_estagio")
-            .update({
-              ...payload,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", vagaId)
-        : supabase.from("vagas_estagio").insert(payload)
-
-      const { data, error } = await query.select()
+      const { data, error } = await supabase.from("vagas_estagio").insert(payload).select()
 
       if (error) {
         console.error("[AddVagaDialog] Save error:", error)
@@ -479,8 +351,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         throw new Error("Failed to save vaga - no data returned from database")
       }
 
-      setVagaId(data[0].id)
-      setIsDraftVaga(false)
       toast.success("✓ Vaga salva com sucesso!")
       resetForm()
       onOpenChange(false)
@@ -516,17 +386,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumeFilename(null)
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
-    setJobSkills([])
-    setVagaId(null)
-    setIsDraftVaga(false)
-    setSkillsLoaded(false)
-    setSkillsLoading(false)
-    setIsSavingSkills(false)
     setActiveTab("descricao")
   }
 
-  async function handleCloseDialog() {
-    await cleanupDraftVaga()
+  function handleCloseDialog() {
     resetForm()
     onOpenChange(false)
   }
@@ -551,14 +414,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
         <Tabs
           value={activeTab}
-          onValueChange={(value) => {
-            setActiveTab(value)
-            if (value === "skills") {
-              void handleLoadSkills()
-            }
-          }}
+          onValueChange={setActiveTab}
         >
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger
               value="descricao"
               className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
@@ -572,14 +430,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
             >
               <span>📊</span>
               <span>Dados da Vaga</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="skills"
-              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
-              onClick={() => void handleLoadSkills()}
-            >
-              <span>🎯</span>
-              <span>Skills</span>
             </TabsTrigger>
             <TabsTrigger
               value="curriculo"
@@ -605,19 +455,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
           <TabsContent value="dados" className="mt-4">
             <DadosVagaTab formData={formData} setFormData={setFormData} jobAnalysisData={jobAnalysisData} />
-          </TabsContent>
-
-          <TabsContent value="skills" className="mt-4">
-            <SkillsVagaTab
-              vagaId={vagaId ?? undefined}
-              skills={jobSkills}
-              isLoading={skillsLoading}
-              isLoaded={skillsLoaded}
-              onChange={setJobSkills}
-              onLoad={handleLoadSkills}
-              onSave={handleSaveSkills}
-              isSaving={isSavingSkills}
-            />
           </TabsContent>
 
           <TabsContent value="curriculo" className="mt-4">
@@ -654,10 +491,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               onDownloadPDF={handleDownloadPDF}
               onSaveVaga={handleSaveVaga}
               jobDescription={lastAnalyzedDescription || jobDescription}
-              vagaId={vagaId ?? undefined}
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
-              approvedSkills={approvedSkills}
               activeModel={selectedResumeModel}
               modelHistory={resumeModelHistory}
               onModelChange={setSelectedResumeModel}
@@ -694,12 +529,6 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               Cancelar
             </Button>
             {activeTab === "dados" && (
-              <Button onClick={() => setActiveTab("skills")} disabled={loading || analyzing || generatingResume}>
-                Continuar para Skills
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-            {activeTab === "skills" && (
               <Button onClick={() => setActiveTab("curriculo")} disabled={loading || analyzing || generatingResume}>
                 Continuar para Currículo
                 <ChevronRight className="ml-2 h-4 w-4" />

@@ -15,7 +15,6 @@ import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { ResumeContainer } from "@/components/resume-container"
 import { RefineResumeDialog } from "@/components/refine-resume-dialog"
 import { GenerateResumeDialog } from "@/components/generate-resume-dialog"
-import { VagaSkillsSection } from "@/components/vaga-skills-section"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
@@ -40,7 +39,6 @@ export default function VagaDetailPage() {
   const [activeModel, setActiveModel] = useState<string>("x-ai/grok-4.1-fast")
   const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
   const [editingResumeContent, setEditingResumeContent] = useState("")
-  const [approvedSkills, setApprovedSkills] = useState<string[]>([])
 
   useEffect(() => {
     loadVaga()
@@ -166,7 +164,6 @@ export default function VagaDetailPage() {
         body: JSON.stringify({
           vagaId: vaga.id,
           language,
-          approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           model,
         }),
       })
@@ -552,8 +549,6 @@ export default function VagaDetailPage() {
               )}
             </CardContent>
           </Card>
-
-          <VagaSkillsSection vagaId={vaga.id} onSkillsChange={setApprovedSkills} />
 
           {/* ✅ SEÇÃO DE CURRÍCULOS - SEMPRE VISÍVEL */}
           <section className="space-y-6">
