@@ -323,7 +323,8 @@ export async function generateTailoredResume(
   language: "pt" | "en",
   userId?: string,
   approvedSkills?: string[],
-  model?: string
+  model?: string,
+  selectedProjectTitles?: string[]
 ): Promise<{
   cv: CVTemplate
   duration: number
@@ -358,6 +359,33 @@ export async function generateTailoredResume(
 
   const baseCv = await getCVTemplateForUser(language, userId)
 
+  // STEP 4.5: Filter projects if caller specified a selection
+  const projectsToUse =
+    selectedProjectTitles && selectedProjectTitles.length > 0
+      ? baseCv.projects.filter((p) =>
+          selectedProjectTitles.some(
+            (title) => p.title.trim().toLowerCase() === title.trim().toLowerCase()
+          )
+        )
+      : baseCv.projects
+
+  if (selectedProjectTitles && selectedProjectTitles.length > 0) {
+    const notFound = selectedProjectTitles.filter(
+      (title) =>
+        !baseCv.projects.some(
+          (p) => p.title.trim().toLowerCase() === title.trim().toLowerCase()
+        )
+    )
+    if (notFound.length > 0) {
+      console.warn("[Resume Generator] ⚠️ selectedProjectTitles not found in CV:", notFound)
+    }
+    console.log(
+      `[Resume Generator] 🎯 Project filter: ${projectsToUse.length}/${baseCv.projects.length} projects selected`
+    )
+  }
+
+  const projectsCv = { ...baseCv, projects: projectsToUse }
+
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation
   const resolvedModel = model ?? config.modelo_gemini
@@ -370,7 +398,7 @@ export async function generateTailoredResume(
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     personalizeSummary(jobDetails, baseCv, summaryModel, language, jobProfile),
     personalizeSkills(jobDetails, baseCv, skillsBank, skillsModel, language, jobProfile, approvedSkills),
-    personalizeProjects(jobDetails, baseCv, projectsModel, language, jobProfile),
+    personalizeProjects(jobDetails, projectsCv, projectsModel, language, jobProfile),
   ])
 
   const uncorrectedDraft: CVDraft = {

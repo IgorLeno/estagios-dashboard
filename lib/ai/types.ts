@@ -260,6 +260,7 @@ export const GenerateResumeRequestSchema = z
     language: z.enum(["pt", "en"]),
     approvedSkills: z.array(z.string().min(1).max(100)).optional(),
     model: z.string().optional(),
+    selectedProjectTitles: z.array(z.string()).optional(),
   })
   .refine((data) => data.vagaId || data.jobDescription, "Either vagaId or jobDescription must be provided")
 
