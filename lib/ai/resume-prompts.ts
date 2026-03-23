@@ -460,6 +460,24 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Front-load keywords in first project (ATS weighs earlier content more)
    - Avoid generic verbs like "worked on" - use specific action verbs
 
+6.5. MEASURABLE RESULTS POLICY (MANDATORY — applies to every project):
+   - ALWAYS scan the raw project data for concrete numbers before writing any bullet.
+     Numbers to look for: percentages, counts, volumes, error rates, deviations,
+     dataset sizes, test counts, time reductions, frequency of use, scale metrics.
+   - If a measurable result exists in the project data: it MUST appear in the output.
+     Place it in the LAST bullet of the project as the impact statement.
+   - Format for results bullet: [what was achieved] + [concrete number/metric] + [context or significance].
+     Examples:
+     ✅ "Implementação de 494 testes automatizados com cobertura integral via CI/CD e quality gates rigorosos."
+     ✅ "Desvio médio relativo de 1,93% no método PM7 — melhor desempenho entre os 5 métodos avaliados em 28 moléculas."
+     ✅ "Pipeline processando base de 28 compostos em 4 grupos moleculares com validação cruzada contra fontes NIST, CRC e Perry."
+   - If NO measurable result exists in the project data: use a concrete scope descriptor
+     (scale, breadth, tool count, dataset size) in place of a percentage or count.
+     DO NOT write vague bullets like "ensuring data quality" — write "validating X data points" or
+     "processing Y categories of compounds" if that information exists.
+   - NEVER fabricate metrics. Only use numbers explicitly present in the project description
+     provided as input. This rule is subordinate to the global ZERO FABRICATION rule.
+
 7. TRUTHFULNESS (see global rules in System Prompt):
    - ONLY describe work that was actually done — reframe HOW, never WHAT
    - NEVER inject job domain into unrelated project descriptions
@@ -519,7 +537,7 @@ Return JSON format:
       "description": [
         "First bullet (front-load keywords)",
         "Second bullet (job-specific terminology)",
-        "Third bullet (measurable outcomes)"
+        "Third bullet: concrete result — use a real number/metric from project data if available; otherwise use scope descriptor (scale, volume, breadth)"
       ]
     },
     ...

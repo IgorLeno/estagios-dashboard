@@ -493,6 +493,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For programming/data projects: reframe as 'systematic methodology for data quality control and traceability'",
       "For chemistry projects: emphasize molecular modeling, physicochemical analysis, process optimization",
       "Each bullet should highlight: quality control, data validation, traceability, lab organization, standards compliance",
+      "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
     ]
   }
   if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
@@ -504,6 +505,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "Each bullet MUST end with a data/process outcome: '...ensuring result consistency and traceability'",
       "PRIORITIZE: structuring databases, standardization, validation, source documentation, technical reporting",
       "AVOID as primary emphasis: Machine Learning, feature engineering, hyperparameters",
+      "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
     ]
   }
   if (family === "data_science_ml") {
@@ -511,23 +513,27 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For data/computing projects: emphasize 'end-to-end data pipeline', 'ML', 'feature engineering', 'model training'",
       "For engineering projects: emphasize 'predictive modeling', 'computational simulation'",
       "Mention libraries (Pandas, NumPy, Scikit-learn) when used",
+      "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
     ]
   }
   if (family === "qhse_quality") {
     return [
       "For data projects: reframe as 'data quality control system', 'KPI monitoring', 'Power BI dashboards'",
       "For engineering projects: emphasize 'environmental efficiency analysis', 'compliance with technical standards'",
+      "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
     ]
   }
   if (family === "process_engineering") {
     return [
       "Emphasize simulation, modeling, process optimization",
       "Mention engineering tools: Aspen Plus, MATLAB, CAD",
+      "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
     ]
   }
   return [
     "Balance technical and practical aspects",
     "Emphasize aspects most relevant to job requirements",
+    "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
   ]
 }
 
