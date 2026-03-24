@@ -1,4 +1,4 @@
-import type { CVTemplate } from "./types"
+import type { CVTemplate, Certification } from "./types"
 
 export type ResumeTemplate = "modelo1" | "modelo2"
 
@@ -92,6 +92,22 @@ function renderSkillGroups(skills: CVTemplate["skills"], template: ResumeTemplat
           )
           .join("\n        ")}
       </ul>`
+}
+
+function renderCertifications(certifications: Certification[]): string {
+  return certifications
+    .map((cert) => {
+      // Backward-compat: legacy string entries stored before migration
+      if (typeof cert === "string") {
+        return `<strong>${escapeHtml(cert as unknown as string)}</strong>`
+      }
+      const suffix: string[] = []
+      if (cert.institution) suffix.push(escapeHtml(cert.institution))
+      if (cert.year) suffix.push(escapeHtml(cert.year))
+      const tail = suffix.length > 0 ? ` — ${suffix.join(", ")}` : ""
+      return `<strong>${escapeHtml(cert.title)}</strong>${tail}`
+    })
+    .join(" | ")
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────
@@ -303,7 +319,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p class="cert-list">${cv.certifications.map(escapeHtml).join(" | ")}</p>
+      <p class="cert-list">${renderCertifications(cv.certifications)}</p>
     </div>`
         : ""
     }
@@ -474,7 +490,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p class="cert-list">${cv.certifications.map(escapeHtml).join(" | ")}</p>
+      <p class="cert-list">${renderCertifications(cv.certifications)}</p>
     </div>`
         : ""
     }

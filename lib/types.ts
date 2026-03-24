@@ -213,7 +213,13 @@ export interface CandidateProfile {
     description_pt: string[]
     description_en?: string[]
   }>
-  certificacoes: Array<{ text_pt: string; text_en?: string }>
+  certificacoes: Array<{
+    title_pt: string
+    title_en?: string
+    institution_pt?: string
+    institution_en?: string
+    year?: string
+  }>
 }
 
 export const EMPTY_CANDIDATE_PROFILE: Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at"> = {

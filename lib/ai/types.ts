@@ -159,6 +159,15 @@ export const JobAnalysisResponseSchema = z.object({
 export type JobAnalysisResponse = z.infer<typeof JobAnalysisResponseSchema>
 
 /**
+ * Structured certification entry for CV rendering.
+ */
+export interface Certification {
+  title: string
+  institution?: string
+  year?: string
+}
+
+/**
  * CV Template Structure
  * Represents full CV content with personalizable sections
  */
@@ -195,7 +204,7 @@ export interface CVTemplate {
     proficiency: string
   }>
 
-  certifications: string[]
+  certifications: Certification[]
 
   // Personalizable sections (LLM-modified)
   summary: string

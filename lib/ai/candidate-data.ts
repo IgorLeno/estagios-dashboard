@@ -5,6 +5,7 @@
  * This file is kept for backward compatibility with tests and deprecated getCVTemplate().
  * New code should load candidate data from the candidate_profile Supabase table.
  */
+import type { Certification } from "./types"
 
 export interface CandidateData {
   identity: {
@@ -42,8 +43,8 @@ export interface CandidateData {
     proficiency_pt: string
     proficiency_en: string
   }>
-  certifications_pt: string[]
-  certifications_en: string[]
+  certifications_pt: Certification[]
+  certifications_en: Certification[]
   summary_pt: string
   summary_en: string
 }
@@ -167,16 +168,16 @@ export const CANDIDATE: CandidateData = {
   ],
 
   certifications_pt: [
-    "Deep Learning Specialization - (Coursera, 2024)",
-    "Power BI Impressionador - (Hashtag Treinamentos, 2023)",
-    "SQL Impressionador - (Hashtag Treinamentos, 2023)",
-    "Google Data Analytics - (Coursera, 2023)",
+    { title: "Deep Learning Specialization", institution: "Coursera", year: "2024" },
+    { title: "Power BI Impressionador", institution: "Hashtag Treinamentos", year: "2023" },
+    { title: "SQL Impressionador", institution: "Hashtag Treinamentos", year: "2023" },
+    { title: "Google Data Analytics", institution: "Coursera", year: "2023" },
   ],
   certifications_en: [
-    "Deep Learning Specialization (Coursera, 2024)",
-    "Power BI Impressionador 1.0 (Hashtag Treinamentos, 2023)",
-    "SQL Impressionador (Hashtag Treinamentos, 2023)",
-    "Google Data Analytics (Coursera, 2023)",
+    { title: "Deep Learning Specialization", institution: "Coursera", year: "2024" },
+    { title: "Power BI Impressionador 1.0", institution: "Hashtag Treinamentos", year: "2023" },
+    { title: "SQL Impressionador", institution: "Hashtag Treinamentos", year: "2023" },
+    { title: "Google Data Analytics", institution: "Coursera", year: "2023" },
   ],
 
   summary_pt:

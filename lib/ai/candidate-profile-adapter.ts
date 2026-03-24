@@ -1,5 +1,6 @@
 import type { CandidateProfile } from "@/lib/types"
 import type { CandidateData } from "./candidate-data"
+import type { Certification } from "./types"
 import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
 
 /**
@@ -51,8 +52,20 @@ export function toCandidateData(profile: CandidateProfile): CandidateData {
       proficiency_en: lang.proficiency_en || lang.proficiency_pt,
     })),
 
-    certifications_pt: profile.certificacoes.map((c) => c.text_pt),
-    certifications_en: profile.certificacoes.map((c) => c.text_en || c.text_pt),
+    certifications_pt: profile.certificacoes.map(
+      (c): Certification => ({
+        title: c.title_pt,
+        institution: c.institution_pt || undefined,
+        year: c.year || undefined,
+      })
+    ),
+    certifications_en: profile.certificacoes.map(
+      (c): Certification => ({
+        title: c.title_en || c.title_pt,
+        institution: c.institution_en || c.institution_pt || undefined,
+        year: c.year || undefined,
+      })
+    ),
 
     summary_pt: profile.objetivo_pt,
     summary_en: profile.objetivo_en || profile.objetivo_pt,

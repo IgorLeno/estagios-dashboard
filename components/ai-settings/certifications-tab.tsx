@@ -20,7 +20,7 @@ export function CertificationsTab({ profile, onChange, disabled }: Certification
   function addCertification() {
     onChange({
       ...profile,
-      certificacoes: [...profile.certificacoes, { text_pt: "" }],
+      certificacoes: [...profile.certificacoes, { title_pt: "" }],
     })
   }
 
@@ -73,8 +73,8 @@ export function CertificationsTab({ profile, onChange, disabled }: Certification
       )}
 
       {profile.certificacoes.map((cert, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <div className="flex flex-col shrink-0">
+        <div key={index} className="flex items-start gap-2">
+          <div className="flex flex-col shrink-0 mt-1">
             <Button
               type="button"
               variant="ghost"
@@ -96,30 +96,56 @@ export function CertificationsTab({ profile, onChange, disabled }: Certification
               <ChevronDown className="h-3 w-3" />
             </Button>
           </div>
-          <span className="text-xs text-muted-foreground w-5 shrink-0 text-center">{index + 1}</span>
-          <Input
-            value={cert.text_pt}
-            onChange={(e) => updateCertification(index, "text_pt", e.target.value)}
-            placeholder="Certificacao (PT)"
-            className="bg-background text-sm"
-            disabled={disabled}
-          />
-          {showEN && (
+          <span className="text-xs text-muted-foreground w-5 shrink-0 text-center mt-2">{index + 1}</span>
+          <div className="flex-1 grid grid-cols-3 gap-2">
             <Input
-              value={cert.text_en || ""}
-              onChange={(e) => updateCertification(index, "text_en", e.target.value)}
-              placeholder="Certification (EN)"
+              value={cert.title_pt}
+              onChange={(e) => updateCertification(index, "title_pt", e.target.value)}
+              placeholder="Título (PT)"
               className="bg-background text-sm"
               disabled={disabled}
             />
-          )}
+            <Input
+              value={cert.institution_pt || ""}
+              onChange={(e) => updateCertification(index, "institution_pt", e.target.value)}
+              placeholder="Instituição (ex: Coursera)"
+              className="bg-background text-sm"
+              disabled={disabled}
+            />
+            <Input
+              value={cert.year || ""}
+              onChange={(e) => updateCertification(index, "year", e.target.value)}
+              placeholder="Ano (ex: 2023)"
+              className="bg-background text-sm"
+              disabled={disabled}
+            />
+            {showEN && (
+              <>
+                <Input
+                  value={cert.title_en || ""}
+                  onChange={(e) => updateCertification(index, "title_en", e.target.value)}
+                  placeholder="Title (EN)"
+                  className="bg-background text-sm"
+                  disabled={disabled}
+                />
+                <Input
+                  value={cert.institution_en || ""}
+                  onChange={(e) => updateCertification(index, "institution_en", e.target.value)}
+                  placeholder="Institution (EN)"
+                  className="bg-background text-sm"
+                  disabled={disabled}
+                />
+                <div /> {/* year is language-independent, no EN duplicate */}
+              </>
+            )}
+          </div>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => removeCertification(index)}
             disabled={disabled}
-            className="h-8 w-8 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+            className="h-8 w-8 p-0 shrink-0 text-muted-foreground hover:text-destructive mt-1"
           >
             <X className="h-3 w-3" />
           </Button>
