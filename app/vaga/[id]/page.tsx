@@ -364,16 +364,40 @@ export default function VagaDetailPage() {
     }
   }
 
-  async function handleRegenerateVisual(language: "pt" | "en", template: string) {
-    setActiveTemplate(template)
-    localStorage.setItem("resume_template_preference", template)
-    await handleGeneratePdf(language, template)
-  }
+  async function handleGeneratePdfFromHtml(language: "pt" | "en", htmlSource: string) {
+    try {
+      if (language === "pt") setIsGeneratingPdfPT(true)
+      else setIsGeneratingPdfEN(true)
 
-  async function handleRegenerateBoth(language: "pt" | "en", model: string, template: string) {
-    setActiveTemplate(template)
-    localStorage.setItem("resume_template_preference", template)
-    await handleGenerateResume(language, model)
+      const response = await fetch("/api/ai/html-to-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: htmlSource }),
+      })
+
+      if (!response.ok) throw new Error("Falha ao gerar PDF")
+
+      const result = await response.json()
+      const dataUrl = `data:application/pdf;base64,${result.data.pdfBase64}`
+
+      const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+      const updateResponse = await fetch(`/api/vagas/${vaga!.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [pdfField]: dataUrl }),
+      })
+
+      if (!updateResponse.ok) throw new Error("Falha ao salvar PDF")
+
+      await loadVaga()
+      toast.success(`PDF gerado com sucesso em ${language.toUpperCase()}!`)
+    } catch (error) {
+      console.error("Error generating PDF from HTML:", error)
+      toast.error("Erro ao gerar PDF. Tente novamente.")
+    } finally {
+      if (language === "pt") setIsGeneratingPdfPT(false)
+      else setIsGeneratingPdfEN(false)
+    }
   }
 
   if (loading) {
@@ -582,10 +606,14 @@ export default function VagaDetailPage() {
               activeModel={activeModel}
               activeTemplate={activeTemplate}
               vagaEmpresa={vaga.empresa}
+              vagaId={vaga.id}
               onRegenerateContent={(model) => handleGenerateResume("pt", model)}
-              onRegenerateVisual={(template) => handleRegenerateVisual("pt", template)}
-              onRegenerateBoth={(model, template) => handleRegenerateBoth("pt", model, template)}
+              onTemplateChange={(template) => {
+                setActiveTemplate(template)
+                localStorage.setItem("resume_template_preference", template)
+              }}
               onGeneratePdf={() => handleGeneratePdf("pt")}
+              onGeneratePdfWithHtml={(html) => handleGeneratePdfFromHtml("pt", html)}
               onDownloadPdf={() => handleDownloadPdf("pt")}
               onRefine={() => setRefineDialogLanguage("pt")}
               onEdit={() => handleEditResume("pt")}
@@ -603,10 +631,14 @@ export default function VagaDetailPage() {
               activeModel={activeModel}
               activeTemplate={activeTemplate}
               vagaEmpresa={vaga.empresa}
+              vagaId={vaga.id}
               onRegenerateContent={(model) => handleGenerateResume("en", model)}
-              onRegenerateVisual={(template) => handleRegenerateVisual("en", template)}
-              onRegenerateBoth={(model, template) => handleRegenerateBoth("en", model, template)}
+              onTemplateChange={(template) => {
+                setActiveTemplate(template)
+                localStorage.setItem("resume_template_preference", template)
+              }}
               onGeneratePdf={() => handleGeneratePdf("en")}
+              onGeneratePdfWithHtml={(html) => handleGeneratePdfFromHtml("en", html)}
               onDownloadPdf={() => handleDownloadPdf("en")}
               onRefine={() => setRefineDialogLanguage("en")}
               onEdit={() => handleEditResume("en")}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Loader2,
   FileText,
@@ -11,20 +11,18 @@ import {
   Wand2,
   RefreshCw,
   ChevronDown,
-  Bot,
   Layers,
-  Sparkles,
+  CheckCircle2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { RegenerateResumeDialog } from "@/components/regenerate-resume-dialog"
+
+const TEMPLATES = [
+  { value: "modelo1", label: "Manguizin" },
+  { value: "modelo2", label: "Maryland" },
+]
 
 interface ResumeContainerProps {
   language: "pt" | "en"
@@ -33,14 +31,14 @@ interface ResumeContainerProps {
   isGenerating: boolean
   isGeneratingPdf?: boolean
   isRefining?: boolean
-  isRegeneratingVisual?: boolean
   activeModel: string
   activeTemplate: string
   vagaEmpresa: string
+  vagaId: string
   onRegenerateContent: (model: string) => void
-  onRegenerateVisual: (template: string) => void
-  onRegenerateBoth: (model: string, template: string) => void
+  onTemplateChange: (template: string) => void
   onGeneratePdf?: () => void
+  onGeneratePdfWithHtml?: (htmlSource: string) => void
   onDownloadPdf?: () => void
   onRefine?: () => void
   onEdit: () => void
@@ -54,21 +52,65 @@ export function ResumeContainer({
   isGenerating,
   isGeneratingPdf,
   isRefining,
-  isRegeneratingVisual,
   activeModel,
   activeTemplate,
   vagaEmpresa,
+  vagaId,
   onRegenerateContent,
-  onRegenerateVisual,
-  onRegenerateBoth,
+  onTemplateChange,
   onGeneratePdf,
+  onGeneratePdfWithHtml,
   onDownloadPdf,
   onRefine,
   onEdit,
   onDelete,
 }: ResumeContainerProps) {
   const hasContent = Boolean(markdown)
-  const [regenerateMode, setRegenerateMode] = useState<"content" | "visual" | "both" | null>(null)
+  const [regenerateMode, setRegenerateMode] = useState<"content" | null>(null)
+
+  const [localTemplate, setLocalTemplate] = useState(activeTemplate)
+  const [templateHtml, setTemplateHtml] = useState<string | null>(null)
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false)
+
+  // Sync localTemplate when activeTemplate changes externally
+  useEffect(() => {
+    setLocalTemplate(activeTemplate)
+  }, [activeTemplate])
+
+  // Clear HTML preview when markdown changes (new AI content generated)
+  useEffect(() => {
+    setTemplateHtml(null)
+  }, [markdown])
+
+  const templateLabel = TEMPLATES.find((t) => t.value === localTemplate)?.label ?? localTemplate
+
+  async function handleSelectTemplate(template: string) {
+    if (template === localTemplate) return
+    setIsLoadingTemplate(true)
+    setLocalTemplate(template)
+    onTemplateChange(template)
+    try {
+      const response = await fetch("/api/ai/generate-resume-html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vagaId,
+          language,
+          resumeTemplate: template,
+        }),
+      })
+      if (!response.ok) throw new Error("Falha ao gerar preview")
+      const result = await response.json()
+      if (result.success && result.data?.html) {
+        setTemplateHtml(result.data.html)
+      }
+    } catch (err) {
+      console.error("[ResumeContainer] Erro ao trocar template:", err)
+      setTemplateHtml(null)
+    } finally {
+      setIsLoadingTemplate(false)
+    }
+  }
 
   const languageConfig = {
     pt: {
@@ -84,9 +126,6 @@ export function ResumeContainer({
       generatingLabel: "Gerando...",
       generatingPdfLabel: "Gerando PDF...",
       refiningLabel: "Refinando...",
-      contentOnly: "Só Conteúdo (IA)",
-      visualOnly: "Só Visual (Template)",
-      contentAndVisual: "Conteúdo + Visual",
     },
     en: {
       flag: "🇺🇸",
@@ -101,9 +140,6 @@ export function ResumeContainer({
       generatingLabel: "Generating...",
       generatingPdfLabel: "Generating PDF...",
       refiningLabel: "Refining...",
-      contentOnly: "Content Only (AI)",
-      visualOnly: "Visual Only (Template)",
-      contentAndVisual: "Content + Visual",
     },
   }
 
@@ -119,72 +155,77 @@ export function ResumeContainer({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botão Gerar (sem conteúdo) ou Dropdown Regenerar (com conteúdo) */}
-          {!hasContent ? (
-            <button
-              onClick={() => setRegenerateMode("content")}
-              disabled={isGenerating}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
-                "bg-blue-600 text-white hover:bg-blue-700",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-colors"
-              )}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="animate-spin" size={16} />
-                  {config.generatingLabel}
-                </>
-              ) : (
-                <>
-                  <FileText size={16} />
-                  {config.generateLabel}
-                </>
-              )}
-            </button>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          {/* Botão Gerar / Regenerar — simples, sem dropdown */}
+          <button
+            onClick={() => setRegenerateMode("content")}
+            disabled={isGenerating}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
+              "bg-blue-600 text-white hover:bg-blue-700",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "transition-colors"
+            )}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                {config.generatingLabel}
+              </>
+            ) : hasContent ? (
+              <>
+                <RefreshCw size={16} />
+                {config.generateLabel}
+              </>
+            ) : (
+              <>
+                <FileText size={16} />
+                {config.generateLabel}
+              </>
+            )}
+          </button>
+
+          {/* Botão de template — visível apenas quando há conteúdo */}
+          {hasContent && (
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
-                  disabled={isGenerating}
+                  disabled={isLoadingTemplate}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
-                    "bg-blue-600 text-white hover:bg-blue-700",
+                    "border border-gray-300 dark:border-gray-600",
+                    "hover:bg-gray-100 dark:hover:bg-gray-800",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "transition-colors"
                   )}
                 >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      {config.generatingLabel}
-                    </>
+                  {isLoadingTemplate ? (
+                    <Loader2 className="animate-spin" size={16} />
                   ) : (
-                    <>
-                      <RefreshCw size={16} />
-                      {config.generateLabel}
-                      <ChevronDown size={14} className="ml-1" />
-                    </>
+                    <Layers size={16} />
                   )}
+                  {templateLabel}
+                  <ChevronDown size={14} />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setRegenerateMode("content")}>
-                  <Bot size={16} className="mr-2" />
-                  {config.contentOnly}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRegenerateMode("visual")}>
-                  <Layers size={16} className="mr-2" />
-                  {config.visualOnly}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setRegenerateMode("both")}>
-                  <Sparkles size={16} className="mr-2" />
-                  {config.contentAndVisual}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-48 p-2">
+                <div className="space-y-1">
+                  {TEMPLATES.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => handleSelectTemplate(t.value)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm",
+                        "hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
+                        localTemplate === t.value && "bg-primary/10 font-semibold text-primary"
+                      )}
+                    >
+                      {t.label}
+                      {localTemplate === t.value && <CheckCircle2 size={14} />}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* Botão Editar */}
@@ -206,7 +247,13 @@ export function ResumeContainer({
           {/* Botão Gerar PDF */}
           {hasContent && (
             <button
-              onClick={onGeneratePdf}
+              onClick={() => {
+                if (templateHtml && onGeneratePdfWithHtml) {
+                  onGeneratePdfWithHtml(templateHtml)
+                } else {
+                  onGeneratePdf?.()
+                }
+              }}
               disabled={isGeneratingPdf || isGenerating}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
@@ -291,7 +338,7 @@ export function ResumeContainer({
         </div>
       </div>
 
-      {/* PREVIEW: Scroll apenas aqui */}
+      {/* PREVIEW */}
       <div
         className={cn(
           "px-6 py-4",
@@ -299,9 +346,21 @@ export function ResumeContainer({
         )}
       >
         {hasContent ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <MarkdownPreview content={markdown!} editable={false} />
-          </div>
+          templateHtml ? (
+            <div className="w-full overflow-auto" style={{ maxHeight: "500px" }}>
+              <iframe
+                srcDoc={templateHtml}
+                title="Resume Preview"
+                className="w-full border-0"
+                style={{ height: "700px", pointerEvents: "none" }}
+                sandbox="allow-same-origin"
+              />
+            </div>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <MarkdownPreview content={markdown!} editable={false} />
+            </div>
+          )
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <FileText size={48} className="mb-4" />
@@ -315,22 +374,15 @@ export function ResumeContainer({
         onOpenChange={(open) => {
           if (!open) setRegenerateMode(null)
         }}
-        mode={regenerateMode ?? "content"}
+        mode="content"
         language={language}
         vagaEmpresa={vagaEmpresa}
         activeModel={activeModel}
-        activeTemplate={activeTemplate}
-        isRegenerating={isGenerating || Boolean(isRegeneratingVisual)}
-        onConfirm={({ model, template }) => {
-          const currentMode = regenerateMode
+        activeTemplate={localTemplate}
+        isRegenerating={isGenerating}
+        onConfirm={({ model }) => {
           setRegenerateMode(null)
-          if (currentMode === "content" && model) {
-            onRegenerateContent(model)
-          } else if (currentMode === "visual" && template) {
-            onRegenerateVisual(template)
-          } else if (currentMode === "both" && model && template) {
-            onRegenerateBoth(model, template)
-          }
+          if (model) onRegenerateContent(model)
         }}
       />
     </div>
