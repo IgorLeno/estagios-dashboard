@@ -347,12 +347,12 @@ export function ResumeContainer({
       >
         {hasContent ? (
           templateHtml ? (
-            <div className="w-full overflow-auto" style={{ maxHeight: "500px" }}>
+            <div className="w-full overflow-auto bg-white rounded" style={{ maxHeight: "500px" }}>
               <iframe
                 srcDoc={templateHtml}
                 title="Resume Preview"
                 className="w-full border-0"
-                style={{ height: "700px", pointerEvents: "none" }}
+                style={{ height: "1120px", pointerEvents: "none" }}
                 sandbox="allow-same-origin"
               />
             </div>

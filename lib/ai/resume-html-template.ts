@@ -17,26 +17,25 @@ function escapeHtml(value: string): string {
 // ─── Shared section renderers ──────────────────────────────────────────────────
 
 function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
-  if (template === "modelo2") {
-    const parts: string[] = []
-    if (cv.header.location) parts.push(escapeHtml(cv.header.location))
-    if (cv.header.phone) parts.push(escapeHtml(cv.header.phone))
-    if (cv.header.email)
-      parts.push(`<a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a>`)
-    cv.header.links.forEach((link) => {
-      parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
-    })
-    return `<p class="contact-line">${parts.join(" | ")}</p>`
-  }
-  // modelo1 — values only, no bold labels
+  const linkedinLinks = cv.header.links.filter((l) => l.url.toLowerCase().includes("linkedin"))
+  const otherLinks = cv.header.links.filter((l) => !l.url.toLowerCase().includes("linkedin"))
+  const formattedLocation = escapeHtml(cv.header.location.replace("/", ", "))
+
   const parts: string[] = []
-  if (cv.header.location) parts.push(escapeHtml(cv.header.location))
-  if (cv.header.phone) parts.push(escapeHtml(cv.header.phone))
-  if (cv.header.email)
-    parts.push(`<a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a>`)
-  cv.header.links.forEach((link) => {
+  linkedinLinks.forEach((link) => {
     parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
   })
+  if (cv.header.email)
+    parts.push(`<a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a>`)
+  if (cv.header.phone) parts.push(escapeHtml(cv.header.phone))
+  if (cv.header.location) parts.push(formattedLocation)
+  otherLinks.forEach((link) => {
+    parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
+  })
+
+  if (template === "modelo2") {
+    return `<p class="contact-line">${parts.join(" | ")}</p>`
+  }
   return `<div class="contact"><p>${parts.join(" | ")}</p></div>`
 }
 
@@ -151,12 +150,20 @@ function renderModelo1(cv: CVTemplate): string {
     }
 
     .header h1 {
-      font-size: 16pt;
+      font-size: 14pt;
       font-weight: bold;
       margin-bottom: 3pt;
       text-transform: uppercase;
       letter-spacing: 0.5pt;
       color: #000;
+    }
+
+    .subtitle {
+      font-size: 11pt;
+      font-style: italic;
+      color: #333;
+      margin-bottom: 4pt;
+      margin-top: 2pt;
     }
 
     .header .contact {
@@ -254,7 +261,10 @@ function renderModelo1(cv: CVTemplate): string {
       text-decoration: underline;
     }
 
-    /* Print optimization */
+    @media screen {
+      body { padding: 1.94cm 2.25cm 1.94cm 2.25cm; }
+    }
+
     @media print {
       body { padding: 0; }
     }
@@ -265,6 +275,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Header -->
     <div class="header">
       <h1>${escapeHtml(cv.header.name.toUpperCase())}</h1>
+      ${cv.header.title ? `<p class="subtitle">${escapeHtml(cv.header.title)}</p>` : ""}
       ${renderContactLine(cv, "modelo1")}
     </div>
 
@@ -292,7 +303,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p>${cv.certifications.map(escapeHtml).join(" — ")}</p>
+      <p>${cv.certifications.map(escapeHtml).join(" | ")}</p>
     </div>`
         : ""
     }
@@ -421,6 +432,10 @@ function renderModelo2(cv: CVTemplate): string {
 
     a { color: #2E5C9E; text-decoration: none; }
 
+    @media screen {
+      body { padding: 40px; }
+    }
+
     @media print {
       body { padding: 0; }
     }
@@ -459,7 +474,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p>${cv.certifications.map(escapeHtml).join(" — ")}</p>
+      <p>${cv.certifications.map(escapeHtml).join(" | ")}</p>
     </div>`
         : ""
     }
