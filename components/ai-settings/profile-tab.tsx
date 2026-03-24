@@ -47,7 +47,7 @@ export function ProfileTab({ profile, onChange, disabled }: ProfileTabProps) {
   function addIdioma() {
     updateField("idiomas", [
       ...profile.idiomas,
-      { language_pt: "", proficiency_pt: "Intermediario" },
+      { language_pt: "", proficiency_pt: "Intermediário" },
     ])
   }
 
@@ -285,9 +285,9 @@ export function ProfileTab({ profile, onChange, disabled }: ProfileTabProps) {
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               disabled={disabled}
             >
-              <option value="Basico">Basico</option>
-              <option value="Intermediario">Intermediario</option>
-              <option value="Avancado">Avancado</option>
+              <option value="Básico">Básico</option>
+              <option value="Intermediário">Intermediário</option>
+              <option value="Avançado">Avançado</option>
               <option value="Fluente">Fluente</option>
               <option value="Nativo">Nativo</option>
             </select>

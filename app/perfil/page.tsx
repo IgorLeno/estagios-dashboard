@@ -23,6 +23,19 @@ const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 
 type ProfileData = Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at">
 
+function normalizeLanguageProficiency(proficiency?: string): string {
+  switch (proficiency) {
+    case "Basico":
+      return "Básico"
+    case "Intermediario":
+      return "Intermediário"
+    case "Avancado":
+      return "Avançado"
+    default:
+      return proficiency ?? ""
+  }
+}
+
 function normalizeProfileData(data?: Partial<CandidateProfile> | null): ProfileData {
   return {
     ...EMPTY_CANDIDATE_PROFILE,
@@ -35,7 +48,10 @@ function normalizeProfileData(data?: Partial<CandidateProfile> | null): ProfileD
     localizacao_en: data?.localizacao_en ?? "",
     disponibilidade: data?.disponibilidade ?? "",
     educacao: data?.educacao ?? [],
-    idiomas: data?.idiomas ?? [],
+    idiomas: (data?.idiomas ?? []).map((idioma) => ({
+      ...idioma,
+      proficiency_pt: normalizeLanguageProficiency(idioma.proficiency_pt),
+    })),
     objetivo_pt: data?.objetivo_pt ?? "",
     objetivo_en: data?.objetivo_en ?? "",
     habilidades: data?.habilidades ?? [],
