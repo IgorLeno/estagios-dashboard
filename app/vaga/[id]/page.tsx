@@ -168,6 +168,7 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           model,
+          resumeTemplate: activeTemplate,
         }),
       })
 

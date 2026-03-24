@@ -1,4 +1,5 @@
 import { generateResumeHTML } from "./resume-html-template"
+import type { ResumeTemplate } from "./resume-html-template"
 import type { CVTemplate } from "./types"
 
 /**
@@ -12,7 +13,10 @@ function isServerlessEnvironment(): boolean {
  * Generate PDF from CV template using Puppeteer
  * Automatically detects if running in serverless environment and uses appropriate Chromium
  */
-export async function generateResumePDF(cv: CVTemplate): Promise<Buffer> {
+export async function generateResumePDF(
+  cv: CVTemplate,
+  template: ResumeTemplate = "modelo1"
+): Promise<Buffer> {
   console.log("[PDF Generator] Launching Puppeteer...")
 
   const isServerless = isServerlessEnvironment()
@@ -45,7 +49,7 @@ export async function generateResumePDF(cv: CVTemplate): Promise<Buffer> {
     const page = await browser.newPage()
 
     // Generate HTML content
-    const htmlContent = generateResumeHTML(cv)
+    const htmlContent = generateResumeHTML(cv, template)
 
     // Set content and wait for rendering
     await page.setContent(htmlContent, {

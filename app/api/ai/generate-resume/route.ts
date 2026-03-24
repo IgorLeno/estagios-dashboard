@@ -43,7 +43,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
 
-    const { vagaId, jobDescription, language, approvedSkills, model, selectedProjectTitles } = validatedInput
+    const { vagaId, jobDescription, language, approvedSkills, model, selectedProjectTitles, resumeTemplate } =
+      validatedInput
 
     console.log(`[Resume API] Request: ${vagaId ? `vaga ${vagaId}` : "job description"}, language: ${language}`)
 
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const resumeResult = await generateTailoredResume(jobDetails, language, userId, approvedSkills, model, selectedProjectTitles)
 
         // Generate PDF
-        const pdfBuffer = await generateResumePDF(resumeResult.cv)
+        const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")
 
         // Convert to base64
         const pdfBase64 = pdfBuffer.toString("base64")
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
 
           // ✅ CONVERT CVTemplate → HTML → Markdown before saving
-          const html = generateResumeHTML(resumeResult.cv)
+          const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
           const markdown = htmlToMarkdown(html)
 
           // ✅ PARTIAL UPDATE: Only update the requested language field

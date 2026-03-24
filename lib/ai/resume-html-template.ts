@@ -216,6 +216,18 @@ function renderModelo1(cv: CVTemplate): string {
       color: #000;
     }
 
+    .cert-list {
+      margin: 0;
+      padding: 0;
+    }
+
+    .cert-item {
+      margin-bottom: 2pt;
+      text-align: left;
+      font-size: 10.5pt;
+      line-height: 1.3;
+    }
+
     /* Lists */
     ul {
       /* ✅ Margem zero para alinhar bullets com título */
@@ -303,7 +315,9 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p>${cv.certifications.map(escapeHtml).join(" | ")}</p>
+      <div class="cert-list">
+        ${cv.certifications.map((cert) => `<p class="cert-item">${escapeHtml(cert)}</p>`).join("\n        ")}
+      </div>
     </div>`
         : ""
     }
@@ -365,7 +379,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     h1 {
       font-family: Georgia, serif;
-      font-size: 32pt;
+      font-size: 18pt;
       font-weight: 700;
       color: #000;
       margin-bottom: 4pt;
@@ -426,6 +440,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     .skill-group-name { font-weight: 700; color: #000; }
     .skill-items { color: #000; margin-bottom: 8pt; }
+    .cert-item { margin-bottom: 3pt; text-align: left; font-size: 10pt; line-height: 1.3; }
 
     .company-name { color: #2E5C9E; }
     .job-title { font-weight: 700; }
@@ -474,7 +489,9 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p>${cv.certifications.map(escapeHtml).join(" | ")}</p>
+      <div class="cert-list">
+        ${cv.certifications.map((cert) => `<p class="cert-item">${escapeHtml(cert)}</p>`).join("\n        ")}
+      </div>
     </div>`
         : ""
     }
