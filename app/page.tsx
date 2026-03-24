@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { getDataInscricao } from "@/lib/date-utils"
 import { getVagasByDate } from "@/lib/supabase/queries"
@@ -17,6 +17,25 @@ import { useSearchParams } from "next/navigation"
 const VALID_HOME_TABS = new Set(["vagas", "resumo", "configuracoes"])
 
 export default function Page() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <PageContent />
+    </Suspense>
+  )
+}
+
+function PageLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background mesh-bg">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse" />
+        <p className="text-muted-foreground text-sm animate-pulse">Carregando...</p>
+      </div>
+    </div>
+  )
+}
+
+function PageContent() {
   const [activeTab, setActiveTab] = useState("vagas") // Start with main vagas tab
   const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [vagas, setVagas] = useState<VagaEstagio[]>([])
@@ -125,14 +144,7 @@ export default function Page() {
 
   // Don't render until currentDate is initialized
   if (!currentDate) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background mesh-bg">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse" />
-          <p className="text-muted-foreground text-sm animate-pulse">Carregando...</p>
-        </div>
-      </div>
-    )
+    return <PageLoading />
   }
 
   return (
