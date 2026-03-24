@@ -28,15 +28,16 @@ function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
     })
     return `<p class="contact-line">${parts.join(" | ")}</p>`
   }
-  // modelo1 — original layout with bold labels
-  return `<div class="contact">
-        <p>
-          <strong>Email:</strong> <a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a> |
-          <strong>${cv.language === "pt" ? "Telefone" : "Phone"}:</strong> ${escapeHtml(cv.header.phone)}<br>
-          <strong>${cv.language === "pt" ? "Localização" : "Location"}:</strong> ${escapeHtml(cv.header.location)} |
-          ${cv.header.links.map((link) => `<strong>${escapeHtml(link.label)}:</strong> <a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`).join(" | ")}
-        </p>
-      </div>`
+  // modelo1 — values only, no bold labels
+  const parts: string[] = []
+  if (cv.header.location) parts.push(escapeHtml(cv.header.location))
+  if (cv.header.phone) parts.push(escapeHtml(cv.header.phone))
+  if (cv.header.email)
+    parts.push(`<a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a>`)
+  cv.header.links.forEach((link) => {
+    parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
+  })
+  return `<div class="contact"><p>${parts.join(" | ")}</p></div>`
 }
 
 function renderSectionTitle(label: string): string {
@@ -117,7 +118,7 @@ function renderModelo1(cv: CVTemplate): string {
   <style>
     @page {
       size: A4;
-      margin: 0;
+      margin: 1.94cm 2.25cm 0.49cm 2.25cm;
     }
 
     * {
@@ -132,10 +133,8 @@ function renderModelo1(cv: CVTemplate): string {
       line-height: 1.3;
       color: #000;
       background: white;
-
-      /* ✅ MARGENS EXATAS DO MODELO (topo direita baixo esquerda) */
-      padding: 1.94cm 2.25cm 0.49cm 2.25cm;
-
+      padding: 0;
+      margin: 0;
       -webkit-print-color-adjust: exact;
     }
 
@@ -152,7 +151,7 @@ function renderModelo1(cv: CVTemplate): string {
     }
 
     .header h1 {
-      font-size: 20pt;
+      font-size: 16pt;
       font-weight: bold;
       margin-bottom: 3pt;
       text-transform: uppercase;
@@ -180,6 +179,10 @@ function renderModelo1(cv: CVTemplate): string {
     .section {
       margin-bottom: 8pt;
       page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-before: auto;
+      orphans: 3;
+      widows: 3;
     }
 
     .section-title {
@@ -193,6 +196,8 @@ function renderModelo1(cv: CVTemplate): string {
       color: #000;
       /* ✅ Linha horizontal preta de 1.5pt */
       border-bottom: 1.5pt solid #000;
+      page-break-after: avoid;
+      break-after: avoid;
     }
 
     /* Paragraphs */
@@ -251,10 +256,7 @@ function renderModelo1(cv: CVTemplate): string {
 
     /* Print optimization */
     @media print {
-      body {
-        /* Garantir margens exatas na impressão */
-        padding: 1.94cm 2.25cm 0.49cm 2.25cm;
-      }
+      body { padding: 0; }
     }
   </style>
 </head>
@@ -290,9 +292,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <ul>
-        ${cv.certifications.map((cert) => `<li>${escapeHtml(cert)}</li>`).join("\n        ")}
-      </ul>
+      <p>${cv.certifications.map(escapeHtml).join(" — ")}</p>
     </div>`
         : ""
     }
@@ -334,7 +334,7 @@ function renderModelo2(cv: CVTemplate): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(cv.header.name)} - CV</title>
   <style>
-    @page { size: A4; margin: 0; }
+    @page { size: A4; margin: 40px; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -343,7 +343,8 @@ function renderModelo2(cv: CVTemplate): string {
       line-height: 1.35;
       color: #000;
       background: #fff;
-      padding: 40px;
+      padding: 0;
+      margin: 0;
       -webkit-print-color-adjust: exact;
     }
 
@@ -372,7 +373,14 @@ function renderModelo2(cv: CVTemplate): string {
       margin-bottom: 0;
     }
 
-    .section { margin-bottom: 20pt; page-break-inside: avoid; }
+    .section {
+      margin-bottom: 20pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-before: auto;
+      orphans: 3;
+      widows: 3;
+    }
 
     .section-title {
       color: #2E5C9E;
@@ -384,6 +392,8 @@ function renderModelo2(cv: CVTemplate): string {
       padding-bottom: 2pt;
       margin-bottom: 8pt;
       margin-top: 0;
+      page-break-after: avoid;
+      break-after: avoid;
     }
 
     p { margin-bottom: 6pt; font-size: 10.5pt; line-height: 1.35; }
@@ -412,7 +422,7 @@ function renderModelo2(cv: CVTemplate): string {
     a { color: #2E5C9E; text-decoration: none; }
 
     @media print {
-      body { padding: 40px; }
+      body { padding: 0; }
     }
   </style>
 </head>
@@ -449,9 +459,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <ul>
-        ${cv.certifications.map((cert) => `<li>${escapeHtml(cert)}</li>`).join("\n        ")}
-      </ul>
+      <p>${cv.certifications.map(escapeHtml).join(" — ")}</p>
     </div>`
         : ""
     }
