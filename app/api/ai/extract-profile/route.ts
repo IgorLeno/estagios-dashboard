@@ -38,7 +38,11 @@ type ExtractedProfileResponse = {
     description_pt?: string[]
     description_en?: string[]
   }>
-  certificacoes?: string[]
+  certificacoes?: Array<{
+    title_pt?: string
+    institution_pt?: string
+    year?: string
+  }>
 }
 
 const SYSTEM_PROMPT = `You are a professional profile data extractor.
@@ -95,7 +99,13 @@ function buildMessages(
       "description_en": []
     }
   ],
-  "certificacoes": []
+  "certificacoes": [
+    {
+      "title_pt": "",
+      "institution_pt": "",
+      "year": ""
+    }
+  ]
 }`
 
   if (mode === "acrescentar" && existingProfile) {
@@ -141,7 +151,7 @@ ${jsonSchema}
 
 For skills: group into logical categories (e.g. "Ferramentas / Tools", "Programação / Programming").
 For projects: if text is in PT, copy title/description to EN fields as fallback.
-For certifications: return array of strings.`,
+For certifications: extract title, institution and year separately into the object fields.`,
     },
   ]
 }
@@ -262,10 +272,23 @@ function adaptToCandidateProfile(payload: ExtractedProfileResponse): Partial<Can
     data.projetos = projetos
   }
 
-  const certificacoes = cleanStringArray(payload.certificacoes).map((certificacao) => ({
-    text_pt: certificacao,
-    text_en: certificacao,
-  }))
+  const certificacoes = Array.isArray(payload.certificacoes)
+    ? payload.certificacoes
+        .map((cert) => {
+          if (typeof cert === "string") {
+            const trimmed = cert.trim()
+            return trimmed ? { title_pt: trimmed } : null
+          }
+          const titlePt = cleanString(cert?.title_pt)
+          if (!titlePt) return null
+          return {
+            title_pt: titlePt,
+            institution_pt: cleanString(cert?.institution_pt) || undefined,
+            year: cleanString(cert?.year) || undefined,
+          }
+        })
+        .filter((cert): cert is NonNullable<typeof cert> => Boolean(cert))
+    : []
 
   if (certificacoes.length > 0) {
     data.certificacoes = certificacoes
