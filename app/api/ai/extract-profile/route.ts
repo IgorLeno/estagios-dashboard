@@ -129,7 +129,7 @@ ${jsonSchema}
 
 For skills: group into logical categories. Do NOT repeat skills already present in the existing profile.
 For projects: do NOT repeat projects with similar titles already present.
-For certifications: do NOT repeat certifications already present.
+For certifications: extract title, institution and year separately into the object fields, and do NOT repeat certifications already present.
 For scalar fields (nome, email, etc.): return empty string if the existing profile already has a value.`,
       },
     ]

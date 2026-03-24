@@ -73,7 +73,13 @@ describe("POST /api/ai/extract-profile", () => {
             description_en: [],
           },
         ],
-        certificacoes: ["AWS Cloud Practitioner"],
+        certificacoes: [
+          {
+            title_pt: "AWS Cloud Practitioner",
+            institution_pt: "Amazon Web Services",
+            year: "2024",
+          },
+        ],
       }),
       usage: {
         prompt_tokens: 100,
@@ -118,8 +124,39 @@ describe("POST /api/ai/extract-profile", () => {
     expect(data.data.projetos[0].title_en).toBe("Painel de Estágios")
     expect(data.data.projetos[0].description_en).toEqual(["Construí dashboard em Next.js."])
     expect(data.data.certificacoes).toEqual([
-      { text_pt: "AWS Cloud Practitioner", text_en: "AWS Cloud Practitioner" },
+      {
+        title_pt: "AWS Cloud Practitioner",
+        institution_pt: "Amazon Web Services",
+        year: "2024",
+      },
     ])
+  })
+
+  it("keeps compatibility with legacy string certifications returned by the model", async () => {
+    vi.mocked(callGrok).mockResolvedValue({
+      content: JSON.stringify({
+        certificacoes: ["AWS Cloud Practitioner"],
+      }),
+      usage: {
+        prompt_tokens: 20,
+        completion_tokens: 30,
+        total_tokens: 50,
+      },
+    })
+
+    const request = new NextRequest("http://localhost:3000/api/ai/extract-profile", {
+      method: "POST",
+      body: JSON.stringify({
+        rawText: "Certificacao AWS Cloud Practitioner.",
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.success).toBe(true)
+    expect(data.data.certificacoes).toEqual([{ title_pt: "AWS Cloud Practitioner" }])
   })
 
   it('returns 500 with "Invalid JSON from model" when parsing fails', async () => {

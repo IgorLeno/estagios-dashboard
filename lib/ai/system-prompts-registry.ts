@@ -136,7 +136,9 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
         educacao: [{ degree_pt: "[CURSO]", institution_pt: "[INSTITUICAO]", period_pt: "[PERIODO]" }],
         habilidades: [{ category_pt: "[CATEGORIA]", items_pt: ["[HABILIDADE_1]", "[HABILIDADE_2]"] }],
         projetos: [{ title_pt: "[PROJETO]", description_pt: ["[DESCRICAO]"] }],
-        certificacoes: [{ text_pt: "[CERTIFICACAO]" }],
+        certificacoes: [
+          { title_pt: "[CERTIFICACAO]", institution_pt: "[INSTITUICAO]", year: "[ANO]" },
+        ],
         idiomas: [{ language_pt: "[IDIOMA]", proficiency_pt: "[NIVEL]" }],
         objetivo_pt: "[OBJETIVO PROFISSIONAL]",
       } as CandidateProfile),

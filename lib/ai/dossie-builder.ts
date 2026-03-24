@@ -1,5 +1,12 @@
 import type { CandidateProfile } from "@/lib/types"
 
+function formatCertification(
+  certification: CandidateProfile["certificacoes"][number]
+): string {
+  const details = [certification.institution_pt, certification.year].filter(Boolean).join(" - ")
+  return details ? `${certification.title_pt} (${details})` : certification.title_pt
+}
+
 /**
  * Build a structured dossie text from a CandidateProfile.
  * Used to replace the hardcoded dossie_prompt for job analysis.
@@ -48,7 +55,7 @@ export function buildDossieFromProfile(profile: CandidateProfile): string {
   // Certifications
   if (profile.certificacoes.length > 0) {
     sections.push(
-      `- Certificacoes: ${profile.certificacoes.map((c) => c.text_pt).join(", ")}`
+      `- Certificacoes: ${profile.certificacoes.map(formatCertification).join(", ")}`
     )
   }
 
