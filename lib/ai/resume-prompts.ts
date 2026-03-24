@@ -98,6 +98,20 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      | visualizações estratégicas | visualização de indicadores |
      | administração de bases | organização e estruturação de bases |
 
+3.5. INTRA-SUMMARY DEDUPLICATION (MANDATORY):
+   After drafting all 4 sentences, scan the entire summary for repeated expressions.
+   The following phrases may appear AT MOST ONCE across the entire summary:
+   - "organização de bases de dados" (or any variant: "organizar bases", "estruturação de bases")
+   - "elaboração de relatórios técnicos" (or any variant: "relatórios técnicos", "relatórios")
+   - "validação de dados" (or any variant: "validação", "checagem de consistência")
+   - "documentação técnica" (or any variant: "documentação")
+   - "padronização de informações" (or any variant: "padronização")
+   If any of these appears more than once across the 4 sentences: remove the duplicate
+   and replace with a distinct descriptor from this list:
+   "rastreabilidade de dados", "consistência de informações", "digitalização de rotinas analíticas",
+   "estruturação de fluxos", "construção de indicadores", "apoio à operação e qualidade".
+   This check is MANDATORY before returning the summary.
+
 4. ATS BEST PRACTICES:
    - Write 100-120 words (optimal ATS length - not too short, not too long)
    - Use industry-standard terminology only (no jargon or slang)
@@ -357,11 +371,33 @@ Return JSON format:
 
 export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
+⚠️ PROJECT COUNT POLICY:
+   You will receive ONLY the projects to be included — do not add, restore, or reference
+   any other projects. Do not comment on missing projects. Rewrite ONLY what is provided.
+   The selection of which projects to include was made before this prompt ran.
+
 1. PROJECT-TO-JOB-DUTY MAPPING:
    - Identify which job responsibilities each project can address
    - Reframe project descriptions to DIRECTLY connect to those duties
    - Example: Lab project → Quality job = emphasize "data validation", "quality control", "standards compliance"
    - Example: Same project → ML job = emphasize "model training", "data pipeline", "predictive analytics"
+
+1.5. AUTHORSHIP IDENTIFICATION (MANDATORY):
+   Before rewriting any project, check if it is a personal/independent project
+   (not institutional academic research). Signs of personal authorship:
+   - Title does not contain year range like "(2022-2023)" or university name
+   - Description mentions personal development, own initiative, or software built from scratch
+   - Examples of personal projects: "Grimperium", "Estagios Dashboard", any web app or tool
+   For personal/authorial projects:
+   - The FIRST bullet MUST make authorship clear using one of these forms:
+     ✅ "Desenvolvimento próprio de..."
+     ✅ "Projeto autoral de..."
+     ✅ "Framework desenvolvido de forma independente para..."
+   - Do NOT use "Desenvolvimento de..." (ambiguous — could be team or institutional)
+   - Do NOT use "Projeto acadêmico de..." for personal projects
+   For institutional academic projects (those with year ranges and research context):
+   - Use standard reframing rules (existing instructions apply)
+   - Do NOT add authorship language
 
 2. EXACT TERMINOLOGY SUBSTITUTION:
    - Replace generic terms with job-specific keywords

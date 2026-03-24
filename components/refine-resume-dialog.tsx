@@ -97,45 +97,47 @@ export function RefineResumeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{config.title}</DialogTitle>
           <DialogDescription>{config.description}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="refine-model">{config.modelLabel}</Label>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger id="refine-model" className="w-full">
-                <SelectValue placeholder={config.modelLabel} />
-              </SelectTrigger>
-              <SelectContent>
-                {modelOptions.map((model) => (
-                  <SelectItem key={model} value={model}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="refine-model">{config.modelLabel}</Label>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger id="refine-model" className="w-full">
+                  <SelectValue placeholder={config.modelLabel} />
+                </SelectTrigger>
+                <SelectContent>
+                  {modelOptions.map((model) => (
+                    <SelectItem key={model} value={model}>
+                      {model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="refine-instructions">{config.instructionsLabel}</Label>
-            <Textarea
-              id="refine-instructions"
-              rows={5}
-              value={instructions}
-              onChange={(event) => setInstructions(event.target.value)}
-              placeholder={config.placeholder}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="refine-instructions">{config.instructionsLabel}</Label>
+              <Textarea
+                id="refine-instructions"
+                className="min-h-[120px] max-h-[240px] resize-none overflow-y-auto"
+                value={instructions}
+                onChange={(event) => setInstructions(event.target.value)}
+                placeholder={config.placeholder}
+              />
+            </div>
 
-          <Alert className="border-primary/25 bg-primary/5 text-foreground [&>svg]:text-primary">
-            <Info />
-            <AlertTitle>{config.alertTitle}</AlertTitle>
-            <AlertDescription>{config.alertDescription}</AlertDescription>
-          </Alert>
+            <Alert className="border-primary/25 bg-primary/5 text-foreground [&>svg]:text-primary">
+              <Info />
+              <AlertTitle>{config.alertTitle}</AlertTitle>
+              <AlertDescription>{config.alertDescription}</AlertDescription>
+            </Alert>
+          </div>
         </div>
 
         <DialogFooter>
