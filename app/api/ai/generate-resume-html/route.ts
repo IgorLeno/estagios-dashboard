@@ -21,7 +21,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw error
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
-    const { vagaId, jobDescription, language, approvedSkills, model } = validatedInput
+    const { vagaId, jobDescription, language, approvedSkills, model, resumeTemplate } = validatedInput
 
     const supabase = await createClient()
     const {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills, model)
 
     // Gerar HTML a partir do CV object
-    const html = generateResumeHTML(resumeResult.cv)
+    const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
 
     return NextResponse.json({
       success: true,

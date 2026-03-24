@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, Info, CheckCircle, FileText, RefreshCw, Languages, Bot, Plus, X } from "lucide-react"
 import type { JobDetails } from "@/lib/ai/types"
@@ -80,6 +81,11 @@ export function CurriculoTab({
   const [isSavingEn, setIsSavingEn] = useState(false)
   const [showModelInput, setShowModelInput] = useState(false)
   const [newModelInput, setNewModelInput] = useState("")
+  const [localTemplate, setLocalTemplate] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
+      : "modelo1"
+  )
 
   const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 
@@ -196,6 +202,7 @@ export function CurriculoTab({
           language: "pt",
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
           model: activeModel || undefined,
+          resumeTemplate: localTemplate,
         }
         console.log("[CurriculoTab] PT payload:", payload)
 
@@ -266,6 +273,7 @@ export function CurriculoTab({
           language: "en",
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
           model: activeModel || undefined,
+          resumeTemplate: localTemplate,
         }
         console.log("[CurriculoTab] EN payload:", payload)
 
@@ -554,6 +562,22 @@ export function CurriculoTab({
           </AlertDescription>
         </Alert>
       )}
+
+      <div className="space-y-2">
+        <Label>Modelo Visual do Currículo</Label>
+        <Select value={localTemplate} onValueChange={setLocalTemplate}>
+          <SelectTrigger className="w-full bg-background border-border">
+            <SelectValue placeholder="Selecione o modelo visual" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="modelo1">Modelo 1 — Padrão</SelectItem>
+            <SelectItem value="modelo2">Modelo 2 — Clássico</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Padrão definido em Configurações. Alteração aqui vale apenas para esta geração.
+        </p>
+      </div>
 
       <div className="space-y-3">
         <Label>Modelo LLM</Label>

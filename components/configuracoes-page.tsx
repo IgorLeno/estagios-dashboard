@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react"
 import { useTheme } from "next-themes"
 import { Palette } from "lucide-react"
 import { ConfiguracoesPrompts } from "@/components/configuracoes-prompts"
@@ -10,6 +11,17 @@ import { SkillsBankManager } from "@/components/skills-bank-manager"
 
 export function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme()
+
+  const [resumeTemplate, setResumeTemplate] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
+      : "modelo1"
+  )
+
+  function handleResumeTemplateChange(value: string) {
+    setResumeTemplate(value)
+    localStorage.setItem("resume_template_preference", value)
+  }
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -47,6 +59,21 @@ export function ConfiguracoesPage() {
                     <SelectItem value="light">Claro</SelectItem>
                     <SelectItem value="dark">Escuro</SelectItem>
                     <SelectItem value="system">Sistema</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border mt-3">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Modelo de Currículo</h3>
+                  <p className="text-sm text-muted-foreground">Layout visual padrão usado na geração do currículo</p>
+                </div>
+                <Select value={resumeTemplate} onValueChange={handleResumeTemplateChange}>
+                  <SelectTrigger className="w-[180px] bg-background border-border">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="modelo1">Modelo 1 — Padrão</SelectItem>
+                    <SelectItem value="modelo2">Modelo 2 — Clássico</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

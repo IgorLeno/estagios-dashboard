@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { htmlToMarkdown } from "@/lib/ai/markdown-converter"
@@ -70,6 +71,11 @@ export function ResumeGeneratorDialog({
   const [resultEn, setResultEn] = useState<GenerateResumeResponse["data"] | null>(null)
   const [metadata, setMetadata] = useState<GenerateResumeResponse["metadata"] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [resumeTemplate, setResumeTemplate] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
+      : "modelo1"
+  )
 
   const handleGeneratePreview = async () => {
     if (!vagaId && !jobDescription) {
@@ -90,6 +96,7 @@ export function ResumeGeneratorDialog({
             body: JSON.stringify({
               ...(vagaId ? { vagaId } : { jobDescription }),
               language: "pt",
+              resumeTemplate,
             }),
           }),
           fetch("/api/ai/generate-resume-html", {
@@ -98,6 +105,7 @@ export function ResumeGeneratorDialog({
             body: JSON.stringify({
               ...(vagaId ? { vagaId } : { jobDescription }),
               language: "en",
+              resumeTemplate,
             }),
           }),
         ])
@@ -133,6 +141,7 @@ export function ResumeGeneratorDialog({
           body: JSON.stringify({
             ...(vagaId ? { vagaId } : { jobDescription }),
             language,
+            resumeTemplate,
           }),
         })
 
@@ -445,6 +454,22 @@ export function ResumeGeneratorDialog({
             </div>
           )}
 
+          {/* Template Selection */}
+          {state === "idle" && step === "form" && (
+            <div className="space-y-2">
+              <Label>Modelo Visual</Label>
+              <Select value={resumeTemplate} onValueChange={setResumeTemplate}>
+                <SelectTrigger className="w-full bg-background border-border">
+                  <SelectValue placeholder="Selecione o modelo visual" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="modelo1">Modelo 1 — Padrão</SelectItem>
+                  <SelectItem value="modelo2">Modelo 2 — Clássico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Loading State */}
           {state === "loading" && (
             <div className="flex flex-col items-center justify-center space-y-4 py-8">
@@ -622,7 +647,7 @@ export function ResumeGeneratorDialog({
               <Button variant="outline" className="flex-1" onClick={() => handleClose(false)}>
                 Close
               </Button>
-              <Button className="flex-1" onClick={handleGenerate}>
+              <Button className="flex-1" onClick={handleGeneratePreview}>
                 Retry
               </Button>
             </>
