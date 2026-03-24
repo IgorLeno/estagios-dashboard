@@ -19,7 +19,6 @@ import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
 import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
-import { markdownToHtml, wrapMarkdownAsHTML } from "@/lib/ai/markdown-converter"
 
 export default function VagaDetailPage() {
   const params = useParams()
@@ -272,43 +271,36 @@ export default function VagaDetailPage() {
     if (!vaga) return
 
     try {
-      // Set loading state
-      if (language === "pt") {
-        setIsGeneratingPdfPT(true)
-      } else {
-        setIsGeneratingPdfEN(true)
-      }
+      if (language === "pt") setIsGeneratingPdfPT(true)
+      else setIsGeneratingPdfEN(true)
 
-      // Get markdown content
-      const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
-      const markdown = vaga[markdownField]
+      const templateToUse = templateOverride ?? activeTemplate
 
-      if (!markdown) {
-        toast.error(`Nenhum conteúdo de currículo encontrado em ${language.toUpperCase()}`)
-        return
-      }
-
-      // Convert markdown to HTML; templateOverride reserved for future template-aware wrapping
-      const _template = templateOverride ?? activeTemplate
-      void _template
-      const html = await markdownToHtml(markdown)
-      const wrappedHtml = wrapMarkdownAsHTML(html)
-
-      // Generate PDF via API
-      const response = await fetch("/api/ai/html-to-pdf", {
+      // Step 1: Render styled HTML from user profile — no AI calls
+      const renderResponse = await fetch("/api/ai/render-resume-html", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: wrappedHtml }),
+        body: JSON.stringify({ vagaId: vaga.id, language, resumeTemplate: templateToUse }),
       })
 
-      if (!response.ok) {
-        throw new Error("Falha ao gerar PDF")
-      }
+      if (!renderResponse.ok) throw new Error("Falha ao renderizar HTML do currículo")
 
-      const result = await response.json()
-      const dataUrl = `data:application/pdf;base64,${result.data.pdfBase64}`
+      const renderResult = await renderResponse.json()
+      const html = renderResult.data.html
 
-      // Save PDF to database
+      // Step 2: Convert HTML to PDF
+      const pdfResponse = await fetch("/api/ai/html-to-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+      })
+
+      if (!pdfResponse.ok) throw new Error("Falha ao gerar PDF")
+
+      const pdfResult = await pdfResponse.json()
+      const dataUrl = `data:application/pdf;base64,${pdfResult.data.pdfBase64}`
+
+      // Step 3: Save PDF to database
       const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
       const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
         method: "PATCH",
@@ -316,23 +308,16 @@ export default function VagaDetailPage() {
         body: JSON.stringify({ [pdfField]: dataUrl }),
       })
 
-      if (!updateResponse.ok) {
-        throw new Error("Falha ao salvar PDF")
-      }
+      if (!updateResponse.ok) throw new Error("Falha ao salvar PDF")
 
-      // Refresh vaga data
       await loadVaga()
-
       toast.success(`PDF gerado com sucesso em ${language.toUpperCase()}!`)
     } catch (error) {
       console.error("Error generating PDF:", error)
       toast.error("Erro ao gerar PDF. Tente novamente.")
     } finally {
-      if (language === "pt") {
-        setIsGeneratingPdfPT(false)
-      } else {
-        setIsGeneratingPdfEN(false)
-      }
+      if (language === "pt") setIsGeneratingPdfPT(false)
+      else setIsGeneratingPdfEN(false)
     }
   }
 
