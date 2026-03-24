@@ -86,6 +86,8 @@ export function CurriculoTab({
       ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
       : "modelo1"
   )
+  const [htmlSourcePt, setHtmlSourcePt] = useState<string>("")
+  const [htmlSourceEn, setHtmlSourceEn] = useState<string>("")
 
   const hasPreview = !!(markdownPreviewPt || markdownPreviewEn)
 
@@ -195,6 +197,7 @@ export function CurriculoTab({
       // Generate PT preview
       if (language === "pt" || language === "both") {
         console.log("[CurriculoTab] Generating PT preview...")
+        setHtmlSourcePt("") // clear stale HTML before regenerating
 
         const payload = {
           vagaId,
@@ -244,6 +247,7 @@ export function CurriculoTab({
           })
 
           setMarkdownPreviewPt(markdown)
+          setHtmlSourcePt(result.data.html) // preserve original HTML for PDF generation
 
           // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
           console.log("[CurriculoTab] ✅ PT setMarkdownPreviewPt called with length:", markdown.length)
@@ -266,6 +270,7 @@ export function CurriculoTab({
       // Generate EN preview
       if (language === "en" || language === "both") {
         console.log("[CurriculoTab] Generating EN preview...")
+        setHtmlSourceEn("") // clear stale HTML before regenerating
 
         const payload = {
           vagaId,
@@ -315,6 +320,7 @@ export function CurriculoTab({
           })
 
           setMarkdownPreviewEn(markdown)
+          setHtmlSourceEn(result.data.html) // preserve original HTML for PDF generation
 
           // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
           console.log("[CurriculoTab] ✅ EN setMarkdownPreviewEn called with length:", markdown.length)
@@ -427,13 +433,13 @@ export function CurriculoTab({
 
       console.log(`[CurriculoTab] Converting ${language.toUpperCase()} Markdown to PDF...`)
 
-      // Step 1: Markdown → HTML
-      const htmlContent = await markdownToHtml(markdownText)
-      console.log(`[CurriculoTab] ${language.toUpperCase()} Markdown converted to HTML`)
-
-      // Step 2: Wrap with CSS
-      const fullHtml = wrapMarkdownAsHTML(htmlContent)
-      console.log(`[CurriculoTab] ${language.toUpperCase()} HTML wrapped with CSS`)
+      // Use the original HTML from the API (has correct template CSS) when available.
+      // Fall back to re-converting markdown only for backward compatibility.
+      const htmlSource = language === "pt" ? htmlSourcePt : htmlSourceEn
+      const fullHtml = htmlSource
+        ? htmlSource
+        : wrapMarkdownAsHTML(await markdownToHtml(markdownText))
+      console.log(`[CurriculoTab] ${language.toUpperCase()} HTML ready for PDF (source: ${htmlSource ? "template" : "markdown"})`)
 
       // Step 3: Send to PDF generator
       const response = await fetch("/api/ai/html-to-pdf", {
@@ -570,8 +576,8 @@ export function CurriculoTab({
             <SelectValue placeholder="Selecione o modelo visual" />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
-            <SelectItem value="modelo1">Modelo 1 — Padrão</SelectItem>
-            <SelectItem value="modelo2">Modelo 2 — Clássico</SelectItem>
+            <SelectItem value="modelo1">Manguizin</SelectItem>
+            <SelectItem value="modelo2">Maryland</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">

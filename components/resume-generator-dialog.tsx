@@ -463,8 +463,8 @@ export function ResumeGeneratorDialog({
                   <SelectValue placeholder="Selecione o modelo visual" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="modelo1">Modelo 1 — Padrão</SelectItem>
-                  <SelectItem value="modelo2">Modelo 2 — Clássico</SelectItem>
+                  <SelectItem value="modelo1">Manguizin</SelectItem>
+                  <SelectItem value="modelo2">Maryland</SelectItem>
                 </SelectContent>
               </Select>
             </div>
