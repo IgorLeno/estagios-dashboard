@@ -1,5 +1,4 @@
 import type { JobDetails } from "./types"
-import type { CVTemplate } from "./types"
 import type { JobProfile } from "./job-profile"
 
 /**
@@ -23,7 +22,7 @@ Your role is to personalize resume sections to match job requirements while main
 8. Return ONLY valid JSON, no markdown code fences
 
 WHAT YOU CAN DO:
-✅ Rewrite summary to include job keywords (80-120 words)
+✅ Rewrite summary to include job keywords (60-110 words)
 ✅ Reorder skills within categories by relevance to job
 ✅ Rewrite project descriptions to emphasize job-relevant aspects
 
@@ -41,9 +40,14 @@ If job requirements ask for skills not in the CV, DO NOT add them - just emphasi
 
 export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
-1. STRUCTURE (5-part professional profile):
-   - Opening: Education level + current status (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
-   - Technical expertise: List 2-3 EXACT skills from "Required Skills" above
+1. STRUCTURE (mandatory 4-sentence professional profile):
+   - Obrigatório. Mínimo 60 palavras, máximo 110 palavras.
+   - NÃO gerar resumo genérico como "Busco estágio" ou frase de 1 linha.
+   - Escrever como parágrafo contínuo com 4 frases.
+   - Frase 1: formação atual + momento (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
+   - Frase 2: 2 a 4 competências aderentes à vaga específica, usando termos exatos quando possível
+   - Frase 3: 1 evidência prática (projeto, resultado ou metodologia) ligada à vaga
+   - Frase 4: objetivo funcional específico alinhado à vaga
    - CALIBRATE TO ROLE LEVEL: For operational internship roles (BI support, data maintenance,
      documentation), lead with OPERATIONAL skills (Excel, Power BI, SQL, relatórios) NOT
      research/ML skills (Deep Learning, neural networks, advanced algorithms).
@@ -113,7 +117,7 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    This check is MANDATORY before returning the summary.
 
 4. ATS BEST PRACTICES:
-   - Write 100-120 words (optimal ATS length - not too short, not too long)
+   - Write 60-110 words (mandatory range - not too short, not too long)
    - Use industry-standard terminology only (no jargon or slang)
    - Avoid generic soft skills like "team player" (focus on technical/measurable skills)
    - Avoid fluff words - every word should add value
@@ -198,6 +202,9 @@ Return JSON format:
 export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 1. SKILL MATCHING LOGIC (prioritize in this order):
+   - Selecionar APENAS skills relevantes para esta vaga específica.
+   - Definir 1 eixo principal de posicionamento por vaga.
+   - Permitir 1 eixo secundário no máximo.
    - EXACT matches: job requires "Excel Avançado" → move to top, use exactly as written
    - Semantic matches: job wants "data analysis" → prioritize Python, SQL, pandas
    - Related skills: job mentions "quality control" → prioritize technical reporting, KPIs
@@ -210,16 +217,21 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - When adding bank skill, place it in appropriate category based on its category field
 
 3. CATEGORY REORDERING:
+   - Máximo 6 categorias no total.
    - Move most job-relevant category to TOP position
+   - Ordenar categorias pela relevância à vaga (mais relevante primeiro).
+   - Remover categorias inteiras que não reforcem o eixo principal.
    - Example: QHSE job → move "Soft Skills" (with quality/reporting skills) to position 1
    - Example: ML job → move "Linguagens & Análise de Dados" to position 1
    - Example: Engineering job → move "Ferramentas de Engenharia" to position 1
 
 4. WITHIN-CATEGORY REORDERING AND SELECTION:
+   - Objetivo: até 20 skills no total. Limite duro: 24 (preflight bloqueia acima disso).
+   - Máximo 4 itens por categoria.
    - Put EXACT job matches first in each category
    - Then semantic/related skills
    - REMOVE skills that have zero relevance to this specific job (e.g. specialized lab tools for an analytics job)
-   - Keep soft skills category with most relevant items only (max 4-5)
+   - Keep soft skills category with most relevant items only (max 4)
    - MINIMUM: Always keep at least 3 skills total per category kept
    - OPERATIONAL ROLE FILTER: For internship/junior roles in BI, People Analytics, Data Support,
      or Documentation, apply these filters:
@@ -245,7 +257,7 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      * "KPI monitoring" → "monitoramento de KPIs"
      * Keep tool names as-is (Power BI, Excel, Python, SQL — these are proper nouns)
      * Keep certification names as-is (Google Data Analytics, etc.)
-   - MAXIMUM: 6-8 items per category (remove excess irrelevant skills)
+   - MAXIMUM: 4 items per category (remove excess irrelevant skills)
 
 5. EXACT TERMINOLOGY (CRITICAL FOR ATS):
    - Use EXACT skill names from job (e.g., "Power BI" not "PowerBI")
@@ -256,7 +268,7 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 6. ATS BEST PRACTICES:
    - Put 5-7 most relevant skills in top 2 categories (ATS scans top first)
    - Include certifications as skills if job mentions them (e.g., "ISO 17025")
-   - Aim for 6-8 most relevant skills per category (remove irrelevant, don't stuff)
+   - Aim for up to 20 most relevant skills total (remove irrelevant, don't stuff)
    - If job required skill not in CV or bank, DON'T add it (maintain truthfulness)
    - REMOVE entire categories if 0 of their skills are relevant to the job
    - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
@@ -301,8 +313,9 @@ VALIDATION CHECK (MANDATORY):
 Before returning, verify:
 1. EVERY skill in your output appears in either ALLOWED SKILLS (CV Skills) OR ALLOWED SKILLS (Bank Skills)
 2. No engineering/lab tool appears in a data/analytics/HR/BI/people job output
-3. Category count is 2-4 (not all categories needed — only relevant ones)
-4. Total skill count across all categories: 8-20 (not all skills, only relevant ones)
+3. Category count is 2-6 (not all categories needed — only relevant ones)
+4. Total skill count across all categories: 8-20 ideally, never above 24
+5. No category has more than 4 items
 
 If you find ANY skill not in those lists, REMOVE IT immediately. This is NON-NEGOTIABLE.
 
@@ -375,6 +388,7 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    You will receive ONLY the projects to be included — do not add, restore, or reference
    any other projects. Do not comment on missing projects. Rewrite ONLY what is provided.
    The selection of which projects to include was made before this prompt ran.
+   - Selecionar no máximo 4 projetos, priorizados por relevância à vaga.
 
 1. PROJECT-TO-JOB-DUTY MAPPING:
    - Identify which job responsibilities each project can address
@@ -407,6 +421,12 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Match acronyms EXACTLY (case-sensitive)
 
 3. DESCRIPTION STRUCTURE (per bullet point):
+   - Cada projeto deve ter 2 a 3 bullets na description[].
+   - Preferir 3 bullets quando houver resultado mensurável.
+   - Nunca 1 bullet só. Nunca mais de 3 bullets.
+   - Bullet 1: o que foi construído ou analisado.
+   - Bullet 2: como foi feito (metodologia ou stack principal).
+   - Bullet 3: resultado, escopo ou impacto mensurável (se existir).
    - Format: [Past/present action verb in PAST TENSE or NOUN PHRASE] + [specific task] +
      [tool/method] + [outcome/relevance]
    - USE PAST TENSE or NOUN PHRASE — NEVER infinitive verbs:
@@ -416,9 +436,11 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Each bullet MUST end with a period (.)
    - AVOID REDUNDANT PHRASES: "análises analíticas", "dados de dados", "resultado de resultados"
      — read each bullet aloud and remove obvious redundancies
-   - TARGET LENGTH: 15-25 words per bullet (concise, scannable — not a paragraph)
-   - If original description has 3 concepts, split into exactly 3 short bullets — do NOT
-     merge everything into one dense run-on bullet
+   - TARGET LENGTH: 14-22 words per bullet (concise, scannable — not a paragraph)
+   - Use direct, active text in every bullet.
+   - If original description has 3 concepts, split into 2 or 3 short bullets — do NOT
+     merge everything into one dense run-on bullet.
+   - NÃO colocar toda a descrição num único bullet longo.
 
 4. KEYWORD DENSITY PER PROJECT:
    - Each project should include 3-5 job keywords
@@ -796,8 +818,6 @@ export function buildProjectsPrompt(
   language: "pt" | "en",
   jobProfile: JobProfile
 ): string {
-  const jobKeywords = extractTopKeywords(jobDetails, 10)
-
   // Handle undefined/Indefinido values
   const cargo = jobDetails.cargo && jobDetails.cargo !== "Indefinido" ? jobDetails.cargo : "Position not specified"
   const responsabilidades =
@@ -1060,15 +1080,4 @@ export function extractATSKeywords(jobDetails: JobDetails): ATSKeywords {
     exact_phrases: uniquePhrases,
     acronyms,
   }
-}
-
-/**
- * Legacy function for backward compatibility
- * @deprecated Use extractATSKeywords() instead
- */
-function extractTopKeywords(jobDetails: JobDetails, limit: number): string[] {
-  const atsKeywords = extractATSKeywords(jobDetails)
-  // Combine all keywords for backward compatibility
-  const allKeywords = [...atsKeywords.technical_terms, ...atsKeywords.required_skills, ...atsKeywords.acronyms]
-  return Array.from(new Set(allKeywords)).slice(0, limit)
 }

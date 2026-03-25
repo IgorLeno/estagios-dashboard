@@ -1,4 +1,5 @@
 import type { CVTemplate, Certification } from "./types"
+import { validateCVTemplate } from "./resume-preflight"
 
 export type ResumeTemplate = "modelo1" | "modelo2"
 
@@ -34,7 +35,7 @@ function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
   })
 
   if (template === "modelo2") {
-    return `<p class="contact-line">${parts.join(" | ")}</p>`
+    return `<p class="contact-line">${parts.map((part) => `<span class="contact-item">${part}</span>`).join("")}</p>`
   }
   return `<div class="contact"><p>${parts.join(" | ")}</p></div>`
 }
@@ -60,7 +61,22 @@ function renderLanguages(languages: CVTemplate["languages"]): string {
       </ul>`
 }
 
-function renderProjects(projects: CVTemplate["projects"]): string {
+function renderProjects(projects: CVTemplate["projects"], template: ResumeTemplate): string {
+  if (template === "modelo2") {
+    return `<ul>
+        ${projects
+          .map(
+            (project) => `<li class="project-item">
+            <strong class="project-title">${escapeHtml(project.title)}</strong>
+            <ul class="project-bullets">
+              ${project.description.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("\n              ")}
+            </ul>
+          </li>`
+          )
+          .join("\n        ")}
+      </ul>`
+  }
+
   return `<ul>
         ${projects
           .map(
@@ -94,20 +110,27 @@ function renderSkillGroups(skills: CVTemplate["skills"], template: ResumeTemplat
       </ul>`
 }
 
-function renderCertifications(certifications: Certification[]): string {
-  return certifications
-    .map((cert) => {
-      // Backward-compat: legacy string entries stored before migration
-      if (typeof cert === "string") {
-        return `<strong>${escapeHtml(cert as unknown as string)}</strong>`
-      }
-      const suffix: string[] = []
-      if (cert.institution) suffix.push(escapeHtml(cert.institution))
-      if (cert.year) suffix.push(escapeHtml(cert.year))
-      const tail = suffix.length > 0 ? ` — ${suffix.join(", ")}` : ""
-      return `<strong>${escapeHtml(cert.title)}</strong>${tail}`
-    })
-    .join(" | ")
+function renderCertificationLabel(cert: Certification): string {
+  // Backward-compat: legacy string entries stored before migration
+  if (typeof cert === "string") {
+    return `<strong>${escapeHtml(cert as unknown as string)}</strong>`
+  }
+
+  const suffix: string[] = []
+  if (cert.institution) suffix.push(escapeHtml(cert.institution))
+  if (cert.year) suffix.push(escapeHtml(cert.year))
+  const tail = suffix.length > 0 ? ` — ${suffix.join(", ")}` : ""
+  return `<strong>${escapeHtml(cert.title)}</strong>${tail}`
+}
+
+function renderCertifications(certifications: Certification[], template: ResumeTemplate): string {
+  if (template === "modelo2") {
+    return `<ul class="cert-list">
+        ${certifications.map((cert) => `<li>${renderCertificationLabel(cert)}</li>`).join("\n        ")}
+      </ul>`
+  }
+
+  return certifications.map(renderCertificationLabel).join(" | ")
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────
@@ -117,6 +140,11 @@ function renderCertifications(certifications: Certification[]): string {
  * Defaults to modelo1 (current layout) for backward compatibility.
  */
 export function generateResumeHTML(cv: CVTemplate, template: ResumeTemplate = "modelo1"): string {
+  const preflight = validateCVTemplate(cv)
+  if (!preflight.valid) {
+    throw new Error(`CV preflight failed:\n${preflight.errors.join("\n")}`)
+  }
+
   if (template === "modelo2") return renderModelo2(cv)
   return renderModelo1(cv)
 }
@@ -319,7 +347,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p class="cert-list">${renderCertifications(cv.certifications)}</p>
+      <p class="cert-list">${renderCertifications(cv.certifications, "modelo1")}</p>
     </div>`
         : ""
     }
@@ -330,7 +358,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Research Projects -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
-      ${renderProjects(cv.projects)}
+      ${renderProjects(cv.projects, "modelo1")}
     </div>`
         : ""
     }
@@ -400,8 +428,18 @@ function renderModelo2(cv: CVTemplate): string {
       margin-bottom: 0;
     }
 
+    .contact-item {
+      white-space: nowrap;
+      display: inline;
+    }
+
+    .contact-item:not(:last-child)::after {
+      content: " | ";
+      color: #999;
+    }
+
     .section {
-      margin-bottom: 20pt;
+      margin-bottom: 14pt;
       page-break-inside: avoid;
       break-inside: avoid;
       page-break-before: auto;
@@ -423,7 +461,7 @@ function renderModelo2(cv: CVTemplate): string {
       break-after: avoid;
     }
 
-    p { margin-bottom: 6pt; font-size: 10.5pt; line-height: 1.35; }
+    p { margin-bottom: 5pt; font-size: 10.5pt; line-height: 1.4; }
 
     ul { list-style: none; margin: 0; padding: 0; margin-bottom: 4pt; }
 
@@ -441,7 +479,42 @@ function renderModelo2(cv: CVTemplate): string {
     strong { font-weight: 700; color: #000; }
 
     .skill-group-name { font-weight: 700; color: #000; }
-    .skill-items { color: #000; margin-bottom: 8pt; }
+    .skill-items { color: #000; margin-bottom: 6pt; }
+
+    .project-item {
+      margin-bottom: 8pt;
+      padding-left: 0;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .project-item::before {
+      content: none;
+    }
+
+    .project-title {
+      display: block;
+      margin-bottom: 2pt;
+    }
+
+    .project-bullets {
+      margin-left: 12pt;
+      margin-top: 2pt;
+    }
+
+    .project-bullets li {
+      margin-bottom: 2pt;
+      font-size: 10.5pt;
+      line-height: 1.35;
+    }
+
+    .cert-list { margin-bottom: 4pt; }
+    .cert-list li { margin-bottom: 3pt; }
+
+    .section-projects {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
 
     .company-name { color: #2E5C9E; }
     .job-title { font-weight: 700; }
@@ -490,7 +563,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      <p class="cert-list">${renderCertifications(cv.certifications)}</p>
+      ${renderCertifications(cv.certifications, "modelo2")}
     </div>`
         : ""
     }
@@ -499,9 +572,9 @@ function renderModelo2(cv: CVTemplate): string {
       cv.projects && cv.projects.length > 0
         ? `
     <!-- Research Projects -->
-    <div class="section">
+    <div class="section section-projects">
       ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
-      ${renderProjects(cv.projects)}
+      ${renderProjects(cv.projects, "modelo2")}
     </div>`
         : ""
     }

@@ -7,13 +7,32 @@ vi.mock("@/lib/ai/resume-generator", () => ({
   generateTailoredResume: vi.fn(async () => ({
     cv: {
       language: "pt",
-      header: { name: "Test", title: "", email: "", phone: "", location: "", links: [] },
-      summary: "Personalized",
+      header: {
+        name: "Test",
+        title: "Estagiario de BI",
+        email: "test@example.com",
+        phone: "(11) 99999-9999",
+        location: "Sao Paulo/SP",
+        links: [{ label: "LinkedIn", url: "linkedin.com/in/test" }],
+      },
+      summary:
+        "Estudante em fase final da graduacao com foco em analise de dados aplicada a rotinas operacionais e suporte a indicadores. Tenho pratica com Excel, SQL, Power BI e organizacao de bases para acompanhamento de relatorios e consistencia das informacoes. Em projetos academicos e autorais, automatizei rotinas em Python, documentei etapas e estruturei dados para analise recorrente. Busco estagio em BI para apoiar manutencao de bases, visualizacao de indicadores e elaboracao de relatorios.",
       experience: [],
-      education: [],
-      skills: [],
-      projects: [],
-      languages: [],
+      education: [{ degree: "Graduacao", institution: "Universidade", period: "2021-2026", location: "SP" }],
+      skills: [
+        { category: "Analise de Dados", items: ["Excel", "SQL", "Power BI", "Python"] },
+        { category: "Processos", items: ["Validacao de dados", "Documentacao tecnica"] },
+      ],
+      projects: [
+        {
+          title: "Projeto de BI",
+          description: [
+            "Estruturei bases e indicadores para acompanhamento semanal de desempenho em dashboards internos.",
+            "Automatizei consolidacao de dados com Python e SQL, melhorando consistencia e rastreabilidade do fluxo.",
+          ],
+        },
+      ],
+      languages: [{ language: "Portugues", proficiency: "Nativo" }],
       certifications: [],
     },
     duration: 5000,
@@ -142,7 +161,8 @@ describe("POST /api/ai/generate-resume", () => {
       "en",
       "test-user-id",
       undefined,
-      "openai/gpt-5.4-nano"
+      "openai/gpt-5.4-nano",
+      undefined
     )
   })
 
@@ -169,6 +189,7 @@ describe("POST /api/ai/generate-resume", () => {
       expect.any(Object),
       "pt",
       "test-user-id",
+      undefined,
       undefined,
       undefined
     )
