@@ -74,10 +74,10 @@ describe("generateResumeHTML", () => {
     expect(html).toContain(".project-item::before")
   })
 
-  it("blocks invalid html rendering through preflight", () => {
+  it("keeps html rendering pure and leaves preflight to callers", () => {
     const cv = createCV()
     cv.summary = "Resumo curto demais."
 
-    expect(() => generateResumeHTML(cv, "modelo2")).toThrowError(/CV preflight failed/)
+    expect(() => generateResumeHTML(cv, "modelo2")).not.toThrow()
   })
 })

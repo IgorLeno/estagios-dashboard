@@ -1,5 +1,4 @@
 import type { CVTemplate, Certification } from "./types"
-import { validateCVTemplate } from "./resume-preflight"
 
 export type ResumeTemplate = "modelo1" | "modelo2"
 
@@ -140,11 +139,6 @@ function renderCertifications(certifications: Certification[], template: ResumeT
  * Defaults to modelo1 (current layout) for backward compatibility.
  */
 export function generateResumeHTML(cv: CVTemplate, template: ResumeTemplate = "modelo1"): string {
-  const preflight = validateCVTemplate(cv)
-  if (!preflight.valid) {
-    throw new Error(`CV preflight failed:\n${preflight.errors.join("\n")}`)
-  }
-
   if (template === "modelo2") return renderModelo2(cv)
   return renderModelo1(cv)
 }

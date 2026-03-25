@@ -5,6 +5,7 @@ import { generateResumeHTML } from "@/lib/ai/resume-html-template"
 import { GenerateResumeRequestSchema, JobDetailsSchema, JobDetails } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
 import { validateAIConfig } from "@/lib/ai/config"
+import { validateCVTemplate } from "@/lib/ai/resume-preflight"
 import { ZodError } from "zod"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -60,6 +61,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Gerar currículo personalizado (só CV object, sem PDF)
     const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills, model)
+
+    const preflight = validateCVTemplate(resumeResult.cv)
+    if (!preflight.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `CV preflight failed:\n${preflight.errors.join("\n")}`,
+          details: {
+            errors: preflight.errors,
+            warnings: preflight.warnings,
+          },
+        },
+        { status: 422 }
+      )
+    }
+    if (preflight.warnings.length > 0) {
+      console.warn("[CV Preflight] Warnings:", preflight.warnings)
+    }
 
     // Gerar HTML a partir do CV object
     const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
