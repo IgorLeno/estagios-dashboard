@@ -22,6 +22,7 @@ import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
 import { JobDetailsSchema } from "@/lib/ai/types"
 import type { JobDetails, ComplementSelection } from "@/lib/ai/types"
+import { renderMarkdownResumeToHtml } from "@/lib/ai/markdown-converter"
 import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
 
 function mapVagaToJobDetails(vaga: VagaEstagio): JobDetails {
@@ -304,26 +305,21 @@ export default function VagaDetailPage() {
     }
   }
 
-  async function handleGeneratePdf(language: "pt" | "en", templateOverride?: string) {
+  async function handleGeneratePdf(language: "pt" | "en") {
     if (!vaga) return
 
     try {
       if (language === "pt") setIsGeneratingPdfPT(true)
       else setIsGeneratingPdfEN(true)
 
-      const templateToUse = templateOverride ?? activeTemplate
+      const markdownText = language === "pt" ? vaga.curriculo_text_pt : vaga.curriculo_text_en
 
-      // Step 1: Render styled HTML from user profile — no AI calls
-      const renderResponse = await fetch("/api/ai/render-resume-html", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vagaId: vaga.id, language, resumeTemplate: templateToUse }),
-      })
+      if (!markdownText?.trim()) {
+        throw new Error(`Nenhum currículo salvo em ${language.toUpperCase()} para converter`)
+      }
 
-      if (!renderResponse.ok) throw new Error("Falha ao renderizar HTML do currículo")
-
-      const renderResult = await renderResponse.json()
-      const html = renderResult.data.html
+      const templateToUse = activeTemplate === "modelo2" ? "modelo2" : "modelo1"
+      const html = await renderMarkdownResumeToHtml(markdownText, templateToUse, language)
 
       // Step 2: Convert HTML to PDF
       const pdfResponse = await fetch("/api/ai/html-to-pdf", {
@@ -351,7 +347,7 @@ export default function VagaDetailPage() {
       toast.success(`PDF gerado com sucesso em ${language.toUpperCase()}!`)
     } catch (error) {
       console.error("Error generating PDF:", error)
-      toast.error("Erro ao gerar PDF. Tente novamente.")
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar PDF. Tente novamente.")
     } finally {
       if (language === "pt") setIsGeneratingPdfPT(false)
       else setIsGeneratingPdfEN(false)

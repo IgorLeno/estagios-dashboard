@@ -77,39 +77,62 @@ export function ResumeContainer({
     setLocalTemplate(activeTemplate)
   }, [activeTemplate])
 
-  // Clear HTML preview when markdown changes (new AI content generated)
   useEffect(() => {
-    setTemplateHtml(null)
-  }, [markdown])
+    if (!hasContent) {
+      setTemplateHtml(null)
+      return
+    }
+
+    let isCancelled = false
+
+    async function loadTemplateHtml() {
+      setIsLoadingTemplate(true)
+
+      try {
+        const response = await fetch("/api/ai/render-resume-html", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vagaId,
+            language,
+            resumeTemplate: localTemplate,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Falha ao carregar preview do currículo")
+        }
+
+        const result = await response.json()
+
+        if (!isCancelled && result.success && result.data?.html) {
+          setTemplateHtml(result.data.html)
+        }
+      } catch (err) {
+        console.error("[ResumeContainer] Erro ao carregar preview HTML:", err)
+        if (!isCancelled) {
+          setTemplateHtml(null)
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingTemplate(false)
+        }
+      }
+    }
+
+    loadTemplateHtml()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [hasContent, vagaId, language, localTemplate, markdown])
 
   const templateLabel = TEMPLATES.find((t) => t.value === localTemplate)?.label ?? localTemplate
 
   async function handleSelectTemplate(template: string) {
     if (template === localTemplate) return
-    setIsLoadingTemplate(true)
     setLocalTemplate(template)
     onTemplateChange(template)
-    try {
-      const response = await fetch("/api/ai/generate-resume-html", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vagaId,
-          language,
-          resumeTemplate: template,
-        }),
-      })
-      if (!response.ok) throw new Error("Falha ao gerar preview")
-      const result = await response.json()
-      if (result.success && result.data?.html) {
-        setTemplateHtml(result.data.html)
-      }
-    } catch (err) {
-      console.error("[ResumeContainer] Erro ao trocar template:", err)
-      setTemplateHtml(null)
-    } finally {
-      setIsLoadingTemplate(false)
-    }
   }
 
   const languageConfig = {

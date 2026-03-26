@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { generateResumeHTML } from "@/lib/ai/resume-html-template"
-import { getCVTemplateForUser } from "@/lib/ai/cv-templates"
 import type { ResumeTemplate } from "@/lib/ai/resume-html-template"
+import { renderMarkdownResumeToHtml } from "@/lib/ai/markdown-converter"
 
 /**
  * POST /api/ai/render-resume-html
  *
- * Renders the user's base CV as styled HTML using the selected template.
- * Does NOT call any AI — uses the user's profile from the database.
+ * Renders the saved tailored resume markdown as styled HTML using the selected template.
+ * Does NOT call any AI and does NOT rebuild the CV from the base user profile.
  *
  * Request body:
  * {
@@ -41,19 +40,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Verify vaga exists (access control via RLS)
-    const { data: vaga, error } = await supabase.from("vagas_estagio").select("id").eq("id", vagaId).single()
+    // Verify vaga exists (access control via RLS) and load the saved tailored resume.
+    const { data: vaga, error } = await supabase
+      .from("vagas_estagio")
+      .select("id, curriculo_text_pt, curriculo_text_en")
+      .eq("id", vagaId)
+      .single()
 
     if (error || !vaga) {
       return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
     }
 
-    // Build CV from user profile — no AI, no markdown parsing
-    const cv = await getCVTemplateForUser(language as "pt" | "en", user?.id)
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+    }
 
-    // Render styled HTML with the selected template
     const template: ResumeTemplate = (resumeTemplate as ResumeTemplate) ?? "modelo1"
-    const html = generateResumeHTML(cv, template)
+    const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+    const savedMarkdown = vaga[markdownField]?.trim()
+
+    if (!savedMarkdown) {
+      return NextResponse.json(
+        { success: false, error: `No saved resume markdown found for ${language.toUpperCase()}` },
+        { status: 400 }
+      )
+    }
+
+    const html = await renderMarkdownResumeToHtml(savedMarkdown, template, language)
 
     console.log(`[render-resume-html] ✅ HTML rendered (template=${template}, language=${language})`)
 

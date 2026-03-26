@@ -1,5 +1,6 @@
 import TurndownService from "turndown"
 import { marked } from "marked"
+import type { ResumeTemplate } from "./resume-html-template"
 
 /**
  * Converte HTML para Markdown com formatação visual similar ao PDF final.
@@ -63,10 +64,7 @@ export function htmlToMarkdown(html: string): string {
   // 6. Melhorar formatação de listas
   turndownService.addRule("betterLists", {
     filter: ["ul", "ol"],
-    replacement: (content, node) => {
-      const listType = node.nodeName === "OL" ? "ol" : "ul"
-      return `\n${content}\n`
-    },
+    replacement: (content) => `\n${content}\n`,
   })
 
   // 7. Garantir espaçamento adequado em parágrafos
@@ -215,68 +213,210 @@ export async function markdownToHtml(markdown: string): Promise<string> {
  *
  * O CSS aqui é a formatação REAL que será aplicada no PDF final.
  */
-export function wrapMarkdownAsHTML(markdownHtml: string): string {
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Currículo</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 15mm;
+function getResumeTemplateStyles(template: ResumeTemplate): string {
+  if (template === "modelo2") {
+    return `
+        @page { size: A4; margin: 40px; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.35;
+            color: #000;
+            background: #fff;
+            padding: 0;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        h1 {
+            font-family: Georgia, serif;
+            font-size: 24pt;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 4pt;
+        }
+
+        h2 {
+            color: #2E5C9E;
             font-size: 10pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-bottom: 1.5pt solid #2E5C9E;
+            padding-bottom: 2pt;
+            margin-top: 12pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+
+        h3 {
+            font-size: 11pt;
+            font-weight: 700;
+            margin-top: 8pt;
+            margin-bottom: 3pt;
+        }
+
+        p {
+            margin-bottom: 5pt;
+            font-size: 10.5pt;
+            line-height: 1.4;
+        }
+
+        ul, ol {
+            list-style: none;
+            margin: 0 0 4pt 0;
+            padding: 0;
+        }
+
+        li {
+            list-style: none;
+            position: relative;
+            padding-left: 14pt;
+            margin-bottom: 4pt;
+            font-size: 10.5pt;
+            line-height: 1.35;
+        }
+
+        li::before {
+            content: "• ";
+            position: absolute;
+            left: 0;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+
+        em {
+            font-style: italic;
+            color: #2E5C9E;
+        }
+
+        a {
+            color: #2E5C9E;
+            text-decoration: none;
+        }
+
+        @media screen {
+            body { padding: 40px; }
+        }
+
+        @media print {
+            body { padding: 0; }
+        }
+    `
+  }
+
+  return `
+        @page {
+            size: A4;
+            margin: 1.94cm 2.25cm 0.49cm 2.25cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, "Segoe UI", sans-serif;
+            font-size: 11pt;
             line-height: 1.3;
             color: #000;
-            max-width: 210mm;
+            background: #fff;
+            padding: 0;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
             margin: 0 auto;
         }
 
         h1 {
             text-align: left;
-            font-size: 20pt;
-            font-weight: bold;
-            margin-bottom: 5px;
-            margin-top: 0;
+            font-size: 14pt;
+            font-weight: 700;
+            margin-bottom: 3pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            color: #000;
         }
 
         h2 {
-            font-size: 12pt;
-            font-weight: bold;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            padding-bottom: 3px;
-            border-bottom: 1px solid #000;
+            font-size: 11pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 6pt;
+            margin-bottom: 5pt;
+            padding-bottom: 2pt;
+            letter-spacing: 0.3pt;
+            color: #000;
+            border-bottom: 1.5pt solid #000;
+            page-break-after: avoid;
+            break-after: avoid;
         }
 
         h3 {
             font-size: 11pt;
-            font-weight: bold;
-            margin-top: 8px;
-            margin-bottom: 3px;
+            font-weight: 700;
+            margin-top: 8pt;
+            margin-bottom: 3pt;
         }
 
         p {
-            margin: 3px 0;
+            margin-bottom: 4pt;
+            text-align: justify;
+            font-size: 11pt;
+            line-height: 1.25;
+            color: #000;
         }
 
         ul, ol {
-            margin: 5px 0;
-            padding-left: 20px;
+            margin-left: 0;
+            margin-bottom: 4pt;
+            padding-left: 0;
+            list-style-position: outside;
+            list-style-type: none;
         }
 
         li {
-            margin-bottom: 2px;
+            margin-bottom: 3pt;
+            padding-left: 12pt;
+            line-height: 1.25;
+            font-size: 11pt;
+            color: #000;
+            text-align: justify;
+            position: relative;
+        }
+
+        li::before {
+            content: "• ";
+            position: absolute;
+            left: 0;
+            font-weight: 700;
         }
 
         strong {
-            font-weight: bold;
+            font-weight: 700;
+            color: #000;
         }
 
         em {
@@ -285,13 +425,54 @@ export function wrapMarkdownAsHTML(markdownHtml: string): string {
 
         a {
             color: #0066cc;
-            text-decoration: none;
+            text-decoration: underline;
         }
+
+        a:hover {
+            color: #004499;
+            text-decoration: underline;
+        }
+
+        @media screen {
+            body { padding: 1.94cm 2.25cm 1.94cm 2.25cm; }
+        }
+
+        @media print {
+            body { padding: 0; }
+        }
+    `
+}
+
+export function wrapMarkdownAsHTML(
+  markdownHtml: string,
+  template: ResumeTemplate = "modelo1",
+  language: "pt" | "en" = "pt"
+): string {
+  return `
+<!DOCTYPE html>
+<html lang="${language === "pt" ? "pt-BR" : "en"}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currículo</title>
+    <style>
+${getResumeTemplateStyles(template)}
     </style>
 </head>
 <body>
-    ${markdownHtml}
+    <div class="container">
+        ${markdownHtml}
+    </div>
 </body>
 </html>
   `
+}
+
+export async function renderMarkdownResumeToHtml(
+  markdown: string,
+  template: ResumeTemplate = "modelo1",
+  language: "pt" | "en" = "pt"
+): Promise<string> {
+  const html = await markdownToHtml(markdown)
+  return wrapMarkdownAsHTML(html, template, language)
 }
