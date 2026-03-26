@@ -111,6 +111,8 @@ export default function VagaDetailPage() {
 
       if (error) throw error
       setVaga(data)
+      if (data?.profile_text_pt) setProfileText(data.profile_text_pt)
+      if (data?.tagline_pt) setTagline(data.tagline_pt)
 
       // Se houver arquivo de análise, carregar conteúdo para preview
       if (data?.observacoes) {

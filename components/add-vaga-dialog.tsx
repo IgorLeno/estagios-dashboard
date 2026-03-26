@@ -135,6 +135,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       arquivo_cv_url_en: cvDataUrlEn,
       curriculo_text_pt: resumeContentPt || null,
       curriculo_text_en: resumeContentEn || null,
+      profile_text_pt: profileText.trim() || null,
+      tagline_pt: tagline.trim() || null,
       data_inscricao: dataInscricao,
       is_test_data: process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true" || looksLikeE2ETest,
     }
