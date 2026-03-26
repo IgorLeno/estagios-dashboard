@@ -42,6 +42,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Get job details (igual ao endpoint original)
     let jobDetails: JobDetails | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let vagaRecord: Record<string, any> | null = null
 
     if (vagaId) {
       const { data: vaga, error } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
@@ -49,6 +51,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (error || !vaga) {
         return NextResponse.json({ success: false, error: "Vaga not found" }, { status: 404 })
       }
+
+      vagaRecord = vaga
 
       jobDetails = JobDetailsSchema.parse({
         empresa: vaga.empresa || "",
@@ -70,8 +74,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw new Error("Either vagaId or jobDescription is required")
     }
 
-    // Gerar currículo personalizado (só CV object, sem PDF)
-    const effectiveProfileText = language === "pt" ? profileText : undefined
+    // Fall back to vaga-stored profile text / tagline when not provided in request body
+    const vagaProfileField = language === "pt" ? "profile_text_pt" : "profile_text_en"
+    const vagaTaglineField = language === "pt" ? "tagline_pt" : "tagline_en"
+    const effectiveProfileText = profileText?.trim() || vagaRecord?.[vagaProfileField]?.trim() || undefined
+    const effectiveTagline = tagline?.trim() || vagaRecord?.[vagaTaglineField]?.trim() || undefined
 
     const resumeResult = await generateTailoredResume({
       jobDetails,
@@ -81,7 +88,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       model,
       selectedProjectTitles,
       profileText: effectiveProfileText,
-      tagline: tagline?.trim() || undefined,
+      tagline: effectiveTagline,
       selectedCertifications,
     })
 

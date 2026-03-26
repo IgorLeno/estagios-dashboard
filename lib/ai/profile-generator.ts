@@ -62,6 +62,9 @@ ${isPt ? "REGRAS" : "RULES"}:
 - ${isPt ? "ZERO fabricação: use apenas fatos do perfil acima" : "ZERO fabrication: only use facts from the profile above"}
 - ${isPt ? "Síntese narrativa, NÃO lista de keywords disfarçada de parágrafo" : "Narrative synthesis, NOT a keyword list disguised as a paragraph"}
 - ${isPt ? "Tom natural, profissional, sem clichês genéricos" : "Natural, professional tone, no generic clichés"}
+- ${isPt
+    ? 'NUNCA use primeira pessoa (eu, meu, minha, utilizo, padronizei, "Pronto para"). Use terceira pessoa implícita sem sujeito: "Estudante de... com experiência em...", "Utiliza...", "Desenvolve..."'
+    : 'NEVER use first person (I, my, mine). Use implicit third person without subject: "Student of... with experience in...", "Uses...", "Develops..."'}
 - ${isPt ? "Conecte competências reais do candidato com necessidades da vaga" : "Connect real candidate competencies with job needs"}
 - ${isPt
     ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), sem clichês, que capture formação + área de atuação + diferencial. Ex: "Engenheiro Químico | Dados, BI & Machine Learning"'

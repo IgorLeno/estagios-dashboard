@@ -70,6 +70,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Get job details (outside timeout wrapper to handle 404 early)
     let jobDetails: JobDetails | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let vagaRecord: Record<string, any> | null = null
 
     if (vagaId) {
       // Fetch from database
@@ -83,6 +85,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
         return NextResponse.json(errorResponse, { status: 404 })
       }
+
+      vagaRecord = vaga
 
       // Map vaga to JobDetails (schema handles null/undefined with defaults)
       jobDetails = JobDetailsSchema.parse({
@@ -118,7 +122,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw new Error("Job details not available")
     }
 
-    const effectiveProfileText = language === "pt" ? profileText : undefined
+    // Fall back to vaga-stored profile text / tagline when not provided in request body
+    const vagaProfileField = language === "pt" ? "profile_text_pt" : "profile_text_en"
+    const vagaTaglineField = language === "pt" ? "tagline_pt" : "tagline_en"
+    const effectiveProfileText = profileText?.trim() || vagaRecord?.[vagaProfileField]?.trim() || undefined
+    const effectiveTagline = tagline?.trim() || vagaRecord?.[vagaTaglineField]?.trim() || undefined
 
     const resumeResult = await withTimeout(
       generateTailoredResume({
@@ -129,7 +137,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         model,
         selectedProjectTitles,
         profileText: effectiveProfileText,
-        tagline: tagline?.trim() || undefined,
+        tagline: effectiveTagline,
         selectedCertifications,
       }),
       AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs,

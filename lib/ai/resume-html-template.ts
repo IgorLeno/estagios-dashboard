@@ -36,7 +36,7 @@ function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
   if (template === "modelo2") {
     return `<p class="contact-line">${parts.map((part) => `<span class="contact-item">${part}</span>`).join("")}</p>`
   }
-  return `<div class="contact"><p>${parts.join(" | ")}</p></div>`
+  return `<div class="contact"><p>${parts.map((part) => `<span class="contact-item">${part}</span>`).join("")}</p></div>`
 }
 
 function renderSectionTitle(label: string): string {
@@ -55,6 +55,10 @@ function renderEducation(education: CVTemplate["education"]): string {
 }
 
 function renderLanguages(languages: CVTemplate["languages"]): string {
+  if (languages.length === 1) {
+    const lang = languages[0]
+    return `<p>${escapeHtml(lang.language)}: ${escapeHtml(lang.proficiency)}.</p>`
+  }
   return `<ul>
         ${languages.map((lang) => `<li>${escapeHtml(lang.language)}: ${escapeHtml(lang.proficiency)}.</li>`).join("\n        ")}
       </ul>`
@@ -76,16 +80,24 @@ function renderProjects(projects: CVTemplate["projects"], template: ResumeTempla
       </ul>`
   }
 
-  return `<ul>
-        ${projects
-          .map(
-            (project) => `<li>
-            <strong>${escapeHtml(project.title)}:</strong>
-            ${project.description.map(escapeHtml).join(" ")}
-          </li>`
-          )
-          .join("\n        ")}
-      </ul>`
+  return projects
+    .map(
+      (project) => `<div class="project-item">
+          <p><strong>${escapeHtml(project.title)}</strong></p>
+          <p>${project.description.map(escapeHtml).join(" ")}</p>
+        </div>`
+    )
+    .join("\n      ")
+}
+
+function deduplicateItems(items: string[]): string[] {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const key = item.replace(/\s*\([^)]+\)$/, "").trim().toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 function renderSkillGroups(skills: CVTemplate["skills"], template: ResumeTemplate): string {
@@ -94,19 +106,18 @@ function renderSkillGroups(skills: CVTemplate["skills"], template: ResumeTemplat
       .map(
         (skillGroup) =>
           `<p><strong class="skill-group-name">${escapeHtml(skillGroup.category)}</strong></p>
-      <p class="skill-items">${skillGroup.items.map(escapeHtml).join(" | ")}</p>`
+      <p class="skill-items">${deduplicateItems(skillGroup.items).map(escapeHtml).join(" | ")}</p>`
       )
       .join("\n      ")
   }
-  // modelo1 — comma-separated list items
-  return `<ul>
-        ${skills
-          .map(
-            (skillGroup) =>
-              `<li><strong>${escapeHtml(skillGroup.category)}:</strong> ${skillGroup.items.map(escapeHtml).join(", ")}</li>`
-          )
-          .join("\n        ")}
-      </ul>`
+  // modelo1 — pipe-separated items
+  return skills
+    .map(
+      (skillGroup) =>
+        `<p><strong>${escapeHtml(skillGroup.category)}</strong></p>
+      <p>${deduplicateItems(skillGroup.items).map(escapeHtml).join(" | ")}</p>`
+    )
+    .join("\n      ")
 }
 
 function renderCertificationLabel(cert: Certification): string {
@@ -190,7 +201,7 @@ function renderModelo1(cv: CVTemplate): string {
     .header h1 {
       font-size: 14pt;
       font-weight: bold;
-      margin-bottom: 3pt;
+      margin-bottom: 8pt;
       text-transform: uppercase;
       letter-spacing: 0.5pt;
       color: #000;
@@ -201,7 +212,7 @@ function renderModelo1(cv: CVTemplate): string {
       font-style: italic;
       color: #0066cc;
       margin-bottom: 4pt;
-      margin-top: 2pt;
+      margin-top: 4pt;
     }
 
     .header .contact {
@@ -218,6 +229,16 @@ function renderModelo1(cv: CVTemplate): string {
 
     .header .contact a:hover {
       color: #004499;
+    }
+
+    .header .contact .contact-item {
+      white-space: nowrap;
+      display: inline;
+    }
+
+    .header .contact .contact-item:not(:last-child)::after {
+      content: " | ";
+      color: #000;
     }
 
     /* Section */
@@ -299,6 +320,17 @@ function renderModelo1(cv: CVTemplate): string {
       text-decoration: underline;
     }
 
+    .section-projects {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+
+    .project-item {
+      margin-bottom: 6pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
     @media screen {
       body { padding: 1.94cm 2.25cm 1.94cm 2.25cm; }
     }
@@ -350,7 +382,7 @@ function renderModelo1(cv: CVTemplate): string {
       cv.projects && cv.projects.length > 0
         ? `
     <!-- Research Projects -->
-    <div class="section">
+    <div class="section section-projects">
       ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
       ${renderProjects(cv.projects, "modelo1")}
     </div>`
@@ -494,6 +526,8 @@ function renderModelo2(cv: CVTemplate): string {
     .project-bullets {
       margin-left: 12pt;
       margin-top: 2pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     .project-bullets li {

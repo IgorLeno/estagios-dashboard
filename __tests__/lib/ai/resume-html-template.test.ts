@@ -53,10 +53,13 @@ describe("generateResumeHTML", () => {
     const html = generateResumeHTML(createCV(), "modelo1")
 
     expect(html).toContain('<div class="contact"><p>')
-    expect(html).toContain("linkedin.com/in/igorfernandes</a> |")
+    // modelo1 now uses <span class="contact-item"> with CSS ::after separator
+    expect(html).toContain('<span class="contact-item">')
+    expect(html).toContain('contact-item:not(:last-child)::after')
     expect(html).toContain('<p class="cert-list"><strong>Google Data Analytics</strong> — Coursera, 2024 |')
-    expect(html).toContain("<strong>Dashboard de Indicadores:</strong>")
-    expect(html).not.toContain('class="contact-item"')
+    // Projects now render as prose <p> with <strong>Title</strong> (no colon)
+    expect(html).toContain("<strong>Dashboard de Indicadores</strong>")
+    expect(html).toContain('class="project-item"')
     expect(html).not.toContain('class="project-bullets"')
     expect(html).not.toContain('<ul class="cert-list">')
   })
@@ -72,6 +75,31 @@ describe("generateResumeHTML", () => {
     expect(html).toContain("<li><strong>Google Data Analytics</strong> — Coursera, 2024</li>")
     expect(html).toContain(".contact-item:not(:last-child)::after")
     expect(html).toContain(".project-item::before")
+  })
+
+  it("deduplicates skill items within a category", () => {
+    const cv = createCV()
+    cv.summary = "Resumo sem skills mencionadas para isolar teste."
+    cv.skills = [
+      {
+        category: "Ferramentas",
+        items: ["Ferramenta A (detalhes)", "Ferramenta B", "Ferramenta A", "Ferramenta B (extras)"],
+      },
+    ]
+    const html = generateResumeHTML(cv, "modelo1")
+    // "Ferramenta A" and "Ferramenta A (detalhes)" share the base — first wins
+    const aMatches = html.match(/Ferramenta A/g) || []
+    expect(aMatches.length).toBe(1)
+    // "Ferramenta B" and "Ferramenta B (extras)" share the base — first wins
+    const bMatches = html.match(/Ferramenta B/g) || []
+    expect(bMatches.length).toBe(1)
+  })
+
+  it("renders single language as p instead of ul", () => {
+    const cv = createCV()
+    const html = generateResumeHTML(cv, "modelo1")
+    expect(html).toContain("<p>Portugues: Nativo.</p>")
+    expect(html).not.toContain("<li>Portugues:")
   })
 
   it("keeps html rendering pure and leaves preflight to callers", () => {
