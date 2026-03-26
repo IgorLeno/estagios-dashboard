@@ -336,16 +336,18 @@ async function runConsistencyAgent(
  * - CORE_SYSTEM_PROMPT is always prepended and cannot be overridden by user config
  * - User's curriculo_prompt is treated as style preferences only (additive)
  */
-export async function generateTailoredResume(
-  jobDetails: JobDetails,
-  language: "pt" | "en",
-  userId?: string,
-  approvedSkills?: string[],
-  model?: string,
-  selectedProjectTitles?: string[],
-  profileText?: string,
+export interface GenerateResumeOptions {
+  jobDetails: JobDetails
+  language: "pt" | "en"
+  userId?: string
+  approvedSkills?: string[]
+  model?: string
+  selectedProjectTitles?: string[]
+  profileText?: string
   selectedCertifications?: string[]
-): Promise<{
+}
+
+export async function generateTailoredResume(options: GenerateResumeOptions): Promise<{
   cv: CVTemplate
   duration: number
   model: string
@@ -353,6 +355,16 @@ export async function generateTailoredResume(
   personalizedSections: string[]
   atsScore?: number
 }> {
+  const {
+    jobDetails,
+    language,
+    userId,
+    approvedSkills,
+    model,
+    selectedProjectTitles,
+    profileText,
+    selectedCertifications,
+  } = options
   const startTime = Date.now()
 
   console.log(`[Resume Generator] Starting personalization (${language})`)

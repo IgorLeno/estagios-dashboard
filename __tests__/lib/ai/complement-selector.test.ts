@@ -113,7 +113,7 @@ describe("selectComplements", () => {
     expect(prompt).toContain("Excel Avançado")
   })
 
-  it("rejects selections that exceed fixed project limits", async () => {
+  it("truncates selections that exceed fixed project limits instead of throwing", async () => {
     mockCallGrok.mockResolvedValueOnce({
       content: JSON.stringify({
         skills: [{ category: "Dados", items: ["Excel"], selected: true }],
@@ -128,8 +128,12 @@ describe("selectComplements", () => {
       usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
     })
 
-    await expect(
-      selectComplements("Perfil profissional aprovado na aba fit.", jobDetails, "pt")
-    ).rejects.toThrow("selected projects exceeds limit 3")
+    const result = await selectComplements("Perfil profissional aprovado na aba fit.", jobDetails, "pt")
+
+    // Should truncate to MAX_PROJECTS (3), not throw
+    const selectedProjects = result.selection.projects.filter((p) => p.selected)
+    expect(selectedProjects.length).toBeLessThanOrEqual(3)
+    // The 4th project should have been deselected
+    expect(result.selection.projects[3].selected).toBe(false)
   })
 })

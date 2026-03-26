@@ -119,16 +119,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Generate tailored resume
         const effectiveProfileText = language === "pt" ? profileText : undefined
 
-        const resumeResult = await generateTailoredResume(
+        const resumeResult = await generateTailoredResume({
           jobDetails,
           language,
           userId,
           approvedSkills,
           model,
           selectedProjectTitles,
-          effectiveProfileText,
-          selectedCertifications
-        )
+          profileText: effectiveProfileText,
+          selectedCertifications,
+        })
 
         // Generate PDF
         const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")

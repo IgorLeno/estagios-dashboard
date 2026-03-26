@@ -1,7 +1,7 @@
 import { callGrok, type GrokMessage } from "./grok-client"
 import { getCVTemplateForUser } from "./cv-templates"
 import { loadUserAIConfig, getGenerationConfig } from "./config"
-import { DEFAULT_MODEL } from "./models"
+import { isValidModelId, DEFAULT_MODEL } from "./models"
 import { extractJsonFromResponse } from "./job-parser"
 import type { JobDetails, TokenUsage } from "./types"
 
@@ -80,7 +80,8 @@ export async function generateProfile(
 ): Promise<{ profileText: string; tokenUsage: TokenUsage }> {
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
-  const resolvedModel = model ?? config.modelo_gemini ?? DEFAULT_MODEL
+  const userModel = config.modelo_gemini
+  const resolvedModel = model ?? (userModel && isValidModelId(userModel) ? userModel : DEFAULT_MODEL)
 
   const cv = await getCVTemplateForUser(language, userId)
 
@@ -123,20 +124,45 @@ export async function generateProfile(
     throw new Error("LLM response missing profileText field")
   }
 
-  const wordCount = profileText.trim().split(/\s+/).length
+  let finalText = profileText.trim()
+  const wordCount = finalText.split(/\s+/).length
+
   if (wordCount < MIN_PROFILE_WORDS) {
     throw new Error(
       `Profile too short: ${wordCount} words (minimum ${MIN_PROFILE_WORDS})`
     )
   }
+
   if (wordCount > MAX_PROFILE_WORDS) {
-    throw new Error(
-      `Profile too long: ${wordCount} words (maximum ${MAX_PROFILE_WORDS})`
+    // Truncate at the last sentence boundary within the word limit
+    const words = finalText.split(/\s+/)
+    const truncatedWords = words.slice(0, MAX_PROFILE_WORDS).join(" ")
+    const lastSentenceEnd = Math.max(
+      truncatedWords.lastIndexOf("."),
+      truncatedWords.lastIndexOf("!"),
+      truncatedWords.lastIndexOf("?")
     )
+
+    if (lastSentenceEnd > 0) {
+      finalText = truncatedWords.slice(0, lastSentenceEnd + 1)
+    } else {
+      finalText = truncatedWords + "."
+    }
+
+    const truncatedWordCount = finalText.split(/\s+/).length
+    console.warn(
+      `[ProfileGenerator] Profile truncated from ${wordCount} to ${truncatedWordCount} words (limit: ${MAX_PROFILE_WORDS})`
+    )
+
+    if (truncatedWordCount < MIN_PROFILE_WORDS) {
+      throw new Error(
+        `Profile too short after truncation: ${truncatedWordCount} words (minimum ${MIN_PROFILE_WORDS})`
+      )
+    }
   }
 
   return {
-    profileText: profileText.trim(),
+    profileText: finalText,
     tokenUsage: {
       inputTokens: response.usage.prompt_tokens,
       outputTokens: response.usage.completion_tokens,

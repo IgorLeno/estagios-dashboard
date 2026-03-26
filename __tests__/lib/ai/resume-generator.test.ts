@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { generateTailoredResume, InsufficientProfileError } from "@/lib/ai/resume-generator"
+import type { GenerateResumeOptions } from "@/lib/ai/resume-generator"
 import type { JobDetails } from "@/lib/ai/types"
 
 // Mock job details for testing
@@ -296,7 +297,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should generate tailored resume with personalized sections", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result).toBeDefined()
     expect(result.cv).toBeDefined()
@@ -306,7 +307,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should include correct metadata", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.model).toBe("x-ai/grok-4.1-fast")
     expect(result.duration).toBeGreaterThanOrEqual(0)
@@ -314,7 +315,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should aggregate token usage from all sections", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.tokenUsage).toBeDefined()
     expect(result.tokenUsage.inputTokens).toBe(500 + 400 + 600 + 250) // 1750
@@ -323,7 +324,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should preserve static CV sections", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.header.name).toBe("Igor Fernandes")
     expect(result.cv.header.email).toBe("igor@example.com")
@@ -375,15 +376,11 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    const result = await generateTailoredResume(
-      mockJobDetails,
-      "pt",
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      providedProfileText
-    )
+    const result = await generateTailoredResume({
+      jobDetails: mockJobDetails,
+      language: "pt",
+      profileText: providedProfileText,
+    })
 
     expect(result.cv.summary).toBe(providedProfileText)
     expect(buildSummaryPrompt).not.toHaveBeenCalled()
@@ -447,29 +444,24 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    const result = await generateTailoredResume(
-      mockJobDetails,
-      "pt",
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [mockBaseCertifications[0], mockBaseCertifications[2]]
-    )
+    const result = await generateTailoredResume({
+      jobDetails: mockJobDetails,
+      language: "pt",
+      selectedCertifications: [mockBaseCertifications[0], mockBaseCertifications[2]],
+    })
 
     expect(result.cv.certifications).toEqual([mockBaseCertifications[0], mockBaseCertifications[2]])
   })
 
   it("should support English language", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "en")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "en" })
 
     expect(result.cv.language).toBe("en")
   })
 
   it("should call LLM in parallel for all sections", async () => {
     const startTime = Date.now()
-    await generateTailoredResume(mockJobDetails, "pt")
+    await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
     const duration = Date.now() - startTime
 
     // If calls were sequential, duration would be sum of all calls
@@ -505,7 +497,7 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.tokenUsage.inputTokens).toBe(0)
     expect(result.tokenUsage.outputTokens).toBe(0)
@@ -513,7 +505,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should include job-relevant keywords in personalized summary", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     const summary = result.cv.summary.toLowerCase()
     expect(summary).toContain("machine learning")
@@ -522,7 +514,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should reorder skills by relevance to job", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     // First category should be ML-related (most relevant to job)
     expect(result.cv.skills[0].category).toBe("Machine Learning & Data Science")
@@ -530,7 +522,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should emphasize job-relevant technologies in projects", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     const firstProject = result.cv.projects[0]
     const projectText = firstProject.description.join(" ").toLowerCase()
@@ -585,7 +577,7 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.summary).toBe(mockSummaryResponse.summary)
   })
@@ -613,7 +605,7 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow()
+    await expect(generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })).rejects.toThrow()
   })
 
   it("should apply consistency corrections to the final draft", async () => {
@@ -654,7 +646,7 @@ describe("generateTailoredResume", () => {
         },
       })
 
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.summary).toBe(correctedSummary)
     expect(result.cv.certifications).toEqual(mockSortedCertifications)
@@ -685,7 +677,7 @@ describe("generateTailoredResume", () => {
       })
       .mockRejectedValueOnce(new Error("Consistency timeout"))
 
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.summary).toBe(mockSummaryResponse.summary)
     expect(result.cv.certifications).toEqual(mockBaseCertifications)
@@ -701,7 +693,7 @@ describe("generateTailoredResume", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
 
     try {
-      await generateTailoredResume(mockJobDetails, "pt")
+      await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
       expect(logSpy).toHaveBeenCalledWith(
         "[ConsistencyAgent] Issues found:",
@@ -718,7 +710,7 @@ describe("generateTailoredResume", () => {
   })
 
   it("should measure execution duration", async () => {
-    const result = await generateTailoredResume(mockJobDetails, "pt")
+    const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.duration).toBeGreaterThanOrEqual(0)
     expect(result.duration).toBeLessThan(10000) // Should complete in less than 10 seconds with mocks
@@ -748,7 +740,7 @@ describe("generateTailoredResume", () => {
         certifications: [],
       })
 
-      await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow(InsufficientProfileError)
+      await expect(generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })).rejects.toThrow(InsufficientProfileError)
       await expect(
         mockedGetCV.mockResolvedValueOnce({
           language: "pt",
@@ -760,7 +752,7 @@ describe("generateTailoredResume", () => {
           projects: [],
           languages: [],
           certifications: [],
-        }) && generateTailoredResume(mockJobDetails, "pt")
+        }) && generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
       ).rejects.toThrow("Perfil profissional insuficiente")
     })
 
@@ -780,12 +772,12 @@ describe("generateTailoredResume", () => {
         certifications: [],
       })
 
-      await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow(InsufficientProfileError)
+      await expect(generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })).rejects.toThrow(InsufficientProfileError)
     })
 
     it("should pass quality gate when summary is adequate", async () => {
       // The default mock already has a 150+ char summary — this test confirms it passes
-      const result = await generateTailoredResume(mockJobDetails, "pt")
+      const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
       expect(result.cv).toBeDefined()
       expect(result.cv.summary).toBeDefined()
     })

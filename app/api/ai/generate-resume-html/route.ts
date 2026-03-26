@@ -72,16 +72,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Gerar currículo personalizado (só CV object, sem PDF)
     const effectiveProfileText = language === "pt" ? profileText : undefined
 
-    const resumeResult = await generateTailoredResume(
+    const resumeResult = await generateTailoredResume({
       jobDetails,
       language,
-      user?.id,
+      userId: user?.id,
       approvedSkills,
       model,
       selectedProjectTitles,
-      effectiveProfileText,
-      selectedCertifications
-    )
+      profileText: effectiveProfileText,
+      selectedCertifications,
+    })
 
     const preflight = validateCVTemplate(resumeResult.cv)
     if (!preflight.valid) {

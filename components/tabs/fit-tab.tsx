@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -44,6 +44,19 @@ export function FitTab({
     certifications: true,
   })
 
+  // Track original skill items per category so removed items can be re-added
+  const originalSkillItemsRef = useRef<Map<string, string[]>>(new Map())
+
+  useEffect(() => {
+    if (complements && originalSkillItemsRef.current.size === 0) {
+      const map = new Map<string, string[]>()
+      for (const skill of complements.skills) {
+        map.set(skill.category, [...skill.items])
+      }
+      originalSkillItemsRef.current = map
+    }
+  }, [complements])
+
   const hasProfile = profileText.trim().length > 0
   const hasComplements = complements !== null
 
@@ -53,10 +66,43 @@ export function FitTab({
 
   function toggleSkillCategory(categoryIndex: number) {
     if (!complements) return
+    const category = complements.skills[categoryIndex]
+    const originalItems = originalSkillItemsRef.current.get(category.category) || category.items
+
     const updated = { ...complements }
-    updated.skills = updated.skills.map((skill, i) =>
-      i === categoryIndex ? { ...skill, selected: !skill.selected } : skill
-    )
+    updated.skills = updated.skills.map((skill, i) => {
+      if (i !== categoryIndex) return skill
+      if (skill.selected && skill.items.length > 0) {
+        // Deselect all: clear items and mark deselected
+        return { ...skill, selected: false, items: [] }
+      } else {
+        // Select all: restore original items
+        return { ...skill, selected: true, items: [...originalItems] }
+      }
+    })
+    onComplementsChange(updated)
+  }
+
+  function toggleSkillItem(categoryIndex: number, itemName: string) {
+    if (!complements) return
+    const category = complements.skills[categoryIndex]
+    const hasItem = category.items.includes(itemName)
+
+    const updated = { ...complements }
+    updated.skills = updated.skills.map((skill, i) => {
+      if (i !== categoryIndex) return skill
+      let newItems: string[]
+      if (hasItem) {
+        newItems = skill.items.filter((item) => item !== itemName)
+      } else {
+        newItems = [...skill.items, itemName]
+      }
+      return {
+        ...skill,
+        items: newItems,
+        selected: newItems.length > 0,
+      }
+    })
     onComplementsChange(updated)
   }
 
@@ -77,6 +123,10 @@ export function FitTab({
     )
     onComplementsChange(updated)
   }
+
+  const totalSelectedSkills = complements
+    ? complements.skills.filter((s) => s.selected).reduce((sum, s) => sum + s.items.length, 0)
+    : 0
 
   const canContinue = hasProfile && hasComplements
 
@@ -182,25 +232,44 @@ export function FitTab({
                 onClick={() => toggleSection("skills")}
                 className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-muted/50"
               >
-                <span>Competências ({complements.skills.filter((s) => s.selected).length}/{complements.skills.length} categorias)</span>
+                <span>Competências ({totalSelectedSkills} skills em {complements.skills.filter((s) => s.selected).length}/{complements.skills.length} categorias)</span>
                 <span className="text-xs text-muted-foreground">{expandedSections.skills ? "▼" : "▶"}</span>
               </button>
               {expandedSections.skills && (
-                <div className="border-t px-3 pb-3 space-y-2">
-                  {complements.skills.map((skill, idx) => (
-                    <label key={idx} className="flex items-start gap-2 pt-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={skill.selected}
-                        onChange={() => toggleSkillCategory(idx)}
-                        className="mt-1 h-4 w-4 rounded border-border"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium">{skill.category}</span>
-                        <p className="text-xs text-muted-foreground truncate">{skill.items.join(", ")}</p>
+                <div className="border-t px-3 pb-3 space-y-3">
+                  {complements.skills.map((skill, idx) => {
+                    const originalItems = originalSkillItemsRef.current.get(skill.category) || skill.items
+                    const allItems = [...new Set([...originalItems, ...skill.items])]
+
+                    return (
+                      <div key={idx} className="pt-2">
+                        {/* Category-level toggle (select all / deselect all) */}
+                        <label className="flex items-start gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={skill.selected && skill.items.length > 0}
+                            onChange={() => toggleSkillCategory(idx)}
+                            className="mt-1 h-4 w-4 rounded border-border"
+                          />
+                          <span className="text-sm font-medium">{skill.category}</span>
+                        </label>
+                        {/* Per-item toggles */}
+                        <div className="ml-6 mt-1 space-y-0.5">
+                          {allItems.map((item) => (
+                            <label key={item} className="flex items-center gap-2 cursor-pointer py-0.5">
+                              <input
+                                type="checkbox"
+                                checked={skill.items.includes(item)}
+                                onChange={() => toggleSkillItem(idx, item)}
+                                className="h-3.5 w-3.5 rounded border-border"
+                              />
+                              <span className="text-xs text-muted-foreground">{item}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </label>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

@@ -157,16 +157,16 @@ describe("POST /api/ai/generate-resume", () => {
       expect.any(String),
       "openai/gpt-5.4-nano"
     )
-    expect(generateTailoredResume).toHaveBeenCalledWith(
-      expect.any(Object),
-      "en",
-      "test-user-id",
-      undefined,
-      "openai/gpt-5.4-nano",
-      undefined,
-      undefined,
-      undefined
-    )
+    expect(generateTailoredResume).toHaveBeenCalledWith({
+      jobDetails: expect.any(Object),
+      language: "en",
+      userId: "test-user-id",
+      approvedSkills: undefined,
+      model: "openai/gpt-5.4-nano",
+      selectedProjectTitles: undefined,
+      profileText: undefined,
+      selectedCertifications: undefined,
+    })
   })
 
   it("should work without model (backward compatibility)", async () => {
@@ -188,16 +188,16 @@ describe("POST /api/ai/generate-resume", () => {
       expect.any(String),
       undefined
     )
-    expect(generateTailoredResume).toHaveBeenCalledWith(
-      expect.any(Object),
-      "pt",
-      "test-user-id",
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined
-    )
+    expect(generateTailoredResume).toHaveBeenCalledWith({
+      jobDetails: expect.any(Object),
+      language: "pt",
+      userId: "test-user-id",
+      approvedSkills: undefined,
+      model: undefined,
+      selectedProjectTitles: undefined,
+      profileText: undefined,
+      selectedCertifications: undefined,
+    })
   })
 })
 
