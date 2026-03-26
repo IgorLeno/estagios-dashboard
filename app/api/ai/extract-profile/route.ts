@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-client"
+import { DEFAULT_MODEL, isValidModelId } from "@/lib/ai/models"
 import { createClient } from "@/lib/supabase/server"
 import { getPromptsConfig } from "@/lib/supabase/prompts"
 import type { CandidateProfile } from "@/lib/types"
@@ -38,11 +39,7 @@ type ExtractedProfileResponse = {
     description_pt?: string[]
     description_en?: string[]
   }>
-  certificacoes?: Array<{
-    title_pt?: string
-    institution_pt?: string
-    year?: string
-  }>
+  certificacoes?: Array<string | { title_pt?: string; institution_pt?: string; year?: string }>
 }
 
 const SYSTEM_PROMPT = `You are a professional profile data extractor.
@@ -323,8 +320,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const { rawText, model, mode, existingProfile } = ExtractProfileRequestSchema.parse(body)
     const config = await getPromptsConfig(user.id)
+    const requestedModel = model ?? config.modelo_gemini
+    const resolvedModel = requestedModel && isValidModelId(requestedModel) ? requestedModel : DEFAULT_MODEL
     const response = await callGrok(buildMessages(rawText, mode, existingProfile), {
-      model: model ?? config.modelo_gemini,
+      model: resolvedModel,
       temperature: 0.1,
       max_tokens: Math.min(config.max_tokens, 4000),
       top_p: config.top_p ?? 0.9,
@@ -340,6 +339,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       data: adaptToCandidateProfile(parsed),
+      metadata: {
+        model: resolvedModel,
+        tokenUsage: {
+          inputTokens: response.usage.prompt_tokens,
+          outputTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        },
+      },
     })
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

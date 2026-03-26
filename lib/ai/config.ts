@@ -21,9 +21,11 @@ export const AI_MODEL_CONFIG = {
 export const AI_TIMEOUT_CONFIG = {
   /**
    * Timeout em milissegundos para operações de parsing
-   * Mantém margem abaixo do teto de 300s do runtime.
+   * Mantém 5s de margem abaixo do maxDuration real de 120s da plataforma,
+   * evitando que a request seja encerrada pelo runtime antes do TimeoutError
+   * estruturado da aplicação.
    */
-  parsingTimeoutMs: 240000,
+  parsingTimeoutMs: 115000,
   /**
    * Timeout em milissegundos para a etapa de geração do currículo via LLM.
    * Mantido separado do parsing para evitar que uma etapa consuma o orçamento inteiro da outra.

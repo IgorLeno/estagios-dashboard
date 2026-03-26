@@ -88,7 +88,7 @@ export async function selectComplements(
   language: "pt" | "en",
   model?: string,
   userId?: string
-): Promise<{ selection: ComplementSelection; tokenUsage: TokenUsage }> {
+): Promise<{ selection: ComplementSelection; tokenUsage: TokenUsage; model: string }> {
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
   const userModel = config.modelo_gemini
@@ -194,6 +194,7 @@ export async function selectComplements(
 
       return {
         selection,
+        model: modelName,
         tokenUsage: {
           inputTokens: response.usage.prompt_tokens,
           outputTokens: response.usage.completion_tokens,

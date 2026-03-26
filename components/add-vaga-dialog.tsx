@@ -197,7 +197,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
 
       if (result.success) {
-        recordModelSuccess(selectedAnalysisModel, "parse-job")
+        recordModelSuccess(result.metadata.model || selectedAnalysisModel, "parse-job")
         const analiseMarkdown = (result as ParseJobResponse & { analise?: string }).analise || ""
         const mapped = mapJobDetailsToFormData(result.data, analiseMarkdown)
         setFormData((prev) => ({ ...prev, ...mapped }))
@@ -257,7 +257,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
 
       if (result.success) {
-        recordModelSuccess(selectedAnalysisModel, "parse-job")
+        recordModelSuccess(result.metadata.model || selectedAnalysisModel, "parse-job")
         const analiseMarkdown = (result as ParseJobResponse & { analise?: string }).analise || ""
         const mapped = mapJobDetailsToFormData(result.data, analiseMarkdown)
         setFormData((prev) => ({ ...prev, ...mapped }))
@@ -355,6 +355,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       })
 
       const result = await response.json()
+      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : selectedResumeModel
 
       if (!response.ok || !result.success) {
         if (response.status >= 500) {
@@ -363,7 +364,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
       }
 
-      recordModelSuccess(selectedResumeModel, "generate-profile")
+      recordModelSuccess(trackedModel, "generate-profile")
       setProfileText(result.data.profileText)
       toast.success("✓ Perfil profissional gerado!")
     } catch (err) {
@@ -396,6 +397,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       })
 
       const result = await response.json()
+      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : selectedResumeModel
 
       if (!response.ok || !result.success) {
         if (response.status >= 500) {
@@ -404,7 +406,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
       }
 
-      recordModelSuccess(selectedResumeModel, "select-complements")
+      recordModelSuccess(trackedModel, "select-complements")
       setComplements(result.data)
       toast.success("✓ Complementos selecionados!")
     } catch (err) {

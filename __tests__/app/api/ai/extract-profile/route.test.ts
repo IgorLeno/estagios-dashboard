@@ -130,6 +130,14 @@ describe("POST /api/ai/extract-profile", () => {
         year: "2024",
       },
     ])
+    expect(data.metadata).toEqual({
+      model: "x-ai/grok-4.1-fast",
+      tokenUsage: {
+        inputTokens: 100,
+        outputTokens: 200,
+        totalTokens: 300,
+      },
+    })
   })
 
   it("keeps compatibility with legacy string certifications returned by the model", async () => {
@@ -157,6 +165,14 @@ describe("POST /api/ai/extract-profile", () => {
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.data.certificacoes).toEqual([{ title_pt: "AWS Cloud Practitioner" }])
+    expect(data.metadata).toEqual({
+      model: "x-ai/grok-4.1-fast",
+      tokenUsage: {
+        inputTokens: 20,
+        outputTokens: 30,
+        totalTokens: 50,
+      },
+    })
   })
 
   it('returns 500 with "Invalid JSON from model" when parsing fails', async () => {

@@ -28,7 +28,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       data: { profileText: result.profileText },
-      metadata: { tokenUsage: result.tokenUsage },
+      metadata: { tokenUsage: result.tokenUsage, model: result.model },
     })
   } catch (error: unknown) {
     console.error("[Generate Profile API] Error:", error instanceof Error ? error.message : String(error))

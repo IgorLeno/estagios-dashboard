@@ -77,7 +77,7 @@ export async function generateProfile(
   language: "pt" | "en",
   model?: string,
   userId?: string
-): Promise<{ profileText: string; tokenUsage: TokenUsage }> {
+): Promise<{ profileText: string; tokenUsage: TokenUsage; model: string }> {
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
   const userModel = config.modelo_gemini
@@ -168,6 +168,7 @@ export async function generateProfile(
 
       return {
         profileText: finalText,
+        model: modelName,
         tokenUsage: {
           inputTokens: response.usage.prompt_tokens,
           outputTokens: response.usage.completion_tokens,

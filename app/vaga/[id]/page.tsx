@@ -458,6 +458,7 @@ export default function VagaDetailPage() {
       })
 
       const result = await response.json()
+      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : activeModel
 
       if (!response.ok || !result.success) {
         if (response.status >= 500) {
@@ -466,7 +467,7 @@ export default function VagaDetailPage() {
         throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
       }
 
-      recordModelSuccess(activeModel, "generate-profile")
+      recordModelSuccess(trackedModel, "generate-profile")
       setProfileText(result.data.profileText)
       setComplements(null)
       toast.success("Perfil profissional gerado com sucesso!")
@@ -499,6 +500,7 @@ export default function VagaDetailPage() {
       })
 
       const result = await response.json()
+      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : activeModel
 
       if (!response.ok || !result.success) {
         if (response.status >= 500) {
@@ -507,7 +509,7 @@ export default function VagaDetailPage() {
         throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
       }
 
-      recordModelSuccess(activeModel, "select-complements")
+      recordModelSuccess(trackedModel, "select-complements")
       setComplements(result.data)
       toast.success("Complementos selecionados com sucesso!")
     } catch (error) {

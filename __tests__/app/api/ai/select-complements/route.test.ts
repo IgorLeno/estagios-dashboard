@@ -51,6 +51,7 @@ describe("POST /api/ai/select-complements", () => {
         projects: [{ title: "Projeto 1", selected: true, reason: "Aderente" }],
         certifications: [{ title: "Certificação 1", selected: false, reason: "Pouco aderente" }],
       },
+      model: "openrouter/hunter-alpha",
       tokenUsage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
     })
 
@@ -69,6 +70,10 @@ describe("POST /api/ai/select-complements", () => {
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.data.skills[0].items).toContain("React")
+    expect(data.metadata).toEqual({
+      model: "openrouter/hunter-alpha",
+      tokenUsage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+    })
   })
 
   it("returns 400 for invalid request data", async () => {

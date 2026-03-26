@@ -51,7 +51,7 @@ vi.mock("@/lib/ai/pdf-generator", () => ({
 vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(() => true),
   AI_TIMEOUT_CONFIG: {
-    parsingTimeoutMs: 240000,
+    parsingTimeoutMs: 115000,
     resumeGenerationTimeoutMs: 110000,
   },
 }))
@@ -236,8 +236,8 @@ describe("POST /api/ai/generate-resume", () => {
     expect(response.status).toBe(200)
 
     expect(withTimeout).toHaveBeenCalledTimes(2)
-    expect(vi.mocked(withTimeout).mock.calls[0]?.[1]).toBe(240000)
-    expect(vi.mocked(withTimeout).mock.calls[0]?.[2]).toBe("Job parsing exceeded 240s timeout")
+    expect(vi.mocked(withTimeout).mock.calls[0]?.[1]).toBe(115000)
+    expect(vi.mocked(withTimeout).mock.calls[0]?.[2]).toBe("Job parsing exceeded 115s timeout")
     expect(vi.mocked(withTimeout).mock.calls[1]?.[1]).toBe(110000)
     expect(vi.mocked(withTimeout).mock.calls[1]?.[2]).toBe("Resume generation exceeded 110s timeout")
   })
@@ -246,7 +246,7 @@ describe("POST /api/ai/generate-resume", () => {
     const { withTimeout, TimeoutError } = await import("@/lib/ai/utils")
 
     vi.mocked(withTimeout)
-      .mockRejectedValueOnce(new TimeoutError("Job parsing exceeded 240s timeout", 240000))
+      .mockRejectedValueOnce(new TimeoutError("Job parsing exceeded 115s timeout", 115000))
       .mockImplementation((promise) => promise)
 
     const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
@@ -263,7 +263,7 @@ describe("POST /api/ai/generate-resume", () => {
     expect(response.status).toBe(504)
     expect(data).toEqual({
       success: false,
-      error: "Job parsing exceeded 240s timeout",
+      error: "Job parsing exceeded 115s timeout",
     })
   })
 

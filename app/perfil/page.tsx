@@ -310,8 +310,9 @@ export default function PerfilPage() {
       }
 
       const result = await response.json()
-      recordModelSuccess(selectedModel, "extract-profile")
-      setModelFailureWarning(getModelFailureWarning(selectedModel))
+      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : selectedModel
+      recordModelSuccess(trackedModel, "extract-profile")
+      setModelFailureWarning(getModelFailureWarning(trackedModel))
       const extracted = normalizeProfileData(result.data)
 
       if (fillMode === "acrescentar") {

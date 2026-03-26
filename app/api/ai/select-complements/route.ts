@@ -35,7 +35,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       data: result.selection,
-      metadata: { tokenUsage: result.tokenUsage },
+      metadata: { tokenUsage: result.tokenUsage, model: result.model },
     })
   } catch (error: unknown) {
     if (error instanceof ZodError) {
