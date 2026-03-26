@@ -404,7 +404,7 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Description mentions personal development, own initiative, or software built from scratch
    - Examples of personal projects: "Grimperium", "Estagios Dashboard", any web app or tool
    For personal/authorial projects:
-   - The FIRST bullet MUST make authorship clear using one of these forms:
+   - The FIRST sentence MUST make authorship clear using one of these forms:
      ✅ "Desenvolvimento próprio de..."
      ✅ "Projeto autoral de..."
      ✅ "Framework desenvolvido de forma independente para..."
@@ -421,31 +421,33 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Include technical terms from "Technical Terms" list
    - Match acronyms EXACTLY (case-sensitive)
 
-3. DESCRIPTION STRUCTURE (per bullet point):
-   - Cada projeto deve ter 2 a 3 bullets na description[].
-   - Preferir 3 bullets quando houver resultado mensurável.
-   - Nunca 1 bullet só. Nunca mais de 3 bullets.
-   - Bullet 1: o que foi construído ou analisado.
-   - Bullet 2: como foi feito (metodologia ou stack principal).
-   - Bullet 3: resultado, escopo ou impacto mensurável (se existir).
-   - Format: [Past/present action verb in PAST TENSE or NOUN PHRASE] + [specific task] +
+3. DESCRIPTION STRUCTURE (MANDATORY):
+   - O array description de cada projeto deve conter EXATAMENTE 1 (um) elemento.
+   - Esse único elemento deve ser um parágrafo de texto corrido em prosa, com 3 a 5 frases.
+   - NÃO use múltiplos itens no array.
+   - NÃO use bullet points.
+   - O resultado será renderizado como parágrafo único.
+   - Sentence 1: o que foi construído ou analisado.
+   - Sentence 2: como foi feito (metodologia ou stack principal).
+   - Sentence 3: resultado, escopo ou impacto mensurável (se existir).
+   - Sentences 4-5: usar apenas se necessário para contexto, stack ou escopo adicional.
+   - Format per sentence: [Past/present action verb in PAST TENSE or NOUN PHRASE] + [specific task] +
      [tool/method] + [outcome/relevance]
    - USE PAST TENSE or NOUN PHRASE — NEVER infinitive verbs:
      ❌ WRONG: "Desenvolver pipeline automatizado..."
      ✅ CORRECT: "Desenvolvimento de pipeline automatizado..." OR "Desenvolveu pipeline..."
      ✅ CORRECT (noun phrase): "Estruturação e padronização de bases de dados para..."
-   - Each bullet MUST end with a period (.)
+   - Each sentence MUST end with a period (.)
    - AVOID REDUNDANT PHRASES: "análises analíticas", "dados de dados", "resultado de resultados"
-     — read each bullet aloud and remove obvious redundancies
-   - TARGET LENGTH: 14-22 words per bullet (concise, scannable — not a paragraph)
-   - Use direct, active text in every bullet.
-   - If original description has 3 concepts, split into 2 or 3 short bullets — do NOT
-     merge everything into one dense run-on bullet.
-   - NÃO colocar toda a descrição num único bullet longo.
+     — read each sentence aloud and remove obvious redundancies
+   - TARGET LENGTH: 3-5 frases, formando um parágrafo conciso em prosa.
+   - Use direct, active text throughout the paragraph.
+   - If original description has 3 concepts, distribute them across separate sentences
+     inside the same paragraph.
 
 4. KEYWORD DENSITY PER PROJECT:
    - Each project should include 3-5 job keywords
-   - Prioritize keywords in FIRST bullet point (ATS scans top first)
+   - Prioritize keywords in FIRST sentence (ATS scans top first)
    - Repeat critical acronyms naturally (QHSE, KPI, ML, etc.)
    - Front-load most relevant technical terms
 
@@ -501,7 +503,7 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
       (these require explicit professional experience, cannot be inferred from academic work)
    FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI/Analytics roles — REFRAMING PRINCIPLE:
 
-   For non-lab/non-engineering roles, the first bullet of each project should lead with the
+   For non-lab/non-engineering roles, the first sentence of each project should lead with the
    DATA or PROCESS activity, not the scientific technique. The scientific domain may appear
    as context (e.g., "...dados de simulações físico-químicas...") but should NOT be the
    grammatical subject of the sentence.
@@ -509,7 +511,7 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    Example: instead of "Modelagem molecular com análise de dados...", write
    "Estruturação e análise de dados experimentais obtidos via simulação molecular..."
 
-   Remaining bullets: use transferable process vocabulary naturally (padronização,
+   Remaining sentences: use transferable process vocabulary naturally (padronização,
    documentação, validação, rastreabilidade) — do not force a rigid template.
 
 6. ATS BEST PRACTICES:
@@ -520,19 +522,19 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Avoid generic verbs like "worked on" - use specific action verbs
 
 6.5. MEASURABLE RESULTS POLICY (MANDATORY — applies to every project):
-   - ALWAYS scan the raw project data for concrete numbers before writing any bullet.
+   - ALWAYS scan the raw project data for concrete numbers before writing the paragraph.
      Numbers to look for: percentages, counts, volumes, error rates, deviations,
      dataset sizes, test counts, time reductions, frequency of use, scale metrics.
    - If a measurable result exists in the project data: it MUST appear in the output.
-     Place it in the LAST bullet of the project as the impact statement.
-   - Format for results bullet: [what was achieved] + [concrete number/metric] + [context or significance].
+     Place it in the LAST sentence of the paragraph as the impact statement.
+   - Format for results sentence: [what was achieved] + [concrete number/metric] + [context or significance].
      Examples:
      ✅ "Implementação de 494 testes automatizados com cobertura integral via CI/CD e quality gates rigorosos."
      ✅ "Desvio médio relativo de 1,93% no método PM7 — melhor desempenho entre os 5 métodos avaliados em 28 moléculas."
      ✅ "Pipeline processando base de 28 compostos em 4 grupos moleculares com validação cruzada contra fontes NIST, CRC e Perry."
    - If NO measurable result exists in the project data: use a concrete scope descriptor
      (scale, breadth, tool count, dataset size) in place of a percentage or count.
-     DO NOT write vague bullets like "ensuring data quality" — write "validating X data points" or
+     DO NOT write vague sentences like "ensuring data quality" — write "validating X data points" or
      "processing Y categories of compounds" if that information exists.
    - NEVER fabricate metrics. Only use numbers explicitly present in the project description
      provided as input. This rule is subordinate to the global ZERO FABRICATION rule.
@@ -564,9 +566,7 @@ PROJECT: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Estruturação e padronização de bases de dados termodinâmicos para processamento recorrente em Python (Pandas, NumPy).",
-    "Implementação de rotinas de validação e controle de consistência para garantir qualidade das informações.",
-    "Elaboração de relatórios técnicos com documentação de fontes, regras de processamento e resultados."
+    "Estruturação e padronização de bases de dados termodinâmicos para processamento recorrente em Python (Pandas, NumPy). Implementação de rotinas de validação e controle de consistência para garantir qualidade das informações. Elaboração de relatórios técnicos com documentação de fontes, regras de processamento e resultados."
   ]
 }
 ✅ Why it works: Uses transferable skills vocabulary (organizar, validar, automatizar, documentar,
@@ -578,9 +578,7 @@ EXAMPLE TRANSFORMATION (ML/Data Science job):
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Desenvolver pipeline de dados end-to-end em Python (Pandas, NumPy, Scikit-learn) para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas",
-    "Implementar rotinas automatizadas de validação e controle de qualidade de dados, processando dataset com múltiplos pontos experimentais para análise de consistência",
-    "Automatizar geração de relatórios analíticos com visualização de performance de modelos, documentando metodologia e resultados para uso em análises futuras"
+    "Desenvolvimento de pipeline de dados end-to-end em Python (Pandas, NumPy, Scikit-learn) para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas. Implementação de rotinas automatizadas de validação e controle de qualidade de dados, processando dataset com múltiplos pontos experimentais para análise de consistência. Automatização da geração de relatórios analíticos com visualização de performance de modelos, documentando metodologia e resultados para uso em análises futuras."
   ]
 }
 ✅ Why it works: For a real ML/Data job, ML terminology IS contextually appropriate. The project
@@ -594,9 +592,7 @@ Return JSON format:
     {
       "title": "EXACT title from REQUIRED PROJECT TITLES (character-by-character match)",
       "description": [
-        "First bullet (front-load keywords)",
-        "Second bullet (job-specific terminology)",
-        "Third bullet: concrete result — use a real number/metric from project data if available; otherwise use scope descriptor (scale, volume, breadth)"
+        "Single prose paragraph with exactly 1 element in description[], using 3-5 sentences and front-loading keywords in the first sentence."
       ]
     },
     ...
@@ -826,6 +822,11 @@ export function buildProjectsPrompt(
       ? "⚠️ OBRIGATÓRIO: As DESCRIÇÕES dos projetos DEVEM estar em PORTUGUÊS BRASILEIRO. Mantenha os títulos EXATAMENTE como estão (não traduza datas ou nomes técnicos nos títulos)."
       : "⚠️ MANDATORY: Project DESCRIPTIONS MUST be in ENGLISH. Keep titles EXACTLY as they are (do not translate dates or technical names in titles)."
 
+  const descriptionFormatInstruction =
+    language === "pt"
+      ? "=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nO array description de cada projeto deve conter EXATAMENTE 1 (um) elemento. Esse elemento é um parágrafo de texto corrido em prosa (3-5 frases), não uma lista de tópicos. NÃO use múltiplos itens no array. NÃO use bullet points. O resultado será renderizado como parágrafo único."
+      : "=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project's description array must contain EXACTLY 1 element. That element must be a prose paragraph (3-5 sentences), not a bullet list. DO NOT use multiple items in the array. DO NOT use bullet points. The result will be rendered as a single paragraph."
+
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
 
@@ -834,6 +835,8 @@ export function buildProjectsPrompt(
   return `${languageInstruction}
 
 ⚠️  CRITICAL: KEEP TITLES UNCHANGED - REWRITE DESCRIPTIONS FOR ATS OPTIMIZATION
+
+${descriptionFormatInstruction}
 
 JOB DETAILS:
 Company: ${jobDetails.empresa}

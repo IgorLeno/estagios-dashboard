@@ -129,7 +129,7 @@ function renderCertificationLabel(cert: Certification): string {
   const suffix: string[] = []
   if (cert.institution) suffix.push(escapeHtml(cert.institution))
   if (cert.year) suffix.push(escapeHtml(cert.year))
-  const tail = suffix.length > 0 ? ` — ${suffix.join(", ")}` : ""
+  const tail = suffix.length > 0 ? ` <span class="cert-meta">(${suffix.join(", ")})</span>` : ""
   return `<strong>${escapeHtml(cert.title)}</strong>${tail}`
 }
 
@@ -220,6 +220,8 @@ function renderModelo1(cv: CVTemplate): string {
       line-height: 1.15;
       margin-bottom: 6pt;
       color: #000;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .header .contact a {
@@ -233,7 +235,7 @@ function renderModelo1(cv: CVTemplate): string {
 
     .header .contact .contact-item {
       white-space: nowrap;
-      display: inline;
+      display: inline-block;
     }
 
     .header .contact .contact-item:not(:last-child)::after {
@@ -307,6 +309,11 @@ function renderModelo1(cv: CVTemplate): string {
     strong {
       font-weight: bold;
       color: #000;
+    }
+
+    .cert-meta {
+      color: #888;
+      font-weight: normal;
     }
 
     /* Links */
@@ -456,7 +463,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     .contact-item {
       white-space: nowrap;
-      display: inline;
+      display: inline-block;
     }
 
     .contact-item:not(:last-child)::after {
@@ -503,6 +510,11 @@ function renderModelo2(cv: CVTemplate): string {
     li::before { content: "• "; position: absolute; left: 0; }
 
     strong { font-weight: 700; color: #000; }
+
+    .cert-meta {
+      color: #888;
+      font-weight: normal;
+    }
 
     .skill-group-name { font-weight: 700; color: #000; }
     .skill-items { color: #000; margin-bottom: 6pt; }
