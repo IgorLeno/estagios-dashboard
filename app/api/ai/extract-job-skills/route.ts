@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-client"
 import { createClient } from "@/lib/supabase/server"
+import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
 import type { ExtractJobSkillsErrorResponse, ExtractJobSkillsResponse, JobSkillReview } from "@/lib/ai/types"
 
 const ExtractJobSkillsRequestSchema = z
@@ -20,9 +21,9 @@ type JobRow = {
   requisitos: unknown
 }
 
-type BankSkillRow = {
+type ProfileSkillRow = {
   skill_name: string
-  category: string | null
+  category: string
 }
 
 type GrokSkillsPayload = {
@@ -77,6 +78,10 @@ function parseSkillsFromGrok(content: string): string[] {
   throw new Error(`Invalid JSON from LLM: ${trimmed.slice(0, 300)}`)
 }
 
+function getProfileSkillsIndex(skills: ProfileSkillRow[]) {
+  return new Map(skills.map((skill) => [normalizeForMatch(skill.skill_name), skill] as const))
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSkillsResponse | ExtractJobSkillsErrorResponse>> {
   try {
     validateGrokConfig()
@@ -127,16 +132,19 @@ export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSki
       }
     }
 
-    const { data: bankSkillsData, error: bankSkillsError } = await supabase
-      .from("user_skills_bank")
-      .select("skill_name, category")
-      .eq("user_id", user.id)
+    const candidateProfile = await getCandidateProfile(user.id)
+    const profileSkills = candidateProfile.habilidades.flatMap((group) => {
+      const category = group.category_pt?.trim() || group.category_en?.trim() || "Sem categoria"
+      const items = [...group.items_pt, ...(group.items_en ?? [])]
 
-    const bankSkills = (bankSkillsData || []) as BankSkillRow[]
-
-    if (bankSkillsError) {
-      throw new Error(`Failed to load skills bank: ${bankSkillsError.message}`)
-    }
+      return items
+        .map((skill) => skill.trim())
+        .filter(Boolean)
+        .map((skill) => ({
+          skill_name: skill,
+          category,
+        }))
+    })
 
     const jobDescriptionText = `${stringifyJobField(vaga.descricao)} ${stringifyJobField(vaga.requisitos)}`.trim()
 
@@ -173,9 +181,7 @@ ${jobDescriptionText}`,
 
     const extractedSkills = parseSkillsFromGrok(grokContent)
 
-    const bankIndex = new Map(
-      (bankSkills || []).map((skill) => [normalizeForMatch(skill.skill_name), skill] as const)
-    )
+    const profileIndex = getProfileSkillsIndex(profileSkills)
 
     const seen = new Set<string>()
     const skills: JobSkillReview[] = extractedSkills
@@ -188,15 +194,15 @@ ${jobDescriptionText}`,
         return true
       })
       .map((skill) => {
-        const matchedSkill = bankIndex.get(normalizeForMatch(skill))
+        const matchedSkill = profileIndex.get(normalizeForMatch(skill))
 
         if (matchedSkill) {
           return {
             originalName: skill,
-            displayName: skill,
+            displayName: matchedSkill.skill_name,
             mode: "use",
-            inBank: true,
-            category: matchedSkill.category ?? undefined,
+            inProfile: true,
+            category: matchedSkill.category,
           }
         }
 
@@ -204,7 +210,7 @@ ${jobDescriptionText}`,
           originalName: skill,
           displayName: skill,
           mode: "skip",
-          inBank: false,
+          inProfile: false,
         }
       })
 

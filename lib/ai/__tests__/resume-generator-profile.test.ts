@@ -5,14 +5,12 @@ const {
   mockGenerateContent,
   mockLoadUserAIConfig,
   mockGetGenerationConfig,
-  mockLoadUserSkillsBank,
   mockCalculateATSScore,
 } = vi.hoisted(() => ({
   mockCreateAIModel: vi.fn(),
   mockGenerateContent: vi.fn(),
   mockLoadUserAIConfig: vi.fn(),
   mockGetGenerationConfig: vi.fn(),
-  mockLoadUserSkillsBank: vi.fn(),
   mockCalculateATSScore: vi.fn(),
 }))
 
@@ -20,10 +18,6 @@ vi.mock("../config", () => ({
   createAIModel: mockCreateAIModel,
   loadUserAIConfig: mockLoadUserAIConfig,
   getGenerationConfig: mockGetGenerationConfig,
-}))
-
-vi.mock("../skills-bank", () => ({
-  loadUserSkillsBank: mockLoadUserSkillsBank,
 }))
 
 vi.mock("../ats-scorer", () => ({
@@ -97,7 +91,6 @@ beforeEach(() => {
     topP: config.top_p,
   }))
 
-  mockLoadUserSkillsBank.mockResolvedValue([])
   mockCalculateATSScore.mockReturnValue(87)
 
   mockGenerateContent.mockImplementation(async (prompt: string) => {
@@ -108,7 +101,7 @@ beforeEach(() => {
       }))
     }
 
-    if (prompt.includes("CRITICAL: REORDER + SELECT FROM SKILLS BANK")) {
+    if (prompt.includes("CRITICAL: REORDER + SELECT FROM PROFILE SKILLS")) {
       return makeResponse(JSON.stringify({ skills: baseCv.skills }))
     }
 

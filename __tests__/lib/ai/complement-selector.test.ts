@@ -50,13 +50,6 @@ vi.mock("@/lib/ai/cv-templates", () => ({
   })),
 }))
 
-vi.mock("@/lib/ai/skills-bank", () => ({
-  loadUserSkillsBank: vi.fn(async () => [
-    { skill: "Excel Avançado", category: "Dados" },
-    { skill: "Power BI", category: "Dados" },
-  ]),
-}))
-
 const jobDetails: JobDetails = {
   empresa: "Saipem",
   cargo: "Estagiário QHSE",
@@ -78,7 +71,7 @@ describe("selectComplements", () => {
     vi.clearAllMocks()
   })
 
-  it("includes profile text, projects and skills bank in the selection prompt", async () => {
+  it("includes profile text, projects and profile skills in the selection prompt", async () => {
     mockCallGrok.mockResolvedValueOnce({
       content: JSON.stringify({
         skills: [
@@ -110,7 +103,8 @@ describe("selectComplements", () => {
 
     expect(prompt).toContain("Perfil profissional aprovado na aba fit.")
     expect(prompt).toContain("Dashboard de Análise de Processos")
-    expect(prompt).toContain("Excel Avançado")
+    expect(prompt).toContain("Skills:")
+    expect(prompt).toContain("Power BI")
   })
 
   it("truncates selections that exceed fixed project limits instead of throwing", async () => {

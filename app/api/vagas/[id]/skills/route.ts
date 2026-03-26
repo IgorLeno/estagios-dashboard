@@ -7,13 +7,22 @@ const JobSkillReviewSchema = z.object({
   originalName: z.string().min(1),
   displayName: z.string().min(1),
   mode: z.enum(["use", "skip", "rename"]),
-  inBank: z.boolean(),
+  inProfile: z.boolean(),
   category: z.string().optional(),
 })
 
 const SaveJobSkillsSchema = z.object({
   skills: z.array(JobSkillReviewSchema),
 })
+
+function normalizeJobSkills(input: unknown): JobSkillReview[] {
+  if (!Array.isArray(input)) return []
+
+  return input.flatMap((item) => {
+    const result = JobSkillReviewSchema.safeParse(item)
+    return result.success ? [result.data] : []
+  })
+}
 
 async function getAuthorizedVagaId(id: string) {
   const supabase = await createClient()
@@ -52,7 +61,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 
     return NextResponse.json({
       success: true,
-      skills: ((data?.skills as JobSkillReview[] | null) ?? []),
+      skills: normalizeJobSkills(data?.skills),
     })
   } catch (error) {
     console.error("[GET /api/vagas/[id]/skills] Error:", error)
@@ -99,7 +108,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     return NextResponse.json({
       success: true,
-      skills: (data.skills as JobSkillReview[]) ?? [],
+      skills: normalizeJobSkills(data.skills),
     })
   } catch (error) {
     if (error instanceof z.ZodError) {

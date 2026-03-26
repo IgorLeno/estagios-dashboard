@@ -7,7 +7,6 @@ import { useState } from "react"
 import { useTheme } from "next-themes"
 import { Palette } from "lucide-react"
 import { ConfiguracoesPrompts } from "@/components/configuracoes-prompts"
-import { SkillsBankManager } from "@/components/skills-bank-manager"
 
 export function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme()
@@ -26,10 +25,9 @@ export function ConfiguracoesPage() {
   return (
     <div className="max-w-4xl space-y-6">
       <Tabs defaultValue="geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="geral">Geral</TabsTrigger>
           <TabsTrigger value="prompts">Prompts de IA</TabsTrigger>
-          <TabsTrigger value="skills">Banco de Skills</TabsTrigger>
         </TabsList>
 
         {/* Tab: Geral */}
@@ -84,11 +82,6 @@ export function ConfiguracoesPage() {
         {/* Tab: Prompts de IA */}
         <TabsContent value="prompts" className="mt-6">
           <ConfiguracoesPrompts />
-        </TabsContent>
-
-        {/* Tab: Banco de Skills */}
-        <TabsContent value="skills" className="mt-6">
-          <SkillsBankManager />
         </TabsContent>
       </Tabs>
     </div>

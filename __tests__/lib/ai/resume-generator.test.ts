@@ -201,15 +201,6 @@ vi.mock("@/lib/ai/resume-prompts", () => ({
   buildProjectsPrompt: vi.fn(() => "Projects prompt"),
 }))
 
-// Mock skills bank (NEW: to avoid Supabase server-side cookies error in tests)
-vi.mock("@/lib/ai/skills-bank", () => ({
-  loadUserSkillsBank: vi.fn(async () => [
-    { skill: "Python", category: "Linguagens de Programação", level: "Avançado", context: "Desenvolvimento de ML" },
-    { skill: "TensorFlow", category: "Machine Learning", level: "Intermediário", context: "Modelos preditivos" },
-    { skill: "Docker", category: "DevOps", level: "Básico", context: "Containerização" },
-  ]),
-}))
-
 // Mock localConsistencyCheck to always trigger LLM consistency agent
 // (the real check with mock data would pass, skipping the agent and breaking tests)
 vi.mock("@/lib/ai/consistency-agent", async () => {

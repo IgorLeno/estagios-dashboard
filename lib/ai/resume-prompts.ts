@@ -210,11 +210,12 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Related skills: job mentions "quality control" → prioritize technical reporting, KPIs
    - General skills: keep but move to end
 
-2. SKILLS BANK USAGE:
-   - ADD skills from bank ONLY if job explicitly requires or strongly implies them
-   - Maximum 3 skills from bank per category (don't overload)
-   - KEEP the bank skill name exactly as stored; do NOT append proficiency suffixes
-   - When adding bank skill, place it in appropriate category based on its category field
+2. SKILL SOURCE RULES:
+   - Use ONLY skills already present in the candidate profile or in the User-Approved Skills list
+   - User-Approved Skills may be added ONLY if job explicitly requires or strongly implies them
+   - Maximum 3 user-approved skills per category (don't overload)
+   - KEEP the approved skill name exactly as provided; do NOT append proficiency suffixes
+   - When adding an approved skill, place it in the most appropriate existing category
 
 3. CATEGORY REORDERING:
    - Máximo 6 categorias no total.
@@ -269,7 +270,7 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Put 5-7 most relevant skills in top 2 categories (ATS scans top first)
    - Include certifications as skills if job mentions them (e.g., "ISO 17025")
    - Aim for up to 20 most relevant skills total (remove irrelevant, don't stuff)
-   - If job required skill not in CV or bank, DON'T add it (maintain truthfulness)
+   - If job required skill is not in the profile or approved list, DON'T add it (maintain truthfulness)
    - REMOVE entire categories if 0 of their skills are relevant to the job
    - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
      in analytics/BI/HR/data roles — they are noise, not signal
@@ -311,7 +312,7 @@ export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 VALIDATION CHECK (MANDATORY):
 Before returning, verify:
-1. EVERY skill in your output appears in either ALLOWED SKILLS (CV Skills) OR ALLOWED SKILLS (Bank Skills)
+1. EVERY skill in your output appears in either ALLOWED SKILLS (Profile Skills) OR User-Approved Skills
 2. No engineering/lab tool appears in a data/analytics/HR/BI/people job output
 3. Category count is 2-6 (not all categories needed — only relevant ones)
 4. Total skill count across all categories: 8-20 ideally, never above 24
@@ -335,7 +336,7 @@ AFTER (QHSE-optimized):
       "Power BI (dashboards, acompanhamento de KPIs)", // EXACT match
       "Relatórios técnicos", // Related to job
       "Acompanhamento de indicadores de qualidade", // Related
-      "ISO 17025" // Added from skills bank
+      "ISO 17025" // Explicitly present in candidate materials
     ]
   },
   { "category": "Linguagens & Análise de Dados", "items": ["SQL", "Python", "R"] }
@@ -715,12 +716,11 @@ ${SUMMARY_PROMPT_INSTRUCTIONS}`
 }
 
 /**
- * Build prompt for personalizing skills section with Skills Bank integration
+ * Build prompt for personalizing skills section
  */
 export function buildSkillsPrompt(
   jobDetails: JobDetails,
   currentSkills: Array<{ category: string; items: string[] }>,
-  skillsBank: Array<{ skill: string; proficiency?: string; category: string }>, // NEW: Skills Bank
   projects: Array<{ title: string; description: string[] }>,
   language: "pt" | "en",
   jobProfile: JobProfile,
@@ -737,8 +737,6 @@ export function buildSkillsPrompt(
 
   // Extract all skill items from CV
   const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
-
-  const bankSkillItems = skillsBank.map((s) => s.skill)
 
   // Compute certification order at prompt-build time (more reliable than asking LLM to sort)
   // Broader match: capture any certification/course category regardless of exact name
@@ -769,16 +767,15 @@ export function buildSkillsPrompt(
       ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
       : "⚠️ MANDATORY: Keep tool, software, and technology names EXACTLY as they are. You may translate non-tool descriptive skill labels to natural English when needed."
 
-  const bankLanguageNote =
-    language === "en"
-      ? `\nNOTE: Skills bank items may be in Portuguese. Translate them naturally to English when including in the CV. Example: "Documentação técnica" → "Technical documentation".\n`
-      : ""
-
   const profileBlock = buildProfileBlock(jobProfile, "skills")
+  const approvedSkillsSection =
+    approvedSkills && approvedSkills.length > 0
+      ? `\nUSER-APPROVED SKILLS (may be added if directly relevant):\n${approvedSkills.join(", ")}\n`
+      : ""
 
   return `${languageInstruction}
 
-⚠️  CRITICAL: REORDER + SELECT FROM SKILLS BANK (ATS OPTIMIZATION)
+⚠️  CRITICAL: REORDER + SELECT FROM PROFILE SKILLS (ATS OPTIMIZATION)
 
 JOB REQUIRED SKILLS (PRIORITIZE THESE):
 ${requisitosObrigatorios}
@@ -789,14 +786,10 @@ ${requisitosDesejaveis}
 USER'S CV SKILLS (always included):
 ${JSON.stringify(currentSkills, null, 2)}
 
-${bankLanguageNote}
-
-USER'S SKILLS BANK (can add if job-relevant):
-${JSON.stringify(skillsBank, null, 2)}
+${approvedSkillsSection}
 
 ALLOWED SKILLS (you MUST use ONLY these exact items):
-CV Skills: ${cvSkillItems.join(", ")}
-Bank Skills: ${bankSkillItems.join(", ")}${approvedSkills && approvedSkills.length > 0 ? `\nUser-Approved Skills: ${approvedSkills.join(", ")}` : ""}
+Profile Skills: ${cvSkillItems.join(", ")}${approvedSkills && approvedSkills.length > 0 ? `\nUser-Approved Skills: ${approvedSkills.join(", ")}` : ""}
 
 EXACT PHRASES TO MATCH (from job):
 ${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}

@@ -20,7 +20,6 @@ function buildSkillsPromptForFixture(
   return buildSkillsPrompt(
     fixture,
     cv.skills,
-    [{ skill: "Validação de dados", category: "Processo" }],
     cv.projects,
     language,
     profile,
@@ -69,6 +68,15 @@ describe("buildSkillsPrompt — approvedSkills", () => {
     const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA, "pt")
 
     expect(prompt).not.toContain("User-Approved Skills")
+  })
+})
+
+describe("buildSkillsPrompt — source restrictions", () => {
+  it("does not mention legacy skills bank instructions", () => {
+    const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA)
+
+    expect(prompt).not.toContain("SKILLS BANK")
+    expect(prompt).toContain("PROFILE SKILLS")
   })
 })
 

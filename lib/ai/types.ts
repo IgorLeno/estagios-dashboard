@@ -400,9 +400,9 @@ export interface JobSkillReview {
   displayName: string
   /** Decisão do usuário sobre esta skill */
   mode: SkillUsageMode
-  /** true se existe em user_skills_bank com correspondência exata (normalizada) */
-  inBank: boolean
-  /** Categoria herdada do banco de skills, se existir */
+  /** true se existe no candidate_profile.habilidades com correspondência exata (normalizada) */
+  inProfile: boolean
+  /** Categoria herdada do perfil do candidato, se existir */
   category?: string
 }
 

@@ -201,15 +201,6 @@ export function SkillsTab({ profile, onChange, disabled }: SkillsTabProps) {
           )}
         </div>
       ))}
-
-      {/* Skills Bank reference */}
-      <div className="rounded-lg border border-dashed p-3 bg-muted/30">
-        <p className="text-xs text-muted-foreground">
-          Habilidades do Banco de Skills (aba separada) estao disponiveis para o modelo incluir no CV,
-          mas nao aparecem por padrao — sao usadas apenas quando relevantes para a vaga.
-        </p>
-      </div>
-
       {/* EN Toggle */}
       <Button
         type="button"

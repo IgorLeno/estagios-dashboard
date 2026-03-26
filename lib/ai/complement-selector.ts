@@ -1,7 +1,6 @@
 import { callGrok, type GrokMessage } from "./grok-client"
 import { getCVTemplateForUser } from "./cv-templates"
 import { loadUserAIConfig, getGenerationConfig } from "./config"
-import { loadUserSkillsBank } from "./skills-bank"
 import { buildModelAttemptList, isRetryableModelError, isValidModelId, DEFAULT_MODEL } from "./models"
 import { extractJsonFromResponse } from "./job-parser"
 import { ComplementSelectionSchema, type ComplementSelection, type JobDetails, type TokenUsage } from "./types"
@@ -13,7 +12,6 @@ const MAX_CERTIFICATIONS = 4
 function buildComplementPrompt(
   profileText: string,
   skills: Array<{ category: string; items: string[] }>,
-  bankSkills: Array<{ skill: string; category: string }>,
   projects: Array<{ title: string; description: string[] }>,
   certifications: string[],
   jobDetails: JobDetails,
@@ -24,10 +22,6 @@ function buildComplementPrompt(
   const skillsJson = JSON.stringify(
     skills.map((s) => ({ category: s.category, items: s.items }))
   )
-  const bankJson =
-    bankSkills.length > 0
-      ? JSON.stringify(bankSkills.map((s) => ({ skill: s.skill, category: s.category })))
-      : "[]"
   const projectsJson = JSON.stringify(
     projects.map((p) => ({ title: p.title, summary: p.description[0] || "" }))
   )
@@ -58,8 +52,7 @@ ${isPt ? "VAGA" : "JOB"}:
 ${jobContext}
 
 ${isPt ? "INVENTÁRIO DO CANDIDATO" : "CANDIDATE INVENTORY"}:
-Skills (CV): ${skillsJson}
-Skills (Bank): ${bankJson}
+Skills: ${skillsJson}
 Projects: ${projectsJson}
 Certifications: ${certsJson}
 
@@ -99,7 +92,6 @@ export async function selectComplements(
   ])
 
   const cv = await getCVTemplateForUser(language, userId)
-  const skillsBank = await loadUserSkillsBank(userId)
 
   const certTitles = cv.certifications.map((c) =>
     typeof c === "string" ? c : c.title
@@ -108,7 +100,6 @@ export async function selectComplements(
   const prompt = buildComplementPrompt(
     profileText,
     cv.skills,
-    skillsBank,
     cv.projects,
     certTitles,
     jobDetails,

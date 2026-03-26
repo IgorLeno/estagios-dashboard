@@ -4,7 +4,6 @@ import {
   SKILLS_PROMPT_INSTRUCTIONS,
   PROJECTS_PROMPT_INSTRUCTIONS,
 } from "./resume-prompts"
-import { SKILLS_EXTRACTION_SYSTEM_PROMPT, getSkillsExtractionPrompt } from "./skills-extractor-prompt"
 import { buildJobExtractionPrompt, SYSTEM_PROMPT } from "./prompts"
 import { ANALYSIS_SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./analysis-prompts"
 import { CONSISTENCY_SYSTEM_PROMPT, buildConsistencyPrompt } from "./consistency-agent"
@@ -54,18 +53,10 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
       id: "resume_skills_instructions",
       title: "Currículo — Seleção de Habilidades",
       description:
-        "Instruções de como selecionar e reordenar habilidades por relevância à vaga, incluindo integração com o Banco de Skills.",
+        "Instruções de como selecionar e reordenar habilidades por relevância à vaga, usando apenas o perfil do candidato e skills aprovadas pelo usuário.",
       sourceFile: "lib/ai/resume-prompts.ts → SKILLS_PROMPT_INSTRUCTIONS",
       content: SKILLS_PROMPT_INSTRUCTIONS,
       category: "resume",
-    },
-    {
-      id: "skills_extractor",
-      title: "Extrator de Skills do Perfil",
-      description: "Prompt usado ao importar skills do perfil profissional via IA.",
-      sourceFile: "lib/ai/skills-extractor-prompt.ts",
-      content: getSkillsExtractionPromptContent(),
-      category: "skills",
     },
     {
       id: "job_parser_system",
@@ -145,14 +136,4 @@ export function getSystemPromptsRegistry(): SystemPromptEntry[] {
       category: "analysis",
     },
   ]
-}
-
-function getSkillsExtractionPromptContent(): string {
-  return [
-    "=== SYSTEM PROMPT ===",
-    SKILLS_EXTRACTION_SYSTEM_PROMPT,
-    "",
-    "=== USER PROMPT TEMPLATE ===",
-    getSkillsExtractionPrompt("[PERFIL_DO_USUARIO]"),
-  ].join("\n")
 }

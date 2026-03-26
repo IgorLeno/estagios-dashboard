@@ -11,12 +11,11 @@ import { buildSummaryPrompt, buildSkillsPrompt, buildProjectsPrompt } from "./re
 import { getCVTemplateForUser } from "./cv-templates"
 import { PersonalizedSectionsSchema } from "./types"
 import { extractJsonFromResponse } from "./job-parser"
-import { loadUserSkillsBank } from "./skills-bank"
 import { calculateATSScore } from "./ats-scorer"
 import { buildJobProfile } from "./job-profile"
 import { mergeSystemInstruction } from "./user-preferences"
 import type { JobProfile } from "./job-profile"
-import type { JobDetails, CVTemplate, PersonalizedSections, TokenUsage } from "./types"
+import type { Certification, JobDetails, CVTemplate, PersonalizedSections, TokenUsage } from "./types"
 
 const MIN_SUMMARY_CHARS = 100
 
@@ -119,7 +118,6 @@ function isAuthorizedRename(returnedSkill: string, allowedSkills: string[]): boo
 async function personalizeSkills(
   jobDetails: JobDetails,
   cv: CVTemplate,
-  skillsBank: Array<{ skill: string; proficiency?: string; category: string }>,
   model: ReturnType<typeof createAIModel>,
   language: "pt" | "en",
   jobProfile: JobProfile,
@@ -127,7 +125,7 @@ async function personalizeSkills(
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, skillsBank, cv.projects, language, jobProfile, approvedSkills)
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects, language, jobProfile, approvedSkills)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -136,10 +134,9 @@ async function personalizeSkills(
   const jsonData = extractJsonFromResponse(text)
   const validated = PersonalizedSectionsSchema.pick({ skills: true }).parse(jsonData)
 
-  // CRITICAL VALIDATION: Check for fabricated skills (CV + Skills Bank)
+  // CRITICAL VALIDATION: Check for fabricated skills (profile + explicitly approved additions)
   const originalSkills = cv.skills.flatMap((cat) => cat.items)
-  const allowedBankSkills = skillsBank.map((s) => s.skill)
-  const allowedSkills = [...originalSkills, ...allowedBankSkills]
+  const allowedSkills = [...originalSkills]
 
   if (approvedSkills && approvedSkills.length > 0) {
     allowedSkills.push(...approvedSkills)
@@ -165,10 +162,9 @@ async function personalizeSkills(
       )
     } else {
       console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
-      console.error("[Resume Generator] Allowed skills (CV):", originalSkills)
-      console.error("[Resume Generator] Allowed skills (Bank):", allowedBankSkills)
+      console.error("[Resume Generator] Allowed skills (Profile):", originalSkills)
       throw new Error(
-        `LLM fabricated skills not in CV or Skills Bank: ${fabricatedSkills.join(", ")}. ` +
+        `LLM fabricated skills not in candidate profile or approved skills: ${fabricatedSkills.join(", ")}. ` +
           `Only these skills are allowed: ${allowedSkills.join(", ")}`
       )
     }
@@ -178,7 +174,7 @@ async function personalizeSkills(
   const tokenUsage = extractTokenUsage(response)
 
   console.log(
-    `[Resume Generator] ✅ Skills personalized (${returnedSkills.length} skills, ${skillsBank.length} from bank available)`
+    `[Resume Generator] ✅ Skills personalized (${returnedSkills.length} skills available in profile)`
   )
 
   return { skills: validated.skills, duration, tokenUsage }
@@ -252,6 +248,30 @@ function extractTokenUsage(response: any): {
     console.warn("[Resume Generator] Could not extract token usage:", error)
   }
   return { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
+}
+
+function normalizeCertification(certification: Certification | string): Certification {
+  return typeof certification === "string" ? { title: certification } : certification
+}
+
+function reorderCertifications(
+  certifications: Array<Certification | string>,
+  orderedTitles?: string[]
+): Certification[] {
+  const normalized = certifications.map(normalizeCertification)
+
+  if (!orderedTitles || orderedTitles.length === 0) {
+    return normalized
+  }
+
+  const byTitle = new Map(normalized.map((certification) => [certification.title, certification] as const))
+  const ordered = orderedTitles.flatMap((title) => {
+    const certification = byTitle.get(title)
+    return certification ? [certification] : []
+  })
+  const remaining = normalized.filter((certification) => !orderedTitles.includes(certification.title))
+
+  return [...ordered, ...remaining]
 }
 
 function validateConsistencyDraft(originalDraft: CVDraft, correctedDraft: CVDraft): void {
@@ -388,10 +408,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   const systemInstruction = mergeSystemInstruction(config.curriculo_prompt)
   console.log(`[Resume Generator] 🔐 System instruction built (core policy + user style preferences)`)
 
-  // STEP 4: Load skills bank and CV template
-  const skillsBank = await loadUserSkillsBank(userId)
-  console.log(`[Resume Generator] Loaded ${skillsBank.length} skills from bank`)
-
+  // STEP 4: Load CV template
   const baseCv = await getCVTemplateForUser(language, userId)
   const providedProfileText = profileText?.trim()
 
@@ -467,6 +484,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     projects: projectsToUse,
     certifications: certificationsToUse,
   }
+  const filteredCertifications = reorderCertifications(filteredCv.certifications)
 
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation
@@ -493,7 +511,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
 
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     summaryPromise,
-    personalizeSkills(jobDetails, baseCv, skillsBank, skillsModel, language, jobProfile, approvedSkills),
+    personalizeSkills(jobDetails, baseCv, skillsModel, language, jobProfile, approvedSkills),
     personalizeProjects(jobDetails, filteredCv, projectsModel, language, jobProfile),
   ])
 
@@ -501,7 +519,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     summary: summaryResult.summary,
     skills: skillsResult.skills,
     projects: projectsResult.projects,
-    certifications: filteredCv.certifications,
+    certifications: filteredCertifications.map((certification) => certification.title),
     language,
   }
 
@@ -553,7 +571,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     summary: finalDraft.summary,
     skills: finalDraft.skills,
     projects: finalDraft.projects,
-    certifications: finalDraft.certifications ?? filteredCv.certifications,
+    certifications: reorderCertifications(filteredCv.certifications, finalDraft.certifications),
   }
 
   // STEP 9: Calculate ATS score
