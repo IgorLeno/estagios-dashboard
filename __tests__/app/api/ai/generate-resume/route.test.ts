@@ -50,7 +50,28 @@ vi.mock("@/lib/ai/pdf-generator", () => ({
 
 vi.mock("@/lib/ai/config", () => ({
   validateAIConfig: vi.fn(() => true),
+  AI_TIMEOUT_CONFIG: {
+    parsingTimeoutMs: 240000,
+    resumeGenerationTimeoutMs: 110000,
+  },
 }))
+
+vi.mock("@/lib/ai/utils", () => {
+  class TimeoutError extends Error {
+    timeoutMs: number
+
+    constructor(message: string, timeoutMs: number) {
+      super(message)
+      this.name = "TimeoutError"
+      this.timeoutMs = timeoutMs
+    }
+  }
+
+  return {
+    withTimeout: vi.fn((promise) => promise),
+    TimeoutError,
+  }
+})
 
 vi.mock("@/lib/ai/resume-html-template", () => ({
   generateResumeHTML: vi.fn((cv) => `<html><body>HTML for ${cv.header.name}</body></html>`),
@@ -197,6 +218,77 @@ describe("POST /api/ai/generate-resume", () => {
       selectedProjectTitles: undefined,
       profileText: undefined,
       selectedCertifications: undefined,
+    })
+  })
+
+  it("should apply independent timeouts to parsing and resume generation", async () => {
+    const { withTimeout } = await import("@/lib/ai/utils")
+
+    const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
+      method: "POST",
+      body: JSON.stringify({
+        jobDescription: "Test job description with more than 50 characters to pass validation",
+        language: "pt",
+      }),
+    })
+
+    const response = await POST(req)
+    expect(response.status).toBe(200)
+
+    expect(withTimeout).toHaveBeenCalledTimes(2)
+    expect(vi.mocked(withTimeout).mock.calls[0]?.[1]).toBe(240000)
+    expect(vi.mocked(withTimeout).mock.calls[0]?.[2]).toBe("Job parsing exceeded 240s timeout")
+    expect(vi.mocked(withTimeout).mock.calls[1]?.[1]).toBe(110000)
+    expect(vi.mocked(withTimeout).mock.calls[1]?.[2]).toBe("Resume generation exceeded 110s timeout")
+  })
+
+  it("should return 504 with parsing timeout message when job parsing exceeds its limit", async () => {
+    const { withTimeout, TimeoutError } = await import("@/lib/ai/utils")
+
+    vi.mocked(withTimeout)
+      .mockRejectedValueOnce(new TimeoutError("Job parsing exceeded 240s timeout", 240000))
+      .mockImplementation((promise) => promise)
+
+    const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
+      method: "POST",
+      body: JSON.stringify({
+        jobDescription: "Test job description with more than 50 characters to pass validation",
+        language: "pt",
+      }),
+    })
+
+    const response = await POST(req)
+    const data = await response.json()
+
+    expect(response.status).toBe(504)
+    expect(data).toEqual({
+      success: false,
+      error: "Job parsing exceeded 240s timeout",
+    })
+  })
+
+  it("should return 504 with resume generation timeout message when resume generation exceeds its limit", async () => {
+    const { withTimeout, TimeoutError } = await import("@/lib/ai/utils")
+
+    vi.mocked(withTimeout)
+      .mockImplementationOnce((promise) => promise)
+      .mockRejectedValueOnce(new TimeoutError("Resume generation exceeded 110s timeout", 110000))
+
+    const req = new NextRequest("http://localhost:3000/api/ai/generate-resume", {
+      method: "POST",
+      body: JSON.stringify({
+        jobDescription: "Test job description with more than 50 characters to pass validation",
+        language: "pt",
+      }),
+    })
+
+    const response = await POST(req)
+    const data = await response.json()
+
+    expect(response.status).toBe(504)
+    expect(data).toEqual({
+      success: false,
+      error: "Resume generation exceeded 110s timeout",
     })
   })
 })

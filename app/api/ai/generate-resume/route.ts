@@ -10,7 +10,7 @@ import {
   JobDetails,
 } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
-import { validateAIConfig } from "@/lib/ai/config"
+import { validateAIConfig, AI_TIMEOUT_CONFIG } from "@/lib/ai/config"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
 import { ZodError } from "zod"
 import { generateResumeHTML } from "@/lib/ai/resume-html-template"
@@ -22,6 +22,8 @@ import { htmlToMarkdown } from "@/lib/ai/markdown-converter"
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const startTime = Date.now()
+  const parsingTimeoutSeconds = Math.floor(AI_TIMEOUT_CONFIG.parsingTimeoutMs / 1000)
+  const resumeGenerationTimeoutSeconds = Math.floor(AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs / 1000)
 
   try {
     // Validate AI config
@@ -102,101 +104,91 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw new Error("Either vagaId or jobDescription is required")
     }
 
-    // Main processing pipeline with timeout protection (55s — fits Vercel Hobby 60s limit)
-    // Wrap job parsing (if needed) + resume generation + PDF creation in timeout
-    const result = await withTimeout(
-      (async () => {
-        // Parse job description if needed
-        if (!jobDetails && jobDescription) {
-          const parseResult = await parseJobWithGemini(jobDescription, model)
-          jobDetails = parseResult.data
-        }
+    if (!jobDetails && jobDescription) {
+      const parseResult = await withTimeout(
+        parseJobWithGemini(jobDescription, model),
+        AI_TIMEOUT_CONFIG.parsingTimeoutMs,
+        `Job parsing exceeded ${parsingTimeoutSeconds}s timeout`
+      )
+      jobDetails = parseResult.data
+    }
 
-        if (!jobDetails) {
-          throw new Error("Job details not available")
-        }
+    if (!jobDetails) {
+      throw new Error("Job details not available")
+    }
 
-        // Generate tailored resume
-        const effectiveProfileText = language === "pt" ? profileText : undefined
+    const effectiveProfileText = language === "pt" ? profileText : undefined
 
-        const resumeResult = await generateTailoredResume({
-          jobDetails,
-          language,
-          userId,
-          approvedSkills,
-          model,
-          selectedProjectTitles,
-          profileText: effectiveProfileText,
-          selectedCertifications,
-        })
-
-        // Generate PDF
-        const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")
-
-        // Convert to base64
-        const pdfBase64 = pdfBuffer.toString("base64")
-
-        // Generate filename
-        const filename = generateResumeFilename(jobDetails.empresa, language)
-
-        // ✅ SAVE markdown to database if vagaId is provided (PARTIAL UPDATE)
-        if (vagaId) {
-          const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
-          const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
-          const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
-
-          // ✅ CONVERT CVTemplate → HTML → Markdown before saving
-          const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
-          const markdown = htmlToMarkdown(html)
-
-          // ✅ PARTIAL UPDATE: Only update the requested language field
-          const updateData = {
-            [markdownField]: markdown,
-            [pdfField]: pdfDataUrl,
-          }
-
-          const { data: updateResult, error: updateError } = await supabase
-            .from("vagas_estagio")
-            .update(updateData)
-            .eq("id", vagaId)
-            .select()
-
-          if (updateError) {
-            console.error(`[Resume API] Failed to save resume to database:`, updateError)
-            throw new Error(`Failed to save resume: ${updateError.message}`)
-          }
-
-          if (!updateResult || updateResult.length === 0) {
-            throw new Error("Failed to save resume: vaga not found")
-          }
-
-          console.log(`[Resume API] ✅ Resume saved to database (${language.toUpperCase()})`)
-        }
-
-        const totalDuration = Date.now() - startTime
-
-        // Return success response
-        const successResponse: GenerateResumeResponse = {
-          success: true,
-          data: {
-            pdfBase64,
-            filename,
-          },
-          metadata: {
-            duration: totalDuration,
-            model: resumeResult.model,
-            tokenUsage: resumeResult.tokenUsage,
-            personalizedSections: resumeResult.personalizedSections,
-          },
-        }
-
-        console.log(`[Resume API] ✅ Success (${totalDuration}ms)`)
-
-        return successResponse
-      })(),
-      55000,
-      "Resume generation exceeded 55s timeout"
+    const resumeResult = await withTimeout(
+      generateTailoredResume({
+        jobDetails,
+        language,
+        userId,
+        approvedSkills,
+        model,
+        selectedProjectTitles,
+        profileText: effectiveProfileText,
+        selectedCertifications,
+      }),
+      AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs,
+      `Resume generation exceeded ${resumeGenerationTimeoutSeconds}s timeout`
     )
+
+    // Generate PDF without an application-level timeout.
+    // If Chromium hangs, the route-level maxDuration is the final safeguard.
+    const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")
+
+    const pdfBase64 = pdfBuffer.toString("base64")
+    const filename = generateResumeFilename(jobDetails.empresa, language)
+
+    if (vagaId) {
+      const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+      const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+      const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
+
+      const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
+      const markdown = htmlToMarkdown(html)
+
+      const updateData = {
+        [markdownField]: markdown,
+        [pdfField]: pdfDataUrl,
+      }
+
+      const { data: updateResult, error: updateError } = await supabase
+        .from("vagas_estagio")
+        .update(updateData)
+        .eq("id", vagaId)
+        .select()
+
+      if (updateError) {
+        console.error(`[Resume API] Failed to save resume to database:`, updateError)
+        throw new Error(`Failed to save resume: ${updateError.message}`)
+      }
+
+      if (!updateResult || updateResult.length === 0) {
+        throw new Error("Failed to save resume: vaga not found")
+      }
+
+      console.log(`[Resume API] ✅ Resume saved to database (${language.toUpperCase()})`)
+    }
+
+    const totalDuration = Date.now() - startTime
+
+    const result: GenerateResumeResponse = {
+      success: true,
+      data: {
+        pdfBase64,
+        filename,
+      },
+      metadata: {
+        duration: totalDuration,
+        model: resumeResult.model,
+        tokenUsage: resumeResult.tokenUsage,
+        personalizedSections: resumeResult.personalizedSections,
+      },
+    }
+
+    console.log(`[Resume API] ✅ Success (${totalDuration}ms)`)
 
     return NextResponse.json(result)
   } catch (error: unknown) {
@@ -211,7 +203,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       console.error(`[Resume API] Timeout: ${timeoutError.message}`)
       const errorResponse: GenerateResumeErrorResponse = {
         success: false,
-        error: "Resume generation timed out (>55s)",
+        error: timeoutError.message,
       }
       return NextResponse.json(errorResponse, { status: 504 })
     }

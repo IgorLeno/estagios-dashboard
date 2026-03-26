@@ -15,14 +15,20 @@ export const AI_MODEL_CONFIG = {
 
 /**
  * Configuração de timeout para operações AI
- * Timeout interno de 55 segundos para parsing de vagas com análise completa
+ * Vercel Fluid Compute suporta até 300s no plano Hobby.
+ * Neste projeto, o maxDuration declarado no vercel.json é 120s para as rotas longas.
  */
 export const AI_TIMEOUT_CONFIG = {
   /**
    * Timeout em milissegundos para operações de parsing
-   * Dispara antes do corte da Vercel no plano Hobby (60s)
+   * Mantém margem abaixo do teto de 300s do runtime.
    */
-  parsingTimeoutMs: 55000, // 55s — dispara antes do corte da Vercel (60s)
+  parsingTimeoutMs: 240000,
+  /**
+   * Timeout em milissegundos para a etapa de geração do currículo via LLM.
+   * Mantido separado do parsing para evitar que uma etapa consuma o orçamento inteiro da outra.
+   */
+  resumeGenerationTimeoutMs: 110000,
 } as const
 
 /**
