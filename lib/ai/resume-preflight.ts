@@ -44,21 +44,19 @@ export function validateCVTemplate(cv: CVTemplate): {
   }
 
   cv.projects.forEach((project, index) => {
-    const bulletCount = project.description.length
+    const descriptionCount = project.description.length
     const projectLabel = project.title || `Projeto ${index + 1}`
 
-    if (bulletCount > 3) {
-      errors.push(`Projeto "${projectLabel}" excede o máximo de 3 bullets (atual: ${bulletCount}).`)
+    if (descriptionCount > 3) {
+      warnings.push(
+        `Projeto "${projectLabel}" tem mais de 3 elementos em description[] (atual: ${descriptionCount}).`
+      )
     }
 
-    if (cv.projects.length > 1 && bulletCount < 2) {
-      errors.push(`Projeto "${projectLabel}" deve ter ao menos 2 bullets quando há múltiplos projetos.`)
-    }
-
-    project.description.forEach((bullet, bulletIndex) => {
-      if (bullet.length > 130) {
+    project.description.forEach((description, descriptionIndex) => {
+      if (description.length > 600) {
         warnings.push(
-          `Bullet ${bulletIndex + 1} do projeto "${projectLabel}" excede 130 caracteres (atual: ${bullet.length}).`
+          `Descrição ${descriptionIndex + 1} do projeto "${projectLabel}" excede 600 caracteres (atual: ${description.length}).`
         )
       }
     })
