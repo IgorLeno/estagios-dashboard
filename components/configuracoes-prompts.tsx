@@ -15,6 +15,7 @@ import { DossieInfoTab } from "./ai-settings/dossie-info-tab"
 import { getSystemPromptsRegistry } from "@/lib/ai/system-prompts-registry"
 import type { PromptsConfig } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { getModelFailureWarning } from "@/lib/model-attempt-tracker"
 
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 const systemPrompts = getSystemPromptsRegistry()
@@ -48,6 +49,7 @@ export function ConfiguracoesPrompts() {
   const [modelHistory, setModelHistory] = useState<string[]>([])
   const [showModelInput, setShowModelInput] = useState(false)
   const [newModelInput, setNewModelInput] = useState("")
+  const [modelFailureWarning, setModelFailureWarning] = useState<ReturnType<typeof getModelFailureWarning>>(null)
   const router = useRouter()
 
   const applyConfigData = useCallback((data: PromptsConfig) => {
@@ -106,6 +108,10 @@ export function ConfiguracoesPrompts() {
   useEffect(() => {
     loadConfig()
   }, [loadConfig])
+
+  useEffect(() => {
+    setModelFailureWarning(getModelFailureWarning(config?.modelo_gemini))
+  }, [config?.modelo_gemini])
 
   function addModelToHistory(model: string) {
     const trimmed = model.trim()
@@ -295,9 +301,21 @@ export function ConfiguracoesPrompts() {
             </TabsList>
 
             <TabsContent value="modelo" className="space-y-4 mt-4">
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <Label>Modelo LLM Ativo</Label>
+                <div className="space-y-4">
+                  {modelFailureWarning && config.modelo_gemini && (
+                    <Alert className="border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+                      <Info className="h-4 w-4 text-amber-600" />
+                      <AlertTitle>Modelo com falhas recentes</AlertTitle>
+                      <AlertDescription>
+                        O modelo <strong>{config.modelo_gemini}</strong> falhou nas últimas{" "}
+                        {modelFailureWarning.consecutiveFailures} tentativas registradas neste navegador. Considere usar
+                        temporariamente <strong>x-ai/grok-4.1-fast</strong>.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="space-y-3">
+                    <Label>Modelo LLM Ativo</Label>
 
                   <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
                     <Bot className="h-4 w-4 shrink-0 text-primary" />

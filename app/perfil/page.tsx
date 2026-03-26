@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { EMPTY_CANDIDATE_PROFILE, type CandidateProfile } from "@/lib/types"
 import { Bot, Info, Loader2, LogIn, Plus, RotateCcw, Save, Sparkles, User, X } from "lucide-react"
 import { toast } from "sonner"
+import { getModelFailureWarning, recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
 
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 
@@ -139,6 +140,7 @@ export default function PerfilPage() {
   const [showModelInput, setShowModelInput] = useState(false)
   const [newModelInput, setNewModelInput] = useState("")
   const [fillMode, setFillMode] = useState<"substituir" | "acrescentar">("substituir")
+  const [modelFailureWarning, setModelFailureWarning] = useState<ReturnType<typeof getModelFailureWarning>>(null)
 
   const router = useRouter()
 
@@ -182,6 +184,10 @@ export default function PerfilPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    setModelFailureWarning(getModelFailureWarning(selectedModel))
+  }, [selectedModel])
 
   function addModelToHistory(model: string) {
     const trimmed = model.trim()
@@ -296,10 +302,16 @@ export default function PerfilPage() {
       })
 
       if (!response.ok) {
+        if (response.status >= 500) {
+          recordModelFailure(selectedModel, "extract-profile")
+          setModelFailureWarning(getModelFailureWarning(selectedModel))
+        }
         throw new Error("Extraction failed")
       }
 
       const result = await response.json()
+      recordModelSuccess(selectedModel, "extract-profile")
+      setModelFailureWarning(getModelFailureWarning(selectedModel))
       const extracted = normalizeProfileData(result.data)
 
       if (fillMode === "acrescentar") {
@@ -426,6 +438,18 @@ export default function PerfilPage() {
                       <CardTitle>Modelo</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      {modelFailureWarning && selectedModel && (
+                        <Alert className="border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+                          <Info className="h-4 w-4 text-amber-600" />
+                          <AlertTitle>Modelo com falhas recentes</AlertTitle>
+                          <AlertDescription>
+                            O modelo <strong>{selectedModel}</strong> falhou nas últimas{" "}
+                            {modelFailureWarning.consecutiveFailures} tentativas registradas neste navegador. Considere
+                            alternar temporariamente para <strong>x-ai/grok-4.1-fast</strong>.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                       <div className="space-y-3">
                         <Label>Modelo LLM para extração</Label>
 

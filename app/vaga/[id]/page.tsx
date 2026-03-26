@@ -22,6 +22,7 @@ import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
 import { JobDetailsSchema } from "@/lib/ai/types"
 import type { JobDetails, ComplementSelection } from "@/lib/ai/types"
+import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
 
 function mapVagaToJobDetails(vaga: VagaEstagio): JobDetails {
   return JobDetailsSchema.parse({
@@ -459,9 +460,13 @@ export default function VagaDetailPage() {
       const result = await response.json()
 
       if (!response.ok || !result.success) {
+        if (response.status >= 500) {
+          recordModelFailure(activeModel, "generate-profile")
+        }
         throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
       }
 
+      recordModelSuccess(activeModel, "generate-profile")
       setProfileText(result.data.profileText)
       setComplements(null)
       toast.success("Perfil profissional gerado com sucesso!")
@@ -496,9 +501,13 @@ export default function VagaDetailPage() {
       const result = await response.json()
 
       if (!response.ok || !result.success) {
+        if (response.status >= 500) {
+          recordModelFailure(activeModel, "select-complements")
+        }
         throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
       }
 
+      recordModelSuccess(activeModel, "select-complements")
       setComplements(result.data)
       toast.success("Complementos selecionados com sucesso!")
     } catch (error) {

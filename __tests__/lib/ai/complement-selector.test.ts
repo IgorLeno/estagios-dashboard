@@ -136,4 +136,30 @@ describe("selectComplements", () => {
     // The 4th project should have been deselected
     expect(result.selection.projects[3].selected).toBe(false)
   })
+
+  it("falls back to the default fast model when the selected model returns empty content", async () => {
+    mockCallGrok
+      .mockRejectedValueOnce(new Error("No content in Grok response [model: openrouter/hunter-alpha]"))
+      .mockResolvedValueOnce({
+        content: JSON.stringify({
+          skills: [{ category: "Dados", items: ["Excel", "Power BI"], selected: true }],
+          projects: [{ title: "Dashboard de Análise de Processos", selected: true, reason: "Aderente" }],
+          certifications: [{ title: "Power BI Impressionador", selected: true, reason: "Aderente" }],
+        }),
+        usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
+      })
+
+    const result = await selectComplements(
+      "Perfil profissional aprovado na aba fit.",
+      jobDetails,
+      "pt",
+      "openrouter/hunter-alpha",
+      "user-1"
+    )
+
+    expect(result.selection.skills[0].items).toContain("Excel")
+    expect(mockCallGrok).toHaveBeenCalledTimes(2)
+    expect(mockCallGrok.mock.calls[0]?.[1]).toMatchObject({ model: "openrouter/hunter-alpha" })
+    expect(mockCallGrok.mock.calls[1]?.[1]).toMatchObject({ model: "x-ai/grok-4.1-fast" })
+  })
 })

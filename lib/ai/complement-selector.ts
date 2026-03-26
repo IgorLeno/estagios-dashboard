@@ -2,7 +2,7 @@ import { callGrok, type GrokMessage } from "./grok-client"
 import { getCVTemplateForUser } from "./cv-templates"
 import { loadUserAIConfig, getGenerationConfig } from "./config"
 import { loadUserSkillsBank } from "./skills-bank"
-import { isValidModelId, DEFAULT_MODEL } from "./models"
+import { buildModelAttemptList, isRetryableModelError, isValidModelId, DEFAULT_MODEL } from "./models"
 import { extractJsonFromResponse } from "./job-parser"
 import { ComplementSelectionSchema, type ComplementSelection, type JobDetails, type TokenUsage } from "./types"
 
@@ -92,7 +92,11 @@ export async function selectComplements(
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
   const userModel = config.modelo_gemini
-  const resolvedModel = model ?? (userModel && isValidModelId(userModel) ? userModel : DEFAULT_MODEL)
+  const modelsToTry = buildModelAttemptList([
+    model && isValidModelId(model) ? model : undefined,
+    userModel && isValidModelId(userModel) ? userModel : undefined,
+    DEFAULT_MODEL,
+  ])
 
   const cv = await getCVTemplateForUser(language, userId)
   const skillsBank = await loadUserSkillsBank(userId)
@@ -120,76 +124,96 @@ export async function selectComplements(
     { role: "user", content: prompt },
   ]
 
-  const response = await callGrok(messages, {
-    temperature: genConfig.temperature ?? 0.5,
-    max_tokens: 2048,
-    model: resolvedModel,
-  })
+  let lastError: Error | null = null
 
-  const parsed = extractJsonFromResponse(response.content)
-  const selection = ComplementSelectionSchema.parse(parsed)
+  for (const modelName of modelsToTry) {
+    try {
+      const response = await callGrok(messages, {
+        temperature: genConfig.temperature ?? 0.5,
+        max_tokens: 2048,
+        model: modelName,
+      })
 
-  // Enforce hard limits — truncate excess items instead of throwing
-  const totalSelectedSkills = selection.skills
-    .filter((s) => s.selected)
-    .reduce((sum, s) => sum + s.items.length, 0)
+      const parsed = extractJsonFromResponse(response.content)
+      const selection = ComplementSelectionSchema.parse(parsed)
 
-  if (totalSelectedSkills > MAX_SKILLS_TOTAL) {
-    console.warn(
-      `[ComplementSelector] Truncating skills: ${totalSelectedSkills} exceeds limit ${MAX_SKILLS_TOTAL}`
-    )
-    let remaining = MAX_SKILLS_TOTAL
-    for (const skill of selection.skills) {
-      if (!skill.selected) continue
-      if (remaining <= 0) {
-        skill.selected = false
-      } else if (skill.items.length > remaining) {
-        skill.items = skill.items.slice(0, remaining)
-        remaining = 0
-      } else {
-        remaining -= skill.items.length
+      // Enforce hard limits — truncate excess items instead of throwing
+      const totalSelectedSkills = selection.skills
+        .filter((s) => s.selected)
+        .reduce((sum, s) => sum + s.items.length, 0)
+
+      if (totalSelectedSkills > MAX_SKILLS_TOTAL) {
+        console.warn(
+          `[ComplementSelector] Truncating skills: ${totalSelectedSkills} exceeds limit ${MAX_SKILLS_TOTAL}`
+        )
+        let remaining = MAX_SKILLS_TOTAL
+        for (const skill of selection.skills) {
+          if (!skill.selected) continue
+          if (remaining <= 0) {
+            skill.selected = false
+          } else if (skill.items.length > remaining) {
+            skill.items = skill.items.slice(0, remaining)
+            remaining = 0
+          } else {
+            remaining -= skill.items.length
+          }
+        }
       }
+
+      const selectedProjects = selection.projects.filter((p) => p.selected)
+      if (selectedProjects.length > MAX_PROJECTS) {
+        console.warn(
+          `[ComplementSelector] Truncating projects: ${selectedProjects.length} exceeds limit ${MAX_PROJECTS}`
+        )
+        let kept = 0
+        for (const proj of selection.projects) {
+          if (!proj.selected) continue
+          if (kept >= MAX_PROJECTS) {
+            proj.selected = false
+          } else {
+            kept++
+          }
+        }
+      }
+
+      const selectedCerts = selection.certifications.filter((c) => c.selected)
+      if (selectedCerts.length > MAX_CERTIFICATIONS) {
+        console.warn(
+          `[ComplementSelector] Truncating certifications: ${selectedCerts.length} exceeds limit ${MAX_CERTIFICATIONS}`
+        )
+        let kept = 0
+        for (const cert of selection.certifications) {
+          if (!cert.selected) continue
+          if (kept >= MAX_CERTIFICATIONS) {
+            cert.selected = false
+          } else {
+            kept++
+          }
+        }
+      }
+
+      return {
+        selection,
+        tokenUsage: {
+          inputTokens: response.usage.prompt_tokens,
+          outputTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        },
+      }
+    } catch (error: unknown) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error))
+      lastError = normalizedError
+
+      if (isRetryableModelError(normalizedError) && modelName !== modelsToTry[modelsToTry.length - 1]) {
+        console.warn(
+          `[ComplementSelector] Model ${modelName} failed, trying fallback model: ${normalizedError.message}`
+        )
+        continue
+      }
+
+      throw normalizedError
     }
   }
 
-  const selectedProjects = selection.projects.filter((p) => p.selected)
-  if (selectedProjects.length > MAX_PROJECTS) {
-    console.warn(
-      `[ComplementSelector] Truncating projects: ${selectedProjects.length} exceeds limit ${MAX_PROJECTS}`
-    )
-    let kept = 0
-    for (const proj of selection.projects) {
-      if (!proj.selected) continue
-      if (kept >= MAX_PROJECTS) {
-        proj.selected = false
-      } else {
-        kept++
-      }
-    }
-  }
-
-  const selectedCerts = selection.certifications.filter((c) => c.selected)
-  if (selectedCerts.length > MAX_CERTIFICATIONS) {
-    console.warn(
-      `[ComplementSelector] Truncating certifications: ${selectedCerts.length} exceeds limit ${MAX_CERTIFICATIONS}`
-    )
-    let kept = 0
-    for (const cert of selection.certifications) {
-      if (!cert.selected) continue
-      if (kept >= MAX_CERTIFICATIONS) {
-        cert.selected = false
-      } else {
-        kept++
-      }
-    }
-  }
-
-  return {
-    selection,
-    tokenUsage: {
-      inputTokens: response.usage.prompt_tokens,
-      outputTokens: response.usage.completion_tokens,
-      totalTokens: response.usage.total_tokens,
-    },
-  }
+  throw lastError ?? new Error("Complement selection failed")
 }

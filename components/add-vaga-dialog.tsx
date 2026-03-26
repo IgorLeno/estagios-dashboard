@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
 import type { ParseJobResponse, ParseJobErrorResponse, JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse, ComplementSelection } from "@/lib/ai/types"
+import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -196,6 +197,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
 
       if (result.success) {
+        recordModelSuccess(selectedAnalysisModel, "parse-job")
         const analiseMarkdown = (result as ParseJobResponse & { analise?: string }).analise || ""
         const mapped = mapJobDetailsToFormData(result.data, analiseMarkdown)
         setFormData((prev) => ({ ...prev, ...mapped }))
@@ -206,6 +208,9 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         // Auto-switch to Tab 2
         setTimeout(() => setActiveTab("dados"), 1000)
       } else {
+        if (response.status >= 500) {
+          recordModelFailure(selectedAnalysisModel, "parse-job")
+        }
         handleParseError(response.status, result.error)
       }
     } catch {
@@ -252,12 +257,16 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result: ParseJobResponse | ParseJobErrorResponse = await response.json()
 
       if (result.success) {
+        recordModelSuccess(selectedAnalysisModel, "parse-job")
         const analiseMarkdown = (result as ParseJobResponse & { analise?: string }).analise || ""
         const mapped = mapJobDetailsToFormData(result.data, analiseMarkdown)
         setFormData((prev) => ({ ...prev, ...mapped }))
         setJobAnalysisData(result.data)
         toast.success("✓ Análise refeita com sucesso!")
       } else {
+        if (response.status >= 500) {
+          recordModelFailure(selectedAnalysisModel, "parse-job")
+        }
         handleParseError(response.status, result.error)
       }
     } catch {
@@ -348,9 +357,13 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result = await response.json()
 
       if (!response.ok || !result.success) {
+        if (response.status >= 500) {
+          recordModelFailure(selectedResumeModel, "generate-profile")
+        }
         throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
       }
 
+      recordModelSuccess(selectedResumeModel, "generate-profile")
       setProfileText(result.data.profileText)
       toast.success("✓ Perfil profissional gerado!")
     } catch (err) {
@@ -385,9 +398,13 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
       const result = await response.json()
 
       if (!response.ok || !result.success) {
+        if (response.status >= 500) {
+          recordModelFailure(selectedResumeModel, "select-complements")
+        }
         throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
       }
 
+      recordModelSuccess(selectedResumeModel, "select-complements")
       setComplements(result.data)
       toast.success("✓ Complementos selecionados!")
     } catch (err) {

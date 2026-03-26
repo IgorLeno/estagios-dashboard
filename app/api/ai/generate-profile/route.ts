@@ -6,14 +6,10 @@ import { JobDetailsSchema } from "@/lib/ai/types"
 import { z, ZodError } from "zod"
 
 const RequestSchema = z.object({
-  jobDescription: z.string().min(50).optional(),
-  jobAnalysis: JobDetailsSchema.optional(),
+  jobAnalysis: JobDetailsSchema,
   language: z.enum(["pt", "en"]),
   model: z.string().optional(),
-}).refine(
-  (data) => data.jobAnalysis || data.jobDescription,
-  "Either jobAnalysis or jobDescription must be provided"
-)
+})
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -21,13 +17,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const body = await req.json()
     const { jobAnalysis, language, model } = RequestSchema.parse(body)
-
-    if (!jobAnalysis) {
-      return NextResponse.json(
-        { success: false, error: "jobAnalysis is required for profile generation" },
-        { status: 400 }
-      )
-    }
 
     const supabase = await createClient()
     const {
