@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, Sparkles, ChevronRight, Info, CheckCircle } from "lucide-react"
+import { Loader2, Sparkles, ChevronRight, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import type { JobDetails, ComplementSelection } from "@/lib/ai/types"
+
+const MAX_SKILLS_TOTAL = 20
 
 export interface FitTabProps {
   jobDescription: string
@@ -44,21 +46,47 @@ export function FitTab({
     certifications: true,
   })
 
-  // Track original skill items per category so removed items can be re-added
+  // Track original skill items per category so removed items can be re-added.
+  // Only repopulate when a fresh API response arrives (isSelectingComplements: true→false),
+  // NOT on user toggles (which also change complements but leave isSelectingComplements false).
   const originalSkillItemsRef = useRef<Map<string, string[]>>(new Map())
+  const wasSelectingRef = useRef(false)
 
   useEffect(() => {
-    if (complements && originalSkillItemsRef.current.size === 0) {
+    if (wasSelectingRef.current && !isSelectingComplements && complements) {
       const map = new Map<string, string[]>()
       for (const skill of complements.skills) {
         map.set(skill.category, [...skill.items])
       }
       originalSkillItemsRef.current = map
     }
-  }, [complements])
+    if (!complements) {
+      originalSkillItemsRef.current = new Map()
+    }
+    wasSelectingRef.current = isSelectingComplements
+  }, [isSelectingComplements, complements])
+
+  // Detect when complements were invalidated by a profile text edit
+  const [complementsInvalidated, setComplementsInvalidated] = useState(false)
+  const hadComplementsRef = useRef(false)
+
+  useEffect(() => {
+    if (!complements && hadComplementsRef.current && profileText.trim().length > 0) {
+      // Complements went from non-null to null while profile text exists → user edited the profile
+      setComplementsInvalidated(true)
+    }
+    if (complements) {
+      setComplementsInvalidated(false)
+    }
+    hadComplementsRef.current = complements !== null
+  }, [complements, profileText])
 
   const hasProfile = profileText.trim().length > 0
   const hasComplements = complements !== null
+  const totalSelectedSkills = complements
+    ? complements.skills.filter((s) => s.selected).reduce((sum, s) => sum + s.items.length, 0)
+    : 0
+  const skillsAtLimit = totalSelectedSkills >= MAX_SKILLS_TOTAL
 
   function toggleSection(key: string) {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -76,8 +104,11 @@ export function FitTab({
         // Deselect all: clear items and mark deselected
         return { ...skill, selected: false, items: [] }
       } else {
-        // Select all: restore original items
-        return { ...skill, selected: true, items: [...originalItems] }
+        // Select all: restore original items, capped at remaining budget
+        const currentOtherSkills = totalSelectedSkills - skill.items.length
+        const budget = MAX_SKILLS_TOTAL - currentOtherSkills
+        const itemsToRestore = originalItems.slice(0, Math.max(0, budget))
+        return { ...skill, selected: itemsToRestore.length > 0, items: itemsToRestore }
       }
     })
     onComplementsChange(updated)
@@ -87,6 +118,9 @@ export function FitTab({
     if (!complements) return
     const category = complements.skills[categoryIndex]
     const hasItem = category.items.includes(itemName)
+
+    // Prevent adding beyond the limit
+    if (!hasItem && totalSelectedSkills >= MAX_SKILLS_TOTAL) return
 
     const updated = { ...complements }
     updated.skills = updated.skills.map((skill, i) => {
@@ -123,10 +157,6 @@ export function FitTab({
     )
     onComplementsChange(updated)
   }
-
-  const totalSelectedSkills = complements
-    ? complements.skills.filter((s) => s.selected).reduce((sum, s) => sum + s.items.length, 0)
-    : 0
 
   const canContinue = hasProfile && hasComplements
 
@@ -197,10 +227,19 @@ export function FitTab({
           {hasComplements && <CheckCircle className="h-4 w-4 text-green-500" />}
         </div>
 
-        {!hasComplements && (
+        {!hasComplements && !complementsInvalidated && (
           <p className="text-sm text-muted-foreground">
             A IA seleciona as competências, projetos e certificações mais relevantes para a vaga.
           </p>
+        )}
+
+        {complementsInvalidated && (
+          <Alert className="border-amber-500/25 bg-amber-500/5">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-sm">
+              Texto do perfil editado — regenere os complementos para refletir as mudanças.
+            </AlertDescription>
+          </Alert>
         )}
 
         <Button
@@ -232,11 +271,19 @@ export function FitTab({
                 onClick={() => toggleSection("skills")}
                 className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-muted/50"
               >
-                <span>Competências ({totalSelectedSkills} skills em {complements.skills.filter((s) => s.selected).length}/{complements.skills.length} categorias)</span>
+                <span className="flex items-center gap-1.5">
+                  Competências ({totalSelectedSkills}/{MAX_SKILLS_TOTAL} skills em {complements.skills.filter((s) => s.selected).length}/{complements.skills.length} categorias)
+                  {skillsAtLimit && <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />}
+                </span>
                 <span className="text-xs text-muted-foreground">{expandedSections.skills ? "▼" : "▶"}</span>
               </button>
               {expandedSections.skills && (
                 <div className="border-t px-3 pb-3 space-y-3">
+                  {skillsAtLimit && (
+                    <p className="text-xs text-amber-600 pt-2">
+                      Limite de {MAX_SKILLS_TOTAL} skills atingido. Desmarque alguma para adicionar outra.
+                    </p>
+                  )}
                   {complements.skills.map((skill, idx) => {
                     const originalItems = originalSkillItemsRef.current.get(skill.category) || skill.items
                     const allItems = [...new Set([...originalItems, ...skill.items])]

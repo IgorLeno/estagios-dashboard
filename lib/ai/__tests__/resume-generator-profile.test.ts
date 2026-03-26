@@ -84,7 +84,7 @@ beforeEach(() => {
   })
 
   mockLoadUserAIConfig.mockResolvedValue({
-    modelo_gemini: "test-model",
+    modelo_gemini: "x-ai/test-model",
     temperatura: 0.2,
     max_tokens: 1024,
     top_p: 0.9,
@@ -136,7 +136,7 @@ afterEach(() => {
 describe("generateTailoredResume — integração com JobProfile", () => {
   it("não lança erro para vaga de People Analytics (FIXTURE_PEOPLE_ANALYTICS_AEGEA)", async () => {
     await expect(generateTailoredResume({ jobDetails: FIXTURE_PEOPLE_ANALYTICS_AEGEA, language: "pt" })).resolves.toMatchObject({
-      model: "test-model",
+      model: "x-ai/test-model",
       personalizedSections: ["summary", "skills", "projects"],
       atsScore: 87,
     })
@@ -144,7 +144,7 @@ describe("generateTailoredResume — integração com JobProfile", () => {
 
   it("não lança erro para vaga de Data Science (FIXTURE_DATA_SCIENCE_RESEARCH)", async () => {
     await expect(generateTailoredResume({ jobDetails: FIXTURE_DATA_SCIENCE_RESEARCH, language: "pt" })).resolves.toMatchObject({
-      model: "test-model",
+      model: "x-ai/test-model",
       personalizedSections: ["summary", "skills", "projects"],
       atsScore: 87,
     })
@@ -152,7 +152,7 @@ describe("generateTailoredResume — integração com JobProfile", () => {
 
   it("não lança erro para vaga de laboratório (FIXTURE_LABORATORIO_QC)", async () => {
     await expect(generateTailoredResume({ jobDetails: FIXTURE_LABORATORIO_QC, language: "pt" })).resolves.toMatchObject({
-      model: "test-model",
+      model: "x-ai/test-model",
       personalizedSections: ["summary", "skills", "projects"],
       atsScore: 87,
     })
@@ -160,7 +160,7 @@ describe("generateTailoredResume — integração com JobProfile", () => {
 
   it("não lança erro para vaga ambígua (FIXTURE_VAGA_AMBIGUA)", async () => {
     await expect(generateTailoredResume({ jobDetails: FIXTURE_VAGA_AMBIGUA, language: "pt" })).resolves.toMatchObject({
-      model: "test-model",
+      model: "x-ai/test-model",
       personalizedSections: ["summary", "skills", "projects"],
       atsScore: 87,
     })

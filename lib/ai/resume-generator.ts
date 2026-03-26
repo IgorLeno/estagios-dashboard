@@ -1,4 +1,5 @@
 import { createAIModel, loadUserAIConfig, getGenerationConfig } from "./config"
+import { isValidModelId, DEFAULT_MODEL } from "./models"
 import {
   buildConsistencyPrompt,
   CONSISTENCY_SYSTEM_PROMPT,
@@ -463,7 +464,8 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
 
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation
-  const resolvedModel = model ?? config.modelo_gemini
+  const userModel = config.modelo_gemini
+  const resolvedModel = model ?? (userModel && isValidModelId(userModel) ? userModel : DEFAULT_MODEL)
   const generationConfig = { ...getGenerationConfig(config), model: resolvedModel }
   const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 })
   const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 })
