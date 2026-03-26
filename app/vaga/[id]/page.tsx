@@ -467,9 +467,28 @@ export default function VagaDetailPage() {
         throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
       }
 
+      const generatedProfileText = typeof result?.data?.profileText === "string" ? result.data.profileText : ""
+      const generatedTagline = typeof result?.data?.tagline === "string" ? result.data.tagline : ""
+
       recordModelSuccess(trackedModel, "generate-profile")
-      setProfileText(result.data.profileText)
-      setTagline(typeof result.data.tagline === "string" ? result.data.tagline : "")
+      setProfileText(generatedProfileText)
+      setTagline(generatedTagline)
+
+      if (vaga?.id) {
+        const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            profile_text_pt: generatedProfileText,
+            tagline_pt: generatedTagline,
+          }),
+        })
+
+        if (!updateResponse.ok) {
+          throw new Error("Erro ao salvar perfil gerado")
+        }
+      }
+
       setComplements(null)
       toast.success("Perfil profissional gerado com sucesso!")
     } catch (error) {
