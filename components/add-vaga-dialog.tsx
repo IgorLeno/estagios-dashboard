@@ -95,6 +95,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
   // Fit tab state
   const [profileText, setProfileText] = useState("")
+  const [tagline, setTagline] = useState("")
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
@@ -298,6 +299,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           jobDescription: description,
           language: "pt",
           profileText: profileText.trim() || undefined,
+          tagline: tagline.trim() || undefined,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
@@ -366,6 +368,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
       recordModelSuccess(trackedModel, "generate-profile")
       setProfileText(result.data.profileText)
+      setTagline(typeof result.data.tagline === "string" ? result.data.tagline : "")
+      setComplements(null)
       toast.success("✓ Perfil profissional gerado!")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao gerar perfil"
@@ -494,6 +498,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
     setProfileText("")
+    setTagline("")
     setComplements(null)
     setActiveTab("descricao")
   }
@@ -583,6 +588,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
                 setProfileText(text)
                 setComplements(null)
               }}
+              tagline={tagline}
+              onTaglineChange={setTagline}
               isGeneratingProfile={isGeneratingProfile}
               onGenerateProfile={handleGenerateProfile}
               complements={complements}

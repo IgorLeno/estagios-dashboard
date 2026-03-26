@@ -196,10 +196,10 @@ function renderModelo1(cv: CVTemplate): string {
       color: #000;
     }
 
-    .subtitle {
+    .tagline {
       font-size: 11pt;
       font-style: italic;
-      color: #333;
+      color: #0066cc;
       margin-bottom: 4pt;
       margin-top: 2pt;
     }
@@ -313,7 +313,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Header -->
     <div class="header">
       <h1>${escapeHtml(cv.header.name.toUpperCase())}</h1>
-      ${cv.header.title ? `<p class="subtitle">${escapeHtml(cv.header.title)}</p>` : ""}
+      ${cv.header.tagline ? `<p class="tagline">${escapeHtml(cv.header.tagline)}</p>` : ""}
       ${renderContactLine(cv, "modelo1")}
     </div>
 
@@ -409,7 +409,7 @@ function renderModelo2(cv: CVTemplate): string {
       margin-bottom: 4pt;
     }
 
-    .subtitle {
+    .tagline {
       color: #2E5C9E;
       font-style: italic;
       font-size: 13pt;
@@ -529,7 +529,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Header -->
     <div class="header">
       <h1>${escapeHtml(cv.header.name)}</h1>
-      <p class="subtitle">${escapeHtml(cv.header.title)}</p>
+      ${cv.header.tagline ? `<p class="tagline">${escapeHtml(cv.header.tagline)}</p>` : ""}
       ${renderContactLine(cv, "modelo2")}
     </div>
 

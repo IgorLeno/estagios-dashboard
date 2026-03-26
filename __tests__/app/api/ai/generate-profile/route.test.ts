@@ -47,6 +47,7 @@ describe("POST /api/ai/generate-profile", () => {
   it("returns 200 when profile generation succeeds", async () => {
     vi.mocked(generateProfile).mockResolvedValue({
       profileText: "Perfil válido com conteúdo suficiente para o teste de rota.",
+      tagline: "Engenharia Química | Dados, BI e Machine Learning",
       model: "openrouter/hunter-alpha",
       tokenUsage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
     })
@@ -65,6 +66,7 @@ describe("POST /api/ai/generate-profile", () => {
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.data.profileText).toContain("Perfil válido")
+    expect(data.data.tagline).toContain("Engenharia Química")
     expect(data.metadata).toEqual({
       model: "openrouter/hunter-alpha",
       tokenUsage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },

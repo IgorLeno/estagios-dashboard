@@ -66,6 +66,7 @@ export default function VagaDetailPage() {
   const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
   const [editingResumeContent, setEditingResumeContent] = useState("")
   const [profileText, setProfileText] = useState("")
+  const [tagline, setTagline] = useState("")
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
@@ -201,6 +202,7 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           profileText: language === "pt" ? profileText.trim() || undefined : undefined,
+          tagline: tagline.trim() || undefined,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
@@ -465,6 +467,7 @@ export default function VagaDetailPage() {
 
       recordModelSuccess(trackedModel, "generate-profile")
       setProfileText(result.data.profileText)
+      setTagline(typeof result.data.tagline === "string" ? result.data.tagline : "")
       setComplements(null)
       toast.success("Perfil profissional gerado com sucesso!")
     } catch (error) {
@@ -702,6 +705,8 @@ export default function VagaDetailPage() {
                   setProfileText(text)
                   setComplements(null)
                 }}
+                tagline={tagline}
+                onTaglineChange={setTagline}
                 isGeneratingProfile={isGeneratingProfile}
                 onGenerateProfile={handleGenerateProfile}
                 complements={complements}

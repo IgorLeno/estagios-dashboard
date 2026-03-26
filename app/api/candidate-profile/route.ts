@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
         idiomas: body.idiomas ?? [],
         objetivo_pt: body.objetivo_pt ?? "",
         objetivo_en: body.objetivo_en ?? "",
+        tagline_pt: body.tagline_pt ?? "",
+        tagline_en: body.tagline_en ?? "",
         habilidades: body.habilidades ?? [],
         projetos: body.projetos ?? [],
         certificacoes: body.certificacoes ?? [],

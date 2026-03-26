@@ -345,6 +345,7 @@ export interface GenerateResumeOptions {
   model?: string
   selectedProjectTitles?: string[]
   profileText?: string
+  tagline?: string
   selectedCertifications?: string[]
 }
 
@@ -364,6 +365,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     model,
     selectedProjectTitles,
     profileText,
+    tagline,
     selectedCertifications,
   } = options
   const startTime = Date.now()
@@ -458,6 +460,10 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
 
   const filteredCv = {
     ...baseCv,
+    header: {
+      ...baseCv.header,
+      tagline: tagline?.trim() || baseCv.header.tagline,
+    },
     projects: projectsToUse,
     certifications: certificationsToUse,
   }

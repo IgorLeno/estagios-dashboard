@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -17,6 +18,8 @@ export interface FitTabProps {
   // 3A: Profile
   profileText: string
   onProfileTextChange: (text: string) => void
+  tagline?: string
+  onTaglineChange?: (tagline: string) => void
   isGeneratingProfile: boolean
   onGenerateProfile: () => void
   // 3B: Complements
@@ -30,8 +33,11 @@ export interface FitTabProps {
 
 export function FitTab({
   jobAnalysisData,
+  language,
   profileText,
   onProfileTextChange,
+  tagline,
+  onTaglineChange,
   isGeneratingProfile,
   onGenerateProfile,
   complements,
@@ -159,6 +165,11 @@ export function FitTab({
   }
 
   const canContinue = hasProfile && hasComplements && !complementsInvalidated
+  const taglineLabel = language === "pt" ? "Tagline" : "Tagline"
+  const taglineDescription =
+    language === "pt"
+      ? "Frase de posicionamento exibida abaixo do nome no currículo (8–15 palavras)"
+      : "Positioning phrase shown below the name on the resume (8–15 words)"
 
   return (
     <div className="space-y-6 p-4">
@@ -196,6 +207,24 @@ export function FitTab({
           className="min-h-[120px] resize-none"
           disabled={isGeneratingProfile}
         />
+
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor="fit-tagline">{taglineLabel}</Label>
+            <p className="text-xs text-muted-foreground">{taglineDescription}</p>
+          </div>
+          <Input
+            id="fit-tagline"
+            value={tagline ?? ""}
+            onChange={(e) => onTaglineChange?.(e.target.value)}
+            placeholder={
+              language === "pt"
+                ? "Ex: Engenheiro Químico | Dados, BI & Machine Learning"
+                : "Ex: Chemical Engineering Student | Data, BI & Machine Learning"
+            }
+            disabled={isGeneratingProfile}
+          />
+        </div>
 
         <Button
           onClick={onGenerateProfile}

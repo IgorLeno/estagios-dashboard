@@ -21,6 +21,7 @@ function buildTemplate(language: "pt" | "en", candidateData: CandidateData): CVT
     header: {
       name: c.identity.name,
       title: "",
+      tagline: isPt ? c.tagline_pt : c.tagline_en,
       email: c.identity.email,
       phone: c.identity.phone,
       location: isPt ? c.identity.location_pt : c.identity.location_en,

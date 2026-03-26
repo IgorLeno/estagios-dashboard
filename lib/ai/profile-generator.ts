@@ -63,12 +63,15 @@ ${isPt ? "REGRAS" : "RULES"}:
 - ${isPt ? "Síntese narrativa, NÃO lista de keywords disfarçada de parágrafo" : "Narrative synthesis, NOT a keyword list disguised as a paragraph"}
 - ${isPt ? "Tom natural, profissional, sem clichês genéricos" : "Natural, professional tone, no generic clichés"}
 - ${isPt ? "Conecte competências reais do candidato com necessidades da vaga" : "Connect real candidate competencies with job needs"}
+- ${isPt
+    ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), sem clichês, que capture formação + área de atuação + diferencial. Ex: "Engenheiro Químico | Dados, BI & Machine Learning"'
+    : 'Also generate a tagline: short positioning phrase (8-15 words), no clichés, capturing background + field + differentiator. Ex: "Chemical Engineering Student | Data Analysis & Machine Learning"'}
 - ${isPt ? `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} palavras, 4-5 frases fluidas` : `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} words, 4-5 fluid sentences`}
 - ${isPt ? 'Idioma do output: Português brasileiro' : 'Output language: English'}
 
 ${isPt ? "FORMATO DE RESPOSTA" : "RESPONSE FORMAT"}: JSON
 \`\`\`json
-{ "profileText": "..." }
+{ "profileText": "...", "tagline": "..." }
 \`\`\``
 }
 
@@ -77,7 +80,7 @@ export async function generateProfile(
   language: "pt" | "en",
   model?: string,
   userId?: string
-): Promise<{ profileText: string; tokenUsage: TokenUsage; model: string }> {
+): Promise<{ profileText: string; tagline: string; tokenUsage: TokenUsage; model: string }> {
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
   const userModel = config.modelo_gemini
@@ -125,12 +128,14 @@ export async function generateProfile(
         model: modelName,
       })
 
-      const parsed = extractJsonFromResponse(response.content) as { profileText?: unknown }
+      const parsed = extractJsonFromResponse(response.content) as { profileText?: unknown; tagline?: unknown }
       const profileText = parsed.profileText
 
       if (!profileText || typeof profileText !== "string") {
         throw new Error("LLM response missing profileText field")
       }
+
+      const tagline = typeof parsed.tagline === "string" ? parsed.tagline.trim() : ""
 
       let finalText = profileText.trim()
       const wordCount = finalText.split(/\s+/).length
@@ -168,6 +173,7 @@ export async function generateProfile(
 
       return {
         profileText: finalText,
+        tagline,
         model: modelName,
         tokenUsage: {
           inputTokens: response.usage.prompt_tokens,

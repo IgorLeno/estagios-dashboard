@@ -40,6 +40,7 @@ export async function saveCandidateProfile(
   userId: string
 ): Promise<CandidateProfile> {
   const supabase = await createClient()
+  // NOTE: requires DB migration: ALTER TABLE candidate_profile ADD COLUMN tagline_pt TEXT DEFAULT '', tagline_en TEXT DEFAULT '';
 
   console.log(`[CandidateProfile] Saving profile for user: ${userId}`)
 
@@ -66,6 +67,8 @@ export async function saveCandidateProfile(
         idiomas: profile.idiomas,
         objetivo_pt: profile.objetivo_pt,
         objetivo_en: profile.objetivo_en,
+        tagline_pt: profile.tagline_pt,
+        tagline_en: profile.tagline_en,
         habilidades: profile.habilidades,
         projetos: profile.projetos,
         certificacoes: profile.certificacoes,
@@ -99,6 +102,8 @@ export async function saveCandidateProfile(
         idiomas: profile.idiomas,
         objetivo_pt: profile.objetivo_pt,
         objetivo_en: profile.objetivo_en,
+        tagline_pt: profile.tagline_pt,
+        tagline_en: profile.tagline_en,
         habilidades: profile.habilidades,
         projetos: profile.projetos,
         certificacoes: profile.certificacoes,

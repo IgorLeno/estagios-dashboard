@@ -27,6 +27,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       jobDescription,
       language,
       profileText,
+      tagline,
       approvedSkills,
       model,
       selectedProjectTitles,
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       model,
       selectedProjectTitles,
       profileText: effectiveProfileText,
+      tagline: tagline?.trim() || undefined,
       selectedCertifications,
     })
 

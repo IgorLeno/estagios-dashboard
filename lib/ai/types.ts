@@ -204,6 +204,7 @@ export interface CVTemplate {
   header: {
     name: string
     title: string
+    tagline?: string
     email: string
     phone: string
     location: string
@@ -251,6 +252,7 @@ export interface CVTemplate {
  */
 export interface PersonalizedSections {
   summary: string
+  tagline?: string
   skills: Array<{
     category: string
     items: string[]
@@ -305,6 +307,7 @@ export const ComplementSelectionSchema = z.object({
  */
 export const PersonalizedSectionsSchema = z.object({
   summary: z.string().min(50, "Summary too short").max(1000, "Summary too long"),
+  tagline: z.string().min(5).max(120).optional(),
   skills: z.array(
     z.object({
       category: z.string().min(1),
@@ -328,6 +331,7 @@ export const GenerateResumeRequestSchema = z
     jobDescription: z.string().min(50).max(50000).optional(),
     language: z.enum(["pt", "en"]),
     profileText: z.string().min(20).max(2000).optional(),
+    tagline: z.string().min(5).max(120).optional(),
     approvedSkills: z.array(z.string().min(1).max(100)).optional(),
     model: z.string().optional(),
     selectedProjectTitles: z.array(z.string()).optional(),

@@ -69,6 +69,8 @@ export function toCandidateData(profile: CandidateProfile): CandidateData {
 
     summary_pt: profile.objetivo_pt,
     summary_en: profile.objetivo_en || profile.objetivo_pt,
+    tagline_pt: profile.tagline_pt ?? "",
+    tagline_en: profile.tagline_en ?? "",
   }
 }
 
