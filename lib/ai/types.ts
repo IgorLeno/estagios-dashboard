@@ -1,5 +1,30 @@
 import { z } from "zod"
 
+const JOB_TYPE_VALUES = ["Estágio", "Júnior", "Pleno", "Sênior"] as const
+const DEFAULT_JOB_TYPE = JOB_TYPE_VALUES[0]
+
+function normalizeTextValue(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+}
+
+export function normalizeTipoVaga(value: string | null | undefined): (typeof JOB_TYPE_VALUES)[number] {
+  if (!value) return DEFAULT_JOB_TYPE
+
+  const normalized = normalizeTextValue(value)
+
+  if (!normalized) return DEFAULT_JOB_TYPE
+  if (/(^|[^a-z])estagio([^a-z]|$)|estagiario|intern/.test(normalized)) return "Estágio"
+  if (/(^|[^a-z])junior([^a-z]|$)|(^|[^a-z])jr([^a-z]|$)/.test(normalized)) return "Júnior"
+  if (/(^|[^a-z])pleno([^a-z]|$)|(^|[^a-z])mid([^a-z]|$)|middle/.test(normalized)) return "Pleno"
+  if (/(^|[^a-z])senior([^a-z]|$)|(^|[^a-z])sr([^a-z]|$)/.test(normalized)) return "Sênior"
+
+  return DEFAULT_JOB_TYPE
+}
+
 /**
  * Schema de validação para dados extraídos de vagas
  * Compatível com ParsedVagaData do markdown-parser.ts
@@ -33,10 +58,11 @@ export const JobDetailsSchema = z.object({
     .default("Presencial")
     .transform((v) => (v === null ? "Presencial" : v)),
   tipo_vaga: z
-    .enum(["Estágio", "Júnior", "Pleno", "Sênior"])
+    .string()
     .nullable()
-    .default("Estágio")
-    .transform((v) => (v === null ? "Estágio" : v)),
+    .optional()
+    .transform((v) => normalizeTipoVaga(v))
+    .pipe(z.enum(JOB_TYPE_VALUES)),
   requisitos_obrigatorios: z
     .array(z.string().min(1, "Item não pode ser vazio"))
     .nullable()

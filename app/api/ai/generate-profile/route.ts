@@ -42,16 +42,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       metadata: { tokenUsage: result.tokenUsage },
     })
   } catch (error: unknown) {
-    console.error("[Generate Profile API] Error:", error)
+    console.error("[Generate Profile API] Error:", error instanceof Error ? error.message : String(error))
 
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { success: false, error: "Invalid request data", details: error.errors },
+        { success: false, error: "Invalid request data", details: error.issues },
         { status: 400 }
       )
     }
 
     const message = error instanceof Error ? error.message : String(error)
+
+    if (
+      message.includes("No content in Grok response") ||
+      message.includes("LLM response missing profileText field")
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "AI provider returned an empty profile response. Try again or switch model.",
+        },
+        { status: 502 }
+      )
+    }
+
     return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }

@@ -1,7 +1,7 @@
 import { callGrok, type GrokMessage } from "./grok-client"
 import { getCVTemplateForUser } from "./cv-templates"
 import { loadUserAIConfig, getGenerationConfig } from "./config"
-import { isValidModelId, DEFAULT_MODEL } from "./models"
+import { buildModelAttemptList, isRetryableModelError, isValidModelId, DEFAULT_MODEL } from "./models"
 import { extractJsonFromResponse } from "./job-parser"
 import type { JobDetails, TokenUsage } from "./types"
 
@@ -81,7 +81,11 @@ export async function generateProfile(
   const config = await loadUserAIConfig(userId)
   const genConfig = getGenerationConfig(config)
   const userModel = config.modelo_gemini
-  const resolvedModel = model ?? (userModel && isValidModelId(userModel) ? userModel : DEFAULT_MODEL)
+  const modelsToTry = buildModelAttemptList([
+    model && isValidModelId(model) ? model : undefined,
+    userModel && isValidModelId(userModel) ? userModel : undefined,
+    DEFAULT_MODEL,
+  ])
 
   const cv = await getCVTemplateForUser(language, userId)
 
@@ -111,62 +115,79 @@ export async function generateProfile(
     { role: "user", content: prompt },
   ]
 
-  const response = await callGrok(messages, {
-    temperature: genConfig.temperature ?? 0.7,
-    max_tokens: 512,
-    model: resolvedModel,
-  })
+  let lastError: Error | null = null
 
-  const parsed = extractJsonFromResponse(response.content)
-  const profileText: string = parsed.profileText
+  for (const modelName of modelsToTry) {
+    try {
+      const response = await callGrok(messages, {
+        temperature: genConfig.temperature ?? 0.7,
+        max_tokens: 512,
+        model: modelName,
+      })
 
-  if (!profileText || typeof profileText !== "string") {
-    throw new Error("LLM response missing profileText field")
-  }
+      const parsed = extractJsonFromResponse(response.content) as { profileText?: unknown }
+      const profileText = parsed.profileText
 
-  let finalText = profileText.trim()
-  const wordCount = finalText.split(/\s+/).length
+      if (!profileText || typeof profileText !== "string") {
+        throw new Error("LLM response missing profileText field")
+      }
 
-  if (wordCount < MIN_PROFILE_WORDS) {
-    throw new Error(
-      `Profile too short: ${wordCount} words (minimum ${MIN_PROFILE_WORDS})`
-    )
-  }
+      let finalText = profileText.trim()
+      const wordCount = finalText.split(/\s+/).length
 
-  if (wordCount > MAX_PROFILE_WORDS) {
-    // Truncate at the last sentence boundary within the word limit
-    const words = finalText.split(/\s+/)
-    const truncatedWords = words.slice(0, MAX_PROFILE_WORDS).join(" ")
-    const lastSentenceEnd = Math.max(
-      truncatedWords.lastIndexOf("."),
-      truncatedWords.lastIndexOf("!"),
-      truncatedWords.lastIndexOf("?")
-    )
+      if (wordCount < MIN_PROFILE_WORDS) {
+        throw new Error(`Profile too short: ${wordCount} words (minimum ${MIN_PROFILE_WORDS})`)
+      }
 
-    if (lastSentenceEnd > 0) {
-      finalText = truncatedWords.slice(0, lastSentenceEnd + 1)
-    } else {
-      finalText = truncatedWords + "."
+      if (wordCount > MAX_PROFILE_WORDS) {
+        const words = finalText.split(/\s+/)
+        const truncatedWords = words.slice(0, MAX_PROFILE_WORDS).join(" ")
+        const lastSentenceEnd = Math.max(
+          truncatedWords.lastIndexOf("."),
+          truncatedWords.lastIndexOf("!"),
+          truncatedWords.lastIndexOf("?")
+        )
+
+        if (lastSentenceEnd > 0) {
+          finalText = truncatedWords.slice(0, lastSentenceEnd + 1)
+        } else {
+          finalText = truncatedWords + "."
+        }
+
+        const truncatedWordCount = finalText.split(/\s+/).length
+        console.warn(
+          `[ProfileGenerator] Profile truncated from ${wordCount} to ${truncatedWordCount} words (limit: ${MAX_PROFILE_WORDS})`
+        )
+
+        if (truncatedWordCount < MIN_PROFILE_WORDS) {
+          throw new Error(
+            `Profile too short after truncation: ${truncatedWordCount} words (minimum ${MIN_PROFILE_WORDS})`
+          )
+        }
+      }
+
+      return {
+        profileText: finalText,
+        tokenUsage: {
+          inputTokens: response.usage.prompt_tokens,
+          outputTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        },
+      }
+    } catch (error: unknown) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error))
+      lastError = normalizedError
+
+      if (isRetryableModelError(normalizedError) && modelName !== modelsToTry[modelsToTry.length - 1]) {
+        console.warn(
+          `[ProfileGenerator] Model ${modelName} failed, trying fallback model: ${normalizedError.message}`
+        )
+        continue
+      }
+
+      throw normalizedError
     }
-
-    const truncatedWordCount = finalText.split(/\s+/).length
-    console.warn(
-      `[ProfileGenerator] Profile truncated from ${wordCount} to ${truncatedWordCount} words (limit: ${MAX_PROFILE_WORDS})`
-    )
-
-    if (truncatedWordCount < MIN_PROFILE_WORDS) {
-      throw new Error(
-        `Profile too short after truncation: ${truncatedWordCount} words (minimum ${MIN_PROFILE_WORDS})`
-      )
-    }
   }
 
-  return {
-    profileText: finalText,
-    tokenUsage: {
-      inputTokens: response.usage.prompt_tokens,
-      outputTokens: response.usage.completion_tokens,
-      totalTokens: response.usage.total_tokens,
-    },
-  }
+  throw lastError ?? new Error("Profile generation failed")
 }

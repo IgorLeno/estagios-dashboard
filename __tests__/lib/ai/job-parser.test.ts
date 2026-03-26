@@ -223,11 +223,12 @@ Score: 4/5 estrelas. Excelente match técnico.
     analise_prompt: "",
     curriculo_prompt: "",
   })),
-  getGenerationConfig: vi.fn((config: any) => ({
+  getGenerationConfig: vi.fn((config: { temperatura: number; max_tokens: number; top_p: number }) => ({
     temperature: config.temperatura,
     maxOutputTokens: config.max_tokens,
     topP: config.top_p,
   })),
+  MODEL_FALLBACK_CHAIN: ["x-ai/grok-4.1-fast"],
   ANALYSIS_SYSTEM_PROMPT: "You are a career coach.",
   ANALYSIS_MODEL_CONFIG: { model: "x-ai/grok-4.1-fast" },
 }))

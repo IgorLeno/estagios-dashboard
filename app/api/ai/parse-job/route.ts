@@ -5,8 +5,9 @@ import { parseJobWithAnalysis } from "@/lib/ai/job-parser"
 import { ParseJobRequestSchema } from "@/lib/ai/types"
 import { checkRateLimit, consumeRequest, consumeTokens, RATE_LIMIT_CONFIG } from "@/lib/ai/rate-limiter"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
-import { ZodError } from "zod"
 import { createClient } from "@/lib/supabase/server"
+
+export const maxDuration = 120
 
 /**
  * POST /api/ai/parse-job
@@ -111,7 +112,26 @@ export async function POST(request: NextRequest) {
     // Parse e validar body
     const body = await request.json()
     const { jobDescription, model }: { jobDescription: string; model?: string } = body
-    ParseJobRequestSchema.parse({ jobDescription })
+    const requestValidation = ParseJobRequestSchema.safeParse({ jobDescription })
+
+    if (!requestValidation.success) {
+      const validationIssues = requestValidation.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+        code: issue.code,
+      }))
+
+      console.error("[AI Parser] Validation error:", validationIssues)
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid request data",
+          details: validationIssues,
+        },
+        { status: 400 }
+      )
+    }
+
     const requestedModel = typeof model === "string" && model.trim() ? model.trim() : undefined
 
     // Get user ID from session (if authenticated)
@@ -173,25 +193,6 @@ export async function POST(request: NextRequest) {
           message: `Parsing operation timed out after ${error.timeoutMs}ms`,
         },
         { status: 504 }
-      )
-    }
-
-    // Erro de validação Zod
-    if (error instanceof ZodError) {
-      const validationIssues = error.issues.map((issue) => ({
-        path: issue.path,
-        message: issue.message,
-        code: issue.code,
-      }))
-
-      console.error("[AI Parser] Validation error:", validationIssues)
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request data",
-          details: validationIssues,
-        },
-        { status: 400 }
       )
     }
 

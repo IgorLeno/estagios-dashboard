@@ -2,9 +2,6 @@ import {
   createGeminiClient,
   GEMINI_CONFIG,
   MODEL_FALLBACK_CHAIN,
-  GeminiModelType,
-  createAnalysisModel,
-  ANALYSIS_MODEL_CONFIG,
   loadUserAIConfig,
   getGenerationConfig,
 } from "./config"
@@ -15,6 +12,7 @@ import { buildJobAnalysisPrompt, ANALYSIS_SYSTEM_PROMPT } from "./analysis-promp
 import { validateAnalysisMarkdown } from "./validation"
 import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
 import { buildDossieFromProfile } from "./dossie-builder"
+import { buildModelAttemptList, isRetryableModelError, isValidModelId } from "./models"
 
 export const JOB_PARSER_SYSTEM_PROMPT = SYSTEM_PROMPT
 
@@ -43,7 +41,7 @@ function repairJsonString(jsonStr: string): string {
   // Pattern: Matches content between quotes that contains newlines
   repaired = repaired.replace(/"([^"\\]*(?:\\.[^"\\]*)*?)"/gs, (match, content) => {
     // Escape any literal newlines, carriage returns, tabs
-    let escaped = content.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
+    const escaped = content.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
 
     return `"${escaped}"`
   })
@@ -198,7 +196,7 @@ export function extractJsonFromResponse(response: string): unknown {
         const result = JSON.parse(repaired)
         console.log("[Job Parser] ✅ Successfully repaired and parsed JSON")
         return result
-      } catch (repairError) {
+      } catch {
         console.error("[Job Parser] Repair also failed")
 
         // Try salvage as last resort
@@ -276,7 +274,7 @@ export function extractJsonFromResponse(response: string): unknown {
         const result = JSON.parse(repaired)
         console.log("[Job Parser] ✅ Successfully repaired and parsed direct JSON")
         return result
-      } catch (repairError) {
+      } catch {
         const parseError = error instanceof Error ? error.message : String(error)
         throw new Error(`Invalid JSON format: ${parseError}`)
       }
@@ -289,14 +287,27 @@ export function extractJsonFromResponse(response: string): unknown {
 /**
  * Extrai informações de uso de tokens da resposta do Gemini
  */
-function extractTokenUsage(response: any): {
+type GeminiLikeUsageMetadata = {
+  promptTokenCount?: number
+  candidatesTokenCount?: number
+  totalTokenCount?: number
+}
+
+type GeminiLikeResponse = {
+  usageMetadata?: GeminiLikeUsageMetadata
+  candidates?: Array<{
+    usageMetadata?: GeminiLikeUsageMetadata
+  }>
+}
+
+function extractTokenUsage(response: GeminiLikeResponse): {
   inputTokens: number
   outputTokens: number
   totalTokens: number
 } {
   try {
     // A resposta do Gemini pode ter usageMetadata em diferentes lugares
-    const usageMetadata = response.usageMetadata || (response as any).candidates?.[0]?.usageMetadata || null
+    const usageMetadata = response.usageMetadata || response.candidates?.[0]?.usageMetadata || null
 
     if (usageMetadata) {
       const promptTokenCount = usageMetadata.promptTokenCount || 0
@@ -339,8 +350,7 @@ export async function parseJobWithGemini(jobDescription: string, model?: string)
   // Criar cliente Gemini uma única vez (fora do loop)
   const genAI = createGeminiClient()
 
-  // If a specific model is requested, use only that; otherwise use fallback chain
-  const modelsToTry = model ? [model] : MODEL_FALLBACK_CHAIN
+  const modelsToTry = buildModelAttemptList([model, ...MODEL_FALLBACK_CHAIN])
 
   // Try each model in fallback chain
   for (const modelName of modelsToTry) {
@@ -435,93 +445,89 @@ export async function parseJobWithAnalysis(
   const startTime = Date.now()
   const MAX_RETRIES = 2
 
-  // Load user AI config (or global defaults)
   const config = await loadUserAIConfig(userId)
-  const resolvedModel = model ?? config.modelo_gemini
+  const requestedModel = model && isValidModelId(model) ? model : undefined
+  const configuredModel = isValidModelId(config.modelo_gemini) ? config.modelo_gemini : undefined
+  const modelsToTry = buildModelAttemptList([requestedModel, configuredModel, ...MODEL_FALLBACK_CHAIN])
+  const generationConfig = getGenerationConfig(config)
+  const genAI = createGeminiClient()
+  const candidateProfile = await getCandidateProfile(userId)
+  const dynamicDossie = buildDossieFromProfile(candidateProfile)
+  const isProfileEmpty = candidateProfile.id === "empty" || !candidateProfile.nome
+  const dossie = isProfileEmpty && config.dossie_prompt ? config.dossie_prompt : dynamicDossie
+  const prompt = buildJobAnalysisPrompt(jobDescription, dossie)
+  let lastError: Error | null = null
+
   console.log(`[Job Parser] Loaded AI config for user: ${userId || "global"}`)
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      console.log(
-        `[Job Parser] Starting analysis with model: ${resolvedModel} (attempt ${attempt}/${MAX_RETRIES})`
-      )
+  for (const modelName of modelsToTry) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`[Job Parser] Starting analysis with model: ${modelName} (attempt ${attempt}/${MAX_RETRIES})`)
 
-      // Get generation config from loaded settings
-      const generationConfig = getGenerationConfig(config)
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig,
+          systemInstruction: ANALYSIS_SYSTEM_PROMPT,
+        })
 
-      // Create Gemini client
-      const genAI = createGeminiClient()
-      const model = genAI.getGenerativeModel({
-        model: resolvedModel,
-        generationConfig,
-        systemInstruction: ANALYSIS_SYSTEM_PROMPT,
-      })
+        const result = await Promise.race([model.generateContent(prompt), createTimeoutPromise(timeoutMs)])
+        const response = result.response
+        const text = response.text()
 
-      // Build dossie from candidate profile (DB), fallback to config.dossie_prompt
-      const candidateProfile = await getCandidateProfile(userId)
-      const dynamicDossie = buildDossieFromProfile(candidateProfile)
-      const isProfileEmpty = candidateProfile.id === "empty" || !candidateProfile.nome
-      const dossie = isProfileEmpty && config.dossie_prompt ? config.dossie_prompt : dynamicDossie
-      const prompt = buildJobAnalysisPrompt(jobDescription, dossie)
+        console.log(`[Job Parser] LLM response: ${text.length} characters`)
 
-      // Call Gemini with timeout protection
-      const result = await Promise.race([model.generateContent(prompt), createTimeoutPromise(timeoutMs)])
+        const tokenUsage = extractTokenUsage(response)
+        const jsonData = extractJsonFromResponse(text)
+        const validated = JobAnalysisResponseSchema.parse(jsonData)
 
-      const response = result.response
-      const text = response.text()
+        if (!validateAnalysisMarkdown(validated.analise_markdown)) {
+          console.warn("[Job Parser] Analysis validation failed, using fallback")
+          validated.analise_markdown = buildObservacoes(validated.structured_data)
+        }
 
-      // Log response size for debugging
-      console.log(`[Job Parser] LLM response: ${text.length} characters`)
+        const duration = Date.now() - startTime
 
-      // Extract token usage
-      const tokenUsage = extractTokenUsage(response)
+        console.log(`[Job Parser] ✅ Analysis complete: ${modelName} (${duration}ms, ${tokenUsage.totalTokens} tokens)`)
 
-      // Extract JSON (includes truncation detection)
-      const jsonData = extractJsonFromResponse(text)
+        return {
+          data: validated.structured_data,
+          analise: validated.analise_markdown,
+          duration,
+          model: modelName,
+          tokenUsage,
+        }
+      } catch (error: unknown) {
+        const normalizedError = error instanceof Error ? error : new Error(String(error))
+        const retryable = isRetryableModelError(normalizedError) || isQuotaError(normalizedError)
+        const hasFallbackModel = modelName !== modelsToTry[modelsToTry.length - 1]
 
-      // Validate with Zod
-      const validated = JobAnalysisResponseSchema.parse(jsonData)
+        lastError = normalizedError
 
-      // Validate analysis markdown
-      if (!validateAnalysisMarkdown(validated.analise_markdown)) {
-        console.warn("[Job Parser] Analysis validation failed, using fallback")
-        // Fallback to basic observations if analysis is invalid
-        const fallbackAnalise = buildObservacoes(validated.structured_data)
-        validated.analise_markdown = fallbackAnalise
+        if (retryable && attempt < MAX_RETRIES) {
+          console.warn(
+            `[Job Parser] ⚠️  Model ${modelName} failed on attempt ${attempt}, retrying same model: ${normalizedError.message}`
+          )
+          continue
+        }
+
+        if (retryable && hasFallbackModel) {
+          console.warn(
+            `[Job Parser] ⚠️  Model ${modelName} exhausted retries, falling back: ${normalizedError.message}`
+          )
+          break
+        }
+
+        console.error(
+          `[Job Parser] ❌ Analysis error with model ${modelName} (attempt ${attempt}):`,
+          normalizedError.message
+        )
+        throw normalizedError
       }
-
-      const duration = Date.now() - startTime
-
-      console.log(
-        `[Job Parser] ✅ Analysis complete: ${resolvedModel} (${duration}ms, ${tokenUsage.totalTokens} tokens)`
-      )
-
-      return {
-        data: validated.structured_data,
-        analise: validated.analise_markdown,
-        duration,
-        model: resolvedModel,
-        tokenUsage,
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-
-      // Check if this is a truncation error - retry once
-      const isTruncationError =
-        errorMessage.includes("truncated") || errorMessage.includes("incomplete") || errorMessage.includes("timeout")
-
-      if (isTruncationError && attempt < MAX_RETRIES) {
-        console.warn(`[Job Parser] ⚠️  Truncation/timeout error on attempt ${attempt}, retrying...`)
-        continue
-      }
-
-      console.error(`[Job Parser] ❌ Analysis error (attempt ${attempt}):`, errorMessage)
-      throw error
     }
   }
 
-  // Should never reach here, but TypeScript needs it
-  throw new Error("Unexpected error: retry loop completed without result")
+  throw lastError ?? new Error("Analysis failed for all candidate models")
 }
 
 /**

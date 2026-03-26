@@ -32,3 +32,48 @@ export function isValidModelId(modelId: string): boolean {
   const parts = modelId.split("/")
   return parts.length >= 2 && parts[0].length > 0 && parts[1].length > 0
 }
+
+export function buildModelAttemptList(candidates: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>()
+  const models: string[] = []
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string") continue
+
+    const trimmed = candidate.trim()
+    if (!trimmed || seen.has(trimmed)) continue
+
+    seen.add(trimmed)
+    models.push(trimmed)
+  }
+
+  return models.length > 0 ? models : [DEFAULT_MODEL]
+}
+
+export function isRetryableModelError(error: unknown): boolean {
+  if (error && typeof error === "object" && "name" in error && error.name === "ZodError") {
+    return true
+  }
+
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase()
+
+  return [
+    "timeout",
+    "timed out",
+    "gateway timeout",
+    "504",
+    "502",
+    "503",
+    "rate limit",
+    "overloaded",
+    "temporarily unavailable",
+    "no content in grok response",
+    "empty response",
+    "no valid json",
+    "invalid json",
+    "truncated",
+    "incomplete",
+    "missing profiletext",
+    "profiletext field",
+  ].some((token) => message.includes(token))
+}

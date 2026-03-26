@@ -26,6 +26,27 @@ export interface GrokResponse {
   }
 }
 
+function extractContentString(content: unknown): string {
+  if (typeof content === "string") {
+    return content.trim()
+  }
+
+  if (!Array.isArray(content)) {
+    return ""
+  }
+
+  return content
+    .map((part) => {
+      if (typeof part === "string") return part
+      if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+        return part.text
+      }
+      return ""
+    })
+    .join("")
+    .trim()
+}
+
 /**
  * Validates that OpenRouter API key is configured
  * @throws Error if OPENROUTER_API_KEY not configured
@@ -92,10 +113,10 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
   const data = await response.json()
 
   // OpenRouter returns OpenAI-compatible format
-  const content = data.choices?.[0]?.message?.content
+  const content = extractContentString(data.choices?.[0]?.message?.content)
 
   if (!content) {
-    throw new Error("No content in Grok response")
+    throw new Error(`No content in Grok response [model: ${model}]`)
   }
 
   return {

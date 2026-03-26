@@ -111,4 +111,23 @@ describe("generateProfile", () => {
 
     await expect(generateProfile(jobDetails, "pt")).rejects.toThrow("Profile too short")
   })
+
+  it("falls back to the default fast model when the selected model returns empty content", async () => {
+    mockCallGrok
+      .mockRejectedValueOnce(new Error("No content in Grok response [model: openrouter/hunter-alpha]"))
+      .mockResolvedValueOnce({
+        content: JSON.stringify({
+          profileText:
+            "Estudante de Engenharia Química com experiência prática em Excel, Power BI e SQL para organizar dados, acompanhar indicadores e estruturar relatórios operacionais com consistência. Em projeto acadêmico, desenvolvi dashboard de análise de processos e documentação de fluxos para monitoramento recorrente de resultados. Minha formação na UNESP reforça base analítica, atenção a detalhes e disciplina para apoiar rotinas de qualidade e melhoria contínua. Busco estágio para conectar análise, organização e suporte técnico às demandas da vaga.",
+        }),
+        usage: { prompt_tokens: 12, completion_tokens: 18, total_tokens: 30 },
+      })
+
+    const result = await generateProfile(jobDetails, "pt", "openrouter/hunter-alpha", "user-1")
+
+    expect(result.profileText).toContain("Engenharia Química")
+    expect(mockCallGrok).toHaveBeenCalledTimes(2)
+    expect(mockCallGrok.mock.calls[0]?.[1]).toMatchObject({ model: "openrouter/hunter-alpha" })
+    expect(mockCallGrok.mock.calls[1]?.[1]).toMatchObject({ model: "x-ai/grok-4.1-fast" })
+  })
 })

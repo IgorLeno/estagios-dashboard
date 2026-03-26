@@ -63,4 +63,38 @@ describe("callGrok", () => {
       callGrok([{ role: "user", content: "Teste" }], { model: "modelo-invalido" })
     ).rejects.toThrow(`[model: ${DEFAULT_MODEL}]`)
   })
+
+  it("supports array-based content parts returned by the provider", async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: [{ type: "text", text: "Resposta " }, { type: "text", text: "em partes" }],
+            },
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      }),
+    } as Response)
+
+    const result = await callGrok([{ role: "user", content: "Teste" }])
+
+    expect(result.content).toBe("Resposta em partes")
+  })
+
+  it("includes the effective model id when the provider returns no content", async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: "" } }],
+        usage: { prompt_tokens: 10, completion_tokens: 0, total_tokens: 10 },
+      }),
+    } as Response)
+
+    await expect(callGrok([{ role: "user", content: "Teste" }])).rejects.toThrow(`[model: ${DEFAULT_MODEL}]`)
+  })
 })

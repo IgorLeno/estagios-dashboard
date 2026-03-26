@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { JobDetailsSchema, JobAnalysisResponseSchema } from "@/lib/ai/types"
+import { JobDetailsSchema, JobAnalysisResponseSchema, normalizeTipoVaga } from "@/lib/ai/types"
 
 describe("JobDetailsSchema", () => {
   const validJob = {
@@ -25,9 +25,29 @@ describe("JobDetailsSchema", () => {
     expect(() => JobDetailsSchema.parse(invalid)).toThrow()
   })
 
-  it("should reject invalid tipo_vaga", () => {
+  it("should normalize composite tipo_vaga values returned by the LLM", () => {
+    const composite = { ...validJob, tipo_vaga: "Júnior/Estágio" }
+    const result = JobDetailsSchema.parse(composite)
+    expect(result.tipo_vaga).toBe("Estágio")
+  })
+
+  it("should normalize free-form tipo_vaga labels with prefixes", () => {
+    const prefixed = { ...validJob, tipo_vaga: "CLT - Júnior" }
+    const result = JobDetailsSchema.parse(prefixed)
+    expect(result.tipo_vaga).toBe("Júnior")
+  })
+
+  it("should fallback invalid tipo_vaga values to Estágio", () => {
     const invalid = { ...validJob, tipo_vaga: "Invalid" }
-    expect(() => JobDetailsSchema.parse(invalid)).toThrow()
+    const result = JobDetailsSchema.parse(invalid)
+    expect(result.tipo_vaga).toBe("Estágio")
+  })
+
+  it("should default missing tipo_vaga to Estágio", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { tipo_vaga, ...withoutTipoVaga } = validJob
+    const result = JobDetailsSchema.parse(withoutTipoVaga)
+    expect(result.tipo_vaga).toBe("Estágio")
   })
 
   it("should accept empty string for empresa with fallback", () => {
@@ -202,6 +222,18 @@ describe("JobDetailsSchema", () => {
         expect(modalidadeError).toBeDefined()
       }
     }
+  })
+})
+
+describe("normalizeTipoVaga", () => {
+  it("prioritizes Estágio when composite levels are returned", () => {
+    expect(normalizeTipoVaga("Júnior/Estágio")).toBe("Estágio")
+  })
+
+  it("detects synonyms without accents", () => {
+    expect(normalizeTipoVaga("Junior")).toBe("Júnior")
+    expect(normalizeTipoVaga("Estagiario")).toBe("Estágio")
+    expect(normalizeTipoVaga("SR Backend")).toBe("Sênior")
   })
 })
 
