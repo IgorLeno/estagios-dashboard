@@ -5,9 +5,9 @@ import { existsSync } from "fs"
 // Carregar variáveis de ambiente do .env.test (específico para E2E)
 // Se .env.test não existir, fallback para .env.local
 if (existsSync(".env.test")) {
-  dotenv.config({ path: ".env.test" })
+  dotenv.config({ path: ".env.test", override: true })
 } else {
-  dotenv.config({ path: ".env.local" })
+  dotenv.config({ path: ".env.local", override: true })
 }
 
 /**
@@ -17,8 +17,8 @@ if (existsSync(".env.test")) {
 export default defineConfig({
   testDir: "./e2e",
 
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  /* Shared Supabase state and Next dev are more stable with serialized files */
+  fullyParallel: false,
 
   /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
@@ -26,8 +26,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Opt out of parallel tests on CI */
-  workers: process.env.CI ? 1 : undefined,
+  /* Keep the suite deterministic locally and on CI */
+  workers: 1,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [

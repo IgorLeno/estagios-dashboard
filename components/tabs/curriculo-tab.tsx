@@ -33,7 +33,10 @@ interface CurriculoTabProps {
   onMarkdownGenerated?: (markdownPt: string, markdownEn: string) => void
   initialMarkdownPt?: string
   initialMarkdownEn?: string
+  profileText?: string
   approvedSkills?: string[]
+  selectedProjectTitles?: string[]
+  selectedCertifications?: string[]
   activeModel: string
   modelHistory: string[]
   onModelChange: (model: string) => void
@@ -60,7 +63,10 @@ export function CurriculoTab({
   onMarkdownGenerated,
   initialMarkdownPt = "",
   initialMarkdownEn = "",
+  profileText,
   approvedSkills,
+  selectedProjectTitles,
+  selectedCertifications,
   activeModel,
   modelHistory,
   onModelChange,
@@ -203,7 +209,12 @@ export function CurriculoTab({
           vagaId,
           jobDescription,
           language: "pt",
+          profileText: profileText?.trim() || undefined,
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
+          selectedProjectTitles:
+            selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
+          selectedCertifications:
+            selectedCertifications && selectedCertifications.length > 0 ? selectedCertifications : undefined,
           model: activeModel || undefined,
           resumeTemplate: localTemplate,
         }
@@ -277,6 +288,10 @@ export function CurriculoTab({
           jobDescription,
           language: "en",
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
+          selectedProjectTitles:
+            selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
+          selectedCertifications:
+            selectedCertifications && selectedCertifications.length > 0 ? selectedCertifications : undefined,
           model: activeModel || undefined,
           resumeTemplate: localTemplate,
         }

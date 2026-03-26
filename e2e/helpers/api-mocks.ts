@@ -221,6 +221,127 @@ export async function mockGenerateResumeHtmlSuccess(page: Page) {
 }
 
 /**
+ * Mock successful profile generation for Fit tab step 3A
+ */
+export async function mockGenerateProfileSuccess(page: Page) {
+  await page.route("**/api/ai/generate-profile", async (route: Route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: {
+            profileText:
+              "Estudante de Engenharia Química com experiência acadêmica em qualidade, análise de dados e suporte a indicadores. Tenho prática com Excel, Power BI e organização de bases para acompanhamento de KPIs e relatórios técnicos. Em projetos e rotinas acadêmicas, estruturei dados, documentei processos e apoiei análises recorrentes com foco em consistência. Busco estágio para contribuir com monitoramento, documentação e melhoria contínua em contextos operacionais.",
+          },
+          metadata: {
+            tokenUsage: {
+              inputTokens: 800,
+              outputTokens: 180,
+              totalTokens: 980,
+            },
+          },
+        }),
+      })
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "ok",
+          message: "Profile Generator API is running",
+        }),
+      })
+    }
+  })
+}
+
+/**
+ * Mock successful complement selection for Fit tab step 3B
+ */
+export async function mockSelectComplementsSuccess(page: Page) {
+  await page.route("**/api/ai/select-complements", async (route: Route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: {
+            skills: [
+              {
+                category: "Qualidade e Processos",
+                items: ["ISO 9001:2015", "Documentação técnica", "Indicadores"],
+                selected: true,
+              },
+              {
+                category: "Dados e Ferramentas",
+                items: ["Excel Avançado", "Power BI", "Análise de dados"],
+                selected: true,
+              },
+              {
+                category: "Diferenciais",
+                items: ["Python", "Automação"],
+                selected: false,
+              },
+            ],
+            projects: [
+              {
+                title: "Dashboard de Análise de Processos",
+                selected: true,
+                reason: "Mais alinhado com indicadores e visualização de dados da vaga.",
+              },
+              {
+                title: "Simulação de Reator Químico em Python",
+                selected: false,
+                reason: "Menos aderente às responsabilidades operacionais desta vaga.",
+              },
+            ],
+            certifications: [
+              {
+                title: "Power BI Impressionador - (Hashtag Treinamentos, 2023)",
+                selected: true,
+                reason: "Relacionada à visualização de indicadores e dashboards.",
+              },
+              {
+                title: "Deep Learning Specialization - (Coursera, 2024)",
+                selected: false,
+                reason: "Muito avançada e pouco conectada ao escopo operacional da vaga.",
+              },
+            ],
+          },
+          metadata: {
+            tokenUsage: {
+              inputTokens: 1000,
+              outputTokens: 260,
+              totalTokens: 1260,
+            },
+          },
+        }),
+      })
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "ok",
+          message: "Complement Selector API is running",
+        }),
+      })
+    }
+  })
+}
+
+/**
+ * Mock complete Fit flow (profile + complements)
+ */
+export async function mockFitSelectionSuccess(page: Page) {
+  await mockGenerateProfileSuccess(page)
+  await mockSelectComplementsSuccess(page)
+}
+
+/**
  * Mock successful PDF generation from HTML
  */
 export async function mockHtmlToPdfSuccess(page: Page) {
@@ -274,7 +395,9 @@ export async function mockGenerateResumeHtmlError(page: Page) {
  */
 export async function unmockAllApis(page: Page) {
   await page.unroute("**/api/ai/parse-job")
+  await page.unroute("**/api/ai/generate-profile")
   await page.unroute("**/api/ai/generate-resume")
   await page.unroute("**/api/ai/generate-resume-html")
   await page.unroute("**/api/ai/html-to-pdf")
+  await page.unroute("**/api/ai/select-complements")
 }

@@ -91,25 +91,25 @@ describe("AddVagaDialog", () => {
     )
   })
 
-  it("should navigate from skills tab to curriculo tab using next button", async () => {
+  it("should navigate from dados tab to fit tab using next button", async () => {
     const user = userEvent.setup()
 
     render(<AddVagaDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />)
 
-    await user.click(screen.getByText(/skills/i))
+    await user.click(screen.getByRole("tab", { name: /dados da vaga/i }))
 
     await waitFor(
       () => {
-        expect(screen.getByRole("button", { name: /continuar para currículo/i })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /continuar para fit/i })).toBeInTheDocument()
       },
       { timeout: 2000 }
     )
 
-    await user.click(screen.getByRole("button", { name: /continuar para currículo/i }))
+    await user.click(screen.getByRole("button", { name: /continuar para fit/i }))
 
     await waitFor(
       () => {
-        expect(screen.getByRole("button", { name: /gerar pt/i })).toBeInTheDocument()
+        expect(screen.getByText(/fit: perfil \+ complementos/i)).toBeInTheDocument()
       },
       { timeout: 2000 }
     )
@@ -124,7 +124,7 @@ describe("AddVagaDialog", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByRole("button", { name: /continuar para skills/i })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /continuar para fit/i })).toBeInTheDocument()
         expect(screen.getByRole("button", { name: /cancelar/i })).toBeInTheDocument()
       },
       { timeout: 2000 }

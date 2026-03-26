@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { generateTailoredResume } from "@/lib/ai/resume-generator"
+import { generateTailoredResume, InsufficientProfileError } from "@/lib/ai/resume-generator"
 import { generateResumeHTML } from "@/lib/ai/resume-html-template"
 import { GenerateResumeRequestSchema, JobDetailsSchema, JobDetails } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
@@ -22,7 +22,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw error
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
-    const { vagaId, jobDescription, language, approvedSkills, model, resumeTemplate } = validatedInput
+    const {
+      vagaId,
+      jobDescription,
+      language,
+      profileText,
+      approvedSkills,
+      model,
+      selectedProjectTitles,
+      selectedCertifications,
+      resumeTemplate,
+    } = validatedInput
 
     const supabase = await createClient()
     const {
@@ -60,7 +70,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // Gerar currículo personalizado (só CV object, sem PDF)
-    const resumeResult = await generateTailoredResume(jobDetails, language, user?.id, approvedSkills, model)
+    const effectiveProfileText = language === "pt" ? profileText : undefined
+
+    const resumeResult = await generateTailoredResume(
+      jobDetails,
+      language,
+      user?.id,
+      approvedSkills,
+      model,
+      selectedProjectTitles,
+      effectiveProfileText,
+      selectedCertifications
+    )
 
     const preflight = validateCVTemplate(resumeResult.cv)
     if (!preflight.valid) {
@@ -103,6 +124,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         { success: false, error: "Invalid request data", details: error.errors },
         { status: 400 }
       )
+    }
+
+    if (error instanceof InsufficientProfileError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 })
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error)

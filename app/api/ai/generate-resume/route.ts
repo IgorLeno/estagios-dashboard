@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { generateTailoredResume } from "@/lib/ai/resume-generator"
+import { generateTailoredResume, InsufficientProfileError } from "@/lib/ai/resume-generator"
 import { generateResumePDF, generateResumeFilename } from "@/lib/ai/pdf-generator"
 import {
   GenerateResumeRequestSchema,
@@ -43,7 +43,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     const validatedInput = GenerateResumeRequestSchema.parse(body)
 
-    const { vagaId, jobDescription, language, approvedSkills, model, selectedProjectTitles, resumeTemplate } =
+    const {
+      vagaId,
+      jobDescription,
+      language,
+      profileText,
+      approvedSkills,
+      model,
+      selectedProjectTitles,
+      selectedCertifications,
+      resumeTemplate,
+    } =
       validatedInput
 
     console.log(`[Resume API] Request: ${vagaId ? `vaga ${vagaId}` : "job description"}, language: ${language}`)
@@ -107,7 +117,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }
 
         // Generate tailored resume
-        const resumeResult = await generateTailoredResume(jobDetails, language, userId, approvedSkills, model, selectedProjectTitles)
+        const effectiveProfileText = language === "pt" ? profileText : undefined
+
+        const resumeResult = await generateTailoredResume(
+          jobDetails,
+          language,
+          userId,
+          approvedSkills,
+          model,
+          selectedProjectTitles,
+          effectiveProfileText,
+          selectedCertifications
+        )
 
         // Generate PDF
         const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")
@@ -201,6 +222,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         success: false,
         error: "Invalid request data",
         details: error.errors,
+      }
+      return NextResponse.json(errorResponse, { status: 400 })
+    }
+
+    // Handle insufficient profile (user-fixable)
+    if (error instanceof InsufficientProfileError) {
+      const errorResponse: GenerateResumeErrorResponse = {
+        success: false,
+        error: error.message,
       }
       return NextResponse.json(errorResponse, { status: 400 })
     }

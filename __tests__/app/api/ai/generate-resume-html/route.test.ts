@@ -26,6 +26,7 @@ const { mockGenerateTailoredResume, mockGenerateResumeHTML, mockParseJobWithGemi
 }))
 
 vi.mock("@/lib/ai/resume-generator", () => ({
+  InsufficientProfileError: class InsufficientProfileError extends Error {},
   generateTailoredResume: mockGenerateTailoredResume,
 }))
 

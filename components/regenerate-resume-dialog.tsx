@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { SUPPORTED_MODELS } from "@/lib/ai/models"
 
 interface RegenerateResumeDialogProps {
   open: boolean
@@ -26,14 +27,6 @@ interface RegenerateResumeDialogProps {
   isRegenerating: boolean
   onConfirm: (params: { model?: string; template?: string }) => void
 }
-
-const DEFAULT_MODEL_OPTIONS = [
-  "x-ai/grok-4.1-fast",
-  "openrouter/hunter-alpha",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "openai/gpt-5.4-nano",
-  "mistralai/mistral-small-2603",
-]
 
 const TEMPLATE_OPTIONS = [
   { value: "modelo1", label: "Manguizin" },
@@ -60,10 +53,10 @@ export function RegenerateResumeDialog({
   }, [open, activeModel, activeTemplate])
 
   const modelOptions = useMemo(() => {
-    if (!activeModel || DEFAULT_MODEL_OPTIONS.includes(activeModel)) {
-      return DEFAULT_MODEL_OPTIONS
+    if (!activeModel || (SUPPORTED_MODELS as readonly string[]).includes(activeModel)) {
+      return [...SUPPORTED_MODELS]
     }
-    return [activeModel, ...DEFAULT_MODEL_OPTIONS]
+    return [activeModel, ...SUPPORTED_MODELS]
   }, [activeModel])
 
   const isPt = language === "pt"

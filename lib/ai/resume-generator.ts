@@ -17,6 +17,24 @@ import { mergeSystemInstruction } from "./user-preferences"
 import type { JobProfile } from "./job-profile"
 import type { JobDetails, CVTemplate, PersonalizedSections, TokenUsage } from "./types"
 
+const MIN_SUMMARY_CHARS = 100
+
+/**
+ * Thrown when the candidate's professional profile is too short to generate
+ * a meaningful personalized resume. This is a user-fixable error (not a bug).
+ */
+export class InsufficientProfileError extends Error {
+  constructor(actualLength: number) {
+    super(
+      `Perfil profissional insuficiente para gerar currículo personalizado. ` +
+        `O campo "Objetivo Profissional" tem ${actualLength} caracteres ` +
+        `(mínimo: ${MIN_SUMMARY_CHARS}). ` +
+        `Acesse Configurações > Perfil e preencha um resumo profissional completo (4-5 frases).`
+    )
+    this.name = "InsufficientProfileError"
+  }
+}
+
 /**
  * Personalize CV summary section using LLM
  */
@@ -324,7 +342,9 @@ export async function generateTailoredResume(
   userId?: string,
   approvedSkills?: string[],
   model?: string,
-  selectedProjectTitles?: string[]
+  selectedProjectTitles?: string[],
+  profileText?: string,
+  selectedCertifications?: string[]
 ): Promise<{
   cv: CVTemplate
   duration: number
@@ -358,6 +378,14 @@ export async function generateTailoredResume(
   console.log(`[Resume Generator] Loaded ${skillsBank.length} skills from bank`)
 
   const baseCv = await getCVTemplateForUser(language, userId)
+  const providedProfileText = profileText?.trim()
+
+  // QUALITY GATE: Reject generation if profile/summary is too short.
+  // This gate applies only when the caller did not already provide a pre-written fit summary.
+  const summaryLength = baseCv.summary?.length ?? 0
+  if (!providedProfileText && (!baseCv.summary || summaryLength < MIN_SUMMARY_CHARS)) {
+    throw new InsufficientProfileError(summaryLength)
+  }
 
   // STEP 4.5: Filter projects if caller specified a selection
   const projectsToUse =
@@ -384,28 +412,76 @@ export async function generateTailoredResume(
     )
   }
 
-  const projectsCv = { ...baseCv, projects: projectsToUse }
+  const certificationsToUse =
+    selectedCertifications && selectedCertifications.length > 0
+      ? baseCv.certifications.filter((certification) =>
+          selectedCertifications.some((title) => {
+            const selected = title.trim().toLowerCase()
+            const certificationTitle =
+              (typeof certification === "string" ? certification : certification.title).trim().toLowerCase()
+            return certificationTitle === selected
+          })
+        )
+      : baseCv.certifications
+
+  if (selectedCertifications && selectedCertifications.length > 0) {
+    const notFound = selectedCertifications.filter((title) => {
+      const selected = title.trim().toLowerCase()
+      return !baseCv.certifications.some((certification) => {
+        const certificationTitle =
+          (typeof certification === "string" ? certification : certification.title).trim().toLowerCase()
+        return certificationTitle === selected
+      })
+    })
+
+    if (notFound.length > 0) {
+      console.warn("[Resume Generator] ⚠️ selectedCertifications not found in CV:", notFound)
+    }
+
+    console.log(
+      `[Resume Generator] 🎯 Certification filter: ${certificationsToUse.length}/${baseCv.certifications.length} certifications selected`
+    )
+  }
+
+  const filteredCv = {
+    ...baseCv,
+    projects: projectsToUse,
+    certifications: certificationsToUse,
+  }
 
   // STEP 5: Create per-section models with capped maxOutputTokens
   // Each section has a different expected output size; capping prevents runaway generation
   const resolvedModel = model ?? config.modelo_gemini
   const generationConfig = { ...getGenerationConfig(config), model: resolvedModel }
-  const summaryModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 })
   const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 })
   const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 })
 
   // STEP 6: Personalize 3 sections in parallel
+  const summaryPromise = providedProfileText
+    ? Promise.resolve({
+        summary: providedProfileText,
+        duration: 0,
+        tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+      })
+    : personalizeSummary(
+        jobDetails,
+        baseCv,
+        createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 }),
+        language,
+        jobProfile
+      )
+
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
-    personalizeSummary(jobDetails, baseCv, summaryModel, language, jobProfile),
+    summaryPromise,
     personalizeSkills(jobDetails, baseCv, skillsBank, skillsModel, language, jobProfile, approvedSkills),
-    personalizeProjects(jobDetails, projectsCv, projectsModel, language, jobProfile),
+    personalizeProjects(jobDetails, filteredCv, projectsModel, language, jobProfile),
   ])
 
   const uncorrectedDraft: CVDraft = {
     summary: summaryResult.summary,
     skills: skillsResult.skills,
     projects: projectsResult.projects,
-    certifications: baseCv.certifications,
+    certifications: filteredCv.certifications,
     language,
   }
 
@@ -453,11 +529,11 @@ export async function generateTailoredResume(
 
   // STEP 8: Merge into final CV
   const personalizedCv: CVTemplate = {
-    ...baseCv,
+    ...filteredCv,
     summary: finalDraft.summary,
     skills: finalDraft.skills,
     projects: finalDraft.projects,
-    certifications: finalDraft.certifications ?? baseCv.certifications,
+    certifications: finalDraft.certifications ?? filteredCv.certifications,
   }
 
   // STEP 9: Calculate ATS score

@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SUPPORTED_MODELS } from "@/lib/ai/models"
 
 interface RefineResumeDialogProps {
   language: "pt" | "en"
@@ -24,14 +25,6 @@ interface RefineResumeDialogProps {
   onConfirm: (instructions: string, model: string) => void
   activeModel: string
 }
-
-const DEFAULT_MODEL_OPTIONS = [
-  "x-ai/grok-4.1-fast",
-  "openrouter/hunter-alpha",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "openai/gpt-5.4-nano",
-  "mistralai/mistral-small-2603",
-]
 
 export function RefineResumeDialog({
   language,
@@ -45,11 +38,11 @@ export function RefineResumeDialog({
   const [selectedModel, setSelectedModel] = useState(activeModel)
 
   const modelOptions = useMemo(() => {
-    if (!activeModel || DEFAULT_MODEL_OPTIONS.includes(activeModel)) {
-      return DEFAULT_MODEL_OPTIONS
+    if (!activeModel || (SUPPORTED_MODELS as readonly string[]).includes(activeModel)) {
+      return [...SUPPORTED_MODELS]
     }
 
-    return [activeModel, ...DEFAULT_MODEL_OPTIONS]
+    return [activeModel, ...SUPPORTED_MODELS]
   }, [activeModel])
 
   useEffect(() => {

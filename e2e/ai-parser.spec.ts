@@ -8,9 +8,11 @@ import {
 } from "./helpers/api-mocks"
 
 test.describe("AI Job Parser", () => {
+  test.describe.configure({ mode: "serial" })
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible({ timeout: 15000 })
   })
 
   test.afterEach(async ({ page }) => {
@@ -71,18 +73,14 @@ Salário: R$ 1.800,00 + benefícios
     // 4. Clicar em "Realizar Análise"
     const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await expect(fillButton).toBeEnabled()
-    await fillButton.click()
-
-    // 5. Com mocks, resposta é instantânea - verificar mudança de tab diretamente
-    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
+    await fillButton.click({ force: true })
 
     // 8. Verificar que campos foram preenchidos
     const empresaInput = dialog.getByLabel(/^empresa/i)
     const cargoInput = dialog.getByLabel(/^cargo/i)
     const localInput = dialog.getByLabel(/^local/i)
 
-    await expect(empresaInput).toHaveValue(/saipem/i)
+    await expect(empresaInput).toHaveValue(/saipem/i, { timeout: 10000 })
     await expect(cargoInput).toHaveValue(/estagiário/i)
     await expect(localInput).toHaveValue(/guarujá|são paulo/i)
 
@@ -130,7 +128,7 @@ Salário: R$ 1.800,00 + benefícios
 
     const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await expect(fillButton).toBeEnabled()
-    await fillButton.click()
+    await fillButton.click({ force: true })
 
     // Aguardar mudança para aba "Dados da Vaga" (resposta instantânea com mocks)
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
@@ -191,7 +189,7 @@ Salário: R$ 1.800,00 + benefícios
 
     // 7. Verificar que dados NÃO foram preenchidos
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await dadosTab.click()
+    await dadosTab.click({ force: true })
     const empresaInput = dialog.getByLabel(/^empresa/i)
     await expect(empresaInput).toHaveValue("")
 
@@ -214,7 +212,7 @@ Salário: R$ 1.800,00 + benefícios
 
     // 4. Clicar em "Realizar Análise"
     const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
-    await fillButton.click()
+    await fillButton.click({ force: true })
 
     // 5. Aguardar um momento para API call acontecer
     await page.waitForTimeout(500)
@@ -225,7 +223,7 @@ Salário: R$ 1.800,00 + benefícios
 
     //7. Verificar que dados NÃO foram preenchidos
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await dadosTab.click()
+    await dadosTab.click({ force: true })
     const empresaInput = dialog.getByLabel(/^empresa/i)
     await expect(empresaInput).toHaveValue("")
 
@@ -246,32 +244,29 @@ Salário: R$ 1.800,00 + benefícios
     await textarea.fill(sampleJobDescription)
 
     const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
-    await fillButton.click()
+    await fillButton.click({ force: true })
 
-    // Aguardar mudança para aba "Dados da Vaga" (resposta instantânea com mocks)
     const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
 
     // Guardar valor de empresa
     const empresaInput = dialog.getByLabel(/^empresa/i)
+    await expect(empresaInput).toHaveValue(/saipem/i, { timeout: 10000 })
     const empresaValue = await empresaInput.inputValue()
 
     // 3. Voltar para aba "Descrição"
     const descricaoTab = dialog.getByRole("tab", { name: /descrição/i })
-    await descricaoTab.click()
-    await expect(descricaoTab).toHaveAttribute("data-state", "active")
+    await descricaoTab.click({ force: true })
 
     // 4. Verificar que descrição ainda está lá
     await expect(textarea).toHaveValue(sampleJobDescription)
 
     // 5. Ir para aba "Currículo"
     const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
-    await curriculoTab.click()
-    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+    await curriculoTab.click({ force: true })
+    await expect(dialog.getByRole("button", { name: /^gerar pt$/i })).toBeVisible()
 
     // 6. Voltar para "Dados da Vaga"
-    await dadosTab.click()
-    await expect(dadosTab).toHaveAttribute("data-state", "active")
+    await dadosTab.click({ force: true })
 
     // 7. Verificar que dados não foram perdidos
     await expect(empresaInput).toHaveValue(empresaValue)

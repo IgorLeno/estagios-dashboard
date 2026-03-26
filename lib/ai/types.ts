@@ -241,6 +241,40 @@ export interface ConsistencyReport {
 }
 
 /**
+ * Result of LLM complement selection (Fit tab step 3B).
+ * Each item has a selected flag + reason for exclusion/inclusion.
+ */
+export interface ComplementSelection {
+  skills: Array<{ category: string; items: string[]; selected: boolean }>
+  projects: Array<{ title: string; selected: boolean; reason: string }>
+  certifications: Array<{ title: string; selected: boolean; reason: string }>
+}
+
+export const ComplementSelectionSchema = z.object({
+  skills: z.array(
+    z.object({
+      category: z.string().min(1),
+      items: z.array(z.string().min(1)),
+      selected: z.boolean(),
+    })
+  ),
+  projects: z.array(
+    z.object({
+      title: z.string().min(1),
+      selected: z.boolean(),
+      reason: z.string().min(1),
+    })
+  ),
+  certifications: z.array(
+    z.object({
+      title: z.string().min(1),
+      selected: z.boolean(),
+      reason: z.string().min(1),
+    })
+  ),
+})
+
+/**
  * Schema for validating personalized sections from LLM
  */
 export const PersonalizedSectionsSchema = z.object({
@@ -267,9 +301,11 @@ export const GenerateResumeRequestSchema = z
     vagaId: z.string().uuid().optional(),
     jobDescription: z.string().min(50).max(50000).optional(),
     language: z.enum(["pt", "en"]),
+    profileText: z.string().min(20).max(2000).optional(),
     approvedSkills: z.array(z.string().min(1).max(100)).optional(),
     model: z.string().optional(),
     selectedProjectTitles: z.array(z.string()).optional(),
+    selectedCertifications: z.array(z.string()).optional(),
     resumeTemplate: z.enum(["modelo1", "modelo2"]).optional(),
   })
   .refine((data) => data.vagaId || data.jobDescription, "Either vagaId or jobDescription must be provided")

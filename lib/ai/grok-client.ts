@@ -3,6 +3,8 @@
  * Provides a simple interface to call Grok 4.1 Fast model
  */
 
+import { DEFAULT_MODEL, isValidModelId } from "./models"
+
 export interface GrokMessage {
   role: "system" | "user" | "assistant"
   content: string
@@ -48,6 +50,12 @@ function getValidatedApiKey(): string {
 export async function callGrok(messages: GrokMessage[], options?: GrokOptions): Promise<GrokResponse> {
   const apiKey = getValidatedApiKey()
 
+  let model = options?.model ?? DEFAULT_MODEL
+  if (!isValidModelId(model)) {
+    console.warn(`[grok-client] Invalid model ID "${model}", falling back to ${DEFAULT_MODEL}`)
+    model = DEFAULT_MODEL
+  }
+
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -57,7 +65,7 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
       "X-Title": "Estágios Dashboard",
     },
     body: JSON.stringify({
-      model: options?.model ?? "x-ai/grok-4.1-fast",
+      model,
       messages,
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.max_tokens ?? 2000,
@@ -67,11 +75,13 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
 
   if (!response.ok) {
     const errorText = await response.text()
-    let errorMessage = `Grok API Error (${response.status})`
+    let errorMessage = `Grok API Error (${response.status}) [model: ${model}]`
 
     try {
       const errorJson = JSON.parse(errorText)
-      errorMessage = errorJson.error?.message || errorMessage
+      errorMessage = errorJson.error?.message
+        ? `${errorJson.error.message} [model: ${model}]`
+        : errorMessage
     } catch {
       errorMessage = `${errorMessage}: ${errorText}`
     }

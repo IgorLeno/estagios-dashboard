@@ -4,6 +4,7 @@ import { NextRequest } from "next/server"
 
 // Mock dependencies
 vi.mock("@/lib/ai/resume-generator", () => ({
+  InsufficientProfileError: class InsufficientProfileError extends Error {},
   generateTailoredResume: vi.fn(async () => ({
     cv: {
       language: "pt",
@@ -162,6 +163,8 @@ describe("POST /api/ai/generate-resume", () => {
       "test-user-id",
       undefined,
       "openai/gpt-5.4-nano",
+      undefined,
+      undefined,
       undefined
     )
   })
@@ -189,6 +192,8 @@ describe("POST /api/ai/generate-resume", () => {
       expect.any(Object),
       "pt",
       "test-user-id",
+      undefined,
+      undefined,
       undefined,
       undefined,
       undefined

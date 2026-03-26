@@ -1,0 +1,146 @@
+import { callGrok, type GrokMessage } from "./grok-client"
+import { getCVTemplateForUser } from "./cv-templates"
+import { loadUserAIConfig, getGenerationConfig } from "./config"
+import { DEFAULT_MODEL } from "./models"
+import { extractJsonFromResponse } from "./job-parser"
+import type { JobDetails, TokenUsage } from "./types"
+
+const MIN_PROFILE_WORDS = 60
+const MAX_PROFILE_WORDS = 110
+
+function buildProfilePrompt(
+  candidateSummary: string,
+  candidateSkills: string[],
+  candidateProjects: string[],
+  candidateEducation: string[],
+  candidateCertifications: string[],
+  jobDetails: JobDetails,
+  language: "pt" | "en"
+): string {
+  const isPt = language === "pt"
+
+  const candidateContext = [
+    `${isPt ? "Resumo atual" : "Current summary"}: ${candidateSummary}`,
+    `${isPt ? "Competências" : "Skills"}: ${candidateSkills.join(", ")}`,
+    `${isPt ? "Projetos" : "Projects"}: ${candidateProjects.join("; ")}`,
+    candidateEducation.length > 0
+      ? `${isPt ? "Formação" : "Education"}: ${candidateEducation.join("; ")}`
+      : "",
+    candidateCertifications.length > 0
+      ? `${isPt ? "Certificações" : "Certifications"}: ${candidateCertifications.join("; ")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  const jobContext = [
+    `${isPt ? "Empresa" : "Company"}: ${jobDetails.empresa}`,
+    `${isPt ? "Cargo" : "Position"}: ${jobDetails.cargo}`,
+    `${isPt ? "Modalidade" : "Mode"}: ${jobDetails.modalidade}`,
+    jobDetails.requisitos_obrigatorios.length > 0
+      ? `${isPt ? "Requisitos" : "Requirements"}: ${jobDetails.requisitos_obrigatorios.join(", ")}`
+      : "",
+    jobDetails.responsabilidades.length > 0
+      ? `${isPt ? "Responsabilidades" : "Responsibilities"}: ${jobDetails.responsabilidades.slice(0, 8).join("; ")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  return `${isPt ? "TAREFA" : "TASK"}: ${isPt
+    ? "Gere um resumo profissional de 4-5 frases naturais para o currículo do candidato, personalizado para a vaga descrita."
+    : "Generate a 4-5 sentence professional summary for the candidate's resume, tailored to the described position."
+  }
+
+${isPt ? "PERFIL DO CANDIDATO" : "CANDIDATE PROFILE"}:
+${candidateContext}
+
+${isPt ? "VAGA" : "JOB"}:
+${jobContext}
+
+${isPt ? "REGRAS" : "RULES"}:
+- ${isPt ? "ZERO fabricação: use apenas fatos do perfil acima" : "ZERO fabrication: only use facts from the profile above"}
+- ${isPt ? "Síntese narrativa, NÃO lista de keywords disfarçada de parágrafo" : "Narrative synthesis, NOT a keyword list disguised as a paragraph"}
+- ${isPt ? "Tom natural, profissional, sem clichês genéricos" : "Natural, professional tone, no generic clichés"}
+- ${isPt ? "Conecte competências reais do candidato com necessidades da vaga" : "Connect real candidate competencies with job needs"}
+- ${isPt ? `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} palavras, 4-5 frases fluidas` : `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} words, 4-5 fluid sentences`}
+- ${isPt ? 'Idioma do output: Português brasileiro' : 'Output language: English'}
+
+${isPt ? "FORMATO DE RESPOSTA" : "RESPONSE FORMAT"}: JSON
+\`\`\`json
+{ "profileText": "..." }
+\`\`\``
+}
+
+export async function generateProfile(
+  jobDetails: JobDetails,
+  language: "pt" | "en",
+  model?: string,
+  userId?: string
+): Promise<{ profileText: string; tokenUsage: TokenUsage }> {
+  const config = await loadUserAIConfig(userId)
+  const genConfig = getGenerationConfig(config)
+  const resolvedModel = model ?? config.modelo_gemini ?? DEFAULT_MODEL
+
+  const cv = await getCVTemplateForUser(language, userId)
+
+  const allSkills = cv.skills.flatMap((g) => g.items)
+  const projectTitles = cv.projects.map((p) => `${p.title}: ${p.description[0] || ""}`)
+  const educationLines = cv.education.map((e) => `${e.degree} — ${e.institution}`)
+  const certTitles = cv.certifications.map((c) =>
+    typeof c === "string" ? c : c.title
+  )
+
+  const prompt = buildProfilePrompt(
+    cv.summary,
+    allSkills,
+    projectTitles,
+    educationLines,
+    certTitles,
+    jobDetails,
+    language
+  )
+
+  const messages: GrokMessage[] = [
+    {
+      role: "system",
+      content:
+        "You are a professional resume writer. Generate concise, truthful professional summaries. Never fabricate information. Respond only with valid JSON.",
+    },
+    { role: "user", content: prompt },
+  ]
+
+  const response = await callGrok(messages, {
+    temperature: genConfig.temperature ?? 0.7,
+    max_tokens: 512,
+    model: resolvedModel,
+  })
+
+  const parsed = extractJsonFromResponse(response.content)
+  const profileText: string = parsed.profileText
+
+  if (!profileText || typeof profileText !== "string") {
+    throw new Error("LLM response missing profileText field")
+  }
+
+  const wordCount = profileText.trim().split(/\s+/).length
+  if (wordCount < MIN_PROFILE_WORDS) {
+    throw new Error(
+      `Profile too short: ${wordCount} words (minimum ${MIN_PROFILE_WORDS})`
+    )
+  }
+  if (wordCount > MAX_PROFILE_WORDS) {
+    throw new Error(
+      `Profile too long: ${wordCount} words (maximum ${MAX_PROFILE_WORDS})`
+    )
+  }
+
+  return {
+    profileText: profileText.trim(),
+    tokenUsage: {
+      inputTokens: response.usage.prompt_tokens,
+      outputTokens: response.usage.completion_tokens,
+      totalTokens: response.usage.total_tokens,
+    },
+  }
+}

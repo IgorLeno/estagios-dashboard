@@ -1,10 +1,59 @@
 import { test, expect } from "@playwright/test"
 import { waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
+import { mockFitSelectionSuccess } from "./helpers/api-mocks"
 
 test.describe("Gerenciamento de Vagas", () => {
+  test.describe.configure({ mode: "serial" })
+
+  async function createManualVaga(page: any, empresaName: string, cargoName: string) {
+    await page.waitForLoadState("networkidle")
+
+    await page.getByRole("button", { name: /adicionar estágio/i }).click()
+
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible()
+
+    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
+    await dadosTab.click()
+    await expect(dadosTab).toHaveAttribute("data-state", "active")
+
+    await dialog.getByLabel(/^empresa/i).fill(empresaName)
+    await dialog.getByLabel(/^cargo/i).fill(cargoName)
+    await dialog.getByLabel(/^local/i).fill("Santos")
+    await dialog.getByLabel(/modalidade/i).click()
+    await page.getByRole("option", { name: "Híbrido" }).click()
+    await dialog.getByLabel(/fit requisitos/i).fill("4.5")
+    await dialog.getByLabel(/fit perfil/i).fill("4.0")
+    await dialog.getByLabel(/análise/i).fill("Teste E2E para página de detalhe com seção Fit")
+
+    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
+    await curriculoTab.click()
+    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+
+    await dialog.getByRole("button", { name: /salvar vaga/i }).click()
+    await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
+    await expect(dialog).not.toBeVisible({ timeout: 10000 })
+
+    await waitForVagaInTable(page, empresaName)
+  }
+
+  async function openVagaDetail(page: any, empresaName: string) {
+    const vagaRow = page.locator("tr").filter({ hasText: empresaName })
+    await expect(vagaRow).toBeVisible({ timeout: 10000 })
+    await vagaRow.scrollIntoViewIfNeeded()
+    await vagaRow.hover()
+
+    const detailsButton = vagaRow.getByRole("button", { name: /ver detalhes/i })
+    await expect(detailsButton).toBeVisible({ timeout: 10000 })
+    await detailsButton.click({ force: true })
+
+    await expect(page).toHaveURL(/\/vaga\//, { timeout: 10000 })
+    await expect(page.getByText(/fit para currículo/i)).toBeVisible({ timeout: 10000 })
+  }
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible({ timeout: 15000 })
   })
 
   test("deve criar nova vaga manualmente", async ({ page }) => {
@@ -283,5 +332,92 @@ test.describe("Gerenciamento de Vagas", () => {
     await waitForVagaInTable(page, empresaName)
     const vagaRow = page.locator("tr").filter({ hasText: empresaName })
     await expect(vagaRow.getByText("Full Stack Developer")).toBeVisible()
+  })
+
+  test("deve exibir a seção Fit na página de detalhe e gerar perfil/complementos", async ({ page }) => {
+    const empresaName = generateUniqueTestName("[E2E-TEST] Detail Fit")
+    await createManualVaga(page, empresaName, "Estágio QHSE")
+
+    await mockFitSelectionSuccess(page)
+    await openVagaDetail(page, empresaName)
+
+    const generateProfileButton = page.getByRole("button", { name: /gerar perfil/i })
+    await generateProfileButton.click()
+
+    const profileTextarea = page.getByPlaceholder(/o perfil profissional será gerado/i)
+    await expect(profileTextarea).toHaveValue(/indicadores/i, { timeout: 10000 })
+
+    const selectComplementsButton = page.getByRole("button", { name: /selecionar complementos/i })
+    await selectComplementsButton.click()
+
+    await expect(page.getByText(/dashboard de análise de processos/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/power bi impressionador/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("button", { name: /continuar para currículo/i })).toBeEnabled()
+  })
+
+  test("deve gerar currículo na página de detalhe com fit aplicado", async ({ page }) => {
+    const empresaName = generateUniqueTestName("[E2E-TEST] Detail Resume")
+    await createManualVaga(page, empresaName, "Estágio BI")
+
+    await mockFitSelectionSuccess(page)
+
+    let resumeRequestBody: Record<string, unknown> | null = null
+    await page.route("**/api/ai/generate-resume", async (route) => {
+      if (route.request().method() === "POST") {
+        resumeRequestBody = await route.request().postDataJSON()
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            data: {
+              pdfBase64: Buffer.from("%PDF-1.4\n%Mock PDF content").toString("base64"),
+              filename: "cv-detail-fit-pt.pdf",
+            },
+            metadata: {
+              duration: 1500,
+              model: "x-ai/grok-4.1-fast",
+              tokenUsage: {
+                inputTokens: 1200,
+                outputTokens: 400,
+                totalTokens: 1600,
+              },
+              personalizedSections: ["summary", "skills", "projects"],
+            },
+          }),
+        })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await openVagaDetail(page, empresaName)
+
+    await page.getByRole("button", { name: /gerar perfil/i }).click()
+    await expect(page.getByPlaceholder(/o perfil profissional será gerado/i)).toHaveValue(/indicadores/i, {
+      timeout: 10000,
+    })
+
+    await page.getByRole("button", { name: /selecionar complementos/i }).click()
+    await expect(page.getByText(/dashboard de análise de processos/i)).toBeVisible({ timeout: 10000 })
+
+    await page.getByRole("button", { name: /^gerar$/i }).click()
+    const regenerateDialog = page.getByRole("dialog")
+    await expect(regenerateDialog.getByRole("heading", { name: /regenerar conteúdo/i })).toBeVisible({
+      timeout: 10000,
+    })
+    await regenerateDialog.getByRole("button", { name: /regenerar conteúdo/i }).click()
+
+    await expect
+      .poll(() => resumeRequestBody, { timeout: 10000 })
+      .not.toBeNull()
+
+    expect(resumeRequestBody).toMatchObject({
+      language: "pt",
+      profileText: expect.stringContaining("indicadores"),
+      approvedSkills: expect.arrayContaining(["ISO 9001:2015", "Excel Avançado", "Power BI"]),
+      selectedProjectTitles: expect.arrayContaining(["Dashboard de Análise de Processos"]),
+      selectedCertifications: expect.arrayContaining(["Power BI Impressionador - (Hashtag Treinamentos, 2023)"]),
+    })
   })
 })

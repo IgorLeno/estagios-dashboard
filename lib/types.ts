@@ -7,6 +7,13 @@ export interface VagaEstagio {
   cargo: string
   local: string
   modalidade: "Presencial" | "Híbrido" | "Remoto"
+  tipo_vaga?: "Estágio" | "Júnior" | "Pleno" | "Sênior"
+  requisitos_obrigatorios?: string[]
+  requisitos_desejaveis?: string[]
+  responsabilidades?: string[]
+  beneficios?: string[]
+  salario?: string
+  idioma_vaga?: "pt" | "en"
   /**
    * Fit de Requisitos - Avaliação estrelar 0-5
    * - Range válido: 0.0 a 5.0

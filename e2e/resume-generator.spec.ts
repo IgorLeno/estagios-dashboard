@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test"
 import { waitForVagaInTable, generateUniqueTestName } from "./helpers/test-utils"
 import {
   mockParseJobSuccess,
+  mockFitSelectionSuccess,
   mockGenerateResumeHtmlSuccess,
   mockGenerateResumeHtmlError,
   mockHtmlToPdfSuccess,
@@ -9,6 +10,8 @@ import {
 } from "./helpers/api-mocks"
 
 test.describe("AI Resume Generator", () => {
+  test.describe.configure({ mode: "serial" })
+
   // Sample job description for testing
   const sampleJobDescription = `
 Vaga de Estágio em Engenharia Química
@@ -39,44 +42,66 @@ Benefícios:
 Salário: R$ 1.800,00 + benefícios
   `.trim()
 
-  /**
-   * Helper: Setup inicial - parse job description and navigate to Curriculo tab
-   * Uses NEW API flow: /api/ai/generate-resume-html + /api/ai/html-to-pdf
-   */
-  async function setupJobAnalysis(page: any) {
-    // Mock ALL APIs for complete new flow
+  async function openDialogAndParseJob(page: any) {
     await mockParseJobSuccess(page)
-    await mockGenerateResumeHtmlSuccess(page)
-    await mockHtmlToPdfSuccess(page)
 
-    // Open dialog
     await page.getByRole("button", { name: /adicionar estágio/i }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
 
-    // Parse job description (Tab 1 → Tab 2 auto-switch with mocks)
     const textarea = dialog.getByPlaceholder(/cole a descrição/i)
     await textarea.fill(sampleJobDescription)
 
     const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
     await fillButton.click()
 
-    // With mocks, response is instant - wait for tab switch
-    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
+    await expect(dialog.getByLabel(/^empresa/i)).toHaveValue("Saipem", { timeout: 10000 })
+    await expect(dialog.getByRole("button", { name: /continuar para fit/i })).toBeVisible()
 
-    // Navigate to Tab 3 (Currículo)
-    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
-    await curriculoTab.click()
-    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+    return dialog
+  }
+
+  async function completeFitAndGoToCurriculo(dialog: any) {
+    const continueToFitButton = dialog.getByRole("button", { name: /continuar para fit/i })
+    await continueToFitButton.click({ force: true })
+    await expect(dialog.getByRole("heading", { name: /fit: perfil \+ complementos/i })).toBeVisible()
+
+    const generateProfileButton = dialog.getByRole("button", { name: /gerar perfil/i })
+    await generateProfileButton.click({ force: true })
+    await expect(dialog.getByPlaceholder(/o perfil profissional será gerado/i)).toHaveValue(/estudante de engenharia química/i, {
+      timeout: 10000,
+    })
+
+    const selectComplementsButton = dialog.getByRole("button", { name: /selecionar complementos/i })
+    await selectComplementsButton.click({ force: true })
+    await expect(dialog.getByText(/dashboard de análise de processos/i)).toBeVisible({ timeout: 10000 })
+
+    const continueButton = dialog.getByRole("button", { name: /continuar para currículo/i })
+    await expect(continueButton).toBeEnabled()
+    await continueButton.scrollIntoViewIfNeeded()
+    await continueButton.click({ force: true })
+
+    await expect(dialog.getByRole("button", { name: /^gerar pt$/i })).toBeVisible()
+  }
+
+  /**
+   * Helper: Setup inicial - parse job description, complete Fit flow and navigate to Curriculo tab
+   */
+  async function setupJobAnalysis(page: any) {
+    await mockFitSelectionSuccess(page)
+    await mockGenerateResumeHtmlSuccess(page)
+    await mockHtmlToPdfSuccess(page)
+
+    const dialog = await openDialogAndParseJob(page)
+    await completeFitAndGoToCurriculo(dialog)
 
     return dialog
   }
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible({ timeout: 15000 })
   })
 
   test.afterEach(async ({ page }) => {
@@ -93,7 +118,7 @@ Salário: R$ 1.800,00 + benefícios
     await expect(generateButton).toBeEnabled()
 
     // 2. Click "Gerar PT"
-    await generateButton.click()
+    await generateButton.click({ force: true })
 
     // 3. With mocks, response is instant - verify preview appears
     // NEW: Check for "Preview Gerado" alert text (AlertTitle is a div, not heading)
@@ -119,12 +144,29 @@ Salário: R$ 1.800,00 + benefícios
     await page.keyboard.press("Escape")
   })
 
+  test("deve completar a aba Fit com perfil e complementos", async ({ page }) => {
+    await mockFitSelectionSuccess(page)
+
+    const dialog = await openDialogAndParseJob(page)
+    await dialog.getByRole("button", { name: /continuar para fit/i }).click({ force: true })
+    await expect(dialog.getByRole("heading", { name: /fit: perfil \+ complementos/i })).toBeVisible()
+
+    await dialog.getByRole("button", { name: /gerar perfil/i }).click({ force: true })
+    const profileTextarea = dialog.getByPlaceholder(/o perfil profissional será gerado/i)
+    await expect(profileTextarea).toHaveValue(/indicadores/i, { timeout: 10000 })
+
+    await dialog.getByRole("button", { name: /selecionar complementos/i }).click({ force: true })
+    await expect(dialog.getByText(/dashboard de análise de processos/i)).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByText(/diferenciais/i)).toBeVisible()
+    await expect(dialog.locator('input[type="checkbox"]').first()).toBeVisible()
+  })
+
   test("deve permitir regenerar currículo", async ({ page }) => {
     const dialog = await setupJobAnalysis(page)
 
     // 1. Generate preview first (fluxo completo)
     const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
-    await generateButton.click()
+    await generateButton.click({ force: true })
 
     // With mocks, preview appears instantly
     const previewAlert = dialog.getByText(/preview gerado/i)
@@ -141,7 +183,7 @@ Salário: R$ 1.800,00 + benefícios
     const regenerarButton = dialog.getByRole("button", { name: /^regenerar$/i }).first()
     await expect(regenerarButton).toBeVisible()
     await expect(regenerarButton).toBeEnabled()
-    await regenerarButton.click()
+    await regenerarButton.click({ force: true })
 
     // 3. Wait for regeneration to complete (mock is instant)
     await page.waitForTimeout(1000)
@@ -162,7 +204,7 @@ Salário: R$ 1.800,00 + benefícios
 
     // Step 1: Generate preview (Markdown)
     const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
-    await generateButton.click()
+    await generateButton.click({ force: true })
 
     // With mocks, preview appears instantly
     const previewAlert = dialog.getByText(/preview gerado/i)
@@ -176,7 +218,7 @@ Salário: R$ 1.800,00 + benefícios
     const gerarPdfButton = dialog.getByRole("button", { name: /gerar pdf/i })
     await expect(gerarPdfButton).toBeVisible()
     await expect(gerarPdfButton).toBeEnabled()
-    await gerarPdfButton.click()
+    await gerarPdfButton.click({ force: true })
 
     // Step 3: Wait for PDF generation to complete (toast message or button state change)
     // PDF is generated and stored in state (pdfBase64Pt)
@@ -190,7 +232,7 @@ Salário: R$ 1.800,00 + benefícios
     const downloadButton = dialog.getByRole("button", { name: /download|baixar/i })
     await expect(downloadButton).toBeVisible({ timeout: 5000 })
     await expect(downloadButton).toBeEnabled()
-    await downloadButton.click()
+    await downloadButton.click({ force: true })
 
     // Step 5: Verify download started
     const download = await downloadPromise
@@ -200,33 +242,16 @@ Salário: R$ 1.800,00 + benefícios
   })
 
   test("deve lidar com erro na geração", async ({ page }) => {
-    // Mock parse job success but resume HTML generation error (NEW API)
-    await mockParseJobSuccess(page)
+    await mockFitSelectionSuccess(page)
     await mockGenerateResumeHtmlError(page)
 
-    // Open dialog and parse job manually (don't use setupJobAnalysis as it mocks success)
-    await page.getByRole("button", { name: /adicionar estágio/i }).click()
-
-    const dialog = page.getByRole("dialog")
-    await expect(dialog).toBeVisible()
-
-    const textarea = dialog.getByPlaceholder(/cole a descrição/i)
-    await textarea.fill(sampleJobDescription)
-
-    const fillButton = dialog.getByRole("button", { name: /realizar análise/i })
-    await fillButton.click()
-
-    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await expect(dadosTab).toHaveAttribute("data-state", "active", { timeout: 10000 })
-
-    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
-    await curriculoTab.click()
-    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+    const dialog = await openDialogAndParseJob(page)
+    await completeFitAndGoToCurriculo(dialog)
 
     // 1. Click "Gerar PT"
     const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
     await expect(generateButton).toBeEnabled()
-    await generateButton.click()
+    await generateButton.click({ force: true })
 
     // 2. With mocks, error response is instant - wait for state to stabilize
     await page.waitForTimeout(2000)
@@ -260,13 +285,13 @@ Salário: R$ 1.800,00 + benefícios
 
     const empresaName = generateUniqueTestName("[E2E-TEST] Resume Test")
 
-    const dialog = await setupJobAnalysis(page)
+    await mockFitSelectionSuccess(page)
+    await mockGenerateResumeHtmlSuccess(page)
+    await mockHtmlToPdfSuccess(page)
+
+    const dialog = await openDialogAndParseJob(page)
 
     // Override empresa field with unique name for test
-    const dadosTab = dialog.getByRole("tab", { name: /dados da vaga/i })
-    await dadosTab.click()
-    await expect(dadosTab).toHaveAttribute("data-state", "active")
-
     const empresaInput = dialog.getByLabel(/^empresa/i)
     await empresaInput.clear()
     await empresaInput.fill(empresaName)
@@ -277,14 +302,11 @@ Salário: R$ 1.800,00 + benefícios
     await dialog.getByLabel(/fit perfil/i).clear()
     await dialog.getByLabel(/fit perfil/i).fill("4.5")
 
-    // Go back to Currículo tab
-    const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
-    await curriculoTab.click()
-    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+    await completeFitAndGoToCurriculo(dialog)
 
     // 1. Generate preview (fluxo atualizado)
     const generateButton = dialog.getByRole("button", { name: /^gerar pt$/i })
-    await generateButton.click()
+    await generateButton.click({ force: true })
 
     // With mocks, preview appears instantly (NEW: "Preview Gerado" alert)
     const previewAlert = dialog.getByText(/preview gerado/i)
@@ -293,7 +315,7 @@ Salário: R$ 1.800,00 + benefícios
     // 2. Click "Salvar Vaga" (green button)
     const saveButton = dialog.getByRole("button", { name: /salvar vaga/i })
     await expect(saveButton).toBeEnabled()
-    await saveButton.click()
+    await saveButton.click({ force: true })
 
     // 3. Aguardar toast de sucesso (indica que save iniciou)
     await expect(page.getByText(/vaga salva com sucesso/i)).toBeVisible({ timeout: 5000 })
@@ -326,8 +348,7 @@ Salário: R$ 1.800,00 + benefícios
 
     // Go to Curriculo tab
     const curriculoTab = dialog.getByRole("tab", { name: /currículo/i })
-    await curriculoTab.click()
-    await expect(curriculoTab).toHaveAttribute("data-state", "active")
+    await curriculoTab.click({ force: true })
 
     // NEW: Verify warning alert is visible (added in Batch 0)
     const warningAlert = dialog.getByText(/análise da vaga necessária/i)

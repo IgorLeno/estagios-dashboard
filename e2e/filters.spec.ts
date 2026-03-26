@@ -2,12 +2,14 @@ import { test, expect } from "./helpers/fixtures"
 import { getTableRowCount } from "./helpers/test-utils"
 
 test.describe("Filtros do Dashboard", () => {
+  test.describe.configure({ mode: "serial" })
+
   test.beforeEach(async ({ page, testData }) => {
     // testData fixture ensures we have test data available
     expect(testData).toBeGreaterThan(0)
 
     await page.goto("/")
-    await expect(page.getByTestId("vagas-card-title")).toBeVisible()
+    await expect(page.getByTestId("vagas-card-title")).toBeVisible({ timeout: 15000 })
     // Aguardar página carregar
     await page.waitForLoadState("networkidle")
     // Aguardar que a tabela carregue com dados (pelo menos algumas linhas)

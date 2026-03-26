@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { generateTailoredResume } from "@/lib/ai/resume-generator"
+import { generateTailoredResume, InsufficientProfileError } from "@/lib/ai/resume-generator"
 import type { JobDetails } from "@/lib/ai/types"
 
 // Mock job details for testing
@@ -145,7 +145,7 @@ vi.mock("@/lib/ai/cv-templates", () => ({
       location: "Santos, SP",
       links: [],
     },
-    summary: "Original summary about chemical engineering and ML experience.",
+    summary: "Engenheiro Químico formado pela UNICAMP com foco em Machine Learning aplicado a processos industriais. Experiência com Python, TensorFlow e análise de dados.",
     experience: [],
     education: [],
     skills: [
@@ -328,6 +328,137 @@ describe("generateTailoredResume", () => {
     expect(result.cv.header.name).toBe("Igor Fernandes")
     expect(result.cv.header.email).toBe("igor@example.com")
     expect(result.cv.language).toBe("pt")
+  })
+
+  it("should skip summary personalization when profileText is provided", async () => {
+    const { buildSummaryPrompt } = await import("@/lib/ai/resume-prompts")
+    const providedProfileText =
+      "Resumo aprovado manualmente para a etapa de fit, com foco em BI operacional, organização de bases, SQL, Power BI e suporte a indicadores."
+
+    mockGenerateContent.mockReset()
+    mockGenerateContent
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 400,
+            candidatesTokenCount: 200,
+            totalTokenCount: 600,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 600,
+            candidatesTokenCount: 300,
+            totalTokenCount: 900,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () =>
+            `\`\`\`json\n${JSON.stringify({
+              draft: {
+                ...mockConsistencyResponse.draft,
+                summary: providedProfileText,
+              },
+              report: mockConsistencyResponse.report,
+            })}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 250,
+            candidatesTokenCount: 120,
+            totalTokenCount: 370,
+          },
+        },
+      })
+
+    const result = await generateTailoredResume(
+      mockJobDetails,
+      "pt",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      providedProfileText
+    )
+
+    expect(result.cv.summary).toBe(providedProfileText)
+    expect(buildSummaryPrompt).not.toHaveBeenCalled()
+    expect(mockGenerateContent).toHaveBeenCalledTimes(3)
+  })
+
+  it("should filter certifications when selectedCertifications is provided", async () => {
+    mockGenerateContent.mockReset()
+    mockGenerateContent
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 500,
+            candidatesTokenCount: 150,
+            totalTokenCount: 650,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 400,
+            candidatesTokenCount: 200,
+            totalTokenCount: 600,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 600,
+            candidatesTokenCount: 300,
+            totalTokenCount: 900,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        response: {
+          text: () =>
+            `\`\`\`json\n${JSON.stringify({
+              draft: {
+                summary: mockSummaryResponse.summary,
+                skills: mockSkillsResponse.skills,
+                projects: mockProjectsResponse.projects,
+                certifications: [mockBaseCertifications[0], mockBaseCertifications[2]],
+                language: "pt",
+              },
+              report: {
+                issues: [],
+                corrections: [],
+              },
+            })}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 250,
+            candidatesTokenCount: 120,
+            totalTokenCount: 370,
+          },
+        },
+      })
+
+    const result = await generateTailoredResume(
+      mockJobDetails,
+      "pt",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      [mockBaseCertifications[0], mockBaseCertifications[2]]
+    )
+
+    expect(result.cv.certifications).toEqual([mockBaseCertifications[0], mockBaseCertifications[2]])
   })
 
   it("should support English language", async () => {
@@ -591,5 +722,72 @@ describe("generateTailoredResume", () => {
 
     expect(result.duration).toBeGreaterThanOrEqual(0)
     expect(result.duration).toBeLessThan(10000) // Should complete in less than 10 seconds with mocks
+  })
+
+  describe("summary quality gate", () => {
+    it("should throw InsufficientProfileError when summary is too short", async () => {
+      const { getCVTemplateForUser } = await import("@/lib/ai/cv-templates")
+      const mockedGetCV = vi.mocked(getCVTemplateForUser)
+
+      mockedGetCV.mockResolvedValueOnce({
+        language: "pt",
+        header: {
+          name: "Igor Fernandes",
+          title: "Engenheiro",
+          email: "igor@example.com",
+          phone: "",
+          location: "Santos, SP",
+          links: [],
+        },
+        summary: "Busco estágio.", // 14 chars — way below 100
+        experience: [],
+        education: [],
+        skills: [],
+        projects: [],
+        languages: [],
+        certifications: [],
+      })
+
+      await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow(InsufficientProfileError)
+      await expect(
+        mockedGetCV.mockResolvedValueOnce({
+          language: "pt",
+          header: { name: "Igor", title: "", email: "", phone: "", location: "", links: [] },
+          summary: "Busco estágio.",
+          experience: [],
+          education: [],
+          skills: [],
+          projects: [],
+          languages: [],
+          certifications: [],
+        }) && generateTailoredResume(mockJobDetails, "pt")
+      ).rejects.toThrow("Perfil profissional insuficiente")
+    })
+
+    it("should throw InsufficientProfileError when summary is empty", async () => {
+      const { getCVTemplateForUser } = await import("@/lib/ai/cv-templates")
+      const mockedGetCV = vi.mocked(getCVTemplateForUser)
+
+      mockedGetCV.mockResolvedValueOnce({
+        language: "pt",
+        header: { name: "Igor", title: "", email: "", phone: "", location: "", links: [] },
+        summary: "",
+        experience: [],
+        education: [],
+        skills: [],
+        projects: [],
+        languages: [],
+        certifications: [],
+      })
+
+      await expect(generateTailoredResume(mockJobDetails, "pt")).rejects.toThrow(InsufficientProfileError)
+    })
+
+    it("should pass quality gate when summary is adequate", async () => {
+      // The default mock already has a 150+ char summary — this test confirms it passes
+      const result = await generateTailoredResume(mockJobDetails, "pt")
+      expect(result.cv).toBeDefined()
+      expect(result.cv.summary).toBeDefined()
+    })
   })
 })

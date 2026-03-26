@@ -10,11 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChevronRight, RotateCcw } from "lucide-react"
 import { DescricaoTab } from "@/components/tabs/descricao-tab"
 import { DadosVagaTab } from "@/components/tabs/dados-vaga-tab"
+import { FitTab } from "@/components/tabs/fit-tab"
 import { CurriculoTab } from "@/components/tabs/curriculo-tab"
 import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
-import type { ParseJobResponse, ParseJobErrorResponse, JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse } from "@/lib/ai/types"
+import type { ParseJobResponse, ParseJobErrorResponse, JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse, ComplementSelection } from "@/lib/ai/types"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -91,7 +92,17 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
   const [resumePdfBase64En, setResumePdfBase64En] = useState<string | null>(null)
 
+  // Fit tab state
+  const [profileText, setProfileText] = useState("")
+  const [complements, setComplements] = useState<ComplementSelection | null>(null)
+  const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
+  const [isSelectingComplements, setIsSelectingComplements] = useState(false)
+
   const supabase = createClient()
+  const approvedSkills = complements?.skills.filter((group) => group.selected).flatMap((group) => group.items) ?? []
+  const selectedProjectTitles = complements?.projects.filter((project) => project.selected).map((project) => project.title) ?? []
+  const selectedCertifications =
+    complements?.certifications.filter((certification) => certification.selected).map((certification) => certification.title) ?? []
 
   function buildVagaPayload() {
     const empresa = formData.empresa.trim()
@@ -277,6 +288,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
         body: JSON.stringify({
           jobDescription: description,
           language: "pt",
+          profileText: profileText.trim() || undefined,
+          approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
+          selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
+          selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
           model: selectedResumeModel || undefined,
         }),
       })
@@ -308,6 +323,79 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     const confirmed = window.confirm("Deseja gerar um novo currículo? O atual será substituído.")
     if (confirmed) {
       await handleGenerateResume()
+    }
+  }
+
+  // Generate professional profile (Fit tab step A)
+  async function handleGenerateProfile() {
+    if (!jobAnalysisData) {
+      toast.error("Análise da vaga necessária primeiro")
+      return
+    }
+
+    setIsGeneratingProfile(true)
+    try {
+      const response = await fetch("/api/ai/generate-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobAnalysis: jobAnalysisData,
+          language: "pt",
+          model: selectedResumeModel || undefined,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
+      }
+
+      setProfileText(result.data.profileText)
+      toast.success("✓ Perfil profissional gerado!")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao gerar perfil"
+      toast.error(msg)
+      console.error("Profile generation error:", err)
+    } finally {
+      setIsGeneratingProfile(false)
+    }
+  }
+
+  // Select complements (Fit tab step B)
+  async function handleSelectComplements() {
+    if (!jobAnalysisData || !profileText.trim()) {
+      toast.error("Perfil profissional necessário primeiro")
+      return
+    }
+
+    setIsSelectingComplements(true)
+    try {
+      const response = await fetch("/api/ai/select-complements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileText,
+          jobAnalysis: jobAnalysisData,
+          language: "pt",
+          model: selectedResumeModel || undefined,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
+      }
+
+      setComplements(result.data)
+      toast.success("✓ Complementos selecionados!")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao selecionar complementos"
+      toast.error(msg)
+      console.error("Complement selection error:", err)
+    } finally {
+      setIsSelectingComplements(false)
     }
   }
 
@@ -386,6 +474,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumeFilename(null)
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
+    setProfileText("")
+    setComplements(null)
     setActiveTab("descricao")
   }
 
@@ -416,7 +506,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           value={activeTab}
           onValueChange={setActiveTab}
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger
               value="descricao"
               className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
@@ -430,6 +520,13 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
             >
               <span>📊</span>
               <span>Dados da Vaga</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="fit"
+              className="flex flex-col items-center gap-0.5 py-2 text-xs sm:flex-row sm:gap-1.5 sm:text-sm"
+            >
+              <span>🎯</span>
+              <span>Fit</span>
             </TabsTrigger>
             <TabsTrigger
               value="curriculo"
@@ -455,6 +552,26 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
 
           <TabsContent value="dados" className="mt-4">
             <DadosVagaTab formData={formData} setFormData={setFormData} jobAnalysisData={jobAnalysisData} />
+          </TabsContent>
+
+          <TabsContent value="fit" className="mt-4">
+            <FitTab
+              jobDescription={lastAnalyzedDescription || jobDescription}
+              jobAnalysisData={jobAnalysisData}
+              language="pt"
+              profileText={profileText}
+              onProfileTextChange={(text) => {
+                setProfileText(text)
+                setComplements(null)
+              }}
+              isGeneratingProfile={isGeneratingProfile}
+              onGenerateProfile={handleGenerateProfile}
+              complements={complements}
+              onComplementsChange={setComplements}
+              isSelectingComplements={isSelectingComplements}
+              onSelectComplements={handleSelectComplements}
+              onContinueToCurriculo={() => setActiveTab("curriculo")}
+            />
           </TabsContent>
 
           <TabsContent value="curriculo" className="mt-4">
@@ -493,6 +610,10 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               jobDescription={lastAnalyzedDescription || jobDescription}
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
+              profileText={profileText}
+              approvedSkills={approvedSkills}
+              selectedProjectTitles={selectedProjectTitles}
+              selectedCertifications={selectedCertifications}
               activeModel={selectedResumeModel}
               modelHistory={resumeModelHistory}
               onModelChange={setSelectedResumeModel}
@@ -529,8 +650,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               Cancelar
             </Button>
             {activeTab === "dados" && (
-              <Button onClick={() => setActiveTab("curriculo")} disabled={loading || analyzing || generatingResume}>
-                Continuar para Currículo
+              <Button onClick={() => setActiveTab("fit")} disabled={loading || analyzing || generatingResume}>
+                Continuar para Fit
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             )}
