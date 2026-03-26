@@ -158,7 +158,7 @@ export function FitTab({
     onComplementsChange(updated)
   }
 
-  const canContinue = hasProfile && hasComplements
+  const canContinue = hasProfile && hasComplements && !complementsInvalidated
 
   return (
     <div className="space-y-6 p-4">
@@ -233,7 +233,7 @@ export function FitTab({
           </p>
         )}
 
-        {complementsInvalidated && (
+        {complementsInvalidated && !isSelectingComplements && (
           <Alert className="border-amber-500/25 bg-amber-500/5">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <AlertDescription className="text-sm">
