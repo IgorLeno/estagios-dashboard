@@ -188,6 +188,6 @@ export const CANDIDATE: CandidateData = {
   summary_en:
     "Chemical Engineering student (UNESP) nearing completion, with a strong analytical profile and keen interest in Quality, Environmental Management (QHSE), and Technical Control. I have academic experience in research, process modeling, and data analysis, with proficiency in management tools (Advanced Excel, MS Office) and analysis tools (Python, SQL) for database administration, indicator monitoring, and technical report preparation. Seeking an initial internship opportunity to apply my knowledge and actively contribute to Quality Control projects, records monitoring, and improvement plans. Available for full-time internship with immediate start and willing to relocate.",
 
-  tagline_pt: "Engenheiro Químico | Dados, BI & Machine Learning",
-  tagline_en: "Chemical Engineering Student | Data, BI & Machine Learning",
+  tagline_pt: "Profissional com base em Engenharia Química e foco em dados e BI.",
+  tagline_en: "Professional with a Chemical Engineering background and data expertise.",
 }

@@ -33,10 +33,17 @@ function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
     parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
   })
 
+  const renderedItems = parts
+    .map(
+      (part, index) =>
+        `<span class="contact-item">${part}${index < parts.length - 1 ? '<span class="contact-separator" aria-hidden="true"> | </span>' : ""}</span>`
+    )
+    .join("")
+
   if (template === "modelo2") {
-    return `<p class="contact-line">${parts.map((part) => `<span class="contact-item">${part}</span>`).join("")}</p>`
+    return `<p class="contact-line">${renderedItems}</p>`
   }
-  return `<div class="contact"><p>${parts.map((part) => `<span class="contact-item">${part}</span>`).join("")}</p></div>`
+  return `<div class="contact"><p>${renderedItems}</p></div>`
 }
 
 function renderSectionTitle(label: string): string {
@@ -57,27 +64,23 @@ function renderEducation(education: CVTemplate["education"]): string {
 function renderLanguages(languages: CVTemplate["languages"]): string {
   if (languages.length === 1) {
     const lang = languages[0]
-    return `<p>${escapeHtml(lang.language)}: ${escapeHtml(lang.proficiency)}.</p>`
+    return `<p><strong>${escapeHtml(lang.language)}</strong>: ${escapeHtml(lang.proficiency)}.</p>`
   }
-  return `<ul>
-        ${languages.map((lang) => `<li>${escapeHtml(lang.language)}: ${escapeHtml(lang.proficiency)}.</li>`).join("\n        ")}
-      </ul>`
+  return languages
+    .map((lang) => `<p><strong>${escapeHtml(lang.language)}</strong>: ${escapeHtml(lang.proficiency)}.</p>`)
+    .join("\n      ")
 }
 
 function renderProjects(projects: CVTemplate["projects"], template: ResumeTemplate): string {
   if (template === "modelo2") {
-    return `<ul>
-        ${projects
-          .map(
-            (project) => `<li class="project-item">
-            <strong class="project-title">${escapeHtml(project.title)}</strong>
-            <ul class="project-bullets">
-              ${project.description.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("\n              ")}
-            </ul>
-          </li>`
-          )
-          .join("\n        ")}
-      </ul>`
+    return projects
+      .map(
+        (project) => `<div class="project-item">
+          <p><strong class="project-title">${escapeHtml(project.title)}</strong></p>
+          <p class="project-prose">${project.description.map(escapeHtml).join(" ")}</p>
+        </div>`
+      )
+      .join("\n      ")
   }
 
   return projects
@@ -135,9 +138,9 @@ function renderCertificationLabel(cert: Certification): string {
 
 function renderCertifications(certifications: Certification[], template: ResumeTemplate): string {
   if (template === "modelo2") {
-    return `<ul class="cert-list">
-        ${certifications.map((cert) => `<li>${renderCertificationLabel(cert)}</li>`).join("\n        ")}
-      </ul>`
+    return `<div class="cert-list">
+        ${certifications.map((cert) => `<p class="cert-item">${renderCertificationLabel(cert)}</p>`).join("\n        ")}
+      </div>`
   }
 
   return certifications.map(renderCertificationLabel).join(" | ")
@@ -238,9 +241,9 @@ function renderModelo1(cv: CVTemplate): string {
       display: inline-block;
     }
 
-    .header .contact .contact-item:not(:last-child)::after {
-      content: " | ";
+    .header .contact .contact-separator {
       color: #000;
+      white-space: pre;
     }
 
     /* Section */
@@ -444,31 +447,35 @@ function renderModelo2(cv: CVTemplate): string {
       font-family: Georgia, serif;
       font-size: 24pt;
       font-weight: 700;
+      line-height: 1.05;
       color: #000;
-      margin-bottom: 4pt;
+      margin-bottom: 6pt;
     }
 
     .tagline {
-      color: #2E5C9E;
-      font-style: italic;
-      font-size: 13pt;
-      margin-bottom: 8pt;
+      color: #2E6FA3;
+      font-size: 12.5pt;
+      font-weight: 500;
+      line-height: 1.25;
+      margin-bottom: 6pt;
+      text-align: left;
     }
 
     .contact-line {
       font-size: 10pt;
-      color: #333;
+      color: #5a5a5a;
       margin-bottom: 0;
+      line-height: 1.35;
+      text-align: left;
     }
 
     .contact-item {
-      white-space: nowrap;
-      display: inline-block;
+      white-space: normal;
     }
 
-    .contact-item:not(:last-child)::after {
-      content: " | ";
-      color: #999;
+    .contact-separator {
+      color: #6d6d6d;
+      white-space: pre;
     }
 
     .section {
@@ -520,36 +527,27 @@ function renderModelo2(cv: CVTemplate): string {
     .skill-items { color: #000; margin-bottom: 6pt; }
 
     .project-item {
-      margin-bottom: 8pt;
-      padding-left: 0;
+      margin-bottom: 10pt;
       page-break-inside: avoid;
       break-inside: avoid;
-    }
-
-    .project-item::before {
-      content: none;
     }
 
     .project-title {
+      font-weight: 700;
       display: block;
-      margin-bottom: 2pt;
+      margin-bottom: 3pt;
     }
 
-    .project-bullets {
-      margin-left: 12pt;
-      margin-top: 2pt;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .project-bullets li {
-      margin-bottom: 2pt;
-      font-size: 10.5pt;
-      line-height: 1.35;
+    .project-prose {
+      font-weight: normal;
+      text-align: justify;
+      line-height: 1.4;
+      margin-bottom: 0;
     }
 
     .cert-list { margin-bottom: 4pt; }
-    .cert-list li { margin-bottom: 3pt; }
+    .cert-item { margin-bottom: 3pt; }
+    .cert-item:last-child { margin-bottom: 0; }
 
     .section-projects {
       page-break-inside: auto;

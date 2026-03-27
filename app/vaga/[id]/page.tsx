@@ -112,7 +112,7 @@ export default function VagaDetailPage() {
       if (error) throw error
       setVaga(data)
       if (data?.profile_text_pt) setProfileText(data.profile_text_pt)
-      if (data?.tagline_pt) setTagline(data.tagline_pt)
+      setTagline(data?.tagline_pt ?? "")
 
       // Se houver arquivo de análise, carregar conteúdo para preview
       if (data?.observacoes) {
@@ -204,7 +204,7 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           profileText: language === "pt" ? profileText.trim() || undefined : undefined,
-          tagline: tagline.trim() || undefined,
+          tagline: language === "pt" ? tagline.trim() || undefined : undefined,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,

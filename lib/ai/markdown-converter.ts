@@ -244,8 +244,26 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             font-family: Georgia, serif;
             font-size: 24pt;
             font-weight: 700;
+            line-height: 1.05;
             color: #000;
-            margin-bottom: 4pt;
+            margin-bottom: 6pt;
+        }
+
+        h1 + p {
+            color: #2E6FA3;
+            font-size: 12.5pt;
+            font-weight: 500;
+            line-height: 1.25;
+            margin-bottom: 6pt;
+            text-align: left;
+        }
+
+        h1 + p + p {
+            color: #5a5a5a;
+            font-size: 10pt;
+            line-height: 1.35;
+            margin-bottom: 12pt;
+            text-align: left;
         }
 
         h2 {
@@ -283,17 +301,14 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         li {
             list-style: none;
-            position: relative;
-            padding-left: 14pt;
+            padding-left: 0;
             margin-bottom: 4pt;
             font-size: 10.5pt;
             line-height: 1.35;
         }
 
         li::before {
-            content: "• ";
-            position: absolute;
-            left: 0;
+            content: none;
         }
 
         strong {
@@ -308,6 +323,11 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         a {
             color: #2E5C9E;
+            text-decoration: none;
+        }
+
+        h1 + p + p a {
+            color: inherit;
             text-decoration: none;
         }
 

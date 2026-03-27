@@ -219,8 +219,8 @@ export function FitTab({
             onChange={(e) => onTaglineChange?.(e.target.value)}
             placeholder={
               language === "pt"
-                ? "Ex: Engenheiro Químico | Dados, BI & Machine Learning"
-                : "Ex: Chemical Engineering Student | Data, BI & Machine Learning"
+                ? "Ex: Profissional com base em Engenharia Química e foco em dados e BI"
+                : "Ex: Professional with a Chemical Engineering background and data expertise"
             }
             disabled={isGeneratingProfile}
           />

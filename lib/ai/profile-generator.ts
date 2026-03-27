@@ -67,8 +67,8 @@ ${isPt ? "REGRAS" : "RULES"}:
     : 'NEVER use first person (I, my, mine). Use implicit third person without subject: "Student of... with experience in...", "Uses...", "Develops..."'}
 - ${isPt ? "Conecte competências reais do candidato com necessidades da vaga" : "Connect real candidate competencies with job needs"}
 - ${isPt
-    ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), sem clichês, que capture formação + área de atuação + diferencial. Ex: "Engenheiro Químico | Dados, BI & Machine Learning"'
-    : 'Also generate a tagline: short positioning phrase (8-15 words), no clichés, capturing background + field + differentiator. Ex: "Chemical Engineering Student | Data Analysis & Machine Learning"'}
+    ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), em formato de frase natural e fluida, sem clichês, capturando formação + área de atuação + diferencial. NÃO use pipes, barras ou listas de palavras-chave. Ex: "Profissional com base em Engenharia Química e experiência em simulação de processos."'
+    : 'Also generate a tagline: a short positioning sentence (8-15 words), written as a natural flowing phrase with no clichés, capturing background + field + differentiator. DO NOT use pipes, separators, or keyword lists. Example: "Professional with a Chemical Engineering background and process simulation expertise."'}
 - ${isPt ? `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} palavras, 4-5 frases fluidas` : `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} words, 4-5 fluid sentences`}
 - ${isPt ? 'Idioma do output: Português brasileiro' : 'Output language: English'}
 
