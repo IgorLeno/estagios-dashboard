@@ -639,6 +639,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               initialMarkdownPt={resumeContentPt}
               initialMarkdownEn={resumeContentEn}
               profileText={profileText}
+              tagline={tagline}
               approvedSkills={approvedSkills}
               selectedProjectTitles={selectedProjectTitles}
               selectedCertifications={selectedCertifications}

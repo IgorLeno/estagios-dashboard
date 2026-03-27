@@ -23,14 +23,18 @@ function renderContactLine(cv: CVTemplate, template: ResumeTemplate): string {
 
   const parts: string[] = []
   linkedinLinks.forEach((link) => {
-    parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
+    parts.push(
+      `<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url.replace(/^https?:\/\//i, ""))}</a>`
+    )
   })
   if (cv.header.email)
     parts.push(`<a href="mailto:${escapeHtml(cv.header.email)}">${escapeHtml(cv.header.email)}</a>`)
   if (cv.header.phone) parts.push(escapeHtml(cv.header.phone))
   if (cv.header.location) parts.push(formattedLocation)
   otherLinks.forEach((link) => {
-    parts.push(`<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url)}</a>`)
+    parts.push(
+      `<a href="https://${escapeHtml(link.url)}" target="_blank">${escapeHtml(link.url.replace(/^https?:\/\//i, ""))}</a>`
+    )
   })
 
   const renderedItems = parts
@@ -425,7 +429,7 @@ function renderModelo2(cv: CVTemplate): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(cv.header.name)} - CV</title>
   <style>
-    @page { size: A4; margin: 40px; }
+    @page { size: A4; margin: 30px 40px; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -441,7 +445,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     .container { width: 100%; max-width: 100%; }
 
-    .header { margin-bottom: 18pt; }
+    .header { margin-bottom: 12pt; }
 
     h1 {
       font-family: Georgia, serif;
@@ -479,7 +483,7 @@ function renderModelo2(cv: CVTemplate): string {
     }
 
     .section {
-      margin-bottom: 14pt;
+      margin-bottom: 10pt;
       page-break-inside: avoid;
       break-inside: avoid;
       page-break-before: auto;
@@ -527,7 +531,7 @@ function renderModelo2(cv: CVTemplate): string {
     .skill-items { color: #000; margin-bottom: 6pt; }
 
     .project-item {
-      margin-bottom: 10pt;
+      margin-bottom: 7pt;
       page-break-inside: avoid;
       break-inside: avoid;
     }

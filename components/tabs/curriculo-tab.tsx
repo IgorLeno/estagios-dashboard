@@ -34,6 +34,7 @@ interface CurriculoTabProps {
   initialMarkdownPt?: string
   initialMarkdownEn?: string
   profileText?: string
+  tagline?: string
   approvedSkills?: string[]
   selectedProjectTitles?: string[]
   selectedCertifications?: string[]
@@ -64,6 +65,7 @@ export function CurriculoTab({
   initialMarkdownPt = "",
   initialMarkdownEn = "",
   profileText,
+  tagline,
   approvedSkills,
   selectedProjectTitles,
   selectedCertifications,
@@ -210,6 +212,7 @@ export function CurriculoTab({
           jobDescription,
           language: "pt",
           profileText: profileText?.trim() || undefined,
+          tagline: tagline?.trim() || undefined,
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles:
             selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
@@ -287,6 +290,7 @@ export function CurriculoTab({
           vagaId,
           jobDescription,
           language: "en",
+          tagline: tagline?.trim() || undefined,
           approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles:
             selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,

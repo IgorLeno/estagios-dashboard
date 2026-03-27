@@ -204,7 +204,7 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           profileText: language === "pt" ? profileText.trim() || undefined : undefined,
-          tagline: language === "pt" ? tagline.trim() || undefined : undefined,
+          tagline: tagline.trim() || undefined,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
