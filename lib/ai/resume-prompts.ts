@@ -423,27 +423,14 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 3. DESCRIPTION STRUCTURE (MANDATORY):
    - O array description de cada projeto deve conter EXATAMENTE 1 (um) elemento.
-   - Esse único elemento deve ser um parágrafo de texto corrido em prosa, com 3 a 5 frases.
+   - Cada projeto deve ser descrito em exatamente 1 parágrafo em prosa corrida, sem bullets, sem marcadores.
+   - O parágrafo deve ter NO MÁXIMO 2-3 frases e NO MÁXIMO 80 palavras.
+   - Priorizar: (1) o que foi feito, (2) a tecnologia/método principal, (3) um resultado mensurável se disponível.
+   - NÃO repetir informações já presentes em outras seções do currículo (competências, perfil profissional).
+   - O campo "description" do objeto de projeto deve ser um array com EXATAMENTE 1 elemento (string única com o parágrafo).
    - NÃO use múltiplos itens no array.
    - NÃO use bullet points.
    - O resultado será renderizado como parágrafo único.
-   - Sentence 1: o que foi construído ou analisado.
-   - Sentence 2: como foi feito (metodologia ou stack principal).
-   - Sentence 3: resultado, escopo ou impacto mensurável (se existir).
-   - Sentences 4-5: usar apenas se necessário para contexto, stack ou escopo adicional.
-   - Format per sentence: [Past/present action verb in PAST TENSE or NOUN PHRASE] + [specific task] +
-     [tool/method] + [outcome/relevance]
-   - USE PAST TENSE or NOUN PHRASE — NEVER infinitive verbs:
-     ❌ WRONG: "Desenvolver pipeline automatizado..."
-     ✅ CORRECT: "Desenvolvimento de pipeline automatizado..." OR "Desenvolveu pipeline..."
-     ✅ CORRECT (noun phrase): "Estruturação e padronização de bases de dados para..."
-   - Each sentence MUST end with a period (.)
-   - AVOID REDUNDANT PHRASES: "análises analíticas", "dados de dados", "resultado de resultados"
-     — read each sentence aloud and remove obvious redundancies
-   - TARGET LENGTH: 3-5 frases, formando um parágrafo conciso em prosa.
-   - Use direct, active text throughout the paragraph.
-   - If original description has 3 concepts, distribute them across separate sentences
-     inside the same paragraph.
 
 4. KEYWORD DENSITY PER PROJECT:
    - Each project should include 3-5 job keywords
@@ -592,7 +579,7 @@ Return JSON format:
     {
       "title": "EXACT title from REQUIRED PROJECT TITLES (character-by-character match)",
       "description": [
-        "Single prose paragraph with exactly 1 element in description[], using 3-5 sentences and front-loading keywords in the first sentence."
+        "Single prose paragraph with exactly 1 element in description[], using 2-3 sentences and at most 80 words."
       ]
     },
     ...
@@ -824,8 +811,8 @@ export function buildProjectsPrompt(
 
   const descriptionFormatInstruction =
     language === "pt"
-      ? "=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nO array description de cada projeto deve conter EXATAMENTE 1 (um) elemento. Esse elemento é um parágrafo de texto corrido em prosa (3-5 frases), não uma lista de tópicos. NÃO use múltiplos itens no array. NÃO use bullet points. O resultado será renderizado como parágrafo único."
-      : "=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project's description array must contain EXACTLY 1 element. That element must be a prose paragraph (3-5 sentences), not a bullet list. DO NOT use multiple items in the array. DO NOT use bullet points. The result will be rendered as a single paragraph."
+      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nCada projeto deve ser descrito em exatamente 1 parágrafo em prosa corrida, sem bullets, sem marcadores. O parágrafo deve ter NO MÁXIMO 2-3 frases e NO MÁXIMO 80 palavras. Priorizar: (1) o que foi feito, (2) a tecnologia/método principal, (3) um resultado mensurável se disponível. NÃO repetir informações já presentes em outras seções do currículo (competências, perfil profissional). O campo "description" do objeto de projeto deve ser um array com EXATAMENTE 1 elemento (string única com o parágrafo).'
+      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project must be described in exactly 1 prose paragraph, with no bullets or markers. The paragraph must have AT MOST 2-3 sentences and AT MOST 80 words. Prioritize: (1) what was done, (2) the main technology/method, (3) a measurable result if available. DO NOT repeat information already present in other resume sections (skills, professional summary). The project "description" field must be an array with EXACTLY 1 element (a single string containing the paragraph).'
 
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)

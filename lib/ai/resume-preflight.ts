@@ -54,9 +54,9 @@ export function validateCVTemplate(cv: CVTemplate): {
     }
 
     project.description.forEach((description, descriptionIndex) => {
-      if (description.length > 600) {
+      if (description.length > 500) {
         warnings.push(
-          `Descrição ${descriptionIndex + 1} do projeto "${projectLabel}" excede 600 caracteres (atual: ${description.length}).`
+          `Descrição ${descriptionIndex + 1} do projeto "${projectLabel}" excede 500 caracteres (atual: ${description.length}).`
         )
       }
     })

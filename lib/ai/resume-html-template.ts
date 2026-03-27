@@ -449,7 +449,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     h1 {
       font-family: Georgia, serif;
-      font-size: 24pt;
+      font-size: 27pt;
       font-weight: 700;
       line-height: 1.05;
       color: #000;
@@ -458,7 +458,7 @@ function renderModelo2(cv: CVTemplate): string {
 
     .tagline {
       color: #2E6FA3;
-      font-size: 12.5pt;
+      font-size: 11pt;
       font-weight: 500;
       line-height: 1.25;
       margin-bottom: 6pt;
