@@ -12,6 +12,7 @@ import {
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
 import { validateAIConfig, AI_TIMEOUT_CONFIG } from "@/lib/ai/config"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
+import { parseResumeUseTaglinePreference, RESUME_USE_TAGLINE_COOKIE_KEY } from "@/lib/resume-tagline-preference"
 import { ZodError } from "zod"
 import { generateResumeHTML } from "@/lib/ai/resume-html-template"
 import { htmlToMarkdown } from "@/lib/ai/markdown-converter"
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       language,
       profileText,
       tagline,
+      useTagline,
       approvedSkills,
       model,
       selectedProjectTitles,
@@ -125,8 +127,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Fall back to vaga-stored profile text / tagline when not provided in request body
     const vagaProfileField = language === "pt" ? "profile_text_pt" : "profile_text_en"
     const vagaTaglineField = language === "pt" ? "tagline_pt" : "tagline_en"
+    const resolvedUseTagline =
+      typeof useTagline === "boolean"
+        ? useTagline
+        : parseResumeUseTaglinePreference(req.cookies.get(RESUME_USE_TAGLINE_COOKIE_KEY)?.value)
+    const hasExplicitFitInputs =
+      Object.prototype.hasOwnProperty.call(body, "profileText") || Object.prototype.hasOwnProperty.call(body, "tagline")
     const effectiveProfileText = profileText?.trim() || vagaRecord?.[vagaProfileField]?.trim() || undefined
-    const effectiveTagline = tagline?.trim() || vagaRecord?.[vagaTaglineField]?.trim() || undefined
+    const effectiveTagline =
+      resolvedUseTagline
+        ? tagline?.trim() || (!hasExplicitFitInputs ? vagaRecord?.[vagaTaglineField]?.trim() || undefined : undefined)
+        : undefined
 
     const resumeResult = await withTimeout(
       generateTailoredResume({

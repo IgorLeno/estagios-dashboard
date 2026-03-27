@@ -5,8 +5,27 @@ import { buildModelAttemptList, isRetryableModelError, isValidModelId, DEFAULT_M
 import { extractJsonFromResponse } from "./job-parser"
 import type { JobDetails, TokenUsage } from "./types"
 
-const MIN_PROFILE_WORDS = 60
-const MAX_PROFILE_WORDS = 110
+const MAX_PROFILE_CHARS = 530
+
+function trimProfileToCharLimit(text: string, maxChars: number): string {
+  const normalized = text.trim().replace(/\s+/g, " ")
+
+  if (normalized.length <= maxChars) {
+    return normalized
+  }
+
+  const truncated = normalized.slice(0, maxChars)
+  const lastSentenceEnd = Math.max(truncated.lastIndexOf("."), truncated.lastIndexOf("!"), truncated.lastIndexOf("?"))
+
+  if (lastSentenceEnd >= Math.floor(maxChars * 0.6)) {
+    return truncated.slice(0, lastSentenceEnd + 1).trim()
+  }
+
+  const lastWordBoundary = truncated.lastIndexOf(" ")
+  const safeText = (lastWordBoundary > 0 ? truncated.slice(0, lastWordBoundary) : truncated).trim()
+
+  return safeText.endsWith(".") || safeText.endsWith("!") || safeText.endsWith("?") ? safeText : `${safeText}.`
+}
 
 function buildProfilePrompt(
   candidateSummary: string,
@@ -48,8 +67,8 @@ function buildProfilePrompt(
     .join("\n")
 
   return `${isPt ? "TAREFA" : "TASK"}: ${isPt
-    ? "Gere um resumo profissional de 4-5 frases naturais para o currículo do candidato, personalizado para a vaga descrita."
-    : "Generate a 4-5 sentence professional summary for the candidate's resume, tailored to the described position."
+    ? "Gere um resumo profissional de 3-4 frases naturais para o currículo do candidato, personalizado para a vaga descrita."
+    : "Generate a 3-4 sentence professional summary for the candidate's resume, tailored to the described position."
   }
 
 ${isPt ? "PERFIL DO CANDIDATO" : "CANDIDATE PROFILE"}:
@@ -69,7 +88,12 @@ ${isPt ? "REGRAS" : "RULES"}:
 - ${isPt
     ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), em formato de frase natural e fluida, sem clichês, capturando formação + área de atuação + diferencial. NÃO use pipes, barras ou listas de palavras-chave. Ex: "Profissional com base em Engenharia Química e experiência em simulação de processos."'
     : 'Also generate a tagline: a short positioning sentence (8-15 words), written as a natural flowing phrase with no clichés, capturing background + field + differentiator. DO NOT use pipes, separators, or keyword lists. Example: "Professional with a Chemical Engineering background and process simulation expertise."'}
-- ${isPt ? `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} palavras, 4-5 frases fluidas` : `${MIN_PROFILE_WORDS}-${MAX_PROFILE_WORDS} words, 4-5 fluid sentences`}
+- ${isPt
+    ? `O campo profileText deve ter NO MÁXIMO ${MAX_PROFILE_CHARS} caracteres contando espaços`
+    : `The profileText field must be AT MOST ${MAX_PROFILE_CHARS} characters including spaces`}
+- ${isPt
+    ? "Use 3-4 frases curtas e diretas; se passar do limite, reescreva de forma mais enxuta"
+    : "Use 3-4 short, direct sentences; if it exceeds the limit, rewrite it more concisely"}
 - ${isPt ? 'Idioma do output: Português brasileiro' : 'Output language: English'}
 
 ${isPt ? "FORMATO DE RESPOSTA" : "RESPONSE FORMAT"}: JSON
@@ -140,38 +164,14 @@ export async function generateProfile(
 
       const tagline = typeof parsed.tagline === "string" ? parsed.tagline.trim() : ""
 
-      let finalText = profileText.trim()
-      const wordCount = finalText.split(/\s+/).length
+      let finalText = profileText.trim().replace(/\s+/g, " ")
 
-      if (wordCount < MIN_PROFILE_WORDS) {
-        throw new Error(`Profile too short: ${wordCount} words (minimum ${MIN_PROFILE_WORDS})`)
-      }
-
-      if (wordCount > MAX_PROFILE_WORDS) {
-        const words = finalText.split(/\s+/)
-        const truncatedWords = words.slice(0, MAX_PROFILE_WORDS).join(" ")
-        const lastSentenceEnd = Math.max(
-          truncatedWords.lastIndexOf("."),
-          truncatedWords.lastIndexOf("!"),
-          truncatedWords.lastIndexOf("?")
-        )
-
-        if (lastSentenceEnd > 0) {
-          finalText = truncatedWords.slice(0, lastSentenceEnd + 1)
-        } else {
-          finalText = truncatedWords + "."
-        }
-
-        const truncatedWordCount = finalText.split(/\s+/).length
+      if (finalText.length > MAX_PROFILE_CHARS) {
+        const originalLength = finalText.length
+        finalText = trimProfileToCharLimit(finalText, MAX_PROFILE_CHARS)
         console.warn(
-          `[ProfileGenerator] Profile truncated from ${wordCount} to ${truncatedWordCount} words (limit: ${MAX_PROFILE_WORDS})`
+          `[ProfileGenerator] Profile truncated from ${originalLength} to ${finalText.length} characters (limit: ${MAX_PROFILE_CHARS})`
         )
-
-        if (truncatedWordCount < MIN_PROFILE_WORDS) {
-          throw new Error(
-            `Profile too short after truncation: ${truncatedWordCount} words (minimum ${MIN_PROFILE_WORDS})`
-          )
-        }
       }
 
       return {

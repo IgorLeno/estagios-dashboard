@@ -19,6 +19,7 @@ import { EMPTY_CANDIDATE_PROFILE, type CandidateProfile } from "@/lib/types"
 import { Bot, Info, Loader2, LogIn, Plus, RotateCcw, Save, Sparkles, User, X } from "lucide-react"
 import { toast } from "sonner"
 import { getModelFailureWarning, recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
+import { useResumeTaglinePreference } from "@/hooks/use-resume-tagline-preference"
 
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 
@@ -145,6 +146,7 @@ export default function PerfilPage() {
   const [newModelInput, setNewModelInput] = useState("")
   const [fillMode, setFillMode] = useState<"substituir" | "acrescentar">("substituir")
   const [modelFailureWarning, setModelFailureWarning] = useState<ReturnType<typeof getModelFailureWarning>>(null)
+  const { value: useTagline, setValue: setUseTagline } = useResumeTaglinePreference()
 
   const router = useRouter()
 
@@ -390,6 +392,29 @@ export default function PerfilPage() {
                 </TabsList>
 
                 <TabsContent value="perfil" className="space-y-6 mt-6">
+                  <Card className="glass-card-intense hover-lift">
+                    <CardHeader>
+                      <CardTitle>Preferências do Currículo</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background/70 p-4">
+                        <input
+                          type="checkbox"
+                          checked={useTagline}
+                          onChange={(e) => setUseTagline(e.target.checked)}
+                          className="mt-1 h-4 w-4 rounded border-border"
+                        />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Incluir tagline no currículo</p>
+                          <p className="text-xs text-muted-foreground">
+                            Quando desativado aqui, a tagline continua salva, mas fica desabilitada na FitTab e não é usada
+                            na geração de currículo nem na página de detalhes da vaga.
+                          </p>
+                        </div>
+                      </label>
+                    </CardContent>
+                  </Card>
+
                   <Card className="glass-card-intense hover-lift">
                     <CardHeader>
                       <CardTitle>Dados Pessoais</CardTitle>

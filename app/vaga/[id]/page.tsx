@@ -24,6 +24,7 @@ import { JobDetailsSchema } from "@/lib/ai/types"
 import type { JobDetails, ComplementSelection } from "@/lib/ai/types"
 import { renderMarkdownResumeToHtml } from "@/lib/ai/markdown-converter"
 import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
+import { useResumeTaglinePreference } from "@/hooks/use-resume-tagline-preference"
 
 function mapVagaToJobDetails(vaga: VagaEstagio): JobDetails {
   return JobDetailsSchema.parse({
@@ -67,6 +68,7 @@ export default function VagaDetailPage() {
   const [editingResumeContent, setEditingResumeContent] = useState("")
   const [profileText, setProfileText] = useState("")
   const [tagline, setTagline] = useState("")
+  const { value: useTagline, setValue: setUseTagline } = useResumeTaglinePreference()
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
@@ -185,6 +187,10 @@ export default function VagaDetailPage() {
     }
   }
 
+  function handleUseTaglineChange(value: boolean) {
+    setUseTagline(value)
+  }
+
   async function handleGenerateResume(language: "pt" | "en", model?: string) {
     if (!vaga) return
 
@@ -204,7 +210,11 @@ export default function VagaDetailPage() {
           vagaId: vaga.id,
           language,
           profileText: language === "pt" ? profileText.trim() || undefined : undefined,
-          tagline: tagline.trim() || undefined,
+          tagline:
+            language === "pt" && useTagline && tagline.trim()
+              ? tagline.trim()
+              : undefined,
+          useTagline,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
@@ -728,6 +738,8 @@ export default function VagaDetailPage() {
                 }}
                 tagline={tagline}
                 onTaglineChange={setTagline}
+                useTagline={useTagline}
+                onUseTaglineChange={handleUseTaglineChange}
                 isGeneratingProfile={isGeneratingProfile}
                 onGenerateProfile={handleGenerateProfile}
                 complements={complements}

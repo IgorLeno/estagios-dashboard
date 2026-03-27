@@ -216,7 +216,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
 function getResumeTemplateStyles(template: ResumeTemplate): string {
   if (template === "modelo2") {
     return `
-        @page { size: A4; margin: 40px; }
+        @page { size: A4; margin: 30px 40px; }
 
         * {
             margin: 0;
@@ -242,7 +242,7 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         h1 {
             font-family: Georgia, serif;
-            font-size: 24pt;
+            font-size: 27pt;
             font-weight: 700;
             line-height: 1.05;
             color: #000;
@@ -251,7 +251,7 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         h1 + p {
             color: #2E6FA3;
-            font-size: 12.5pt;
+            font-size: 11pt;
             font-weight: 500;
             line-height: 1.25;
             margin-bottom: 6pt;

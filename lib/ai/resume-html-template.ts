@@ -142,9 +142,7 @@ function renderCertificationLabel(cert: Certification): string {
 
 function renderCertifications(certifications: Certification[], template: ResumeTemplate): string {
   if (template === "modelo2") {
-    return `<div class="cert-list">
-        ${certifications.map((cert) => `<p class="cert-item">${renderCertificationLabel(cert)}</p>`).join("\n        ")}
-      </div>`
+    return certifications.map(renderCertificationLabel).join(' <span class="cert-separator">|</span> ')
   }
 
   return certifications.map(renderCertificationLabel).join(" | ")
@@ -445,31 +443,31 @@ function renderModelo2(cv: CVTemplate): string {
 
     .container { width: 100%; max-width: 100%; }
 
-    .header { margin-bottom: 12pt; }
+    .header { margin-bottom: 10pt; }
 
     h1 {
       font-family: Georgia, serif;
-      font-size: 27pt;
+      font-size: 20pt;
       font-weight: 700;
       line-height: 1.05;
       color: #000;
-      margin-bottom: 6pt;
+      margin-bottom: 4pt;
     }
 
     .tagline {
       color: #2E6FA3;
-      font-size: 11pt;
+      font-size: 9pt;
       font-weight: 500;
       line-height: 1.25;
-      margin-bottom: 6pt;
+      margin-bottom: 4pt;
       text-align: left;
     }
 
     .contact-line {
-      font-size: 10pt;
+      font-size: 9.5pt;
       color: #5a5a5a;
       margin-bottom: 0;
-      line-height: 1.35;
+      line-height: 1.3;
       text-align: left;
     }
 
@@ -550,8 +548,7 @@ function renderModelo2(cv: CVTemplate): string {
     }
 
     .cert-list { margin-bottom: 4pt; }
-    .cert-item { margin-bottom: 3pt; }
-    .cert-item:last-child { margin-bottom: 0; }
+    .cert-separator { color: #2E5C9E; }
 
     .section-projects {
       page-break-inside: auto;
@@ -605,7 +602,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Certifications -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
-      ${renderCertifications(cv.certifications, "modelo2")}
+      <p class="cert-list">${renderCertifications(cv.certifications, "modelo2")}</p>
     </div>`
         : ""
     }

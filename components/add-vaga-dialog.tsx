@@ -17,6 +17,7 @@ import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
 import type { ParseJobResponse, ParseJobErrorResponse, JobDetails, GenerateResumeResponse, GenerateResumeErrorResponse, ComplementSelection } from "@/lib/ai/types"
 import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
+import { useResumeTaglinePreference } from "@/hooks/use-resume-tagline-preference"
 
 interface AddVagaDialogProps {
   open: boolean
@@ -99,6 +100,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
+  const { value: useTagline, setValue: setUseTagline } = useResumeTaglinePreference()
 
   const supabase = createClient()
   const approvedSkills = complements?.skills.filter((group) => group.selected).flatMap((group) => group.items) ?? []
@@ -301,7 +303,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           jobDescription: description,
           language: "pt",
           profileText: profileText.trim() || undefined,
-          tagline: tagline.trim() || undefined,
+          tagline: useTagline && tagline.trim() ? tagline.trim() : undefined,
+          useTagline,
           approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
           selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
@@ -592,6 +595,8 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               }}
               tagline={tagline}
               onTaglineChange={setTagline}
+              useTagline={useTagline}
+              onUseTaglineChange={setUseTagline}
               isGeneratingProfile={isGeneratingProfile}
               onGenerateProfile={handleGenerateProfile}
               complements={complements}
@@ -640,6 +645,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               initialMarkdownEn={resumeContentEn}
               profileText={profileText}
               tagline={tagline}
+              useTagline={useTagline}
               approvedSkills={approvedSkills}
               selectedProjectTitles={selectedProjectTitles}
               selectedCertifications={selectedCertifications}

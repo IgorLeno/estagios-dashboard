@@ -332,6 +332,7 @@ export const GenerateResumeRequestSchema = z
     language: z.enum(["pt", "en"]),
     profileText: z.string().min(20).max(2000).optional(),
     tagline: z.string().min(5).max(120).optional(),
+    useTagline: z.boolean().optional(),
     approvedSkills: z.array(z.string().min(1).max(100)).optional(),
     model: z.string().optional(),
     selectedProjectTitles: z.array(z.string()).optional(),

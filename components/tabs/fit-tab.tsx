@@ -20,6 +20,8 @@ export interface FitTabProps {
   onProfileTextChange: (text: string) => void
   tagline?: string
   onTaglineChange?: (tagline: string) => void
+  useTagline?: boolean
+  onUseTaglineChange?: (value: boolean) => void
   isGeneratingProfile: boolean
   onGenerateProfile: () => void
   // 3B: Complements
@@ -38,6 +40,8 @@ export function FitTab({
   onProfileTextChange,
   tagline,
   onTaglineChange,
+  useTagline,
+  onUseTaglineChange,
   isGeneratingProfile,
   onGenerateProfile,
   complements,
@@ -170,6 +174,11 @@ export function FitTab({
     language === "pt"
       ? "Frase de posicionamento exibida abaixo do nome no currículo (8–15 palavras)"
       : "Positioning phrase shown below the name on the resume (8–15 words)"
+  const isTaglineEnabled = useTagline ?? true
+  const showTaglineToggle = typeof useTagline === "boolean" && typeof onUseTaglineChange === "function"
+  const taglineToggleLabel =
+    language === "pt" ? "Incluir tagline no currículo" : "Include tagline in resume"
+  const taglineToggleId = `fit-tagline-toggle-${language}`
 
   return (
     <div className="space-y-6 p-4">
@@ -209,6 +218,20 @@ export function FitTab({
         />
 
         <div className="space-y-2">
+          {showTaglineToggle && (
+            <div className="flex items-center gap-2">
+              <input
+                id={taglineToggleId}
+                type="checkbox"
+                checked={isTaglineEnabled}
+                onChange={(e) => onUseTaglineChange?.(e.target.checked)}
+                className="h-4 w-4 rounded border-border"
+              />
+              <Label htmlFor={taglineToggleId} className="text-sm font-normal text-muted-foreground">
+                {taglineToggleLabel}
+              </Label>
+            </div>
+          )}
           <div className="space-y-1">
             <Label htmlFor="fit-tagline">{taglineLabel}</Label>
             <p className="text-xs text-muted-foreground">{taglineDescription}</p>
@@ -222,7 +245,8 @@ export function FitTab({
                 ? "Ex: Profissional com base em Engenharia Química e foco em dados e BI"
                 : "Ex: Professional with a Chemical Engineering background and data expertise"
             }
-            disabled={isGeneratingProfile}
+            disabled={isGeneratingProfile || !isTaglineEnabled}
+            className={!isTaglineEnabled ? "opacity-50" : ""}
           />
         </div>
 

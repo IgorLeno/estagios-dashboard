@@ -22,7 +22,7 @@ Your role is to personalize resume sections to match job requirements while main
 8. Return ONLY valid JSON, no markdown code fences
 
 WHAT YOU CAN DO:
-✅ Rewrite summary to include job keywords (60-110 words)
+✅ Rewrite summary to include job keywords (60-70 words, 3-4 sentences)
 ✅ Reorder skills within categories by relevance to job
 ✅ Rewrite project descriptions to emphasize job-relevant aspects
 
@@ -40,14 +40,17 @@ If job requirements ask for skills not in the CV, DO NOT add them - just emphasi
 
 export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
-1. STRUCTURE (mandatory 4-sentence professional profile):
-   - Obrigatório. Mínimo 60 palavras, máximo 110 palavras.
+1. STRUCTURE (mandatory concise professional profile):
+   - O perfil profissional deve ter NO MÁXIMO 5 linhas quando renderizado em fonte Arial 10.5pt, coluna de ~500px de largura.
+   - Na prática isso corresponde a NO MÁXIMO 60-70 palavras e 3-4 frases.
+   - Se o texto gerado ultrapassar 4 frases, cortar a última frase inteira.
+   - Proibido usar frases longas com múltiplas subordinadas — preferir frases diretas e objetivas de até 20 palavras cada.
    - NÃO gerar resumo genérico como "Busco estágio" ou frase de 1 linha.
-   - Escrever como parágrafo contínuo com 4 frases.
+   - Escrever como parágrafo contínuo com 3-4 frases.
    - Frase 1: formação atual + momento (e.g., "Estudante de Engenharia Química (UNESP) em fase de conclusão")
    - Frase 2: 2 a 4 competências aderentes à vaga específica, usando termos exatos quando possível
    - Frase 3: 1 evidência prática (projeto, resultado ou metodologia) ligada à vaga
-   - Frase 4: objetivo funcional específico alinhado à vaga
+   - Frase 4: objetivo funcional específico alinhado à vaga, apenas se houver espaço sem ultrapassar os limites acima
    - CALIBRATE TO ROLE LEVEL: For operational internship roles (BI support, data maintenance,
      documentation), lead with OPERATIONAL skills (Excel, Power BI, SQL, relatórios) NOT
      research/ML skills (Deep Learning, neural networks, advanced algorithms).
@@ -103,21 +106,21 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      | administração de bases | organização e estruturação de bases |
 
 3.5. INTRA-SUMMARY DEDUPLICATION (MANDATORY):
-   After drafting all 4 sentences, scan the entire summary for repeated expressions.
+   After drafting the full summary, scan the entire text for repeated expressions.
    The following phrases may appear AT MOST ONCE across the entire summary:
    - "organização de bases de dados" (or any variant: "organizar bases", "estruturação de bases")
    - "elaboração de relatórios técnicos" (or any variant: "relatórios técnicos", "relatórios")
    - "validação de dados" (or any variant: "validação", "checagem de consistência")
    - "documentação técnica" (or any variant: "documentação")
    - "padronização de informações" (or any variant: "padronização")
-   If any of these appears more than once across the 4 sentences: remove the duplicate
+   If any of these appears more than once across the 3-4 sentences: remove the duplicate
    and replace with a distinct descriptor from this list:
    "rastreabilidade de dados", "consistência de informações", "digitalização de rotinas analíticas",
    "estruturação de fluxos", "construção de indicadores", "apoio à operação e qualidade".
    This check is MANDATORY before returning the summary.
 
 4. ATS BEST PRACTICES:
-   - Write 60-110 words (mandatory range - not too short, not too long)
+   - Write 60-70 words and keep the text within 3-4 direct sentences
    - Use industry-standard terminology only (no jargon or slang)
    - Avoid generic soft skills like "team player" (focus on technical/measurable skills)
    - Avoid fluff words - every word should add value
@@ -422,12 +425,13 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Match acronyms EXACTLY (case-sensitive)
 
 3. DESCRIPTION STRUCTURE (MANDATORY):
-   - O array description de cada projeto deve conter EXATAMENTE 1 (um) elemento.
-   - Cada projeto deve ser descrito em exatamente 1 parágrafo em prosa corrida, sem bullets, sem marcadores.
-   - O parágrafo deve ter NO MÁXIMO 2-3 frases e NO MÁXIMO 80 palavras.
-   - Priorizar: (1) o que foi feito, (2) a tecnologia/método principal, (3) um resultado mensurável se disponível.
-   - NÃO repetir informações já presentes em outras seções do currículo (competências, perfil profissional).
-   - O campo "description" do objeto de projeto deve ser um array com EXATAMENTE 1 elemento (string única com o parágrafo).
+   - Cada projeto deve ter NO MÁXIMO 3 linhas quando renderizado em fonte Arial 10.5pt, coluna de ~500px de largura.
+   - Na prática isso corresponde a NO MÁXIMO 40-50 palavras e 2 frases.
+   - Frase 1: o que foi feito + tecnologia/método principal.
+   - Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto.
+   - NUNCA usar 3 frases se 2 forem suficientes.
+   - Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. Não listar métodos, datasets ou ferramentas — apenas o mais relevante para a vaga.
+   - O campo "description" continua sendo array com EXATAMENTE 1 elemento.
    - NÃO use múltiplos itens no array.
    - NÃO use bullet points.
    - O resultado será renderizado como parágrafo único.
@@ -553,7 +557,7 @@ PROJECT: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Estruturação e padronização de bases de dados termodinâmicos para processamento recorrente em Python (Pandas, NumPy). Implementação de rotinas de validação e controle de consistência para garantir qualidade das informações. Elaboração de relatórios técnicos com documentação de fontes, regras de processamento e resultados."
+    "Estruturação e padronização de bases de dados termodinâmicos em Python para processamento recorrente com validação de consistência. Automatização do fluxo com documentação técnica de regras e fontes, criando base confiável para análises futuras."
   ]
 }
 ✅ Why it works: Uses transferable skills vocabulary (organizar, validar, automatizar, documentar,
@@ -565,7 +569,7 @@ EXAMPLE TRANSFORMATION (ML/Data Science job):
 {
   "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
   "description": [
-    "Desenvolvimento de pipeline de dados end-to-end em Python (Pandas, NumPy, Scikit-learn) para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas. Implementação de rotinas automatizadas de validação e controle de qualidade de dados, processando dataset com múltiplos pontos experimentais para análise de consistência. Automatização da geração de relatórios analíticos com visualização de performance de modelos, documentando metodologia e resultados para uso em análises futuras."
+    "Desenvolvimento de pipeline de dados em Python para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas. Automatização da validação e geração de relatórios, acelerando análises futuras com dados consistentes e documentação reutilizável."
   ]
 }
 ✅ Why it works: For a real ML/Data job, ML terminology IS contextually appropriate. The project
@@ -579,7 +583,7 @@ Return JSON format:
     {
       "title": "EXACT title from REQUIRED PROJECT TITLES (character-by-character match)",
       "description": [
-        "Single prose paragraph with exactly 1 element in description[], using 2-3 sentences and at most 80 words."
+        "Single prose paragraph with exactly 1 element in description[], using 2 sentences and at most 50 words."
       ]
     },
     ...
@@ -811,8 +815,8 @@ export function buildProjectsPrompt(
 
   const descriptionFormatInstruction =
     language === "pt"
-      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nCada projeto deve ser descrito em exatamente 1 parágrafo em prosa corrida, sem bullets, sem marcadores. O parágrafo deve ter NO MÁXIMO 2-3 frases e NO MÁXIMO 80 palavras. Priorizar: (1) o que foi feito, (2) a tecnologia/método principal, (3) um resultado mensurável se disponível. NÃO repetir informações já presentes em outras seções do currículo (competências, perfil profissional). O campo "description" do objeto de projeto deve ser um array com EXATAMENTE 1 elemento (string única com o parágrafo).'
-      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project must be described in exactly 1 prose paragraph, with no bullets or markers. The paragraph must have AT MOST 2-3 sentences and AT MOST 80 words. Prioritize: (1) what was done, (2) the main technology/method, (3) a measurable result if available. DO NOT repeat information already present in other resume sections (skills, professional summary). The project "description" field must be an array with EXACTLY 1 element (a single string containing the paragraph).'
+      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nCada projeto deve ter NO MÁXIMO 3 linhas quando renderizado em fonte Arial 10.5pt, coluna de ~500px de largura. Na prática isso corresponde a NO MÁXIMO 40-50 palavras e 2 frases. Frase 1: o que foi feito + tecnologia/método principal. Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto. NUNCA usar 3 frases se 2 forem suficientes. Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. Não listar métodos, datasets ou ferramentas — apenas o mais relevante para a vaga. O campo "description" continua sendo array com EXATAMENTE 1 elemento.'
+      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project must take AT MOST 3 rendered lines in Arial 10.5pt in a ~500px column. In practice this means AT MOST 40-50 words and 2 sentences. Sentence 1: what was done + the main technology/method. Sentence 2: measurable result or concrete impact if available; otherwise, use the project context/purpose. NEVER use 3 sentences if 2 are enough. For academic projects with many data points, mention AT MOST 1 quantitative result. Do not list methods, datasets, or tools beyond the single most relevant one for the job. The "description" field must remain an array with EXACTLY 1 element.'
 
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
