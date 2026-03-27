@@ -263,7 +263,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
  */
 export async function GET(): Promise<NextResponse> {
   try {
-    await validateAIConfig()
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    await validateAIConfig(user?.id ?? null)
 
     return NextResponse.json({
       status: "ok",
