@@ -1,6 +1,6 @@
 import { getPromptsConfig } from "@/lib/supabase/prompts"
 import type { PromptsConfig } from "@/lib/types"
-import { callGrok, validateGrokConfig, type GrokMessage } from "./grok-client"
+import { callGrok, validateGrokConfig, type GrokAuthContext, type GrokMessage } from "./grok-client"
 
 /**
  * AI Model Configuration for Grok 4.1 Fast via OpenRouter
@@ -48,7 +48,8 @@ export function createAIModel(
     maxOutputTokens?: number
     topP?: number
     model?: string
-  }
+  },
+  authContext?: GrokAuthContext
 ) {
   const config = {
     temperature: generationConfig?.temperature ?? AI_MODEL_CONFIG.temperature,
@@ -72,7 +73,7 @@ export function createAIModel(
 
       messages.push({ role: "user", content: prompt })
 
-      const grokResponse = await callGrok(messages, config)
+      const grokResponse = await callGrok(messages, config, authContext)
 
       // Return Gemini-compatible response structure
       return {
@@ -96,20 +97,20 @@ export function createAIModel(
  * @param systemPrompt - Optional system prompt override
  * @throws Error if OPENROUTER_API_KEY not configured
  */
-export function createAnalysisModel(systemPrompt?: string) {
+export function createAnalysisModel(systemPrompt?: string, authContext?: GrokAuthContext) {
   return createAIModel(systemPrompt, {
     temperature: 0.7, // Balanced for analysis
     maxOutputTokens: 4096, // Sufficient for job analysis
     topP: 0.9,
-  })
+  }, authContext)
 }
 
 /**
  * Valida que a configuração AI está correta
  * @throws Error se configuração inválida
  */
-export function validateAIConfig(): boolean {
-  validateGrokConfig()
+export async function validateAIConfig(userId?: string | null): Promise<boolean> {
+  await validateGrokConfig(userId)
   return true
 }
 
@@ -159,17 +160,14 @@ export type GeminiModelType = (typeof MODEL_FALLBACK_CHAIN)[number]
  * Kept for backward compatibility
  * @throws Error if OPENROUTER_API_KEY not configured
  */
-export function createGeminiClient() {
-  // Validate API key before creating client
-  validateGrokConfig()
-
+export function createGeminiClient(userId?: string | null) {
   // Return a mock object for compatibility
   return {
     getGenerativeModel: (config: any) => {
       return createAIModel(config.systemInstruction, {
         ...config.generationConfig,
         model: config.model,
-      })
+      }, { userId })
     },
   }
 }

@@ -60,8 +60,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const startTime = Date.now()
 
   try {
-    validateGrokConfig()
-
     let body
     try {
       body = await req.json()
@@ -97,6 +95,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       )
     }
 
+    await validateGrokConfig(user.id)
+
     const { data: vaga, error: vagaError } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
     if (vagaError || !vaga) {
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       temperature: config.temperatura,
       max_tokens: 8192,
       top_p: config.top_p ?? 0.9,
-    })
+    }, { userId: user.id })
 
     const refinedResume = response.content.trim()
 
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
  */
 export async function GET(): Promise<NextResponse> {
   try {
-    validateGrokConfig()
+    await validateGrokConfig()
 
     return NextResponse.json({
       status: "ok",

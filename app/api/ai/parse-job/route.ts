@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
     await consumeRequest(identifier)
 
     // Validar configuração
-    validateAIConfig()
 
     // Parse e validar body
     const body = await request.json()
@@ -138,6 +137,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData?.user?.id
+
+    await validateAIConfig(userId)
 
     console.log(`[AI Parser] Starting job parsing for user: ${userId || "unauthenticated"}`)
 
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    validateAIConfig()
+    await validateAIConfig()
     return NextResponse.json({
       status: "ok",
       message: "AI Parser configured correctly",

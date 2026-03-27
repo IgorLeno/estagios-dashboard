@@ -153,7 +153,7 @@ export async function generateProfile(
         temperature: genConfig.temperature ?? 0.7,
         max_tokens: 512,
         model: modelName,
-      })
+      }, { userId })
 
       const parsed = extractJsonFromResponse(response.content) as { profileText?: unknown; tagline?: unknown }
       const profileText = parsed.profileText

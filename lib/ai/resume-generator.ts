@@ -294,14 +294,15 @@ async function runConsistencyAgent(
   draft: CVDraft,
   jobDetails: JobDetails,
   systemInstruction: string,
-  generationConfig: ReturnType<typeof getGenerationConfig>
+  generationConfig: ReturnType<typeof getGenerationConfig>,
+  userId?: string
 ): Promise<{ draft: CVDraft; report: { issues: string[]; corrections: string[] }; tokenUsage: TokenUsage }> {
   // Consistency agent uses its own dedicated system prompt (not the user preferences)
   const consistencyModel = createAIModel(CONSISTENCY_SYSTEM_PROMPT, {
     ...generationConfig,
     temperature: 0.1,
     maxOutputTokens: 2048,
-  })
+  }, { userId })
 
   // Build compact job context — avoids pretty-printed JSON that wastes token budget
   const jobContext = [
@@ -491,8 +492,8 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   const userModel = config.modelo_gemini
   const resolvedModel = model ?? (userModel && isValidModelId(userModel) ? userModel : DEFAULT_MODEL)
   const generationConfig = { ...getGenerationConfig(config), model: resolvedModel }
-  const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 })
-  const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 })
+  const skillsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 2048 }, { userId })
+  const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 }, { userId })
 
   // STEP 6: Personalize 3 sections in parallel
   const summaryPromise = providedProfileText
@@ -504,7 +505,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     : personalizeSummary(
         jobDetails,
         baseCv,
-        createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 }),
+        createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 }, { userId }),
         language,
         jobProfile
       )
@@ -541,7 +542,8 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
         uncorrectedDraft,
         jobDetails,
         systemInstruction,
-        generationConfig
+        generationConfig,
+        userId
       )
 
       finalDraft = consistencyResult.draft

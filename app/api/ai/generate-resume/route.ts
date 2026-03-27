@@ -27,9 +27,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const resumeGenerationTimeoutSeconds = Math.floor(AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs / 1000)
 
   try {
-    // Validate AI config
-    validateAIConfig()
-
     // Parse request body
     let body
     try {
@@ -69,6 +66,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       data: { user },
     } = await supabase.auth.getUser()
     const userId = user?.id
+
+    await validateAIConfig(userId)
 
     // Get job details (outside timeout wrapper to handle 404 early)
     let jobDetails: JobDetails | undefined
@@ -113,7 +112,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (!jobDetails && jobDescription) {
       const parseResult = await withTimeout(
-        parseJobWithGemini(jobDescription, model),
+        parseJobWithGemini(jobDescription, model, userId),
         AI_TIMEOUT_CONFIG.parsingTimeoutMs,
         `Job parsing exceeded ${parsingTimeoutSeconds}s timeout`
       )
@@ -264,7 +263,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
  */
 export async function GET(): Promise<NextResponse> {
   try {
-    validateAIConfig()
+    await validateAIConfig()
 
     return NextResponse.json({
       status: "ok",

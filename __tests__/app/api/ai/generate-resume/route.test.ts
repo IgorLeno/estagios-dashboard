@@ -176,7 +176,8 @@ describe("POST /api/ai/generate-resume", () => {
 
     expect(parseJobWithGemini).toHaveBeenCalledWith(
       expect.any(String),
-      "openai/gpt-5.4-nano"
+      "openai/gpt-5.4-nano",
+      "test-user-id"
     )
     expect(generateTailoredResume).toHaveBeenCalledWith({
       jobDetails: expect.any(Object),
@@ -207,7 +208,8 @@ describe("POST /api/ai/generate-resume", () => {
 
     expect(parseJobWithGemini).toHaveBeenCalledWith(
       expect.any(String),
-      undefined
+      undefined,
+      "test-user-id"
     )
     expect(generateTailoredResume).toHaveBeenCalledWith({
       jobDetails: expect.any(Object),

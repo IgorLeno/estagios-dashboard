@@ -296,8 +296,6 @@ function adaptToCandidateProfile(payload: ExtractedProfileResponse): Partial<Can
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    validateGrokConfig()
-
     const supabase = await createClient()
     const {
       data: { user },
@@ -307,6 +305,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (authError || !user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
     }
+
+    await validateGrokConfig(user.id)
 
     let body: unknown
     try {
@@ -327,7 +327,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       temperature: 0.1,
       max_tokens: Math.min(config.max_tokens, 4000),
       top_p: config.top_p ?? 0.9,
-    })
+    }, { userId: user.id })
 
     let parsed: ExtractedProfileResponse
     try {

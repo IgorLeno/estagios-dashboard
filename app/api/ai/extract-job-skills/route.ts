@@ -84,8 +84,6 @@ function getProfileSkillsIndex(skills: ProfileSkillRow[]) {
 
 export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSkillsResponse | ExtractJobSkillsErrorResponse>> {
   try {
-    validateGrokConfig()
-
     const supabase = await createClient()
     const {
       data: { user },
@@ -95,6 +93,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ExtractJobSki
     if (authError || !user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
     }
+
+    await validateGrokConfig(user.id)
 
     let body: unknown
     try {
@@ -172,7 +172,7 @@ ${jobDescriptionText}`,
       const grokResponse = await callGrok(messages, {
         temperature: 0.1,
         max_tokens: 1200,
-      })
+      }, { userId: user.id })
       grokContent = grokResponse.content
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

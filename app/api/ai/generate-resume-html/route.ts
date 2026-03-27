@@ -11,8 +11,6 @@ import { ZodError } from "zod"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    validateAIConfig()
-
     let body
     try {
       body = await req.json()
@@ -41,6 +39,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const {
       data: { user },
     } = await supabase.auth.getUser()
+    const userId = user?.id
+
+    await validateAIConfig(userId)
 
     // Get job details (igual ao endpoint original)
     let jobDetails: JobDetails | undefined
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         idioma_vaga: vaga.idioma_vaga || "pt",
       })
     } else if (jobDescription) {
-      const parseResult = await parseJobWithGemini(jobDescription, model)
+      const parseResult = await parseJobWithGemini(jobDescription, model, userId)
       jobDetails = parseResult.data
     } else {
       throw new Error("Either vagaId or jobDescription is required")
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const resumeResult = await generateTailoredResume({
       jobDetails,
       language,
-      userId: user?.id,
+      userId,
       approvedSkills,
       model,
       selectedProjectTitles,

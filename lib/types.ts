@@ -252,3 +252,18 @@ export const EMPTY_CANDIDATE_PROFILE: Omit<CandidateProfile, "id" | "user_id" | 
   projetos: [],
   certificacoes: [],
 }
+
+export type OpenRouterKeyValidationStatus = "valid" | "invalid" | "unknown"
+export type OpenRouterKeyEffectiveSource = "user" | "global" | "missing"
+
+export interface OpenRouterKeyStatus {
+  hasUserKey: boolean
+  keyMask: string | null
+  validationStatus: OpenRouterKeyValidationStatus
+  lastValidatedAt: string | null
+  lastValidationError: string | null
+  updatedAt: string | null
+  effectiveSource: OpenRouterKeyEffectiveSource
+  hasServerFallback: boolean
+  canManageUserKey: boolean
+}

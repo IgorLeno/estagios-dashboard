@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { EMPTY_CANDIDATE_PROFILE, type CandidateProfile } from "@/lib/types"
+import { EMPTY_CANDIDATE_PROFILE, type CandidateProfile, type OpenRouterKeyStatus } from "@/lib/types"
 import { Bot, Info, Loader2, LogIn, Plus, RotateCcw, Save, Sparkles, User, X } from "lucide-react"
 import { toast } from "sonner"
 import { getModelFailureWarning, recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
@@ -131,12 +131,50 @@ function persistModelHistory(history: string[]) {
   localStorage.setItem(MODEL_HISTORY_STORAGE_KEY, JSON.stringify(history))
 }
 
+function formatStatusDate(value?: string | null): string {
+  if (!value) return "Nunca"
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return "Data inválida"
+  }
+
+  return date.toLocaleString("pt-BR")
+}
+
+function getOpenRouterSourceLabel(source: OpenRouterKeyStatus["effectiveSource"]): string {
+  switch (source) {
+    case "user":
+      return "Usando sua chave pessoal"
+    case "global":
+      return "Usando a chave global do servidor"
+    default:
+      return "Nenhuma chave ativa"
+  }
+}
+
+function getOpenRouterValidationLabel(status: OpenRouterKeyStatus["validationStatus"]): string {
+  switch (status) {
+    case "valid":
+      return "Válida"
+    case "invalid":
+      return "Inválida"
+    default:
+      return "Desconhecida"
+  }
+}
+
 export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState<"perfil" | "gerador">("perfil")
   const [candidateProfile, setCandidateProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isReadOnly, setIsReadOnly] = useState(false)
+  const [openRouterKeyStatus, setOpenRouterKeyStatus] = useState<OpenRouterKeyStatus | null>(null)
+  const [openRouterKeyInput, setOpenRouterKeyInput] = useState("")
+  const [savingOpenRouterKey, setSavingOpenRouterKey] = useState(false)
+  const [removingOpenRouterKey, setRemovingOpenRouterKey] = useState(false)
 
   const [rawText, setRawText] = useState("")
   const [isExtracting, setIsExtracting] = useState(false)
@@ -153,12 +191,21 @@ export default function PerfilPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profileRes, promptsRes] = await Promise.all([fetch("/api/candidate-profile"), fetch("/api/prompts")])
-      const [profileData, promptsData] = await Promise.all([profileRes.json(), promptsRes.json()])
+      const [profileRes, promptsRes, openRouterKeyRes] = await Promise.all([
+        fetch("/api/candidate-profile"),
+        fetch("/api/prompts"),
+        fetch("/api/openrouter-key"),
+      ])
+      const [profileData, promptsData, openRouterKeyData] = await Promise.all([
+        profileRes.json(),
+        promptsRes.json(),
+        openRouterKeyRes.json(),
+      ])
 
       setCandidateProfile(
         profileData.success && profileData.data ? normalizeProfileData(profileData.data) : normalizeProfileData()
       )
+      setOpenRouterKeyStatus(openRouterKeyData.success && openRouterKeyData.data ? openRouterKeyData.data : null)
 
       const modelFromConfig = promptsData.success && promptsData.data ? promptsData.data.modelo_gemini ?? "" : ""
       setSelectedModel(modelFromConfig)
@@ -181,6 +228,7 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("[PerfilPage] Error loading:", error)
       setCandidateProfile(normalizeProfileData())
+      setOpenRouterKeyStatus(null)
       toast.error("Erro ao carregar perfil")
     } finally {
       setLoading(false)
@@ -285,6 +333,71 @@ export default function PerfilPage() {
       toast.error("Erro ao restaurar perfil")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleSaveOpenRouterKey() {
+    if (isReadOnly) {
+      toast.error("Faça login para salvar sua chave OpenRouter")
+      return
+    }
+
+    if (!openRouterKeyInput.trim()) {
+      toast.error("Cole sua chave OpenRouter antes de salvar")
+      return
+    }
+
+    setSavingOpenRouterKey(true)
+    try {
+      const response = await fetch("/api/openrouter-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: openRouterKeyInput.trim() }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Falha ao salvar a chave OpenRouter")
+      }
+
+      setOpenRouterKeyStatus(result.data)
+      setOpenRouterKeyInput("")
+      toast.success("Chave OpenRouter salva e validada.")
+    } catch (error) {
+      console.error("[PerfilPage] Error saving OpenRouter key:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar a chave OpenRouter")
+    } finally {
+      setSavingOpenRouterKey(false)
+    }
+  }
+
+  async function handleRemoveOpenRouterKey() {
+    if (isReadOnly) {
+      toast.error("Faça login para remover sua chave OpenRouter")
+      return
+    }
+
+    const confirmed = window.confirm("Remover sua chave OpenRouter salva? A aplicação voltará a usar o fallback global, se existir.")
+    if (!confirmed) return
+
+    setRemovingOpenRouterKey(true)
+    try {
+      const response = await fetch("/api/openrouter-key", { method: "DELETE" })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Falha ao remover a chave OpenRouter")
+      }
+
+      setOpenRouterKeyStatus(result.data)
+      setOpenRouterKeyInput("")
+      toast.success("Chave OpenRouter removida.")
+    } catch (error) {
+      console.error("[PerfilPage] Error removing OpenRouter key:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao remover a chave OpenRouter")
+    } finally {
+      setRemovingOpenRouterKey(false)
     }
   }
 
@@ -412,6 +525,89 @@ export default function PerfilPage() {
                           </p>
                         </div>
                       </label>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="glass-card-intense hover-lift">
+                    <CardHeader>
+                      <CardTitle>OpenRouter</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {openRouterKeyStatus && (
+                        <div className="space-y-2 rounded-lg border border-border bg-background/70 p-4 text-sm">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium">{getOpenRouterSourceLabel(openRouterKeyStatus.effectiveSource)}</span>
+                            <Badge variant={openRouterKeyStatus.validationStatus === "valid" ? "secondary" : "outline"}>
+                              {getOpenRouterValidationLabel(openRouterKeyStatus.validationStatus)}
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground">
+                            {openRouterKeyStatus.hasUserKey
+                              ? `Chave salva: ${openRouterKeyStatus.keyMask ?? "mascarada"}`
+                              : "Nenhuma chave pessoal salva."}
+                          </p>
+                          <p className="text-muted-foreground">
+                            Última validação: {formatStatusDate(openRouterKeyStatus.lastValidatedAt)}
+                          </p>
+                          <p className="text-muted-foreground">
+                            Última atualização: {formatStatusDate(openRouterKeyStatus.updatedAt)}
+                          </p>
+                          {openRouterKeyStatus.lastValidationError && (
+                            <p className="text-destructive">{openRouterKeyStatus.lastValidationError}</p>
+                          )}
+                          {!openRouterKeyStatus.canManageUserKey && (
+                            <p className="text-amber-600 dark:text-amber-400">
+                              O servidor ainda não definiu `OPENROUTER_KEY_ENCRYPTION_SECRET`, então chaves pessoais não podem ser salvas.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="openrouter-api-key">Sua chave OpenRouter</Label>
+                        <Input
+                          id="openrouter-api-key"
+                          type="password"
+                          value={openRouterKeyInput}
+                          onChange={(e) => setOpenRouterKeyInput(e.target.value)}
+                          placeholder="sk-or-v1-..."
+                          autoComplete="off"
+                          disabled={isReadOnly || savingOpenRouterKey || removingOpenRouterKey}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A chave é validada no backend e salva criptografada. Sem uma chave pessoal, a aplicação usa a
+                          chave global do servidor como fallback.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          onClick={handleSaveOpenRouterKey}
+                          disabled={
+                            isReadOnly ||
+                            savingOpenRouterKey ||
+                            removingOpenRouterKey ||
+                            !openRouterKeyInput.trim() ||
+                            !openRouterKeyStatus?.canManageUserKey
+                          }
+                        >
+                          {savingOpenRouterKey ? "Validando..." : "Salvar chave"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleRemoveOpenRouterKey}
+                          disabled={
+                            isReadOnly ||
+                            savingOpenRouterKey ||
+                            removingOpenRouterKey ||
+                            !openRouterKeyStatus?.hasUserKey
+                          }
+                        >
+                          {removingOpenRouterKey ? "Removendo..." : "Remover chave"}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
 

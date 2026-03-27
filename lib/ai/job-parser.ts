@@ -337,7 +337,11 @@ function extractTokenUsage(response: GeminiLikeResponse): {
  * Parseia descrição de vaga usando Gemini com fallback automático
  * Tenta modelos em ordem até conseguir sucesso ou esgotar opções
  */
-export async function parseJobWithGemini(jobDescription: string, model?: string): Promise<{
+export async function parseJobWithGemini(
+  jobDescription: string,
+  model?: string,
+  userId?: string
+): Promise<{
   data: JobDetails
   duration: number
   model: string
@@ -348,7 +352,7 @@ export async function parseJobWithGemini(jobDescription: string, model?: string)
   let lastError: Error | null = null
 
   // Criar cliente Gemini uma única vez (fora do loop)
-  const genAI = createGeminiClient()
+  const genAI = createGeminiClient(userId)
 
   const modelsToTry = buildModelAttemptList([model, ...MODEL_FALLBACK_CHAIN])
 
@@ -450,7 +454,7 @@ export async function parseJobWithAnalysis(
   const configuredModel = isValidModelId(config.modelo_gemini) ? config.modelo_gemini : undefined
   const modelsToTry = buildModelAttemptList([requestedModel, configuredModel, ...MODEL_FALLBACK_CHAIN])
   const generationConfig = getGenerationConfig(config)
-  const genAI = createGeminiClient()
+  const genAI = createGeminiClient(userId)
   const candidateProfile = await getCandidateProfile(userId)
   const dynamicDossie = buildDossieFromProfile(candidateProfile)
   const isProfileEmpty = candidateProfile.id === "empty" || !candidateProfile.nome

@@ -123,7 +123,7 @@ export async function selectComplements(
         temperature: genConfig.temperature ?? 0.5,
         max_tokens: 2048,
         model: modelName,
-      })
+      }, { userId })
 
       const parsed = extractJsonFromResponse(response.content)
       const selection = ComplementSelectionSchema.parse(parsed)

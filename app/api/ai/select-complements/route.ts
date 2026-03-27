@@ -14,8 +14,6 @@ const RequestSchema = z.object({
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    validateAIConfig()
-
     const body = await req.json()
     const { profileText, jobAnalysis, language, model } = RequestSchema.parse(body)
 
@@ -23,6 +21,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const {
       data: { user },
     } = await supabase.auth.getUser()
+
+    await validateAIConfig(user?.id)
 
     const result = await selectComplements(
       profileText,

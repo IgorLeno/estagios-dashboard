@@ -3,6 +3,7 @@
  * Provides a simple interface to call Grok 4.1 Fast model
  */
 
+import { resolveOpenRouterApiKey } from "@/lib/supabase/openrouter-keys"
 import { DEFAULT_MODEL, isValidModelId } from "./models"
 
 export interface GrokMessage {
@@ -26,6 +27,10 @@ export interface GrokResponse {
   }
 }
 
+export interface GrokAuthContext {
+  userId?: string | null
+}
+
 function extractContentString(content: unknown): string {
   if (typeof content === "string") {
     return content.trim()
@@ -47,18 +52,56 @@ function extractContentString(content: unknown): string {
     .trim()
 }
 
-/**
- * Validates that OpenRouter API key is configured
- * @throws Error if OPENROUTER_API_KEY not configured
- */
-function getValidatedApiKey(): string {
-  const apiKey = process.env.OPENROUTER_API_KEY
+async function getValidatedApiKey(userId?: string | null): Promise<string> {
+  const { apiKey } = await resolveOpenRouterApiKey(userId)
+  return apiKey
+}
 
-  if (!apiKey || apiKey.trim() === "") {
-    throw new Error("OPENROUTER_API_KEY not found in environment. " + "Get your key at: https://openrouter.ai/keys")
+function buildOpenRouterHeaders(apiKey: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://estagios-dashboard.vercel.app",
+    "X-Title": "Estagios Dashboard",
+  }
+}
+
+async function extractOpenRouterErrorMessage(response: Response, fallback: string): Promise<string> {
+  const errorText = await response.text()
+
+  try {
+    const errorJson = JSON.parse(errorText)
+
+    if (typeof errorJson?.error?.message === "string" && errorJson.error.message.trim()) {
+      return errorJson.error.message.trim()
+    }
+  } catch {
+    // Use fallback below
   }
 
-  return apiKey
+  return errorText?.trim() ? `${fallback}: ${errorText}` : fallback
+}
+
+export async function validateUserSuppliedOpenRouterApiKey(apiKey: string): Promise<void> {
+  const normalizedApiKey = apiKey.trim()
+
+  if (!normalizedApiKey) {
+    throw new Error("OpenRouter API key cannot be empty")
+  }
+
+  const response = await fetch("https://openrouter.ai/api/v1/key", {
+    method: "GET",
+    headers: buildOpenRouterHeaders(normalizedApiKey),
+  })
+
+  if (!response.ok) {
+    const fallbackMessage =
+      response.status === 401 || response.status === 403
+        ? "OpenRouter rejected this API key. Verify the key and try again."
+        : `Unable to validate OpenRouter API key (${response.status})`
+
+    throw new Error(await extractOpenRouterErrorMessage(response, fallbackMessage))
+  }
 }
 
 /**
@@ -68,8 +111,12 @@ function getValidatedApiKey(): string {
  * @returns Response content and token usage
  * @throws Error if API call fails
  */
-export async function callGrok(messages: GrokMessage[], options?: GrokOptions): Promise<GrokResponse> {
-  const apiKey = getValidatedApiKey()
+export async function callGrok(
+  messages: GrokMessage[],
+  options?: GrokOptions,
+  authContext?: GrokAuthContext
+): Promise<GrokResponse> {
+  const apiKey = await getValidatedApiKey(authContext?.userId)
 
   let model = options?.model ?? DEFAULT_MODEL
   if (!isValidModelId(model)) {
@@ -79,12 +126,10 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://estagios-dashboard.vercel.app",
+    headers: buildOpenRouterHeaders(apiKey), /*
       "X-Title": "Estágios Dashboard",
     },
+    */
     body: JSON.stringify({
       model,
       messages,
@@ -95,17 +140,8 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
   })
 
   if (!response.ok) {
-    const errorText = await response.text()
     let errorMessage = `Grok API Error (${response.status}) [model: ${model}]`
-
-    try {
-      const errorJson = JSON.parse(errorText)
-      errorMessage = errorJson.error?.message
-        ? `${errorJson.error.message} [model: ${model}]`
-        : errorMessage
-    } catch {
-      errorMessage = `${errorMessage}: ${errorText}`
-    }
+    errorMessage = `${await extractOpenRouterErrorMessage(response, errorMessage)} [model: ${model}]`
 
     throw new Error(errorMessage)
   }
@@ -133,7 +169,7 @@ export async function callGrok(messages: GrokMessage[], options?: GrokOptions): 
  * Validates that the Grok client is properly configured
  * @throws Error if configuration invalid
  */
-export function validateGrokConfig(): boolean {
-  getValidatedApiKey()
+export async function validateGrokConfig(userId?: string | null): Promise<boolean> {
+  await getValidatedApiKey(userId)
   return true
 }

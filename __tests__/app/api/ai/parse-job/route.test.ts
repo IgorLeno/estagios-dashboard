@@ -286,7 +286,7 @@ describe("GET /api/ai/parse-job", () => {
   })
 
   it("should return health check status when config is valid", async () => {
-    vi.mocked(validateAIConfig).mockReturnValue(true)
+    vi.mocked(validateAIConfig).mockResolvedValue(true)
 
     const response = await GET()
     const data = await response.json()
@@ -297,9 +297,7 @@ describe("GET /api/ai/parse-job", () => {
   })
 
   it("should return 500 when config is invalid", async () => {
-    vi.mocked(validateAIConfig).mockImplementation(() => {
-      throw new Error("Configuration error")
-    })
+    vi.mocked(validateAIConfig).mockRejectedValue(new Error("Configuration error"))
 
     const response = await GET()
     const data = await response.json()

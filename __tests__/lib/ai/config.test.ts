@@ -26,14 +26,14 @@ describe("AI Config", () => {
   })
 
   describe("createGeminiClient", () => {
-    it("should throw if OPENROUTER_API_KEY is missing", () => {
+    it("should still create a client object when OPENROUTER_API_KEY is missing", () => {
       delete process.env.OPENROUTER_API_KEY
-      expect(() => createGeminiClient()).toThrow()
+      expect(createGeminiClient()).toBeDefined()
     })
 
-    it("should throw if OPENROUTER_API_KEY is empty string", () => {
+    it("should still create a client object when OPENROUTER_API_KEY is empty", () => {
       process.env.OPENROUTER_API_KEY = "   "
-      expect(() => createGeminiClient()).toThrow()
+      expect(createGeminiClient()).toBeDefined()
     })
 
     it("should create client if OPENROUTER_API_KEY exists", () => {
@@ -59,19 +59,19 @@ describe("AI Config", () => {
   })
 
   describe("validateAIConfig", () => {
-    it("should throw if OPENROUTER_API_KEY is empty string", () => {
+    it("should throw if OPENROUTER_API_KEY is empty string", async () => {
       process.env.OPENROUTER_API_KEY = ""
-      expect(() => validateAIConfig()).toThrow()
+      await expect(validateAIConfig()).rejects.toThrow()
     })
 
-    it("should return true if OPENROUTER_API_KEY exists", () => {
+    it("should return true if OPENROUTER_API_KEY exists", async () => {
       process.env.OPENROUTER_API_KEY = "sk-or-v1-valid-api-key-at-least-20-chars-long"
-      expect(validateAIConfig()).toBe(true)
+      await expect(validateAIConfig()).resolves.toBe(true)
     })
 
-    it("should throw if OPENROUTER_API_KEY is missing", () => {
+    it("should throw if OPENROUTER_API_KEY is missing", async () => {
       delete process.env.OPENROUTER_API_KEY
-      expect(() => validateAIConfig()).toThrow()
+      await expect(validateAIConfig()).rejects.toThrow()
     })
   })
 
@@ -134,7 +134,6 @@ describe("AI Config", () => {
     it("should load global defaults when userId not provided", async () => {
       const mockGlobalConfig: PromptsConfig = {
         id: "global-id",
-        user_id: null,
         modelo_gemini: "x-ai/grok-4.1-fast",
         temperatura: 0.7,
         max_tokens: 4096,
