@@ -85,7 +85,7 @@ function PageContent() {
       if (metaError && metaError.code !== "PGRST116") throw metaError
       setMeta(metaData || null)
     } catch (error) {
-      console.error("Erro ao carregar dados:", error)
+      console.error("Erro ao carregar dados:", error instanceof Error ? error.message : JSON.stringify(error))
     } finally {
       setLoading(false)
     }
