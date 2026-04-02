@@ -389,10 +389,9 @@ Return JSON format:
 export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
 
 ⚠️ PROJECT COUNT POLICY:
-   You will receive ONLY the projects to be included — do not add, restore, or reference
-   any other projects. Do not comment on missing projects. Rewrite ONLY what is provided.
-   The selection of which projects to include was made before this prompt ran.
-   - Selecionar entre 2 e 3 projetos, priorizados por relevância à vaga. Nunca incluir apenas 1 projeto nem 4 ou mais.
+   You will receive candidate projects. Select 2 to 3 most relevant to the job — never only 1, never 4+.
+   Do not add projects that were not provided. Do not reference omitted projects.
+   Prioritize projects whose skills and context best match the job requirements.
 
 1. PROJECT-TO-JOB-DUTY MAPPING:
    - Identify which job responsibilities each project can address

@@ -322,13 +322,27 @@ describe("generateTailoredResume", () => {
     expect(result.cv.language).toBe("pt")
   })
 
-  it("should skip summary personalization when profileText is provided", async () => {
+  it("should use profileText as base for LLM personalization when provided", async () => {
     const { buildSummaryPrompt } = await import("@/lib/ai/resume-prompts")
     const providedProfileText =
       "Resumo aprovado manualmente para a etapa de fit, com foco em BI operacional, organização de bases, SQL, Power BI e suporte a indicadores."
 
+    const personalizedSummary =
+      "Profissional com foco em BI operacional e organização de bases de dados. Experiência com SQL e Power BI aplicados a Machine Learning e TensorFlow."
+
     mockGenerateContent.mockReset()
     mockGenerateContent
+      .mockResolvedValueOnce({
+        // Summary response (now always called, even with profileText)
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify({ summary: personalizedSummary })}\n\`\`\``,
+          usageMetadata: {
+            promptTokenCount: 500,
+            candidatesTokenCount: 150,
+            totalTokenCount: 650,
+          },
+        },
+      })
       .mockResolvedValueOnce({
         response: {
           text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
@@ -355,7 +369,7 @@ describe("generateTailoredResume", () => {
             `\`\`\`json\n${JSON.stringify({
               draft: {
                 ...mockConsistencyResponse.draft,
-                summary: providedProfileText,
+                summary: personalizedSummary,
               },
               report: mockConsistencyResponse.report,
             })}\n\`\`\``,
@@ -373,9 +387,24 @@ describe("generateTailoredResume", () => {
       profileText: providedProfileText,
     })
 
-    expect(result.cv.summary).toBe(providedProfileText)
-    expect(buildSummaryPrompt).not.toHaveBeenCalled()
-    expect(mockGenerateContent).toHaveBeenCalledTimes(3)
+    // Summary should be personalized by LLM, not the raw profileText
+    expect(result.cv.summary).toBe(personalizedSummary)
+    // buildSummaryPrompt should be called (profileText is used as base, not bypass)
+    expect(buildSummaryPrompt).toHaveBeenCalled()
+    // All 4 LLM calls: summary + skills + projects + consistency
+    expect(mockGenerateContent).toHaveBeenCalledTimes(4)
+  })
+
+  it("should throw InsufficientProfileError when profileText is too short", async () => {
+    const shortProfileText = "Curto demais."
+
+    await expect(
+      generateTailoredResume({
+        jobDetails: mockJobDetails,
+        language: "pt",
+        profileText: shortProfileText,
+      })
+    ).rejects.toThrow(InsufficientProfileError)
   })
 
   it("should filter certifications when selectedCertifications is provided", async () => {

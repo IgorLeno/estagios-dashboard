@@ -214,11 +214,13 @@ async function personalizeProjects(
     )
   }
 
-  if (validated.projects.length !== cv.projects.length) {
-    console.error(
-      `[Resume Generator] ❌ PROJECT COUNT MISMATCH: Expected ${cv.projects.length}, got ${validated.projects.length}`
+  if (validated.projects.length < 1) {
+    throw new Error("LLM returned 0 projects. At least 1 project is required.")
+  }
+  if (validated.projects.length > cv.projects.length) {
+    throw new Error(
+      `LLM returned more projects (${validated.projects.length}) than provided (${cv.projects.length}).`
     )
-    throw new Error(`LLM removed projects. Must include all ${cv.projects.length} projects.`)
   }
 
   const duration = Date.now() - startTime
@@ -278,9 +280,12 @@ function validateConsistencyDraft(originalDraft: CVDraft, correctedDraft: CVDraf
   const originalTitles = originalDraft.projects.map((project) => project.title)
   const correctedTitles = correctedDraft.projects.map((project) => project.title)
 
-  if (correctedTitles.length !== originalTitles.length) {
+  if (correctedTitles.length < 1) {
+    throw new Error("Consistency agent removed all projects.")
+  }
+  if (correctedTitles.length > originalTitles.length) {
     throw new Error(
-      `Consistency agent changed project count. Expected ${originalTitles.length}, got ${correctedTitles.length}.`
+      `Consistency agent added projects. Expected at most ${originalTitles.length}, got ${correctedTitles.length}.`
     )
   }
 
@@ -414,10 +419,10 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   const providedProfileText = profileText?.trim()
 
   // QUALITY GATE: Reject generation if profile/summary is too short.
-  // This gate applies only when the caller did not already provide a pre-written fit summary.
-  const summaryLength = baseCv.summary?.length ?? 0
-  if (!providedProfileText && (!baseCv.summary || summaryLength < MIN_SUMMARY_CHARS)) {
-    throw new InsufficientProfileError(summaryLength)
+  // Applies to whichever source is active: providedProfileText (from fit step) or baseCv.summary.
+  const effectiveSummary = providedProfileText || baseCv.summary || ""
+  if (effectiveSummary.length < MIN_SUMMARY_CHARS) {
+    throw new InsufficientProfileError(effectiveSummary.length)
   }
 
   // STEP 4.5: Filter projects if caller specified a selection
@@ -496,19 +501,19 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   const projectsModel = createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1536 }, { userId })
 
   // STEP 6: Personalize 3 sections in parallel
-  const summaryPromise = providedProfileText
-    ? Promise.resolve({
-        summary: providedProfileText,
-        duration: 0,
-        tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
-      })
-    : personalizeSummary(
-        jobDetails,
-        baseCv,
-        createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 }, { userId }),
-        language,
-        jobProfile
-      )
+  // When profileText is provided (from the fit step), use it as the base for LLM rewriting
+  // instead of the template summary. The LLM will inject job keywords and ATS optimization.
+  const summaryBaseCv = providedProfileText
+    ? { ...baseCv, summary: providedProfileText }
+    : baseCv
+
+  const summaryPromise = personalizeSummary(
+    jobDetails,
+    summaryBaseCv,
+    createAIModel(systemInstruction, { ...generationConfig, maxOutputTokens: 1024 }, { userId }),
+    language,
+    jobProfile
+  )
 
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     summaryPromise,
