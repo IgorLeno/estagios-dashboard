@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getVagaById } from "@/lib/supabase/queries"
-import type { VagaEstagio } from "@/lib/types"
+import type { CandidateProfile, VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,7 @@ import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { ResumeContainer } from "@/components/resume-container"
 import { RefineResumeDialog } from "@/components/refine-resume-dialog"
 import { FitTab } from "@/components/tabs/fit-tab"
+import { CoverLetterSection } from "@/components/cover-letter-section"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { downloadPdf } from "@/lib/url-utils"
@@ -72,6 +73,7 @@ export default function VagaDetailPage() {
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
+  const [candidateProfile, setCandidateProfile] = useState<CandidateProfile | null>(null)
 
   useEffect(() => {
     loadVaga()
@@ -101,6 +103,32 @@ export default function VagaDetailPage() {
     }
 
     loadActiveModel()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadCandidateProfile() {
+      try {
+        const response = await fetch("/api/candidate-profile")
+        if (!response.ok) {
+          throw new Error(`Failed to load candidate profile: ${response.status}`)
+        }
+
+        const result = await response.json()
+        if (isMounted && result.success) {
+          setCandidateProfile(result.data ?? null)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar perfil do candidato:", error)
+      }
+    }
+
+    loadCandidateProfile()
 
     return () => {
       isMounted = false
@@ -807,6 +835,17 @@ export default function VagaDetailPage() {
               onDelete={() => handleDeleteResume("en")}
             />
           </section>
+
+          <CoverLetterSection
+            vagaData={vaga}
+            candidateData={candidateProfile}
+            profileText={profileText}
+            curriculos={{
+              pt: vaga.curriculo_text_pt,
+              en: vaga.curriculo_text_en,
+            }}
+            activeModel={activeModel}
+          />
 
           <RefineResumeDialog
             language={refineDialogLanguage ?? "pt"}

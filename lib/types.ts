@@ -40,6 +40,8 @@ export interface VagaEstagio {
   arquivo_cv_url_en?: string // URL do currículo PDF em Inglês (base64 data URL)
   curriculo_text_pt?: string // Texto markdown do currículo personalizado em Português (preview editável)
   curriculo_text_en?: string // Texto markdown do currículo personalizado em Inglês (preview editável)
+  carta_apresentacao_text_pt?: string // Texto da carta de apresentação em Português
+  carta_apresentacao_text_en?: string // Texto da carta de apresentação em Inglês
   profile_text_pt?: string // Perfil profissional gerado pela IA para esta vaga
   tagline_pt?: string // Tagline de posicionamento gerada pela IA para esta vaga
   is_test_data?: boolean // Flag to identify E2E test data (true = test, false = production)
