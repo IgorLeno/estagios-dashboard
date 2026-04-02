@@ -41,7 +41,9 @@ function buildProfilePrompt(
   const candidateContext = [
     `${isPt ? "Resumo atual" : "Current summary"}: ${candidateSummary}`,
     `${isPt ? "Competências" : "Skills"}: ${candidateSkills.join(", ")}`,
-    `${isPt ? "Projetos" : "Projects"}: ${candidateProjects.join("; ")}`,
+    candidateProjects.length > 0
+      ? `${isPt ? "Projetos" : "Projects"}:\n${candidateProjects.join("\n")}`
+      : "",
     candidateEducation.length > 0
       ? `${isPt ? "Formação" : "Education"}: ${candidateEducation.join("; ")}`
       : "",
@@ -86,6 +88,9 @@ ${isPt ? "REGRAS" : "RULES"}:
     : 'NEVER use first person (I, my, mine). Use implicit third person without subject: "Student of... with experience in...", "Uses...", "Develops..."'}
 - ${isPt ? "Conecte competências reais do candidato com necessidades da vaga" : "Connect real candidate competencies with job needs"}
 - ${isPt
+    ? "Ao usar projetos no resumo, extraia o ângulo estratégico de cada um (problema atacado → abordagem → resultado) — não reduza a título ou lista de ferramentas"
+    : "When referencing projects in the summary, extract each project's strategic angle (problem addressed → approach → outcome) — don't reduce to title or tool list"}
+- ${isPt
     ? 'Gere também uma tagline: frase curta de posicionamento (8-15 palavras), em formato de frase natural e fluida, sem clichês, capturando formação + área de atuação + diferencial. NÃO use pipes, barras ou listas de palavras-chave. Ex: "Profissional com base em Engenharia Química e experiência em simulação de processos."'
     : 'Also generate a tagline: a short positioning sentence (8-15 words), written as a natural flowing phrase with no clichés, capturing background + field + differentiator. DO NOT use pipes, separators, or keyword lists. Example: "Professional with a Chemical Engineering background and process simulation expertise."'}
 - ${isPt
@@ -120,7 +125,10 @@ export async function generateProfile(
   const cv = await getCVTemplateForUser(language, userId)
 
   const allSkills = cv.skills.flatMap((g) => g.items)
-  const projectTitles = cv.projects.map((p) => `${p.title}: ${p.description[0] || ""}`)
+  const projectEntries = cv.projects.map((p) => {
+    const fullDesc = p.description.join(" ").trim()
+    return `- ${p.title}: ${fullDesc}`
+  })
   const educationLines = cv.education.map((e) => `${e.degree} — ${e.institution}`)
   const certTitles = cv.certifications.map((c) =>
     typeof c === "string" ? c : c.title
@@ -129,7 +137,7 @@ export async function generateProfile(
   const prompt = buildProfilePrompt(
     cv.summary,
     allSkills,
-    projectTitles,
+    projectEntries,
     educationLines,
     certTitles,
     jobDetails,

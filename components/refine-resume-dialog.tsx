@@ -24,6 +24,7 @@ interface RefineResumeDialogProps {
   isRefining: boolean
   onConfirm: (instructions: string, model: string) => void
   activeModel: string
+  contentType?: "resume" | "cover-letter"
 }
 
 export function RefineResumeDialog({
@@ -33,6 +34,7 @@ export function RefineResumeDialog({
   isRefining,
   onConfirm,
   activeModel,
+  contentType = "resume",
 }: RefineResumeDialogProps) {
   const [instructions, setInstructions] = useState("")
   const [selectedModel, setSelectedModel] = useState(activeModel)
@@ -58,29 +60,44 @@ export function RefineResumeDialog({
   const config =
     language === "pt"
       ? {
-          title: "Refinar Currículo — Português",
-          description: "Ajuste o currículo existente com instruções específicas, sem regenerar do zero.",
+          title:
+            contentType === "cover-letter" ? "Refinar Carta de Apresentação — Português" : "Refinar Currículo — Português",
+          description:
+            contentType === "cover-letter"
+              ? "Ajuste a carta existente com instruções específicas, sem gerar uma nova do zero."
+              : "Ajuste o currículo existente com instruções específicas, sem regenerar do zero.",
           modelLabel: "Modelo",
           instructionsLabel: "Instruções",
           placeholder:
-            "Ex.: Destaque mais a experiência com Python e dados. Reduza repetição no resumo e deixe o tom mais objetivo.",
+            contentType === "cover-letter"
+              ? "Ex.: Deixe o segundo parágrafo mais objetivo, destaque mais a aderência à vaga e reduza a repetição no fechamento."
+              : "Ex.: Destaque mais a experiência com Python e dados. Reduza repetição no resumo e deixe o tom mais objetivo.",
           alertTitle: "Como funciona",
           alertDescription:
-            "O texto refinado substitui o markdown atual e invalida o PDF salvo. Depois do refinamento, gere o PDF novamente para baixar a versão atualizada.",
+            contentType === "cover-letter"
+              ? "O texto refinado substitui a carta atual e invalida o PDF em memória. Depois do refinamento, visualize ou baixe novamente para gerar a versão atualizada."
+              : "O texto refinado substitui o markdown atual e invalida o PDF salvo. Depois do refinamento, gere o PDF novamente para baixar a versão atualizada.",
           cancelLabel: "Cancelar",
           confirmLabel: "Refinar",
           refiningLabel: "Refinando...",
         }
       : {
-          title: "Refine Resume — English",
-          description: "Adjust the existing resume with targeted instructions instead of regenerating it from scratch.",
+          title: contentType === "cover-letter" ? "Refine Cover Letter — English" : "Refine Resume — English",
+          description:
+            contentType === "cover-letter"
+              ? "Adjust the current cover letter with targeted instructions instead of generating a new one from scratch."
+              : "Adjust the existing resume with targeted instructions instead of regenerating it from scratch.",
           modelLabel: "Model",
           instructionsLabel: "Instructions",
           placeholder:
-            "Ex.: Emphasize Python and data experience. Reduce repetition in the summary and make the tone more concise.",
+            contentType === "cover-letter"
+              ? "Ex.: Make the second paragraph more concise, strengthen the match to the role, and tighten the closing."
+              : "Ex.: Emphasize Python and data experience. Reduce repetition in the summary and make the tone more concise.",
           alertTitle: "What will happen",
           alertDescription:
-            "The refined text replaces the current markdown resume and invalidates the saved PDF. Generate the PDF again afterward to download the updated version.",
+            contentType === "cover-letter"
+              ? "The refined text replaces the current cover letter and invalidates the in-memory PDF. Preview or download again afterward to generate the updated version."
+              : "The refined text replaces the current markdown resume and invalidates the saved PDF. Generate the PDF again afterward to download the updated version.",
           cancelLabel: "Cancel",
           confirmLabel: "Refine",
           refiningLabel: "Refining...",

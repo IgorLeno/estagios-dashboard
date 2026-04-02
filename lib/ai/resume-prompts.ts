@@ -431,8 +431,21 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
      → 3 projetos = ~330 caracteres cada.
    - Cada descrição DEVE respeitar esse orçamento individual. Conte os caracteres antes de finalizar.
    - Formato: texto corrido em parágrafo único, sem bullet points.
-   - Frase 1: o que foi feito + tecnologia/método principal.
-   - Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto.
+   - ANTES DE ESCREVER — IDENTIFICAÇÃO DE ÂNGULO (OBRIGATÓRIO):
+     Leia a descrição original completa de cada projeto e identifique se ela já contém
+     estrutura narrativa (problema atacado → o que foi feito → aprendizado → resultado).
+     Quando essa estrutura existir, COMPRIMA a narrativa nas 2 frases obrigatórias
+     preservando o arco (problema → resultado), em vez de achatar em keywords ATS genéricas.
+     Quando a descrição for mais aberta, INFIRA o problema e resultado a partir do contexto.
+   - SELEÇÃO DE ÂNGULO POR TIPO DE VAGA (OBRIGATÓRIO):
+     Antes de redigir, escolha o ângulo mais forte do projeto para a vaga específica:
+     * Vaga técnica/engenharia → ângulo de método e rigor técnico
+     * Vaga de dados/BI/analytics → ângulo de pipeline, automação e organização de dados
+     * Vaga corporativa/gestão → ângulo de processo, documentação e resultado de negócio
+     * Vaga de pesquisa/ML → ângulo de modelagem, validação e contribuição científica
+     O ângulo escolhido deve guiar QUAIS elementos da narrativa entram nas 2 frases.
+   - Frase 1: o que foi feito + tecnologia/método principal, enquadrado pelo ângulo escolhido.
+   - Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto, preservando o arco narrativo quando presente na descrição original.
    - NUNCA usar 3 frases se 2 forem suficientes.
    - Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. Não listar métodos, datasets ou ferramentas — apenas o mais relevante para a vaga.
    - O campo "description" continua sendo array com EXATAMENTE 1 elemento.
