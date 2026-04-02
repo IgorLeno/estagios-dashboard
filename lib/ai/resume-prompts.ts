@@ -392,7 +392,7 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    You will receive ONLY the projects to be included — do not add, restore, or reference
    any other projects. Do not comment on missing projects. Rewrite ONLY what is provided.
    The selection of which projects to include was made before this prompt ran.
-   - Selecionar no máximo 4 projetos, priorizados por relevância à vaga.
+   - Selecionar entre 2 e 3 projetos, priorizados por relevância à vaga. Nunca incluir apenas 1 projeto nem 4 ou mais.
 
 1. PROJECT-TO-JOB-DUTY MAPPING:
    - Identify which job responsibilities each project can address
@@ -425,8 +425,12 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Match acronyms EXACTLY (case-sensitive)
 
 3. DESCRIPTION STRUCTURE (MANDATORY):
-   - Cada projeto deve ter NO MÁXIMO 3 linhas quando renderizado em fonte Arial 10.5pt, coluna de ~500px de largura.
-   - Na prática isso corresponde a NO MÁXIMO 40-50 palavras e 2 frases.
+   - ORÇAMENTO TOTAL: A seção inteira de projetos dispõe de NO MÁXIMO 1000 caracteres.
+   - ANTES de redigir, calcule o orçamento por projeto: 1000 ÷ número de projetos selecionados.
+     → 2 projetos = ~500 caracteres cada.
+     → 3 projetos = ~330 caracteres cada.
+   - Cada descrição DEVE respeitar esse orçamento individual. Conte os caracteres antes de finalizar.
+   - Formato: texto corrido em parágrafo único, sem bullet points.
    - Frase 1: o que foi feito + tecnologia/método principal.
    - Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto.
    - NUNCA usar 3 frases se 2 forem suficientes.
@@ -815,8 +819,8 @@ export function buildProjectsPrompt(
 
   const descriptionFormatInstruction =
     language === "pt"
-      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nCada projeto deve ter NO MÁXIMO 3 linhas quando renderizado em fonte Arial 10.5pt, coluna de ~500px de largura. Na prática isso corresponde a NO MÁXIMO 40-50 palavras e 2 frases. Frase 1: o que foi feito + tecnologia/método principal. Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto. NUNCA usar 3 frases se 2 forem suficientes. Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. Não listar métodos, datasets ou ferramentas — apenas o mais relevante para a vaga. O campo "description" continua sendo array com EXATAMENTE 1 elemento.'
-      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nEach project must take AT MOST 3 rendered lines in Arial 10.5pt in a ~500px column. In practice this means AT MOST 40-50 words and 2 sentences. Sentence 1: what was done + the main technology/method. Sentence 2: measurable result or concrete impact if available; otherwise, use the project context/purpose. NEVER use 3 sentences if 2 are enough. For academic projects with many data points, mention AT MOST 1 quantitative result. Do not list methods, datasets, or tools beyond the single most relevant one for the job. The "description" field must remain an array with EXACTLY 1 element.'
+      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nSelecione entre 2 e 3 projetos (nunca 1, nunca 4+). ORÇAMENTO TOTAL: 1000 caracteres para TODA a seção de projetos. Antes de redigir, calcule: 1000 ÷ nº de projetos = orçamento por projeto (2 projetos = ~500 chars cada; 3 projetos = ~330 chars cada). Cada descrição deve ser texto corrido em parágrafo único, sem bullet points. Frase 1: o que foi feito + tecnologia/método principal. Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto. NUNCA usar 3 frases se 2 forem suficientes. Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. O campo "description" continua sendo array com EXATAMENTE 1 elemento.'
+      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nSelect between 2 and 3 projects (never 1, never 4+). TOTAL BUDGET: 1000 characters for the ENTIRE projects section. Before writing, calculate: 1000 ÷ number of projects = budget per project (2 projects = ~500 chars each; 3 projects = ~330 chars each). Each description must be continuous prose in a single paragraph, no bullet points. Sentence 1: what was done + the main technology/method. Sentence 2: measurable result or concrete impact if available; otherwise, use the project context/purpose. NEVER use 3 sentences if 2 are enough. For academic projects with many data points, mention AT MOST 1 quantitative result. The "description" field must remain an array with EXACTLY 1 element.'
 
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)
