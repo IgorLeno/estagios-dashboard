@@ -65,14 +65,15 @@ function renderEducation(education: CVTemplate["education"]): string {
     .join("\n")
 }
 
-function renderLanguages(languages: CVTemplate["languages"]): string {
-  if (languages.length === 1) {
-    const lang = languages[0]
-    return `<p><strong>${escapeHtml(lang.language)}</strong>: ${escapeHtml(lang.proficiency)}.</p>`
+function buildSkillsWithLanguages(cv: CVTemplate): CVTemplate["skills"] {
+  const skills = [...cv.skills]
+  if (cv.languages && cv.languages.length > 0) {
+    skills.push({
+      category: cv.language === "pt" ? "Idiomas" : "Languages",
+      items: cv.languages.map((l) => `${l.language} (${l.proficiency})`),
+    })
   }
-  return languages
-    .map((lang) => `<p><strong>${escapeHtml(lang.language)}</strong>: ${escapeHtml(lang.proficiency)}.</p>`)
-    .join("\n      ")
+  return skills
 }
 
 function renderProjects(projects: CVTemplate["projects"], template: ResumeTemplate): string {
@@ -376,7 +377,7 @@ function renderModelo1(cv: CVTemplate): string {
     <!-- Skills -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "COMPETÊNCIAS" : "COMPETENCIES")}
-      ${renderSkillGroups(cv.skills, "modelo1")}
+      ${renderSkillGroups(buildSkillsWithLanguages(cv), "modelo1")}
     </div>
 
     ${
@@ -397,17 +398,6 @@ function renderModelo1(cv: CVTemplate): string {
     <div class="section section-projects">
       ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
       ${renderProjects(cv.projects, "modelo1")}
-    </div>`
-        : ""
-    }
-
-    ${
-      cv.languages && cv.languages.length > 0
-        ? `
-    <!-- Languages -->
-    <div class="section">
-      ${renderSectionTitle(cv.language === "pt" ? "IDIOMAS" : "LANGUAGES")}
-      ${renderLanguages(cv.languages)}
     </div>`
         : ""
     }
@@ -593,7 +583,7 @@ function renderModelo2(cv: CVTemplate): string {
     <!-- Skills -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "COMPETÊNCIAS" : "COMPETENCIES")}
-      ${renderSkillGroups(cv.skills, "modelo2")}
+      ${renderSkillGroups(buildSkillsWithLanguages(cv), "modelo2")}
     </div>
 
     ${
@@ -614,17 +604,6 @@ function renderModelo2(cv: CVTemplate): string {
     <div class="section section-projects">
       ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
       ${renderProjects(cv.projects, "modelo2")}
-    </div>`
-        : ""
-    }
-
-    ${
-      cv.languages && cv.languages.length > 0
-        ? `
-    <!-- Languages -->
-    <div class="section">
-      ${renderSectionTitle(cv.language === "pt" ? "IDIOMAS" : "LANGUAGES")}
-      ${renderLanguages(cv.languages)}
     </div>`
         : ""
     }
