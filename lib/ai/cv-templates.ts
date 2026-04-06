@@ -52,6 +52,7 @@ function buildTemplate(language: "pt" | "en", candidateData: CandidateData): CVT
     projects: c.projects.map((proj) => ({
       title: isPt ? proj.title_pt : proj.title_en,
       description: isPt ? [...proj.description_pt] : [...proj.description_en],
+      period: isPt ? proj.period_pt : proj.period_en,
     })),
 
     // FIXED: Never modify languages

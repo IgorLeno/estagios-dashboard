@@ -193,6 +193,12 @@ export interface Certification {
   year?: string
 }
 
+export interface CVProject {
+  title: string
+  description: string[]
+  period?: string
+}
+
 /**
  * CV Template Structure
  * Represents full CV content with personalizable sections
@@ -241,10 +247,7 @@ export interface CVTemplate {
     items: string[]
   }>
 
-  projects: Array<{
-    title: string
-    description: string[]
-  }>
+  projects: CVProject[]
 }
 
 /**
@@ -257,10 +260,7 @@ export interface PersonalizedSections {
     category: string
     items: string[]
   }>
-  projects: Array<{
-    title: string
-    description: string[]
-  }>
+  projects: CVProject[]
 }
 
 export interface ConsistencyReport {
@@ -318,6 +318,7 @@ export const PersonalizedSectionsSchema = z.object({
     z.object({
       title: z.string().min(1),
       description: z.array(z.string().min(1)),
+      period: z.string().min(1).optional(),
     })
   ),
 })

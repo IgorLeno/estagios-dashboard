@@ -36,6 +36,8 @@ export interface CandidateData {
     title_en: string
     description_pt: string[]
     description_en: string[]
+    period_pt?: string
+    period_en?: string
   }>
   languages: Array<{
     language_pt: string
@@ -147,6 +149,8 @@ export const CANDIDATE: CandidateData = {
       description_en: [
         "Developed a Python pipeline to automate data generation and control, resulting in model training and analytical report preparation",
       ],
+      period_pt: "Pesquisa computacional · 2023–2025",
+      period_en: "Computational research · 2023–2025",
     },
     {
       title_pt: "Modelagem do Equilíbrio Líquido-Vapor para Produção de Biodiesel (2022-2023)",
@@ -157,6 +161,8 @@ export const CANDIDATE: CandidateData = {
       description_en: [
         "Analysis of industrial process efficiency (environmental focus) through molecular modeling and physicochemical simulation for performance optimization",
       ],
+      period_pt: "Modelagem de processos · 2022–2023",
+      period_en: "Process modeling · 2022–2023",
     },
   ],
 

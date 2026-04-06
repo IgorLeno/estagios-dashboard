@@ -92,6 +92,7 @@ function renderProjects(projects: CVTemplate["projects"], template: ResumeTempla
     .map(
       (project) => `<div class="project-item">
           <p><strong>${escapeHtml(project.title)}</strong></p>
+          ${project.period ? `<p class="project-period">${escapeHtml(project.period)}</p>` : ""}
           <p>${project.description.map(escapeHtml).join(" ")}</p>
         </div>`
     )
@@ -342,6 +343,20 @@ function renderModelo1(cv: CVTemplate): string {
       margin-bottom: 6pt;
       page-break-inside: avoid;
       break-inside: avoid;
+    }
+
+    .project-period {
+      font-size: 8.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
+      background: #f0f0f0;
+      display: inline-block;
+      padding: 1pt 5pt;
+      border-radius: 2pt;
+      margin-top: 1pt;
+      margin-bottom: 3pt;
     }
 
     @media screen {
