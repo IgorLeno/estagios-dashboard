@@ -43,6 +43,8 @@ export function toCandidateData(profile: CandidateProfile): CandidateData {
       title_en: proj.title_en || proj.title_pt,
       description_pt: proj.description_pt,
       description_en: proj.description_en?.length ? proj.description_en : proj.description_pt,
+      period_pt: proj.period_pt,
+      period_en: proj.period_en || proj.period_pt,
     })),
 
     languages: profile.idiomas.map((lang) => ({

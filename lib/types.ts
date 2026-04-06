@@ -225,6 +225,8 @@ export interface CandidateProfile {
     title_en?: string
     description_pt: string[]
     description_en?: string[]
+    period_pt?: string
+    period_en?: string
   }>
   certificacoes: Array<{
     title_pt: string
