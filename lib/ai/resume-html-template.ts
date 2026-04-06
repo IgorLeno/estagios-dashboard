@@ -351,7 +351,6 @@ function renderModelo1(cv: CVTemplate): string {
       text-transform: uppercase;
       letter-spacing: 0.07em;
       color: #444;
-      display: inline-block;
       margin-top: 1pt;
       margin-bottom: 3pt;
       border-left: 2pt solid #444;

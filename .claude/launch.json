@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Next.js Dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "Supabase Local (API)",
+      "runtimeExecutable": "supabase",
+      "runtimeArgs": ["start"],
+      "port": 54321
+    },
+    {
+      "name": "Supabase Studio",
+      "runtimeExecutable": "supabase",
+      "runtimeArgs": ["start"],
+      "port": 54323
+    }
+  ]
+}
