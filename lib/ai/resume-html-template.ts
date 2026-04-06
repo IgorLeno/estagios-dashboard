@@ -347,16 +347,15 @@ function renderModelo1(cv: CVTemplate): string {
 
     .project-period {
       font-size: 8.5pt;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #555;
-      background: #f0f0f0;
+      letter-spacing: 0.07em;
+      color: #444;
       display: inline-block;
-      padding: 1pt 5pt;
-      border-radius: 2pt;
       margin-top: 1pt;
       margin-bottom: 3pt;
+      border-left: 2pt solid #444;
+      padding-left: 5pt;
     }
 
     @media screen {
