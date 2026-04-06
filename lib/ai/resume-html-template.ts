@@ -59,7 +59,7 @@ function renderEducation(education: CVTemplate["education"]): string {
     .map(
       (edu) => `<p>
         <strong>${escapeHtml(edu.degree)}</strong> — ${escapeHtml(edu.institution)}${edu.location ? ` | ${escapeHtml(edu.location)}` : ""}<br>
-        ${edu.period ? escapeHtml(edu.period) : ""}
+        ${edu.period ? `<span class="period-tag">${escapeHtml(edu.period)}</span>` : ""}
       </p>`
     )
     .join("\n")
@@ -92,7 +92,7 @@ function renderProjects(projects: CVTemplate["projects"], template: ResumeTempla
     .map(
       (project) => `<div class="project-item">
           <p><strong>${escapeHtml(project.title)}</strong></p>
-          ${project.period ? `<p class="project-period">${escapeHtml(project.period)}</p>` : ""}
+          ${project.period ? `<span class="period-tag">${escapeHtml(project.period)}</span>` : ""}
           <p>${project.description.map(escapeHtml).join(" ")}</p>
         </div>`
     )
@@ -345,16 +345,16 @@ function renderModelo1(cv: CVTemplate): string {
       break-inside: avoid;
     }
 
-    .project-period {
-      font-size: 8.5pt;
-      font-weight: 700;
+    .period-tag {
+      display: inline-block;
+      font-size: 7.5pt;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: #444;
-      margin-top: 1pt;
-      margin-bottom: 3pt;
-      border-left: 2pt solid #444;
-      padding-left: 5pt;
+      letter-spacing: 0.05em;
+      color: #555;
+      border: 1pt solid #bbb;
+      padding: 1pt 5pt;
+      margin: 0 0 2pt 0;
     }
 
     @media screen {

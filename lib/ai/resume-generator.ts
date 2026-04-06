@@ -573,11 +573,18 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   }
 
   // STEP 8: Merge into final CV
+  // Re-attach the `period` field from the original projects — the LLM doesn't receive
+  // or return it, so it would otherwise be lost during personalization.
+  const projectsWithPeriod = finalDraft.projects.map((p) => ({
+    ...p,
+    period: filteredCv.projects.find((orig) => orig.title === p.title)?.period,
+  }))
+
   const personalizedCv: CVTemplate = {
     ...filteredCv,
     summary: finalDraft.summary,
     skills: finalDraft.skills,
-    projects: finalDraft.projects,
+    projects: projectsWithPeriod,
     certifications: reorderCertifications(filteredCv.certifications, finalDraft.certifications),
   }
 
