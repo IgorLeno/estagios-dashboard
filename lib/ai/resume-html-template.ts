@@ -346,6 +346,14 @@ function renderModelo1(cv: CVTemplate): string {
       break-inside: avoid;
     }
 
+    .project-item p {
+      text-align: justify;
+    }
+
+    .section p {
+      text-align: justify;
+    }
+
     .project-item:first-child {
       margin-top: 0;
     }
