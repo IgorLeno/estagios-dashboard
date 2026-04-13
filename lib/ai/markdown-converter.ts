@@ -192,7 +192,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     console.log("[MarkdownConverter] Converting Markdown to HTML")
 
     marked.setOptions({
-      breaks: true, // Quebras de linha viram <br>
+      breaks: false, // Quebras simples seguem como espaço; hard breaks com 2 espaços continuam virando <br>
       gfm: true, // GitHub Flavored Markdown
     })
 
