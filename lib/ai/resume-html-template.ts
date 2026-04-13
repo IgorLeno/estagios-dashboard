@@ -191,6 +191,9 @@ function renderModelo1(cv: CVTemplate): string {
       padding: 0;
       margin: 0;
       -webkit-print-color-adjust: exact;
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
     }
 
     .container {
