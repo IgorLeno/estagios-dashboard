@@ -340,9 +340,14 @@ function renderModelo1(cv: CVTemplate): string {
     }
 
     .project-item {
-      margin-bottom: 6pt;
+      margin-top: 7pt;
+      margin-bottom: 0;
       page-break-inside: avoid;
       break-inside: avoid;
+    }
+
+    .project-item:first-child {
+      margin-top: 0;
     }
 
     .period-tag {
@@ -381,16 +386,27 @@ function renderModelo1(cv: CVTemplate): string {
       <p>${escapeHtml(cv.summary)}</p>
     </div>
 
-    <!-- Education -->
-    <div class="section">
-      ${renderSectionTitle(cv.language === "pt" ? "EDUCAÇÃO" : "EDUCATION")}
-      ${renderEducation(cv.education)}
-    </div>
-
     <!-- Skills -->
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "COMPETÊNCIAS" : "COMPETENCIES")}
       ${renderSkillGroups(buildSkillsWithLanguages(cv), "modelo1")}
+    </div>
+
+    ${
+      cv.projects && cv.projects.length > 0
+        ? `
+    <!-- Research Projects -->
+    <div class="section section-projects">
+      ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
+      ${renderProjects(cv.projects, "modelo1")}
+    </div>`
+        : ""
+    }
+
+    <!-- Education -->
+    <div class="section">
+      ${renderSectionTitle(cv.language === "pt" ? "EDUCAÇÃO" : "EDUCATION")}
+      ${renderEducation(cv.education)}
     </div>
 
     ${
@@ -400,17 +416,6 @@ function renderModelo1(cv: CVTemplate): string {
     <div class="section">
       ${renderSectionTitle(cv.language === "pt" ? "CERTIFICAÇÕES" : "CERTIFICATIONS")}
       <p class="cert-list">${renderCertifications(cv.certifications, "modelo1")}</p>
-    </div>`
-        : ""
-    }
-
-    ${
-      cv.projects && cv.projects.length > 0
-        ? `
-    <!-- Research Projects -->
-    <div class="section section-projects">
-      ${renderSectionTitle(cv.language === "pt" ? "PROJETOS DE PESQUISA" : "RESEARCH PROJECTS")}
-      ${renderProjects(cv.projects, "modelo1")}
     </div>`
         : ""
     }
