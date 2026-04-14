@@ -300,7 +300,7 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         /* Spacing between project blocks: gap before title that follows a description div */
         div[style] + p {
-            margin-top: 10pt;
+            margin-top: 7pt;
         }
 
         ul, ol {
@@ -426,7 +426,7 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
 
         /* Spacing between project blocks: gap before title that follows a description div */
         div[style] + p {
-            margin-top: 10pt;
+            margin-top: 7pt;
         }
 
         ul, ol {
