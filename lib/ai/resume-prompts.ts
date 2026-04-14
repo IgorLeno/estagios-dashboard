@@ -16,20 +16,26 @@ Your role is to personalize resume sections to match job requirements while main
 2. NEVER add new skills to the skills list (ONLY reorder existing ones)
 3. NEVER change project titles or dates (ONLY rewrite descriptions)
 4. NEVER invent metrics or achievements not in the original CV
-5. ONLY reorder and emphasize existing content - NO invention allowed
-6. Use job keywords naturally in rewrites - no keyword stuffing
-7. Maintain professional, concise language
-8. Return ONLY valid JSON, no markdown code fences
+5. NEVER add, remove, rename, or reorder resume sections from the general resume
+6. NEVER change contact information, education, institutions, certifications, project periods, or project order
+7. Preserve the general resume markdown pattern and project formatting conventions, including divs with style="text-align: justify;" when present
+8. ONLY reorder and emphasize existing content - NO invention allowed
+9. Use job keywords naturally in rewrites - no keyword stuffing
+10. Maintain professional, concise language
+11. Return ONLY valid JSON, no markdown code fences
 
 WHAT YOU CAN DO:
 ✅ Rewrite summary to include job keywords (60-70 words, 3-4 sentences)
-✅ Reorder skills within categories by relevance to job
-✅ Rewrite project descriptions to emphasize job-relevant aspects
+✅ Reorder existing skills within existing categories by relevance to job
+✅ Rewrite project descriptions to emphasize job-relevant aspects without changing titles or periods
 
 WHAT YOU CANNOT DO:
 ❌ Add skills/tools not in original skills list
+❌ Remove skills/tools from original skills list
 ❌ Add certifications not in original certifications list
+❌ Add, remove, rename, or reorder sections
 ❌ Change project titles or dates
+❌ Omit projects received as input
 ❌ Invent new projects or experiences
 ❌ Add metrics/numbers not in original CV
 ❌ Change contact information
@@ -202,404 +208,87 @@ Return JSON format:
   "summary": "Your highly ATS-optimized summary here (100-120 words)..."
 }`
 
-export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
+export const SKILLS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - SKILL REORDERING ONLY:
 
-1. SKILL MATCHING LOGIC (prioritize in this order):
-   - Selecionar APENAS skills relevantes para esta vaga específica.
-   - Definir 1 eixo principal de posicionamento por vaga.
-   - Permitir 1 eixo secundário no máximo.
-   - EXACT matches: job requires "Excel Avançado" → move to top, use exactly as written
-   - Semantic matches: job wants "data analysis" → prioritize Python, SQL, pandas
-   - Related skills: job mentions "quality control" → prioritize technical reporting, KPIs
-   - General skills: keep but move to end
+1. STRUCTURAL PRESERVATION:
+   - Keep every existing skill category exactly as provided.
+   - Do not create, remove, rename, split, merge, or reorder categories.
+   - Keep every existing skill item exactly as provided.
+   - Do not add, remove, rename, translate, deduplicate, or rewrite skill items.
+   - Do not add User-Approved Skills to the output; they are contextual signals only unless already present in the provided categories.
 
-2. SKILL SOURCE RULES:
-   - Use ONLY skills already present in the candidate profile or in the User-Approved Skills list
-   - User-Approved Skills may be added ONLY if job explicitly requires or strongly implies them
-   - Maximum 3 user-approved skills per category (don't overload)
-   - KEEP the approved skill name exactly as provided; do NOT append proficiency suffixes
-   - When adding an approved skill, place it in the most appropriate existing category
+2. ALLOWED CHANGE:
+   - Within each existing category, reorder the existing items by relevance to the job.
+   - Put exact job matches first, then semantically related items, then less relevant items.
+   - If an item is weakly related to the job, keep it in the same category and move it to the end.
 
-3. CATEGORY REORDERING:
-   - Máximo 6 categorias no total.
-   - Move most job-relevant category to TOP position
-   - Ordenar categorias pela relevância à vaga (mais relevante primeiro).
-   - Remover categorias inteiras que não reforcem o eixo principal.
-   - Example: QHSE job → move "Soft Skills" (with quality/reporting skills) to position 1
-   - Example: ML job → move "Linguagens & Análise de Dados" to position 1
-   - Example: Engineering job → move "Ferramentas de Engenharia" to position 1
+3. EXACTNESS:
+   - Copy category names character-by-character from USER'S CV SKILLS.
+   - Copy skill names character-by-character from ALLOWED SKILLS.
+   - Preserve punctuation, accents, capitalization, parenthetical text, and tool names.
+   - Never infer proficiency labels, levels, or new tool variants.
 
-4. WITHIN-CATEGORY REORDERING AND SELECTION:
-   - Objetivo: até 20 skills no total. Limite duro: 24 (preflight bloqueia acima disso).
-   - Máximo 4 itens por categoria.
-   - Put EXACT job matches first in each category
-   - Then semantic/related skills
-   - REMOVE skills that have zero relevance to this specific job (e.g. specialized lab tools for an analytics job)
-   - Keep soft skills category with most relevant items only (max 4)
-   - MINIMUM: Always keep at least 3 skills total per category kept
-   - OPERATIONAL ROLE FILTER: For internship/junior roles in BI, People Analytics, Data Support,
-     or Documentation, apply these filters:
-     * REMOVE (do not include in any category): Scikit-learn — for BI/People Analytics/
-       Data Support operational internship roles, Scikit-learn implies ML focus which
-       contradicts the operational profile being presented. ALWAYS remove for these roles,
-       even if moving to last position is tempting. Omit entirely.
-     * REMOVE: Deep Learning, neural networks, TensorFlow (same reason)
-     * DEPRIORITIZE: Typer, GAMESS, MOPAC, CREST, Avogadro, OpenBabel (niche tools)
-     * REMOVE: Self-assessed soft skill proficiency levels — NEVER write "Comunicação técnica
-       (Avançado)" or "Pensamento analítico (Avançado)"; write just "Comunicação técnica",
-       "Pensamento analítico". Soft skills are NEVER rated with proficiency levels.
-     * KEEP AND PROMOTE: organização de bases, validação de dados, atualização de bases,
-       padronização, Excel (with specific functions), Power BI, SQL,
-       relatórios técnicos, documentação técnica
-     * REMOVE from "Competências de Processo" for BI/People Analytics/Data Support roles:
-       "Análise de dados" — too broad, already implied by the entire CV.
-       Replace with more specific operational terms like "Validação de dados" or
-       "Atualização de bases de dados" if not already present.
-   - LANGUAGE CONSISTENCY: When output language is PT (Portuguese), translate skill
-     display terms that are commonly used in Portuguese CVs:
-     * "KPI tracking" → "acompanhamento de KPIs"
-     * "KPI monitoring" → "monitoramento de KPIs"
-     * Keep tool names as-is (Power BI, Excel, Python, SQL — these are proper nouns)
-     * Keep certification names as-is (Google Data Analytics, etc.)
-   - MAXIMUM: 4 items per category (remove excess irrelevant skills)
-
-5. EXACT TERMINOLOGY (CRITICAL FOR ATS):
-   - Use EXACT skill names from job (e.g., "Power BI" not "PowerBI")
-   - Match tool versions if specified (e.g., "Excel Avançado" not just "Excel")
-   - Keep acronyms exact (SQL, VBA, KPI, QHSE)
-   - Preserve special characters and spacing
-
-6. ATS BEST PRACTICES:
-   - Put 5-7 most relevant skills in top 2 categories (ATS scans top first)
-   - Include certifications as skills if job mentions them (e.g., "ISO 17025")
-   - Aim for up to 20 most relevant skills total (remove irrelevant, don't stuff)
-   - If job required skill is not in the profile or approved list, DON'T add it (maintain truthfulness)
-   - REMOVE entire categories if 0 of their skills are relevant to the job
-   - NEVER include specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)
-     in analytics/BI/HR/data roles — they are noise, not signal
-   - DEDUPLICATION (MANDATORY — CROSS-CATEGORY):
-     After building all categories, scan the ENTIRE skills section (all categories combined)
-     for duplicate skill names.
-     * If the same skill appears in TWO different categories: keep it ONLY in the most
-       relevant category for the job — remove from the less relevant one.
-     * Example: "Excel Avançado" in "Visualização & BI" AND in "Linguagens & Análise de Dados"
-       → keep ONLY in "Visualização & BI" (more relevant for BI roles), remove from Linguagens.
-     * Within same category: keep most descriptive version (existing rule — keep as is).
-     * Apply this check AFTER all categories are built, as a final pass.
-   - SEMANTIC DEDUPLICATION (MANDATORY — SAME AND CROSS-CATEGORY):
-     After exact deduplication, scan for skills that mean the same thing even if worded
-     differently. Known redundant pairs — when both appear, KEEP only the first listed:
-     * "Relatórios técnicos" vs "Elaboração de Relatórios" → keep "Relatórios técnicos"
-     * "Elaboração de relatórios técnicos" vs "Relatórios técnicos" → keep "Relatórios técnicos"
-     * "Organização de bases" vs "Organização de bases de dados" → keep longer form
-     * "Análise de dados" vs "Análise exploratória de dados" → keep more specific one
-     * "Acompanhamento de KPIs" vs "Monitoramento de KPIs" → keep "Acompanhamento de KPIs"
-     * "Documentação técnica" vs "Documentação de processos" → keep "Documentação técnica"
-     Apply this check as a FINAL pass after all other deduplication.
-   - CERTIFICATION ORDER (STRICT): Sort certifications using this priority for
-     BI/Analytics/People Analytics/Data Support roles:
-     1st: "Google Data Analytics" — broad analytics foundation
-     2nd: "Power BI" related certifications — direct tool match
-     3rd: "SQL" related certifications — direct tool match
-     4th: "Excel" related certifications — direct tool match
-     5th: Other analytics/data certifications
-     LAST: Deep Learning, ML, AI certifications (unless job explicitly requires)
-     
-     Apply this sort BEFORE outputting the certifications array.
-     If a certification matches multiple levels, use the highest applicable.
-
-7. TRUTHFULNESS (see global rules in System Prompt):
-   - ONLY describe work that was actually done — reframe HOW, never WHAT
-   - NEVER inject job domain into unrelated project descriptions
-   - Keep all original metrics; if none exist, use qualitative descriptors
-
-VALIDATION CHECK (MANDATORY):
-Before returning, verify:
-1. EVERY skill in your output appears in either ALLOWED SKILLS (Profile Skills) OR User-Approved Skills
-2. No engineering/lab tool appears in a data/analytics/HR/BI/people job output
-3. Category count is 2-6 (not all categories needed — only relevant ones)
-4. Total skill count across all categories: 8-20 ideally, never above 24
-5. No category has more than 4 items
-
-If you find ANY skill not in those lists, REMOVE IT immediately. This is NON-NEGOTIABLE.
-
-EXAMPLE TRANSFORMATION (QHSE job):
-BEFORE (generic):
-[
-  { "category": "Linguagens & Análise de Dados", "items": ["Python", "SQL", "R"] },
-  { "category": "Soft Skills", "items": ["Relatórios técnicos", "Gestão de projetos"] }
-]
-
-AFTER (QHSE-optimized):
-[
-  {
-    "category": "Gestão de Qualidade & QHSE",
-    "items": [
-      "Excel Avançado (Tabelas Dinâmicas, Macros)", // EXACT match from job
-      "Power BI (dashboards, acompanhamento de KPIs)", // EXACT match
-      "Relatórios técnicos", // Related to job
-      "Acompanhamento de indicadores de qualidade", // Related
-      "ISO 17025" // Explicitly present in candidate materials
-    ]
-  },
-  { "category": "Linguagens & Análise de Dados", "items": ["SQL", "Python", "R"] }
-]
-
-OUTPUT FORMAT RULES FOR SOFT SKILLS:
-   - If the CV contains soft skills, split them into TWO separate categories:
-     1. "Competências de Processo": technical process activities that are transferable.
-        For BI/Analytics/People Analytics roles, PRIORITIZE these items (in order):
-        ✅ PRIORITY 1 (data operations): "Validação de dados", "Organização de bases de dados",
-           "Padronização de informações", "Documentação técnica",
-           "Atualização e manutenção de bases"
-        ✅ PRIORITY 2 (reporting): "Elaboração de relatórios técnicos",
-           "Acompanhamento de KPIs", "Controle de indicadores"
-        ✅ PRIORITY 3 (general process): "Acompanhamento de projetos",
-           "Organização de atividades"
-        ❌ DEPRIORITIZE for BI/Analytics roles (move to last or remove):
-           "Controle de não-conformidades" — too industrial/quality-management, not BI
-           "Acompanhamento de indicadores de qualidade" — implies manufacturing QA, not data
-           "Gestão de processos industriais" — clearly wrong domain
-
-        Select 3-5 items that best match the job. For BI/People Analytics roles, the
-        section MUST contain at least 2 items from PRIORITY 1.
-     2. "Competências Comportamentais": pure behavioral traits
-        (ex: "Pensamento analítico", "Atenção a detalhes", "Comunicação técnica",
-        "Resolução de problemas", "Organização")
-   - NEVER mix process activities with behavioral traits in the same category
-   - "Gestão de projetos" → rename to "Acompanhamento de projetos" (for ALL internship roles, mandatory)
-   - "Gestão de projetos (KPIs/qualidade)" → "Acompanhamento de indicadores de qualidade"
-   - "Rastreamento de KPIs" → rename to "Acompanhamento de KPIs"
-   - "Administração de bases de dados" → rename to "Organização e estruturação de bases de dados"
-   - "Visualizações estratégicas" → rename to "Visualização de indicadores"
-   - "Controle de não-conformidades" → remove for BI/Analytics/People Analytics outputs unless
-     the job is explicitly quality/compliance-focused
+4. VALIDATION CHECK:
+   Before returning, verify:
+   - Every input category appears once in the output.
+   - Every input skill item appears once in the same category.
+   - No output skill item is absent from ALLOWED SKILLS.
+   - No category or item was renamed, translated, added, or removed.
 
 Return JSON format:
 {
   "skills": [
     {
-      "category": "Exact category name (can create new by combining existing skills)",
-      "items": ["Skill1", "Skill2", ...]  // ONLY from ALLOWED SKILLS
+      "category": "Exact existing category name",
+      "items": ["Same existing items, reordered only within this category"]
     },
     ...
   ]
 }`
 
-export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
+export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - PROJECT DESCRIPTION REWRITE ONLY:
 
-⚠️ PROJECT COUNT POLICY:
-   You will receive candidate projects. Select 2 to 3 most relevant to the job — never only 1, never 4+.
-   Do not add projects that were not provided. Do not reference omitted projects.
-   Prioritize projects whose skills and context best match the job requirements.
+1. PROJECT INVENTORY PRESERVATION:
+   - Return every project you received in CURRENT PROJECTS.
+   - Do not omit projects.
+   - Do not add projects.
+   - Do not reorder projects.
+   - Copy each title exactly from REQUIRED PROJECT TITLES.
+   - Do not change project periods or dates.
 
-1. PROJECT-TO-JOB-DUTY MAPPING:
-   - Identify which job responsibilities each project can address
-   - Reframe project descriptions to DIRECTLY connect to those duties
-   - Example: Lab project → Quality job = emphasize "data validation", "quality control", "standards compliance"
-   - Example: Same project → ML job = emphasize "model training", "data pipeline", "predictive analytics"
+2. ALLOWED CHANGE:
+   - Rewrite only the description text to emphasize job-relevant aspects.
+   - Keep the description grounded in the original project facts.
+   - Use transferable wording when useful, but never claim direct domain experience that the project does not prove.
+   - Never inject the job's domain into an unrelated project.
 
-1.5. AUTHORSHIP IDENTIFICATION (MANDATORY):
-   Before rewriting any project, check if it is a personal/independent project
-   (not institutional academic research). Signs of personal authorship:
-   - Title does not contain year range like "(2022-2023)" or university name
-   - Description mentions personal development, own initiative, or software built from scratch
-   - Examples of personal projects: "Grimperium", "Estagios Dashboard", any web app or tool
-   For personal/authorial projects:
-   - The FIRST sentence MUST make authorship clear using one of these forms:
-     ✅ "Desenvolvimento próprio de..."
-     ✅ "Projeto autoral de..."
-     ✅ "Framework desenvolvido de forma independente para..."
-   - Do NOT use "Desenvolvimento de..." (ambiguous — could be team or institutional)
-   - Do NOT use "Projeto acadêmico de..." for personal projects
-   For institutional academic projects (those with year ranges and research context):
-   - Use standard reframing rules (existing instructions apply)
-   - Do NOT add authorship language
+3. DESCRIPTION FORMAT:
+   - The "description" field must remain an array with exactly 1 string.
+   - Use one concise prose paragraph, no bullet points.
+   - Prefer 2 direct sentences.
+   - Preserve concrete numbers and metrics already present in the original project.
+   - Never fabricate numbers, tools, results, responsibilities, or business impact.
 
-2. EXACT TERMINOLOGY SUBSTITUTION:
-   - Replace generic terms with job-specific keywords
-   - Use EXACT phrases from "Exact Phrases" list
-   - Use action verbs from "Action Verbs" list
-   - Include technical terms from "Technical Terms" list
-   - Match acronyms EXACTLY (case-sensitive)
+4. MARKDOWN/HTML FORMAT COMPATIBILITY:
+   - The final markdown renderer expects project titles and periods to remain separate from descriptions.
+   - Do not include title or period text inside the description.
+   - If the source resume uses project descriptions inside divs with style="text-align: justify;", preserve that convention in the final markdown flow.
 
-3. DESCRIPTION STRUCTURE (MANDATORY):
-   - ORÇAMENTO TOTAL: A seção inteira de projetos dispõe de NO MÁXIMO 1000 caracteres.
-   - ANTES de redigir, calcule o orçamento por projeto: 1000 ÷ número de projetos selecionados.
-     → 2 projetos = ~500 caracteres cada.
-     → 3 projetos = ~330 caracteres cada.
-   - Cada descrição DEVE respeitar esse orçamento individual. Conte os caracteres antes de finalizar.
-   - Formato: texto corrido em parágrafo único, sem bullet points.
-   - ANTES DE ESCREVER — IDENTIFICAÇÃO DE ÂNGULO (OBRIGATÓRIO):
-     Leia a descrição original completa de cada projeto e identifique se ela já contém
-     estrutura narrativa (problema atacado → o que foi feito → aprendizado → resultado).
-     Quando essa estrutura existir, COMPRIMA a narrativa nas 2 frases obrigatórias
-     preservando o arco (problema → resultado), em vez de achatar em keywords ATS genéricas.
-     Quando a descrição for mais aberta, INFIRA o problema e resultado a partir do contexto.
-   - SELEÇÃO DE ÂNGULO POR TIPO DE VAGA (OBRIGATÓRIO):
-     Antes de redigir, escolha o ângulo mais forte do projeto para a vaga específica:
-     * Vaga técnica/engenharia → ângulo de método e rigor técnico
-     * Vaga de dados/BI/analytics → ângulo de pipeline, automação e organização de dados
-     * Vaga corporativa/gestão → ângulo de processo, documentação e resultado de negócio
-     * Vaga de pesquisa/ML → ângulo de modelagem, validação e contribuição científica
-     O ângulo escolhido deve guiar QUAIS elementos da narrativa entram nas 2 frases.
-   - Frase 1: o que foi feito + tecnologia/método principal, enquadrado pelo ângulo escolhido.
-   - Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto, preservando o arco narrativo quando presente na descrição original.
-   - NUNCA usar 3 frases se 2 forem suficientes.
-   - Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. Não listar métodos, datasets ou ferramentas — apenas o mais relevante para a vaga.
-   - O campo "description" continua sendo array com EXATAMENTE 1 elemento.
-   - NÃO use múltiplos itens no array.
-   - NÃO use bullet points.
-   - O resultado será renderizado como parágrafo único.
-
-4. KEYWORD DENSITY PER PROJECT:
-   - Each project should include 3-5 job keywords
-   - Prioritize keywords in FIRST sentence (ATS scans top first)
-   - Repeat critical acronyms naturally (QHSE, KPI, ML, etc.)
-   - Front-load most relevant technical terms
-
-5. TRANSFERABLE SKILLS TRANSLATION (critical: describe WHAT was done, reframe HOW it's described):
-
-   ⚠️ CRITICAL RULE: NEVER insert the job's domain (e.g., "People Analytics", "BI corporativo",
-   "HR analytics") into a project that is NOT from that domain. This is keyword stuffing and
-   will cause immediate rejection by experienced recruiters.
-
-   CORRECT approach — translate project ACTIONS into transferable business language:
-   - "Coletou e organizou dados experimentais" → "Estruturou e organizou bases de dados para análise"
-   - "Executou validação de modelos moleculares" → "Realizou validação e controle de qualidade de dados"
-   - "Gerou relatórios técnicos de simulações" → "Elaborou relatórios analíticos documentando metodologia, fontes e resultados"
-   - "Automatizou pipeline de cálculos quânticos" → "Automatizou rotinas de processamento e atualização de dados"
-   - "Comparou dados experimentais com bases bibliográficas" → "Realizou checagem de consistência e padronização de informações"
-
-   ALLOWED reframing by job type (always grounded in what was ACTUALLY done):
-
-   If People Analytics/BI/HR role:
-   - Emphasize: organização de bases, validação de dados, automação de rotinas, elaboração de
-     relatórios, padronização, documentação técnica, controle de qualidade de informação
-   - DO NOT write: "People Analytics", "análise de RH", "dados de gestão de pessoas"
-   - Use instead: "organização e atualização de bases de dados", "documentação de processos",
-     "rotinas de validação e consistência", "apoio analítico à tomada de decisão"
-
-   If Data/ML role:
-   - Emphasize: pipeline de dados, automação de processamento, análise exploratória,
-     treinamento de modelos, validação de resultados
-   - DO NOT write: "pipeline para BI corporativo", "People Analytics pipeline"
-   - Use instead: "pipeline automatizado de processamento de dados", "validação de modelos preditivos"
-
-   If QHSE/Quality role:
-   - Emphasize: controle de qualidade de dados, validação de conformidade, rastreabilidade,
-     relatórios técnicos, padronização de processos
-   - DO NOT write: "controle de qualidade industrial" if project was academic
-   - Use instead: "controle de qualidade de dados acadêmicos/experimentais", "validação de resultados"
-
-   If Technical/Engineering role:
-   - Emphasize: simulação de processos, otimização de parâmetros, análise técnica, modelagem
-   - Use domain-specific tools as-is (Aspen Plus, MATLAB, CREST, GAMESS are relevant here)
-
-   RULE: If a connection between project and job area feels forced, describe only the
-   PROCESS SKILLS (organizar, validar, automatizar, documentar, padronizar, elaborar relatórios)
-   without claiming domain expertise the project doesn't have.
-   GOVERNANCE VOCABULARY INFERENCE (authorized inferences — not fabrication):
-   When project involves: data collection, organization, processing pipelines, validation →
-   you MAY add these descriptors if they are natural consequences of the described activity:
-   ✅ "rastreabilidade de dados" (if traceability is implied by the pipeline structure)
-   ✅ "padronização de informações" (if standardization is part of processing)
-   ✅ "consistência de dados" (if validation routines exist)
-   ✅ "documentação de fontes e regras" (if methodology documentation exists)
-   ❌ NEVER add: "controle de acessos", "políticas de governança", "gestão de TI"
-      (these require explicit professional experience, cannot be inferred from academic work)
-   FOR CHEMICAL/SCIENTIFIC PROJECTS in operational BI/Analytics roles — REFRAMING PRINCIPLE:
-
-   For non-lab/non-engineering roles, the first sentence of each project should lead with the
-   DATA or PROCESS activity, not the scientific technique. The scientific domain may appear
-   as context (e.g., "...dados de simulações físico-químicas...") but should NOT be the
-   grammatical subject of the sentence.
-
-   Example: instead of "Modelagem molecular com análise de dados...", write
-   "Estruturação e análise de dados experimentais obtidos via simulação molecular..."
-
-   Remaining sentences: use transferable process vocabulary naturally (padronização,
-   documentação, validação, rastreabilidade) — do not force a rigid template.
-
-6. ATS BEST PRACTICES:
-   - Use industry-standard terminology (no academic jargon)
-   - Quantify when possible (%, reduced time, improved accuracy)
-   - Match job's language register (formal for corporate, technical for startups)
-   - Front-load keywords in first project (ATS weighs earlier content more)
-   - Avoid generic verbs like "worked on" - use specific action verbs
-
-6.5. MEASURABLE RESULTS POLICY (MANDATORY — applies to every project):
-   - ALWAYS scan the raw project data for concrete numbers before writing the paragraph.
-     Numbers to look for: percentages, counts, volumes, error rates, deviations,
-     dataset sizes, test counts, time reductions, frequency of use, scale metrics.
-   - If a measurable result exists in the project data: it MUST appear in the output.
-     Place it in the LAST sentence of the paragraph as the impact statement.
-   - Format for results sentence: [what was achieved] + [concrete number/metric] + [context or significance].
-     Examples:
-     ✅ "Implementação de 494 testes automatizados com cobertura integral via CI/CD e quality gates rigorosos."
-     ✅ "Desvio médio relativo de 1,93% no método PM7 — melhor desempenho entre os 5 métodos avaliados em 28 moléculas."
-     ✅ "Pipeline processando base de 28 compostos em 4 grupos moleculares com validação cruzada contra fontes NIST, CRC e Perry."
-   - If NO measurable result exists in the project data: use a concrete scope descriptor
-     (scale, breadth, tool count, dataset size) in place of a percentage or count.
-     DO NOT write vague sentences like "ensuring data quality" — write "validating X data points" or
-     "processing Y categories of compounds" if that information exists.
-   - NEVER fabricate metrics. Only use numbers explicitly present in the project description
-     provided as input. This rule is subordinate to the global ZERO FABRICATION rule.
-
-7. TRUTHFULNESS (see global rules in System Prompt):
-   - ONLY describe work that was actually done — reframe HOW, never WHAT
-   - NEVER inject job domain into unrelated project descriptions
-   - Keep all original metrics; if none exist, use qualitative descriptors
-
-VALIDATION CHECK (MANDATORY):
-Before returning, verify that EVERY project title in your output matches EXACTLY (character-by-character, including dates, parentheses, and capitalization) with the "REQUIRED PROJECT TITLES" list above.
-
-EXAMPLE TRANSFORMATION (People Analytics/BI job — correct approach):
-
-PROJECT: "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)"
-
-❌ WRONG (keyword stuffing — what the system was doing before):
-{
-  "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
-  "description": [
-    "Desenvolver pipeline automatizado em Python para BI e People Analytics, realizando automação da geração de dados termodinâmicos",
-    "Elaborar relatórios analíticos com dados processados, gerando insights para cenários de People Analytics e BI",
-    "Automatizar fluxos de dados termodinâmicos, suportando análises preditivas em People Analytics"
-  ]
-}
-⚠️ Problem: Forces "People Analytics" and "BI" into a thermodynamics research project. Recruiters detect this immediately.
-
-✅ CORRECT (transferable skills, honest reframing):
-{
-  "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
-  "description": [
-    "Estruturação e padronização de bases de dados termodinâmicos em Python para processamento recorrente com validação de consistência. Automatização do fluxo com documentação técnica de regras e fontes, criando base confiável para análises futuras."
-  ]
-}
-✅ Why it works: Uses transferable skills vocabulary (organizar, validar, automatizar, documentar,
-padronizar) without falsely claiming the project was about People Analytics. Honest AND ATS-optimized.
-
-EXAMPLE TRANSFORMATION (ML/Data Science job):
-
-✅ CORRECT (ML job — domain IS relevant here):
-{
-  "title": "Pipeline Automatizado de Dados Termodinâmicos para Machine Learning (2023-2025)",
-  "description": [
-    "Desenvolvimento de pipeline de dados em Python para automação de feature engineering e treinamento de modelos preditivos de propriedades termodinâmicas. Automatização da validação e geração de relatórios, acelerando análises futuras com dados consistentes e documentação reutilizável."
-  ]
-}
-✅ Why it works: For a real ML/Data job, ML terminology IS contextually appropriate. The project
-genuinely uses ML tools, so the framing is honest.
-
-CRITICAL FOR ATS: These descriptions will be scanned by Applicant Tracking Systems. Exact keyword matches and domain-specific terminology are ESSENTIAL.
+5. VALIDATION CHECK:
+   Before returning, verify:
+   - Every required project title appears exactly once.
+   - Project order matches CURRENT PROJECTS.
+   - No project title, period, or date was changed.
+   - No project was added or removed.
+   - No unsupported fact was invented.
 
 Return JSON format:
 {
   "projects": [
     {
-      "title": "EXACT title from REQUIRED PROJECT TITLES (character-by-character match)",
+      "title": "EXACT title from REQUIRED PROJECT TITLES",
       "description": [
-        "Single prose paragraph with exactly 1 element in description[], using 2 sentences and at most 50 words."
+        "Single concise prose paragraph with rewritten description only."
       ]
     },
     ...
@@ -741,44 +430,20 @@ export function buildSkillsPrompt(
   // Extract all skill items from CV
   const cvSkillItems = currentSkills.flatMap((cat) => cat.items)
 
-  // Compute certification order at prompt-build time (more reliable than asking LLM to sort)
-  // Broader match: capture any certification/course category regardless of exact name
-  const CERT_CATEGORY_KEYWORDS = ["certif", "curso", "course", "formação", "training", "qualificaç"]
-  const cvCertifications = currentSkills
-    .filter((cat) =>
-      CERT_CATEGORY_KEYWORDS.some((keyword) => cat.category.toLowerCase().includes(keyword))
-    )
-    .flatMap((cat) => cat.items)
-
-  const certRankOrder = ["google data analytics", "power bi", "sql", "excel"]
-
-  const sortedCerts = [...cvCertifications].sort((a, b) => {
-    const rankA = certRankOrder.findIndex((keyword) => a.toLowerCase().includes(keyword))
-    const rankB = certRankOrder.findIndex((keyword) => b.toLowerCase().includes(keyword))
-    const effectiveRankA = rankA === -1 ? certRankOrder.length : rankA
-    const effectiveRankB = rankB === -1 ? certRankOrder.length : rankB
-    return effectiveRankA - effectiveRankB
-  })
-
-  const certOrderInstruction =
-    sortedCerts.length > 0
-      ? `\nCERTIFICATIONS MUST BE IN THIS EXACT ORDER (pre-computed, do not reorder):\n${sortedCerts.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n`
-      : ""
-
   const languageInstruction =
     language === "pt"
       ? "⚠️ OBRIGATÓRIO: Mantenha os nomes das categorias e habilidades EXATAMENTE como estão (podem estar em português ou inglês). NÃO traduza nomes de ferramentas, software ou tecnologias."
-      : "⚠️ MANDATORY: Keep tool, software, and technology names EXACTLY as they are. You may translate non-tool descriptive skill labels to natural English when needed."
+      : "⚠️ MANDATORY: Keep every category and skill name EXACTLY as provided. Do not translate, rename, add, or remove anything."
 
   const profileBlock = buildProfileBlock(jobProfile, "skills")
   const approvedSkillsSection =
     approvedSkills && approvedSkills.length > 0
-      ? `\nUSER-APPROVED SKILLS (may be added if directly relevant):\n${approvedSkills.join(", ")}\n`
+      ? `\nUSER-APPROVED SKILLS (context only; do not add unless already present in USER'S CV SKILLS):\n${approvedSkills.join(", ")}\n`
       : ""
 
   return `${languageInstruction}
 
-⚠️  CRITICAL: REORDER + SELECT FROM PROFILE SKILLS (ATS OPTIMIZATION)
+⚠️  CRITICAL: REORDER EXISTING PROFILE SKILLS ONLY (NO ADDITIONS OR REMOVALS)
 
 JOB REQUIRED SKILLS (PRIORITIZE THESE):
 ${requisitosObrigatorios}
@@ -791,16 +456,14 @@ ${JSON.stringify(currentSkills, null, 2)}
 
 ${approvedSkillsSection}
 
-ALLOWED SKILLS (you MUST use ONLY these exact items):
-Profile Skills: ${cvSkillItems.join(", ")}${approvedSkills && approvedSkills.length > 0 ? `\nUser-Approved Skills: ${approvedSkills.join(", ")}` : ""}
+ALLOWED SKILLS (you MUST use ONLY these exact profile items, all exactly once):
+Profile Skills: ${cvSkillItems.join(", ")}
 
 EXACT PHRASES TO MATCH (from job):
 ${atsKeywords.exact_phrases.length > 0 ? atsKeywords.exact_phrases.join(", ") : "None extracted"}
 
 STRUCTURED JOB PROFILE:
 ${profileBlock}
-
-${certOrderInstruction}
 
 ${SKILLS_PROMPT_INSTRUCTIONS}`
 }
@@ -831,8 +494,8 @@ export function buildProjectsPrompt(
 
   const descriptionFormatInstruction =
     language === "pt"
-      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nSelecione entre 2 e 3 projetos (nunca 1, nunca 4+). ORÇAMENTO TOTAL: 1000 caracteres para TODA a seção de projetos. Antes de redigir, calcule: 1000 ÷ nº de projetos = orçamento por projeto (2 projetos = ~500 chars cada; 3 projetos = ~330 chars cada). Cada descrição deve ser texto corrido em parágrafo único, sem bullet points. Frase 1: o que foi feito + tecnologia/método principal. Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto. NUNCA usar 3 frases se 2 forem suficientes. Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. O campo "description" continua sendo array com EXATAMENTE 1 elemento.'
-      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nSelect between 2 and 3 projects (never 1, never 4+). TOTAL BUDGET: 1000 characters for the ENTIRE projects section. Before writing, calculate: 1000 ÷ number of projects = budget per project (2 projects = ~500 chars each; 3 projects = ~330 chars each). Each description must be continuous prose in a single paragraph, no bullet points. Sentence 1: what was done + the main technology/method. Sentence 2: measurable result or concrete impact if available; otherwise, use the project context/purpose. NEVER use 3 sentences if 2 are enough. For academic projects with many data points, mention AT MOST 1 quantitative result. The "description" field must remain an array with EXACTLY 1 element.'
+      ? '=== IMPORTANTE: FORMATO OBRIGATÓRIO DOS PROJETOS ===\nReescreva TODOS os projetos recebidos, sem selecionar, omitir, adicionar ou reordenar projetos. Cada descrição deve ser texto corrido em parágrafo único, sem bullet points. Frase 1: o que foi feito + tecnologia/método principal. Frase 2: resultado mensurável ou impacto concreto (se disponível). Se não houver resultado mensurável, a frase 2 pode mencionar o contexto/finalidade do projeto. NUNCA usar 3 frases se 2 forem suficientes. Projetos acadêmicos com muitos dados: mencionar NO MÁXIMO 1 resultado quantitativo. O campo "description" continua sendo array com EXATAMENTE 1 elemento.'
+      : '=== IMPORTANT: REQUIRED PROJECT FORMAT ===\nRewrite EVERY project received. Do not select, omit, add, or reorder projects. Each description must be continuous prose in a single paragraph, no bullet points. Sentence 1: what was done + the main technology/method. Sentence 2: measurable result or concrete impact if available; otherwise, use the project context/purpose. NEVER use 3 sentences if 2 are enough. For academic projects with many data points, mention AT MOST 1 quantitative result. The "description" field must remain an array with EXACTLY 1 element.'
 
   // Extract ATS keywords (6 types)
   const atsKeywords = extractATSKeywords(jobDetails)

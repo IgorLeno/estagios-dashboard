@@ -24,6 +24,13 @@ vi.mock("../ats-scorer", () => ({
   calculateATSScore: mockCalculateATSScore,
 }))
 
+vi.mock("@/lib/supabase/candidate-profile", () => ({
+  getCandidateProfile: vi.fn(async () => ({
+    curriculo_geral_md: "# Curriculo geral\n\n## PERFIL PROFISSIONAL\n\nResumo base.",
+    curriculo_geral_md_en: "# General resume\n\n## PROFESSIONAL PROFILE\n\nBase summary.",
+  })),
+}))
+
 import { getCVTemplate } from "../cv-templates"
 
 // Mock getCVTemplateForUser to use the synchronous getCVTemplate (avoids Supabase cookies error)
@@ -101,7 +108,7 @@ beforeEach(() => {
       }))
     }
 
-    if (prompt.includes("CRITICAL: REORDER + SELECT FROM PROFILE SKILLS")) {
+    if (prompt.includes("CRITICAL: REORDER EXISTING PROFILE SKILLS ONLY")) {
       return makeResponse(JSON.stringify({ skills: baseCv.skills }))
     }
 

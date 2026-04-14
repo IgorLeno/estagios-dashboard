@@ -435,54 +435,51 @@ function buildSummaryTopics(
 function buildSkillReorderingHints(family: RoleFamily, mode: RoleMode): string[] {
   if (family === "laboratory_qc") {
     return [
-      "PRIORITIZE category 'Química Analítica & Laboratório' FIRST: solution preparation, titrations, synthesis, sample control, GLP",
-      "SECOND: 'Gestão de Qualidade & Normas' — Excel (basic level), ISO 17025, technical reports",
-      "MINIMIZE or move to end: programming (Python, SQL), data science tools — only keep if job explicitly requires",
-      "ADD lab skills from bank if available; use proficiency indicators (básico/intermediário/avançado)",
+      "Within each existing category, move laboratory-related items toward the start when they are already present",
+      "Within each existing category, move quality/norms items toward the start when they are already present",
+      "Move programming and data science items toward the end when weakly related; do not remove them",
+      "Do not add lab skills, proficiency indicators, categories, or renamed skill labels",
     ]
   }
   if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
     return [
-      "PRIORITIZE 'Visualização & BI' FIRST: Power BI, Excel (with specific functions), SQL",
-      "SECOND: 'Competências de Processo' — validação de dados, organização de bases, padronização, documentação técnica",
-      "REMOVE entirely: Scikit-learn, Deep Learning, TensorFlow, neural networks — contradicts operational profile",
-      "REMOVE: specialized engineering tools (CREST, MOPAC, GAMESS, Aspen Plus, OpenBabel, Avogadro)",
-      "DEPRIORITIZE: niche tools not relevant to BI/analytics",
-      "For soft skills: split into 'Competências de Processo' (technical process) and 'Competências Comportamentais' (behavioral traits)",
-      "RENAME: 'Gestão de projetos' → 'Acompanhamento de projetos' for internship roles",
+      "Within existing categories, move BI/analytics items such as Power BI, Excel, SQL, validation, bases, standardization, documentation, and KPIs toward the start when already present",
+      "Move ML, neural network, and specialized engineering tool items toward the end when weakly related; do not remove them",
+      "Do not split soft-skill categories or create process/behavioral categories",
+      "Do not rename skills such as 'Gestão de projetos'; keep labels exactly as provided",
     ]
   }
   if (family === "data_science_ml") {
     return [
-      "PRIORITIZE 'Linguagens & Análise de Dados' FIRST: Python (Pandas, NumPy, Scikit-learn), SQL, ML libraries",
-      "SECOND: Visualization tools (Power BI, Matplotlib)",
-      "MINIMIZE: Lab skills unless data comes from experiments",
+      "Within existing categories, move Python, SQL, ML, data pipeline, and analysis items toward the start when already present",
+      "Within existing categories, move visualization items toward the start when already present",
+      "Move lab-only items toward the end when weakly related; do not remove them",
     ]
   }
   if (family === "bi_reporting" && mode === "analytical_reporting") {
     return [
-      "PRIORITIZE 'Visualização & BI' FIRST: Power BI, Tableau, SQL, Excel",
-      "SECOND: data analysis tools (Python, pandas) — position as reporting support, not ML",
-      "MINIMIZE: Lab skills, engineering tools",
+      "Within existing categories, move Power BI, Tableau, SQL, Excel, and reporting items toward the start when already present",
+      "Within existing categories, position Python/pandas as reporting support, not ML, when already present",
+      "Move lab and engineering tool items toward the end when weakly related; do not remove them",
     ]
   }
   if (family === "qhse_quality") {
     return [
-      "PRIORITIZE 'Gestão de Qualidade & QHSE' FIRST: Excel, Power BI, KPIs, technical reports, ISO standards, non-conformance control",
-      "MINIMIZE: Programming (except when job requires quality automation)",
+      "Within existing categories, move Excel, Power BI, KPIs, technical reports, ISO standards, and non-conformance control toward the start when already present",
+      "Move programming items toward the end unless the job requires quality automation; do not remove them",
     ]
   }
   if (family === "process_engineering") {
     return [
-      "PRIORITIZE 'Ferramentas de Engenharia' FIRST: Aspen Plus, MATLAB, CAD, process simulation",
-      "SECOND: 'Análise Técnica & Otimização' — mass/energy balances, process optimization, efficiency analysis",
-      "MINIMIZE: generic office skills unless explicitly required; data tools only if they support engineering scope",
+      "Within existing categories, move Aspen Plus, MATLAB, CAD, process simulation, and engineering analysis items toward the start when already present",
+      "Within existing categories, move mass/energy balance, process optimization, and efficiency analysis items toward the start when already present",
+      "Move generic office skills and unrelated data tools toward the end unless explicitly required; do not remove them",
     ]
   }
   return [
-    "PRIORITIZE skills with exact job match first",
+    "Within each existing category, place exact job matches first",
     "KEEP a balanced mix of technical, analytical, and operational skills",
-    "REMOVE or move to end skills with no direct relationship to requirements",
+    "Move skills with no direct relationship to requirements toward the end; do not remove them",
   ]
 }
 

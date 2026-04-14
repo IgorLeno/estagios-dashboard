@@ -147,28 +147,32 @@ FORMATO DE SAÍDA (JSON):
 
   curriculo_prompt: `⚠️ REGRAS CRÍTICAS - ZERO TOLERÂNCIA PARA VIOLAÇÕES:
 
-1. NUNCA invente habilidades, ferramentas, certificações ou experiências
-2. NUNCA adicione novas habilidades à lista (APENAS reordene as existentes)
-3. NUNCA mude títulos ou datas de projetos (APENAS reescreva descrições)
-4. NUNCA invente métricas ou conquistas não presentes no CV original
-5. APENAS reordene e enfatize conteúdo existente - SEM invenção
+BASE OBRIGATÓRIA:
+Use o currículo geral fornecido como fonte base. O currículo personalizado deve seguir exatamente o mesmo padrão de markdown, estrutura de seções e ordem das seções do currículo geral.
 
-O QUE VOCÊ PODE FAZER:
-✅ Reescrever resumo para incluir palavras-chave da vaga (80-120 palavras)
-✅ Reordenar habilidades dentro de categorias por relevância à vaga
-✅ Reescrever descrições de projetos para enfatizar aspectos relevantes à vaga
+PRESERVAÇÃO DE LAYOUT E ESTRUTURA:
+1. Mantenha EXATAMENTE a mesma estrutura e ordem de seções do currículo geral (ex.: Perfil Profissional, Competências, Projetos, Educação, Certificações).
+2. NUNCA adicione, remova ou renomeie seções.
+3. NUNCA altere a linha de contato: mantenha nome, email, telefone, LinkedIn, GitHub e localização exatamente como aparecem no currículo geral, sem quebrar o telefone.
+4. NUNCA altere formação acadêmica, instituições, datas, idiomas ou certificações.
+5. NUNCA altere a formatação HTML dos projetos: preserve divs com style="text-align: justify;" quando existirem no currículo geral.
+6. Preserve negritos (**texto**) em títulos de projetos e categorias de habilidades.
+7. Preserve itálicos (_texto_ ou *texto*) nos períodos dos projetos.
 
-O QUE VOCÊ NÃO PODE FAZER:
-❌ Adicionar habilidades/ferramentas não presentes na lista original
-❌ Adicionar certificações não presentes na lista original
-❌ Mudar títulos ou datas de projetos
-❌ Inventar novos projetos ou experiências
-❌ Adicionar métricas/números não presentes no CV original
-❌ Mudar informações de contato
+O QUE VOCÊ PODE ALTERAR:
+✅ Resumo/Perfil profissional: reescrever com palavras-chave da vaga, mantendo tamanho similar ao original.
+✅ Habilidades: reordenar itens dentro das categorias existentes por relevância à vaga. NÃO adicionar nem remover itens.
+✅ Projetos: reescrever somente as descrições para enfatizar aspectos relevantes à vaga. NÃO alterar títulos, períodos ou criar projetos.
 
-VALIDAÇÃO:
-Seu output será validado contra schemas rigorosos. Qualquer conteúdo inventado será rejeitado.
-Se os requisitos da vaga pedirem habilidades não presentes no CV, NÃO as adicione - apenas enfatize habilidades relacionadas existentes.`,
+PROIBIÇÕES ABSOLUTAS:
+❌ Nunca inventar habilidades, ferramentas, métricas, certificações, experiências, datas ou resultados não presentes no currículo geral.
+❌ Nunca adicionar novas seções.
+❌ Nunca alterar datas, instituições, títulos de projetos ou informações de contato.
+❌ Nunca alterar layout visual, ordem das seções ou padrão de markdown do currículo geral.
+
+QUALIDADE DE OUTPUT:
+O output deve ser markdown válido, seguindo exatamente o mesmo padrão do currículo geral de entrada.
+Se a vaga pedir algo que não existe no currículo geral, NÃO invente: apenas enfatize competências relacionadas que já estejam presentes.`,
 }
 
 export interface QuickFillField {

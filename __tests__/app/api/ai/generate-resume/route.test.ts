@@ -181,12 +181,13 @@ describe("POST /api/ai/generate-resume", () => {
     )
     expect(generateTailoredResume).toHaveBeenCalledWith({
       jobDetails: expect.any(Object),
-      language: "en",
+      language: "pt",
       userId: "test-user-id",
       approvedSkills: undefined,
       model: "openai/gpt-5.4-nano",
       selectedProjectTitles: undefined,
       profileText: undefined,
+      tagline: undefined,
       selectedCertifications: undefined,
     })
   })
@@ -219,6 +220,7 @@ describe("POST /api/ai/generate-resume", () => {
       model: undefined,
       selectedProjectTitles: undefined,
       profileText: undefined,
+      tagline: undefined,
       selectedCertifications: undefined,
     })
   })

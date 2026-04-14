@@ -4,36 +4,75 @@ import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-cl
 import { loadUserAIConfig } from "@/lib/ai/config"
 import { RefineResumeRequestSchema } from "@/lib/ai/types"
 import { createClient } from "@/lib/supabase/server"
+import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
 
-function buildRefinementMessages(currentResume: string, instructions: string, language: "pt" | "en"): GrokMessage[] {
+type ResumeLanguage = "pt" | "en"
+
+function resolveResumeLanguage(vagaLanguage: unknown, fallback: ResumeLanguage): ResumeLanguage {
+  return vagaLanguage === "en" || vagaLanguage === "pt" ? vagaLanguage : fallback
+}
+
+function formatList(label: string, values: unknown): string {
+  return Array.isArray(values) && values.length > 0 ? `${label}: ${values.join("; ")}` : `${label}: Not specified`
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildJobContext(vaga: Record<string, any>): string {
+  return [
+    `Company: ${vaga.empresa || "Not specified"}`,
+    `Position: ${vaga.cargo || "Not specified"}`,
+    `Location: ${vaga.local || "Not specified"}`,
+    `Work mode: ${vaga.modalidade || "Not specified"}`,
+    `Job level: ${vaga.tipo_vaga || "Not specified"}`,
+    `Job language: ${vaga.idioma_vaga || "pt"}`,
+    formatList("Required skills", vaga.requisitos_obrigatorios),
+    formatList("Desired skills", vaga.requisitos_desejaveis),
+    formatList("Responsibilities", vaga.responsabilidades),
+  ].join("\n")
+}
+
+function buildRefinementMessages(
+  currentResume: string,
+  generalResume: string,
+  instructions: string,
+  language: ResumeLanguage,
+  jobContext: string
+): GrokMessage[] {
   const languageLabel = language === "pt" ? "Português" : "English"
 
   return [
     {
       role: "system",
       content: [
-        "You are an expert resume editor. Your job is to apply the user's instructions to produce a genuinely better resume — not just a superficially adjusted one.",
+        "You are an expert resume editor for tailored resumes.",
         "",
-        "CORE DIRECTIVES:",
-        "- The user's instructions are the highest priority. Follow them precisely and completely.",
-        "- You have full editorial authority: rewrite, restructure, cut, or reorder any section if it leads to a better result.",
-        "- The final resume MUST fit on a single page. Cut ruthlessly to achieve this.",
-        "- Do not fabricate experience, dates, certifications, links, or metrics that are not already present in the resume.",
+        "STRUCTURAL SOURCE OF TRUTH:",
+        "- The GENERAL RESUME BASE is the mandatory structural baseline.",
+        "- Keep EXACTLY the same markdown pattern, section structure, and section order from the general resume.",
+        "- Do not add, remove, rename, or reorder sections.",
+        "- Do not change the contact line: keep name, email, phone, LinkedIn, GitHub, and location exactly as they appear in the general resume.",
+        "- Do not split, wrap, rewrite, or reformat the phone number.",
+        "- Do not change education, institutions, dates, languages, certifications, project titles, or project periods.",
+        '- Preserve project HTML formatting from the general resume, including divs with style="text-align: justify;" when present.',
+        "- Preserve bold markdown (**text**) for project titles and skill category names.",
+        "- Preserve italic markdown (_text_ or *text*) for project periods.",
         "",
-        "PROJECT SELECTION:",
-        "- You do NOT need to include all projects from the current resume.",
-        "- Select only the projects that are most relevant and impactful for the target context.",
-        "- Prefer projects with measurable outcomes (numbers, scale, frequency, reliability gains, error reductions, automation scope).",
-        "- Cut or summarize projects that are generic, weakly connected to the target role, or that push the resume past one page.",
+        "ALLOWED CHANGES ONLY:",
+        "- Profile/summary: rewrite to incorporate relevant job keywords while keeping similar length.",
+        "- Skills: reorder existing items inside existing categories by relevance to the job. Do not add or remove skill items.",
+        "- Projects: rewrite descriptions to emphasize job-relevant aspects. Do not alter titles, periods, or create projects.",
+        "- User refinement instructions apply only inside these allowed changes.",
         "",
-        "QUALITY STANDARDS FOR PROJECT DESCRIPTIONS:",
-        "- Each project bullet must follow the pattern: action + context + measurable impact or concrete result.",
-        '- Replace vague phrases ("support to operation", "operational routines", "continuous improvement") with specific, credible language that reflects what the project actually did.',
-        "- Avoid keyword stuffing. Each keyword should appear at most once per project and only where it is organically appropriate.",
-        "- Prefer authenticity over ATS optimization: a credible description that reads naturally is stronger than a keyword-dense one that sounds artificial.",
+        "ABSOLUTE PROHIBITIONS:",
+        "- Never fabricate skills, tools, metrics, certifications, experience, institutions, dates, links, or achievements.",
+        "- Never add new sections.",
+        "- Never change contact information.",
+        "- Never change the visual layout or markdown pattern from the general resume.",
+        "- If the user's instruction conflicts with these restrictions, preserve the general resume structure and facts.",
         "",
         "OUTPUT RULES:",
-        "Return the complete refined resume in markdown only.",
+        "Return the complete refined resume in valid markdown only.",
+        "Follow exactly the same output pattern as the general resume base.",
         "Do not wrap the answer in code fences.",
         "Do not add explanations, notes, or commentary before or after the markdown.",
         `The resume is written in ${languageLabel}.`,
@@ -42,10 +81,16 @@ function buildRefinementMessages(currentResume: string, instructions: string, la
     {
       role: "user",
       content: [
-        `Current resume markdown (${languageLabel}):`,
+        `GENERAL RESUME BASE MARKDOWN (${languageLabel}) - structural source of truth:`,
+        generalResume,
+        "",
+        `CURRENT TAILORED RESUME MARKDOWN (${languageLabel}) - starting draft:`,
         currentResume,
         "",
-        "Refinement instructions (apply these exactly — they override any default behavior):",
+        "JOB CONTEXT:",
+        jobContext,
+        "",
+        "REFINEMENT INSTRUCTIONS (apply only within the allowed changes above):",
         instructions,
       ].join("\n"),
     },
@@ -110,27 +155,48 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       )
     }
 
-    const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
-    const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+    const effectiveLanguage = resolveResumeLanguage(vaga.idioma_vaga, language)
+    const markdownField = effectiveLanguage === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+    const pdfField = effectiveLanguage === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
     const currentResume = vaga[markdownField]?.trim()
 
     if (!currentResume) {
       return NextResponse.json(
         {
           success: false,
-          error: `No existing resume found for ${language.toUpperCase()}`,
+          error: `No existing resume found for ${effectiveLanguage.toUpperCase()}`,
+        },
+        { status: 400 }
+      )
+    }
+
+    const profile = await getCandidateProfile(user.id)
+    const generalResume =
+      effectiveLanguage === "en"
+        ? profile.curriculo_geral_md_en?.trim() || profile.curriculo_geral_md?.trim()
+        : profile.curriculo_geral_md?.trim()
+
+    if (!generalResume) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No general resume found for ${effectiveLanguage.toUpperCase()}`,
         },
         { status: 400 }
       )
     }
 
     const config = await loadUserAIConfig(user.id)
-    const response = await callGrok(buildRefinementMessages(currentResume, instructions, language), {
-      model: validatedInput.model ?? config.modelo_gemini,
-      temperature: config.temperatura,
-      max_tokens: 8192,
-      top_p: config.top_p ?? 0.9,
-    }, { userId: user.id })
+    const response = await callGrok(
+      buildRefinementMessages(currentResume, generalResume, instructions, effectiveLanguage, buildJobContext(vaga)),
+      {
+        model: validatedInput.model ?? config.modelo_gemini,
+        temperature: config.temperatura,
+        max_tokens: 8192,
+        top_p: config.top_p ?? 0.9,
+      },
+      { userId: user.id }
+    )
 
     const refinedResume = response.content.trim()
 

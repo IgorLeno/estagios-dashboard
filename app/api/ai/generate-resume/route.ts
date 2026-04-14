@@ -123,9 +123,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw new Error("Job details not available")
     }
 
+    const effectiveLanguage = jobDetails.idioma_vaga || language
+    if (effectiveLanguage !== language) {
+      console.log(
+        `[Resume API] Using job language ${effectiveLanguage.toUpperCase()} instead of requested ${language.toUpperCase()}`
+      )
+    }
+
     // Fall back to vaga-stored profile text / tagline when not provided in request body
-    const vagaProfileField = language === "pt" ? "profile_text_pt" : "profile_text_en"
-    const vagaTaglineField = language === "pt" ? "tagline_pt" : "tagline_en"
+    const vagaProfileField = effectiveLanguage === "pt" ? "profile_text_pt" : "profile_text_en"
+    const vagaTaglineField = effectiveLanguage === "pt" ? "tagline_pt" : "tagline_en"
     const resolvedUseTagline =
       typeof useTagline === "boolean"
         ? useTagline
@@ -141,7 +148,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const resumeResult = await withTimeout(
       generateTailoredResume({
         jobDetails,
-        language,
+        language: effectiveLanguage,
         userId,
         approvedSkills,
         model,
@@ -159,11 +166,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const pdfBuffer = await generateResumePDF(resumeResult.cv, resumeTemplate ?? "modelo1")
 
     const pdfBase64 = pdfBuffer.toString("base64")
-    const filename = generateResumeFilename(jobDetails.empresa, language)
+    const filename = generateResumeFilename(jobDetails.empresa, effectiveLanguage)
 
     if (vagaId) {
-      const markdownField = language === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
-      const pdfField = language === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
+      const markdownField = effectiveLanguage === "pt" ? "curriculo_text_pt" : "curriculo_text_en"
+      const pdfField = effectiveLanguage === "pt" ? "arquivo_cv_url_pt" : "arquivo_cv_url_en"
       const pdfDataUrl = `data:application/pdf;base64,${pdfBase64}`
 
       const html = generateResumeHTML(resumeResult.cv, resumeTemplate ?? "modelo1")
@@ -189,7 +196,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         throw new Error("Failed to save resume: vaga not found")
       }
 
-      console.log(`[Resume API] ✅ Resume saved to database (${language.toUpperCase()})`)
+      console.log(`[Resume API] ✅ Resume saved to database (${effectiveLanguage.toUpperCase()})`)
     }
 
     const totalDuration = Date.now() - startTime

@@ -29,8 +29,10 @@ function appendGeneralResumeContext(systemInstruction: string, generalResumeMark
     systemInstruction,
     "",
     "--- GENERAL RESUME BASE CONTEXT ---",
-    "The candidate saved this general resume as the base reference for tailored resumes.",
-    "Use it as a style and content baseline: preserve its tone, formatting conventions, section style, and factual information when they fit the target job.",
+    "The candidate saved this general resume as the mandatory base reference for tailored resumes.",
+    "Preserve its section structure, section order, markdown pattern, contact line, education, certifications, project titles, and project periods.",
+    'If project descriptions use HTML blocks such as divs with style="text-align: justify;", preserve that formatting convention in markdown outputs.',
+    "Only the profile/summary, skill ordering inside existing categories, and project descriptions may be adapted to the job.",
     "This context does not override the zero-fabrication rules. Do not add facts that are not present in the candidate profile, approved inputs, job-specific resume, or this general resume.",
     "",
     markdown.slice(0, MAX_GENERAL_RESUME_CONTEXT_CHARS),
@@ -295,6 +297,39 @@ function reorderCertifications(
   return [...ordered, ...remaining]
 }
 
+function preserveSkillInventory(
+  originalSkills: CVTemplate["skills"],
+  returnedSkills: PersonalizedSections["skills"]
+): PersonalizedSections["skills"] {
+  return originalSkills.map((originalCategory) => {
+    const returnedCategory = returnedSkills.find((category) => category.category === originalCategory.category)
+    if (!returnedCategory) return originalCategory
+
+    const returnedItems = returnedCategory.items.filter((item) => originalCategory.items.includes(item))
+    const remainingItems = originalCategory.items.filter((item) => !returnedItems.includes(item))
+
+    return {
+      category: originalCategory.category,
+      items: [...returnedItems, ...remainingItems],
+    }
+  })
+}
+
+function preserveProjectInventory(
+  originalProjects: CVTemplate["projects"],
+  returnedProjects: PersonalizedSections["projects"]
+): PersonalizedSections["projects"] {
+  return originalProjects.map((originalProject) => {
+    const returnedProject = returnedProjects.find((project) => project.title === originalProject.title)
+    if (!returnedProject) return originalProject
+
+    return {
+      ...originalProject,
+      description: returnedProject.description,
+    }
+  })
+}
+
 function validateConsistencyDraft(originalDraft: CVDraft, correctedDraft: CVDraft): void {
   const originalTitles = originalDraft.projects.map((project) => project.title)
   const correctedTitles = correctedDraft.projects.map((project) => project.title)
@@ -548,10 +583,13 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     personalizeProjects(jobDetails, filteredCv, projectsModel, language, jobProfile),
   ])
 
+  const preservedSkills = preserveSkillInventory(baseCv.skills, skillsResult.skills)
+  const preservedProjects = preserveProjectInventory(filteredCv.projects, projectsResult.projects)
+
   const uncorrectedDraft: CVDraft = {
     summary: summaryResult.summary,
-    skills: skillsResult.skills,
-    projects: projectsResult.projects,
+    skills: preservedSkills,
+    projects: preservedProjects,
     certifications: filteredCertifications.map((certification) => certification.title),
     language,
   }
@@ -602,7 +640,9 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   // STEP 8: Merge into final CV
   // Re-attach the `period` field from the original projects — the LLM doesn't receive
   // or return it, so it would otherwise be lost during personalization.
-  const projectsWithPeriod = finalDraft.projects.map((p) => ({
+  const finalSkills = preserveSkillInventory(baseCv.skills, finalDraft.skills)
+  const finalProjects = preserveProjectInventory(filteredCv.projects, finalDraft.projects)
+  const projectsWithPeriod = finalProjects.map((p) => ({
     ...p,
     period: filteredCv.projects.find((orig) => orig.title === p.title)?.period,
   }))
@@ -610,9 +650,9 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   const personalizedCv: CVTemplate = {
     ...filteredCv,
     summary: finalDraft.summary,
-    skills: finalDraft.skills,
+    skills: finalSkills,
     projects: projectsWithPeriod,
-    certifications: reorderCertifications(filteredCv.certifications, finalDraft.certifications),
+    certifications: filteredCertifications,
   }
 
   // STEP 9: Calculate ATS score

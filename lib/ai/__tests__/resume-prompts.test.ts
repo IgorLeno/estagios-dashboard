@@ -49,25 +49,27 @@ function buildProjectsPromptForFixture(
 // ─── approvedSkills integration ───────────────────────────────────────────────
 
 describe("buildSkillsPrompt — approvedSkills", () => {
-  it("includes approved skills in ALLOWED SKILLS when provided", () => {
+  it("includes approved skills as context only when provided", () => {
     const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA, "pt", [
       "Gestão de Pessoas",
       "SAP SuccessFactors",
     ])
 
-    expect(prompt).toContain("User-Approved Skills: Gestão de Pessoas, SAP SuccessFactors")
+    expect(prompt).toContain("USER-APPROVED SKILLS (context only; do not add unless already present in USER'S CV SKILLS):")
+    expect(prompt).toContain("Gestão de Pessoas, SAP SuccessFactors")
+    expect(prompt).not.toContain("User-Approved Skills: Gestão de Pessoas, SAP SuccessFactors")
   })
 
   it("does not include User-Approved Skills line when approvedSkills is empty", () => {
     const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA, "pt", [])
 
-    expect(prompt).not.toContain("User-Approved Skills")
+    expect(prompt).not.toContain("USER-APPROVED SKILLS (context only")
   })
 
   it("does not include User-Approved Skills line when approvedSkills is undefined", () => {
     const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA, "pt")
 
-    expect(prompt).not.toContain("User-Approved Skills")
+    expect(prompt).not.toContain("USER-APPROVED SKILLS (context only")
   })
 })
 
@@ -129,7 +131,7 @@ describe("prompts — domain-specific hints from JobProfile", () => {
     const prompt = buildSkillsPromptForFixture(FIXTURE_PEOPLE_ANALYTICS_AEGEA)
 
     expect(prompt).toContain("DOMAIN-SPECIFIC GUIDANCE:")
-    expect(prompt).toContain("PRIORITIZE 'Visualização & BI'")
+    expect(prompt).toContain("move BI/analytics items")
   })
 
   it("skills prompt includes skill_reordering_hints for laboratory", () => {

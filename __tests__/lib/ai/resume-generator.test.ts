@@ -3,6 +3,8 @@ import { generateTailoredResume, InsufficientProfileError } from "@/lib/ai/resum
 import type { GenerateResumeOptions } from "@/lib/ai/resume-generator"
 import type { JobDetails } from "@/lib/ai/types"
 
+const asCertificationObjects = (certifications: string[]) => certifications.map((title) => ({ title }))
+
 // Mock job details for testing
 const mockJobDetails: JobDetails = {
   empresa: "Tech Corp",
@@ -131,6 +133,13 @@ vi.mock("@/lib/ai/config", () => ({
     maxOutputTokens: config.max_tokens || 4096,
     topP: config.top_p,
     topK: config.top_k,
+  })),
+}))
+
+vi.mock("@/lib/supabase/candidate-profile", () => ({
+  getCandidateProfile: vi.fn(async () => ({
+    curriculo_geral_md: "# Curriculo geral\n\n## PERFIL PROFISSIONAL\n\nResumo base.",
+    curriculo_geral_md_en: "# General resume\n\n## PROFESSIONAL PROFILE\n\nBase summary.",
   })),
 }))
 
@@ -470,7 +479,7 @@ describe("generateTailoredResume", () => {
       selectedCertifications: [mockBaseCertifications[0], mockBaseCertifications[2]],
     })
 
-    expect(result.cv.certifications).toEqual([mockBaseCertifications[0], mockBaseCertifications[2]])
+    expect(result.cv.certifications).toEqual(asCertificationObjects([mockBaseCertifications[0], mockBaseCertifications[2]]))
   })
 
   it("should support English language", async () => {
@@ -669,7 +678,7 @@ describe("generateTailoredResume", () => {
     const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.summary).toBe(correctedSummary)
-    expect(result.cv.certifications).toEqual(mockSortedCertifications)
+    expect(result.cv.certifications).toEqual(asCertificationObjects(mockBaseCertifications))
   })
 
   it("should fall back to uncorrected draft when consistency agent fails", async () => {
@@ -700,7 +709,7 @@ describe("generateTailoredResume", () => {
     const result = await generateTailoredResume({ jobDetails: mockJobDetails, language: "pt" })
 
     expect(result.cv.summary).toBe(mockSummaryResponse.summary)
-    expect(result.cv.certifications).toEqual(mockBaseCertifications)
+    expect(result.cv.certifications).toEqual(asCertificationObjects(mockBaseCertifications))
     expect(warnSpy).toHaveBeenCalledWith(
       "[ConsistencyAgent] ❌ Failed (OTHER), using uncorrected draft:",
       "Consistency timeout"

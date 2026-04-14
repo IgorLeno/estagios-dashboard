@@ -60,7 +60,7 @@ Your sole job: make the document internally coherent.
 RULES:
 1. Never add new content - only modify existing content
 2. Never change project titles or dates
-3. Never remove entire sections
+3. Never remove sections, skill categories, skill items, projects, or certifications
 4. Return ONLY valid JSON matching the input schema
 5. Log every change you make in the "corrections" array`
 
@@ -98,26 +98,16 @@ Known violations to fix:
 Fix ALL English descriptors inside parentheses in the summary.
 Tool names (Power BI, Excel, SQL, Python) are proper nouns - keep as-is.
 
-## RULE 3: Credential Calibration (UNCONDITIONAL)
-Scan skills for inflated credential terms. Apply these ALWAYS — do not check role type:
-- "Modelagem de dados" → ALWAYS REMOVE from skills
-  UNLESS a project description explicitly mentions ER diagrams, schema design, or database modeling.
-  (organizing bases ≠ data modeling; pipeline ≠ ER diagram)
-- "Governança da informação" → ALWAYS REMOVE from skills.
-  Do NOT move to summary. Simply remove.
-- "Análise de dados" in "Competências de Processo" → ALWAYS REMOVE
-  (too generic, already implied by the entire CV)
-- "Visualização de dados" as standalone item → REMOVE if Power BI is already listed
-  with descriptors (redundant)
+## RULE 3: Inventory Preservation
+Do not remove, add, rename, translate, deduplicate, or reorder skill categories or skill items.
+Do not remove, add, rename, translate, deduplicate, or reorder certifications.
+If a skill looks inflated or weakly relevant, leave it unchanged and mention the concern in "issues".
 
-## RULE 4: Certification Order
-Reorder the certifications array using this priority (lower index = higher priority):
-1. Google Data Analytics
-2. Power BI (any certification containing "Power BI")
-3. SQL (any certification containing "SQL")
-4. Excel (any certification containing "Excel")
-5. All other analytics/data certifications
-LAST. Deep Learning, Machine Learning, AI, Neural Network certifications
+## RULE 4: Certification Preservation
+Keep the certifications array exactly as received.
+Do not sort certifications.
+Do not remove certifications.
+Do not add certifications.
 
 ## RULE 5: Summary naturalness - remove constructed phrases
 In the summary, if you find phrases that sound artificial, apply these replacements:
