@@ -84,7 +84,7 @@ describe("validateCVTemplate", () => {
     expect(result.errors.join("\n")).toContain("Resumo deve ter pelo menos 40 palavras")
     expect(result.errors.join("\n")).toContain("6 categorias")
     expect(result.errors.join("\n")).toContain("24 itens")
-    expect(result.errors.join("\n")).toContain('Projeto "Dashboard de Indicadores" excede o máximo de 3 bullets')
+    expect(result.warnings.join("\n")).toContain('Projeto "Dashboard de Indicadores" tem mais de 3 elementos em description[]')
   })
 
   it("returns warnings for soft limit breaches without blocking generation", () => {
@@ -113,7 +113,7 @@ describe("validateCVTemplate", () => {
       {
         title: "Projeto Extra 3",
         description: [
-          "Este bullet foi escrito de forma propositalmente longa para ultrapassar o limite de caracteres e validar o warning esperado no preflight.",
+          "Este bullet foi escrito de forma propositalmente longa para ultrapassar o limite de trezentos caracteres e validar o warning esperado no preflight. O texto precisa ser extenso o suficiente para que a funcao de validacao identifique a violacao e emita o aviso correspondente ao usuario antes da geracao do PDF.",
           "Mantive a documentacao e a padronizacao das regras de atualizacao.",
         ],
       },
@@ -127,6 +127,6 @@ describe("validateCVTemplate", () => {
     expect(result.warnings.join("\n")).toContain("menos de 2 categorias")
     expect(result.warnings.join("\n")).toContain("Certificações acima do recomendado de 5 itens")
     expect(result.warnings.join("\n")).toContain("Projetos acima do recomendado de 4 itens")
-    expect(result.warnings.join("\n")).toContain("excede 130 caracteres")
+    expect(result.warnings.join("\n")).toContain("excede 300 caracteres")
   })
 })

@@ -1,6 +1,5 @@
 import { generateResumeHTML } from "./resume-html-template"
 import type { ResumeTemplate } from "./resume-html-template"
-import { validateCVTemplate } from "./resume-preflight"
 import type { CVTemplate } from "./types"
 
 /**
@@ -48,14 +47,6 @@ export async function generateResumePDF(
 
   try {
     const page = await browser.newPage()
-
-    const preflight = validateCVTemplate(cv)
-    if (!preflight.valid) {
-      throw new Error(`CV preflight failed:\n${preflight.errors.join("\n")}`)
-    }
-    if (preflight.warnings.length > 0) {
-      console.warn("[CV Preflight] Warnings:", preflight.warnings)
-    }
 
     // Generate HTML content
     const htmlContent = generateResumeHTML(cv, template)

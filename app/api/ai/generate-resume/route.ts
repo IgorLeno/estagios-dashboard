@@ -10,6 +10,7 @@ import {
   JobDetails,
 } from "@/lib/ai/types"
 import { parseJobWithGemini } from "@/lib/ai/job-parser"
+import { validateCVTemplate } from "@/lib/ai/resume-preflight"
 import { validateAIConfig, AI_TIMEOUT_CONFIG } from "@/lib/ai/config"
 import { withTimeout, TimeoutError } from "@/lib/ai/utils"
 import { parseResumeUseTaglinePreference, RESUME_USE_TAGLINE_COOKIE_KEY } from "@/lib/resume-tagline-preference"
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       selectedProjectTitles,
       selectedCertifications,
       resumeTemplate,
+      ignoreWarnings,
     } =
       validatedInput
 
@@ -160,6 +162,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs,
       `Resume generation exceeded ${resumeGenerationTimeoutSeconds}s timeout`
     )
+
+    // Preflight: validate CV structure before PDF generation.
+    // If errors are found and the caller didn't explicitly ignore them,
+    // return a confirmation prompt instead of generating the PDF.
+    const preflight = validateCVTemplate(resumeResult.cv)
+    if (preflight.warnings.length > 0) {
+      console.warn("[Resume API] Preflight warnings:", preflight.warnings)
+    }
+    if (!preflight.valid && !ignoreWarnings) {
+      return NextResponse.json({
+        success: false,
+        requiresConfirmation: true,
+        warnings: preflight.errors,
+        message: "O currículo possui características fora do padrão recomendado.",
+      })
+    }
 
     // Generate PDF without an application-level timeout.
     // If Chromium hangs, the route-level maxDuration is the final safeguard.

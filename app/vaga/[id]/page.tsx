@@ -7,8 +7,16 @@ import type { CandidateProfile, VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit2, Star, User, MapPin, Building2, Save, Download } from "lucide-react"
+import { ArrowLeft, Edit2, Star, User, MapPin, Building2, Save, Download, AlertTriangle } from "lucide-react"
 import { EditVagaDialog } from "@/components/edit-vaga-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Sidebar } from "@/components/sidebar"
 import { StarRating } from "@/components/ui/star-rating"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
@@ -74,6 +82,9 @@ export default function VagaDetailPage() {
   const [complements, setComplements] = useState<ComplementSelection | null>(null)
   const [isSelectingComplements, setIsSelectingComplements] = useState(false)
   const [candidateProfile, setCandidateProfile] = useState<CandidateProfile | null>(null)
+  const [preflightWarnings, setPreflightWarnings] = useState<string[] | null>(null)
+  const [pendingGenerateLang, setPendingGenerateLang] = useState<"pt" | "en" | null>(null)
+  const [pendingGenerateModel, setPendingGenerateModel] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     loadVaga()
@@ -219,7 +230,7 @@ export default function VagaDetailPage() {
     setUseTagline(value)
   }
 
-  async function handleGenerateResume(language: "pt" | "en", model?: string) {
+  async function handleGenerateResume(language: "pt" | "en", model?: string, ignoreWarnings = false) {
     if (!vaga) return
 
     const approvedSkills = complements?.skills.filter((group) => group.selected).flatMap((group) => group.items) ?? []
@@ -248,12 +259,21 @@ export default function VagaDetailPage() {
           selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
           model,
           resumeTemplate: activeTemplate,
+          ignoreWarnings: ignoreWarnings || undefined,
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Erro ao gerar currículo: ${response.status}`)
+      const data = await response.json()
+
+      if (data.requiresConfirmation) {
+        setPreflightWarnings(data.warnings as string[])
+        setPendingGenerateLang(language)
+        setPendingGenerateModel(model)
+        return
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Erro ao gerar currículo: ${response.status}`)
       }
 
       toast.success(`Currículo em ${language.toUpperCase()} gerado com sucesso!`)
@@ -265,6 +285,22 @@ export default function VagaDetailPage() {
     } finally {
       setIsGeneratingPDF(null)
     }
+  }
+
+  async function handleConfirmGenerateWithWarnings() {
+    if (!pendingGenerateLang) return
+    const lang = pendingGenerateLang
+    const model = pendingGenerateModel
+    setPreflightWarnings(null)
+    setPendingGenerateLang(null)
+    setPendingGenerateModel(undefined)
+    await handleGenerateResume(lang, model, true)
+  }
+
+  function handleCancelPreflightDialog() {
+    setPreflightWarnings(null)
+    setPendingGenerateLang(null)
+    setPendingGenerateModel(undefined)
   }
 
   async function handleRefineResume(instructions: string, model: string) {
@@ -904,6 +940,34 @@ export default function VagaDetailPage() {
           )}
         </div>
       </main>
+
+      {/* Preflight warning dialog */}
+      <Dialog open={preflightWarnings !== null} onOpenChange={(open) => { if (!open) handleCancelPreflightDialog() }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Currículo fora do padrão recomendado
+            </DialogTitle>
+            <DialogDescription>
+              Isso pode afetar a formatação do PDF. Deseja continuar mesmo assim?
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+            {preflightWarnings?.map((warning, i) => (
+              <li key={i}>{warning}</li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelPreflightDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmGenerateWithWarnings}>
+              Gerar mesmo assim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
