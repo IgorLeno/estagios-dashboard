@@ -214,6 +214,7 @@ export interface CandidateProfile {
   objetivo_en: string
   tagline_pt: string
   tagline_en: string
+  curriculo_geral_md: string
   habilidades: Array<{
     category_pt: string
     category_en?: string
@@ -252,6 +253,7 @@ export const EMPTY_CANDIDATE_PROFILE: Omit<CandidateProfile, "id" | "user_id" | 
   objetivo_en: "",
   tagline_pt: "",
   tagline_en: "",
+  curriculo_geral_md: "",
   habilidades: [],
   projetos: [],
   certificacoes: [],

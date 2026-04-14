@@ -7,15 +7,21 @@ import { ProfileTab } from "@/components/ai-settings/profile-tab"
 import { SkillsTab } from "@/components/ai-settings/skills-tab"
 import { ProjectsTab } from "@/components/ai-settings/projects-tab"
 import { CertificationsTab } from "@/components/ai-settings/certifications-tab"
+import { ResumeContainer } from "@/components/resume-container"
+import { RefineResumeDialog } from "@/components/refine-resume-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MarkdownPreview } from "@/components/ui/markdown-preview"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { EMPTY_CANDIDATE_PROFILE, type CandidateProfile, type OpenRouterKeyStatus } from "@/lib/types"
+import { renderMarkdownResumeToHtml } from "@/lib/ai/markdown-converter"
+import { downloadPdf } from "@/lib/url-utils"
 import { Bot, Info, Loader2, LogIn, Plus, RotateCcw, Save, Sparkles, User, X } from "lucide-react"
 import { toast } from "sonner"
 import { getModelFailureWarning, recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
@@ -58,6 +64,7 @@ function normalizeProfileData(data?: Partial<CandidateProfile> | null): ProfileD
     objetivo_en: data?.objetivo_en ?? "",
     tagline_pt: data?.tagline_pt ?? "",
     tagline_en: data?.tagline_en ?? "",
+    curriculo_geral_md: data?.curriculo_geral_md ?? "",
     habilidades: data?.habilidades ?? [],
     projetos: data?.projetos ?? [],
     certificacoes: data?.certificacoes ?? [],
@@ -105,6 +112,7 @@ function mergeProfiles(existing: ProfileData, extracted: ProfileData): ProfileDa
     objetivo_en: existing.objetivo_en || extracted.objetivo_en,
     tagline_pt: existing.tagline_pt || extracted.tagline_pt,
     tagline_en: existing.tagline_en || extracted.tagline_en,
+    curriculo_geral_md: existing.curriculo_geral_md || extracted.curriculo_geral_md,
     educacao: [...existing.educacao, ...extracted.educacao],
     idiomas: [...existing.idiomas, ...extracted.idiomas],
     habilidades: mergeSkillCategories(existing.habilidades, extracted.habilidades),
@@ -185,6 +193,22 @@ export default function PerfilPage() {
   const [fillMode, setFillMode] = useState<"substituir" | "acrescentar">("substituir")
   const [modelFailureWarning, setModelFailureWarning] = useState<ReturnType<typeof getModelFailureWarning>>(null)
   const { value: useTagline, setValue: setUseTagline } = useResumeTaglinePreference()
+  const [activeResumeTemplate, setActiveResumeTemplate] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
+      : "modelo1"
+  )
+  const [isGeneratingGeneralResume, setIsGeneratingGeneralResume] = useState(false)
+  const [isGeneratingGeneralPdf, setIsGeneratingGeneralPdf] = useState(false)
+  const [generalResumePdfUrl, setGeneralResumePdfUrl] = useState<string | null>(null)
+  const [isRefiningGeneralResume, setIsRefiningGeneralResume] = useState(false)
+  const [isEditingGeneralResume, setIsEditingGeneralResume] = useState(false)
+  const [editingGeneralResumeContent, setEditingGeneralResumeContent] = useState("")
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
+  const [uploadMarkdownText, setUploadMarkdownText] = useState("")
+  const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null)
+  const [isUploadingGeneralResume, setIsUploadingGeneralResume] = useState(false)
+  const [isGeneralRefineDialogOpen, setIsGeneralRefineDialogOpen] = useState(false)
 
   const router = useRouter()
 
@@ -305,6 +329,254 @@ export default function PerfilPage() {
       toast.error("Erro ao salvar perfil")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function saveGeneralResumeMarkdown(markdown: string, successMessage: string) {
+    if (!candidateProfile) return
+
+    if (isReadOnly) {
+      toast.error("Faça login para salvar o currículo geral")
+      return
+    }
+
+    const nextProfile = {
+      ...candidateProfile,
+      curriculo_geral_md: markdown,
+    }
+
+    const response = await fetch("/api/candidate-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nextProfile),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Erro ao salvar currículo geral")
+    }
+
+    setCandidateProfile(normalizeProfileData(result.data))
+    setGeneralResumePdfUrl(null)
+    toast.success(successMessage)
+  }
+
+  const renderGeneralResumePreview = useCallback(
+    async (template: string) => {
+      const markdown = candidateProfile?.curriculo_geral_md?.trim()
+      if (!markdown) return ""
+      return renderMarkdownResumeToHtml(markdown, template === "modelo2" ? "modelo2" : "modelo1", "pt")
+    },
+    [candidateProfile?.curriculo_geral_md]
+  )
+
+  async function handleGenerateGeneralResume(model?: string) {
+    if (isReadOnly) {
+      toast.error("Faça login para gerar o currículo geral")
+      return
+    }
+
+    setIsGeneratingGeneralResume(true)
+    try {
+      const response = await fetch("/api/ai/generate-general-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: "pt",
+          resumeTemplate: activeResumeTemplate,
+          model,
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Erro ao gerar currículo geral")
+      }
+
+      setCandidateProfile((prev) =>
+        prev ? { ...prev, curriculo_geral_md: result.data.markdown ?? "" } : prev
+      )
+      setGeneralResumePdfUrl(null)
+      toast.success("Currículo geral gerado com sucesso!")
+      await loadData()
+    } catch (error) {
+      console.error("[PerfilPage] Error generating general resume:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar currículo geral")
+    } finally {
+      setIsGeneratingGeneralResume(false)
+    }
+  }
+
+  function handleEditGeneralResume() {
+    const currentContent = candidateProfile?.curriculo_geral_md?.trim()
+    if (!currentContent) {
+      toast.error("Nenhum currículo geral para editar")
+      return
+    }
+
+    setEditingGeneralResumeContent(currentContent)
+    setIsEditingGeneralResume(true)
+  }
+
+  async function handleSaveGeneralResumeEdit() {
+    try {
+      await saveGeneralResumeMarkdown(editingGeneralResumeContent, "Currículo geral atualizado!")
+      setIsEditingGeneralResume(false)
+      setEditingGeneralResumeContent("")
+    } catch (error) {
+      console.error("[PerfilPage] Error saving general resume edit:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar currículo geral")
+    }
+  }
+
+  async function handleDeleteGeneralResume() {
+    if (!candidateProfile?.curriculo_geral_md?.trim()) return
+
+    const confirmed = window.confirm("Deseja realmente excluir o currículo geral? Esta ação não pode ser desfeita.")
+    if (!confirmed) return
+
+    try {
+      await saveGeneralResumeMarkdown("", "Currículo geral excluído com sucesso!")
+    } catch (error) {
+      console.error("[PerfilPage] Error deleting general resume:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir currículo geral")
+    }
+  }
+
+  async function handleGenerateGeneralPdfFromHtml(html: string) {
+    setIsGeneratingGeneralPdf(true)
+
+    try {
+      const response = await fetch("/api/ai/html-to-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html, filename: "curriculo-geral.pdf" }),
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Falha ao gerar PDF")
+      }
+
+      setGeneralResumePdfUrl(`data:application/pdf;base64,${result.data.pdfBase64}`)
+      toast.success("PDF do currículo geral gerado com sucesso!")
+    } catch (error) {
+      console.error("[PerfilPage] Error generating general resume PDF:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar PDF")
+    } finally {
+      setIsGeneratingGeneralPdf(false)
+    }
+  }
+
+  async function handleGenerateGeneralPdf() {
+    const markdown = candidateProfile?.curriculo_geral_md?.trim()
+    if (!markdown) {
+      toast.error("Nenhum currículo geral salvo para converter")
+      return
+    }
+
+    const html = await renderMarkdownResumeToHtml(
+      markdown,
+      activeResumeTemplate === "modelo2" ? "modelo2" : "modelo1",
+      "pt"
+    )
+    await handleGenerateGeneralPdfFromHtml(html)
+  }
+
+  function handleDownloadGeneralPdf() {
+    if (!generalResumePdfUrl) {
+      toast.error("Gere o PDF do currículo geral antes de baixar")
+      return
+    }
+
+    const success = downloadPdf(generalResumePdfUrl, "curriculo-geral.pdf")
+    if (success) {
+      toast.success("Download iniciado!")
+    } else {
+      toast.error("Erro ao iniciar download")
+    }
+  }
+
+  async function handleUploadMarkdownResume() {
+    const markdown = uploadMarkdownText.trim()
+    if (!markdown) {
+      toast.error("Cole o markdown antes de carregar")
+      return
+    }
+
+    setIsUploadingGeneralResume(true)
+    try {
+      await saveGeneralResumeMarkdown(markdown, "Currículo geral carregado com sucesso!")
+      setUploadMarkdownText("")
+      setUploadPdfFile(null)
+      setIsUploadDialogOpen(false)
+    } catch (error) {
+      console.error("[PerfilPage] Error uploading markdown resume:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar markdown")
+    } finally {
+      setIsUploadingGeneralResume(false)
+    }
+  }
+
+  async function handleUploadPdfResume() {
+    if (!uploadPdfFile) {
+      toast.error("Selecione um PDF antes de carregar")
+      return
+    }
+
+    setIsUploadingGeneralResume(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", uploadPdfFile)
+
+      const response = await fetch("/api/ai/pdf-to-markdown", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Erro ao converter PDF")
+      }
+
+      await saveGeneralResumeMarkdown(result.data.markdown, "Currículo geral carregado a partir do PDF!")
+      setUploadMarkdownText("")
+      setUploadPdfFile(null)
+      setIsUploadDialogOpen(false)
+    } catch (error) {
+      console.error("[PerfilPage] Error uploading PDF resume:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar PDF")
+    } finally {
+      setIsUploadingGeneralResume(false)
+    }
+  }
+
+  async function handleRefineGeneralResume(instructions: string, model: string) {
+    setIsRefiningGeneralResume(true)
+    try {
+      const response = await fetch("/api/ai/refine-general-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instructions, model }),
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Erro ao refinar currículo geral")
+      }
+
+      setCandidateProfile((prev) =>
+        prev ? { ...prev, curriculo_geral_md: result.data.curriculo_geral_md ?? "" } : prev
+      )
+      setGeneralResumePdfUrl(null)
+      setIsGeneralRefineDialogOpen(false)
+      toast.success("Currículo geral refinado com sucesso!")
+      await loadData()
+    } catch (error) {
+      console.error("[PerfilPage] Error refining general resume:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao refinar currículo geral")
+    } finally {
+      setIsRefiningGeneralResume(false)
     }
   }
 
@@ -527,6 +799,36 @@ export default function PerfilPage() {
                       </label>
                     </CardContent>
                   </Card>
+
+                  <section id="general-resume-section" className="space-y-3">
+                    <h2 className="text-2xl font-bold">Currículo Geral</h2>
+                    <ResumeContainer
+                      language="pt"
+                      title="Currículo Geral"
+                      emptyMessage="Currículo geral ainda não foi carregado"
+                      markdown={candidateProfile.curriculo_geral_md || undefined}
+                      pdfUrl={generalResumePdfUrl}
+                      isGenerating={isGeneratingGeneralResume}
+                      isGeneratingPdf={isGeneratingGeneralPdf}
+                      isRefining={isRefiningGeneralResume}
+                      activeModel={selectedModel || "x-ai/grok-4.1-fast"}
+                      activeTemplate={activeResumeTemplate}
+                      vagaEmpresa="Currículo Geral"
+                      renderPreviewHtml={renderGeneralResumePreview}
+                      onRegenerateContent={handleGenerateGeneralResume}
+                      onTemplateChange={(template) => {
+                        setActiveResumeTemplate(template)
+                        localStorage.setItem("resume_template_preference", template)
+                      }}
+                      onGeneratePdf={handleGenerateGeneralPdf}
+                      onGeneratePdfWithHtml={handleGenerateGeneralPdfFromHtml}
+                      onDownloadPdf={handleDownloadGeneralPdf}
+                      onRefine={() => setIsGeneralRefineDialogOpen(true)}
+                      onUpload={() => setIsUploadDialogOpen(true)}
+                      onEdit={handleEditGeneralResume}
+                      onDelete={handleDeleteGeneralResume}
+                    />
+                  </section>
 
                   <Card className="glass-card-intense hover-lift">
                     <CardHeader>
@@ -860,6 +1162,121 @@ export default function PerfilPage() {
               </Tabs>
             </CardContent>
           </Card>
+
+          <RefineResumeDialog
+            language="pt"
+            open={isGeneralRefineDialogOpen}
+            onOpenChange={(open) => {
+              if (!open && !isRefiningGeneralResume) {
+                setIsGeneralRefineDialogOpen(false)
+              }
+            }}
+            isRefining={isRefiningGeneralResume}
+            onConfirm={handleRefineGeneralResume}
+            activeModel={selectedModel || "x-ai/grok-4.1-fast"}
+          />
+
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Upload do Currículo Geral</DialogTitle>
+                <DialogDescription>
+                  Carregue um PDF para conversão por IA ou cole um currículo em markdown já pronto.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border border-border p-4">
+                  <div>
+                    <h3 className="font-medium">Arquivo PDF</h3>
+                    <p className="text-sm text-muted-foreground">Aceita apenas arquivos .pdf.</p>
+                  </div>
+                  <Input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    disabled={isUploadingGeneralResume || isReadOnly}
+                    onChange={(event) => setUploadPdfFile(event.target.files?.[0] ?? null)}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUploadPdfResume}
+                    disabled={!uploadPdfFile || isUploadingGeneralResume || isReadOnly}
+                    className="w-full"
+                  >
+                    {isUploadingGeneralResume ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Carregando...
+                      </>
+                    ) : (
+                      "Carregar"
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-3 rounded-lg border border-border p-4">
+                  <div>
+                    <h3 className="font-medium">Markdown</h3>
+                    <p className="text-sm text-muted-foreground">Cole o conteúdo em markdown.</p>
+                  </div>
+                  <Textarea
+                    value={uploadMarkdownText}
+                    onChange={(event) => setUploadMarkdownText(event.target.value)}
+                    disabled={isUploadingGeneralResume || isReadOnly}
+                    rows={8}
+                    className="font-mono text-sm"
+                    placeholder="# Seu Nome..."
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUploadMarkdownResume}
+                    disabled={!uploadMarkdownText.trim() || isUploadingGeneralResume || isReadOnly}
+                    className="w-full"
+                  >
+                    {isUploadingGeneralResume ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Carregando...
+                      </>
+                    ) : (
+                      "Carregar"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isEditingGeneralResume} onOpenChange={setIsEditingGeneralResume}>
+            <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Editar Currículo Geral</DialogTitle>
+              </DialogHeader>
+              <div className="overflow-y-auto">
+                <MarkdownPreview
+                  content={editingGeneralResumeContent}
+                  editable={true}
+                  onChange={setEditingGeneralResumeContent}
+                  className="min-h-[400px]"
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingGeneralResume(false)
+                    setEditingGeneralResumeContent("")
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveGeneralResumeEdit} disabled={isReadOnly}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>

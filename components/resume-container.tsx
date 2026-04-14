@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Layers,
   CheckCircle2,
+  Upload,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MarkdownPreview } from "@/components/ui/markdown-preview"
@@ -34,13 +35,17 @@ interface ResumeContainerProps {
   activeModel: string
   activeTemplate: string
   vagaEmpresa: string
-  vagaId: string
+  vagaId?: string
+  title?: string
+  emptyMessage?: string
   onRegenerateContent: (model: string) => void
   onTemplateChange: (template: string) => void
+  renderPreviewHtml?: (template: string) => Promise<string>
   onGeneratePdf?: () => void
   onGeneratePdfWithHtml?: (htmlSource: string) => void
   onDownloadPdf?: () => void
   onRefine?: () => void
+  onUpload?: () => void
   onEdit: () => void
   onDelete: () => void
 }
@@ -56,12 +61,16 @@ export function ResumeContainer({
   activeTemplate,
   vagaEmpresa,
   vagaId,
+  title,
+  emptyMessage,
   onRegenerateContent,
   onTemplateChange,
+  renderPreviewHtml,
   onGeneratePdf,
   onGeneratePdfWithHtml,
   onDownloadPdf,
   onRefine,
+  onUpload,
   onEdit,
   onDelete,
 }: ResumeContainerProps) {
@@ -89,24 +98,35 @@ export function ResumeContainer({
       setIsLoadingTemplate(true)
 
       try {
-        const response = await fetch("/api/ai/render-resume-html", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            vagaId,
-            language,
-            resumeTemplate: localTemplate,
-          }),
-        })
+        if (renderPreviewHtml) {
+          const html = await renderPreviewHtml(localTemplate)
+          if (!isCancelled) {
+            setTemplateHtml(html)
+          }
+        } else {
+          if (!vagaId) {
+            throw new Error("vagaId is required to load resume preview")
+          }
 
-        if (!response.ok) {
-          throw new Error("Falha ao carregar preview do currículo")
-        }
+          const response = await fetch("/api/ai/render-resume-html", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vagaId,
+              language,
+              resumeTemplate: localTemplate,
+            }),
+          })
 
-        const result = await response.json()
+          if (!response.ok) {
+            throw new Error("Falha ao carregar preview do currículo")
+          }
 
-        if (!isCancelled && result.success && result.data?.html) {
-          setTemplateHtml(result.data.html)
+          const result = await response.json()
+
+          if (!isCancelled && result.success && result.data?.html) {
+            setTemplateHtml(result.data.html)
+          }
         }
       } catch (err) {
         console.error("[ResumeContainer] Erro ao carregar preview HTML:", err)
@@ -125,7 +145,7 @@ export function ResumeContainer({
     return () => {
       isCancelled = true
     }
-  }, [hasContent, vagaId, language, localTemplate, markdown])
+  }, [hasContent, vagaId, language, localTemplate, markdown, renderPreviewHtml])
 
   const templateLabel = TEMPLATES.find((t) => t.value === localTemplate)?.label ?? localTemplate
 
@@ -167,6 +187,8 @@ export function ResumeContainer({
   }
 
   const config = languageConfig[language]
+  const displayTitle = title ?? config.title
+  const displayEmptyMessage = emptyMessage ?? config.emptyMessage
 
   return (
     <div className="border rounded-lg bg-white dark:bg-slate-900 shadow-sm">
@@ -174,7 +196,7 @@ export function ResumeContainer({
       <div className="flex items-center justify-between px-6 py-4 border-b">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{config.flag}</span>
-          <h3 className="text-lg font-semibold">{config.title}</h3>
+          <h3 className="text-lg font-semibold">{displayTitle}</h3>
         </div>
 
         <div className="flex items-center gap-2">
@@ -249,6 +271,22 @@ export function ResumeContainer({
                 </div>
               </PopoverContent>
             </Popover>
+          )}
+
+          {/* Botão Upload */}
+          {onUpload && (
+            <button
+              onClick={onUpload}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium",
+                "border border-gray-300 dark:border-gray-600",
+                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "transition-colors"
+              )}
+            >
+              <Upload size={16} />
+              Upload
+            </button>
           )}
 
           {/* Botão Editar */}
@@ -387,7 +425,7 @@ export function ResumeContainer({
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <FileText size={48} className="mb-4" />
-            <p className="text-sm">{config.emptyMessage}</p>
+            <p className="text-sm">{displayEmptyMessage}</p>
           </div>
         )}
       </div>

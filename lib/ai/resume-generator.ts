@@ -14,10 +14,29 @@ import { extractJsonFromResponse } from "./job-parser"
 import { calculateATSScore } from "./ats-scorer"
 import { buildJobProfile } from "./job-profile"
 import { mergeSystemInstruction } from "./user-preferences"
+import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
 import type { JobProfile } from "./job-profile"
 import type { Certification, JobDetails, CVTemplate, PersonalizedSections, TokenUsage } from "./types"
 
 const MIN_SUMMARY_CHARS = 100
+const MAX_GENERAL_RESUME_CONTEXT_CHARS = 12000
+
+function appendGeneralResumeContext(systemInstruction: string, generalResumeMarkdown?: string | null): string {
+  const markdown = generalResumeMarkdown?.trim()
+  if (!markdown) return systemInstruction
+
+  return [
+    systemInstruction,
+    "",
+    "--- GENERAL RESUME BASE CONTEXT ---",
+    "The candidate saved this general resume as the base reference for tailored resumes.",
+    "Use it as a style and content baseline: preserve its tone, formatting conventions, section style, and factual information when they fit the target job.",
+    "This context does not override the zero-fabrication rules. Do not add facts that are not present in the candidate profile, approved inputs, job-specific resume, or this general resume.",
+    "",
+    markdown.slice(0, MAX_GENERAL_RESUME_CONTEXT_CHARS),
+    "--- END GENERAL RESUME BASE CONTEXT ---",
+  ].join("\n")
+}
 
 /**
  * Thrown when the candidate's professional profile is too short to generate
@@ -411,7 +430,11 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   // STEP 3: Build system instruction
   // GOVERNANCE: CORE_SYSTEM_PROMPT is always prepended.
   // config.curriculo_prompt is treated as additive style preferences only.
-  const systemInstruction = mergeSystemInstruction(config.curriculo_prompt)
+  const candidateProfile = await getCandidateProfile(userId)
+  const systemInstruction = appendGeneralResumeContext(
+    mergeSystemInstruction(config.curriculo_prompt),
+    candidateProfile.curriculo_geral_md
+  )
   console.log(`[Resume Generator] 🔐 System instruction built (core policy + user style preferences)`)
 
   // STEP 4: Load CV template
