@@ -4,7 +4,7 @@ import { loadUserAIConfig } from "@/lib/ai/config"
 import { createClient } from "@/lib/supabase/server"
 import { getCandidateProfile, saveCandidateProfile } from "@/lib/supabase/candidate-profile"
 
-function buildRefinementMessages(currentResume: string, instructions: string): GrokMessage[] {
+function buildRefinementMessages(currentResume: string, instructions: string, language: "pt" | "en"): GrokMessage[] {
   return [
     {
       role: "system",
@@ -12,6 +12,7 @@ function buildRefinementMessages(currentResume: string, instructions: string): G
         "You are an expert resume editor refining a candidate's general/base resume.",
         "Follow the user's instructions precisely, but do not fabricate experience, dates, certifications, links, metrics, education, or skills.",
         "Keep the resume in clean markdown and preserve the same concise structure and formatting style unless the user explicitly asks otherwise.",
+        `Keep the complete resume in ${language === "en" ? "English" : "Portuguese"}.`,
         "Return only the complete refined markdown. Do not wrap it in code fences and do not add commentary.",
       ].join("\n"),
     },
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json()
     const instructions = typeof body.instructions === "string" ? body.instructions.trim() : ""
+    const language = body.language === "en" ? "en" : "pt"
 
     if (instructions.length < 10) {
       return NextResponse.json({ success: false, error: "instructions must be at least 10 characters" }, { status: 400 })
@@ -58,7 +60,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await validateGrokConfig(user.id)
 
     const profile = await getCandidateProfile(user.id)
-    const currentResume = profile.curriculo_geral_md?.trim()
+    const currentResume =
+      language === "en"
+        ? profile.curriculo_geral_md_en?.trim()
+        : profile.curriculo_geral_md?.trim()
 
     if (!currentResume) {
       return NextResponse.json({ success: false, error: "No general resume found" }, { status: 400 })
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const config = await loadUserAIConfig(user.id)
     const response = await callGrok(
-      buildRefinementMessages(currentResume, instructions),
+      buildRefinementMessages(currentResume, instructions, language),
       {
         model: typeof body.model === "string" ? body.model : config.modelo_gemini,
         temperature: config.temperatura,
@@ -77,6 +82,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
 
     const refinedResume = stripMarkdownFence(response.content)
+    const nextPtResume = language === "pt" ? refinedResume : (profile.curriculo_geral_md ?? "")
+    const nextEnResume = language === "en" ? refinedResume : (profile.curriculo_geral_md_en ?? "")
 
     if (refinedResume.length < Math.ceil(currentResume.length * 0.3)) {
       return NextResponse.json(
@@ -102,7 +109,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         objetivo_en: profile.objetivo_en,
         tagline_pt: profile.tagline_pt,
         tagline_en: profile.tagline_en,
-        curriculo_geral_md: refinedResume,
+        curriculo_geral_md: nextPtResume,
+        curriculo_geral_md_en: nextEnResume,
         habilidades: profile.habilidades,
         projetos: profile.projetos,
         certificacoes: profile.certificacoes,
@@ -112,7 +120,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      data: { curriculo_geral_md: refinedResume },
+      data: {
+        curriculo_geral_md: nextPtResume,
+        curriculo_geral_md_en: nextEnResume,
+      },
       metadata: {
         model: typeof body.model === "string" ? body.model : config.modelo_gemini,
         tokenUsage: response.usage,

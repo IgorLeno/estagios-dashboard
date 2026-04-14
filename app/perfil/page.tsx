@@ -30,6 +30,16 @@ import { useResumeTaglinePreference } from "@/hooks/use-resume-tagline-preferenc
 const MODEL_HISTORY_STORAGE_KEY = "openrouter_model_history"
 
 type ProfileData = Omit<CandidateProfile, "id" | "user_id" | "created_at" | "updated_at">
+type ResumeLanguage = "pt" | "en"
+type GeneralResumeField = "curriculo_geral_md" | "curriculo_geral_md_en"
+
+function getGeneralResumeField(language: ResumeLanguage): GeneralResumeField {
+  return language === "en" ? "curriculo_geral_md_en" : "curriculo_geral_md"
+}
+
+function getGeneralResumeLanguageLabel(language: ResumeLanguage): string {
+  return language === "en" ? "EN" : "PT"
+}
 
 function normalizeLanguageProficiency(proficiency?: string): string {
   switch (proficiency) {
@@ -65,6 +75,7 @@ function normalizeProfileData(data?: Partial<CandidateProfile> | null): ProfileD
     tagline_pt: data?.tagline_pt ?? "",
     tagline_en: data?.tagline_en ?? "",
     curriculo_geral_md: data?.curriculo_geral_md ?? "",
+    curriculo_geral_md_en: data?.curriculo_geral_md_en ?? "",
     habilidades: data?.habilidades ?? [],
     projetos: data?.projetos ?? [],
     certificacoes: data?.certificacoes ?? [],
@@ -113,6 +124,7 @@ function mergeProfiles(existing: ProfileData, extracted: ProfileData): ProfileDa
     tagline_pt: existing.tagline_pt || extracted.tagline_pt,
     tagline_en: existing.tagline_en || extracted.tagline_en,
     curriculo_geral_md: existing.curriculo_geral_md || extracted.curriculo_geral_md,
+    curriculo_geral_md_en: existing.curriculo_geral_md_en || extracted.curriculo_geral_md_en,
     educacao: [...existing.educacao, ...extracted.educacao],
     idiomas: [...existing.idiomas, ...extracted.idiomas],
     habilidades: mergeSkillCategories(existing.habilidades, extracted.habilidades),
@@ -198,17 +210,21 @@ export default function PerfilPage() {
       ? (localStorage.getItem("resume_template_preference") ?? "modelo1")
       : "modelo1"
   )
-  const [isGeneratingGeneralResume, setIsGeneratingGeneralResume] = useState(false)
-  const [isGeneratingGeneralPdf, setIsGeneratingGeneralPdf] = useState(false)
-  const [generalResumePdfUrl, setGeneralResumePdfUrl] = useState<string | null>(null)
-  const [isRefiningGeneralResume, setIsRefiningGeneralResume] = useState(false)
-  const [isEditingGeneralResume, setIsEditingGeneralResume] = useState(false)
+  const [isGeneratingGeneralResume, setIsGeneratingGeneralResume] = useState<ResumeLanguage | null>(null)
+  const [isGeneratingGeneralPdf, setIsGeneratingGeneralPdf] = useState<ResumeLanguage | null>(null)
+  const [generalResumePdfUrl, setGeneralResumePdfUrl] = useState<Record<ResumeLanguage, string | null>>({
+    pt: null,
+    en: null,
+  })
+  const [isRefiningGeneralResume, setIsRefiningGeneralResume] = useState<ResumeLanguage | null>(null)
+  const [editingGeneralResumeLanguage, setEditingGeneralResumeLanguage] = useState<ResumeLanguage | null>(null)
   const [editingGeneralResumeContent, setEditingGeneralResumeContent] = useState("")
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
+  const [uploadResumeLanguage, setUploadResumeLanguage] = useState<ResumeLanguage>("pt")
   const [uploadMarkdownText, setUploadMarkdownText] = useState("")
   const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null)
   const [isUploadingGeneralResume, setIsUploadingGeneralResume] = useState(false)
-  const [isGeneralRefineDialogOpen, setIsGeneralRefineDialogOpen] = useState(false)
+  const [generalRefineResumeLanguage, setGeneralRefineResumeLanguage] = useState<ResumeLanguage | null>(null)
 
   const router = useRouter()
 
@@ -266,6 +282,9 @@ export default function PerfilPage() {
   useEffect(() => {
     setModelFailureWarning(getModelFailureWarning(selectedModel))
   }, [selectedModel])
+
+  const generalResumeMarkdownPt = candidateProfile?.curriculo_geral_md ?? ""
+  const generalResumeMarkdownEn = candidateProfile?.curriculo_geral_md_en ?? ""
 
   function addModelToHistory(model: string) {
     const trimmed = model.trim()
@@ -332,7 +351,7 @@ export default function PerfilPage() {
     }
   }
 
-  async function saveGeneralResumeMarkdown(markdown: string, successMessage: string) {
+  async function saveGeneralResumeMarkdown(markdown: string, language: ResumeLanguage, successMessage: string) {
     if (!candidateProfile) return
 
     if (isReadOnly) {
@@ -340,9 +359,10 @@ export default function PerfilPage() {
       return
     }
 
+    const field = getGeneralResumeField(language)
     const nextProfile = {
       ...candidateProfile,
-      curriculo_geral_md: markdown,
+      [field]: markdown,
     }
 
     const response = await fetch("/api/candidate-profile", {
@@ -357,32 +377,32 @@ export default function PerfilPage() {
     }
 
     setCandidateProfile(normalizeProfileData(result.data))
-    setGeneralResumePdfUrl(null)
+    setGeneralResumePdfUrl((prev) => ({ ...prev, [language]: null }))
     toast.success(successMessage)
   }
 
   const renderGeneralResumePreview = useCallback(
-    async (template: string) => {
-      const markdown = candidateProfile?.curriculo_geral_md?.trim()
+    async (language: ResumeLanguage, template: string) => {
+      const markdown = (language === "en" ? generalResumeMarkdownEn : generalResumeMarkdownPt).trim()
       if (!markdown) return ""
-      return renderMarkdownResumeToHtml(markdown, template === "modelo2" ? "modelo2" : "modelo1", "pt")
+      return renderMarkdownResumeToHtml(markdown, template === "modelo2" ? "modelo2" : "modelo1", language)
     },
-    [candidateProfile?.curriculo_geral_md]
+    [generalResumeMarkdownEn, generalResumeMarkdownPt]
   )
 
-  async function handleGenerateGeneralResume(model?: string) {
+  async function handleGenerateGeneralResume(language: ResumeLanguage, model?: string) {
     if (isReadOnly) {
       toast.error("Faça login para gerar o currículo geral")
       return
     }
 
-    setIsGeneratingGeneralResume(true)
+    setIsGeneratingGeneralResume(language)
     try {
       const response = await fetch("/api/ai/generate-general-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          language: "pt",
+          language,
           resumeTemplate: activeResumeTemplate,
           model,
         }),
@@ -393,35 +413,39 @@ export default function PerfilPage() {
         throw new Error(result.error || "Erro ao gerar currículo geral")
       }
 
+      const field = getGeneralResumeField(language)
       setCandidateProfile((prev) =>
-        prev ? { ...prev, curriculo_geral_md: result.data.markdown ?? "" } : prev
+        prev ? { ...prev, [field]: result.data.markdown ?? "" } : prev
       )
-      setGeneralResumePdfUrl(null)
-      toast.success("Currículo geral gerado com sucesso!")
+      setGeneralResumePdfUrl((prev) => ({ ...prev, [language]: null }))
+      toast.success(`Currículo geral ${getGeneralResumeLanguageLabel(language)} gerado com sucesso!`)
       await loadData()
     } catch (error) {
       console.error("[PerfilPage] Error generating general resume:", error)
       toast.error(error instanceof Error ? error.message : "Erro ao gerar currículo geral")
     } finally {
-      setIsGeneratingGeneralResume(false)
+      setIsGeneratingGeneralResume(null)
     }
   }
 
-  function handleEditGeneralResume() {
-    const currentContent = candidateProfile?.curriculo_geral_md?.trim()
+  function handleEditGeneralResume(language: ResumeLanguage) {
+    const field = getGeneralResumeField(language)
+    const currentContent = candidateProfile?.[field]?.trim()
     if (!currentContent) {
       toast.error("Nenhum currículo geral para editar")
       return
     }
 
     setEditingGeneralResumeContent(currentContent)
-    setIsEditingGeneralResume(true)
+    setEditingGeneralResumeLanguage(language)
   }
 
   async function handleSaveGeneralResumeEdit() {
+    if (!editingGeneralResumeLanguage) return
+
     try {
-      await saveGeneralResumeMarkdown(editingGeneralResumeContent, "Currículo geral atualizado!")
-      setIsEditingGeneralResume(false)
+      await saveGeneralResumeMarkdown(editingGeneralResumeContent, editingGeneralResumeLanguage, "Currículo geral atualizado!")
+      setEditingGeneralResumeLanguage(null)
       setEditingGeneralResumeContent("")
     } catch (error) {
       console.error("[PerfilPage] Error saving general resume edit:", error)
@@ -429,28 +453,31 @@ export default function PerfilPage() {
     }
   }
 
-  async function handleDeleteGeneralResume() {
-    if (!candidateProfile?.curriculo_geral_md?.trim()) return
+  async function handleDeleteGeneralResume(language: ResumeLanguage) {
+    const field = getGeneralResumeField(language)
+    if (!candidateProfile?.[field]?.trim()) return
 
-    const confirmed = window.confirm("Deseja realmente excluir o currículo geral? Esta ação não pode ser desfeita.")
+    const confirmed = window.confirm(
+      `Deseja realmente excluir o currículo geral ${getGeneralResumeLanguageLabel(language)}? Esta ação não pode ser desfeita.`
+    )
     if (!confirmed) return
 
     try {
-      await saveGeneralResumeMarkdown("", "Currículo geral excluído com sucesso!")
+      await saveGeneralResumeMarkdown("", language, "Currículo geral excluído com sucesso!")
     } catch (error) {
       console.error("[PerfilPage] Error deleting general resume:", error)
       toast.error(error instanceof Error ? error.message : "Erro ao excluir currículo geral")
     }
   }
 
-  async function handleGenerateGeneralPdfFromHtml(html: string) {
-    setIsGeneratingGeneralPdf(true)
+  async function handleGenerateGeneralPdfFromHtml(language: ResumeLanguage, html: string) {
+    setIsGeneratingGeneralPdf(language)
 
     try {
       const response = await fetch("/api/ai/html-to-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html, filename: "curriculo-geral.pdf" }),
+        body: JSON.stringify({ html, filename: `curriculo-geral-${language}.pdf` }),
       })
 
       const result = await response.json()
@@ -458,18 +485,22 @@ export default function PerfilPage() {
         throw new Error(result.error || "Falha ao gerar PDF")
       }
 
-      setGeneralResumePdfUrl(`data:application/pdf;base64,${result.data.pdfBase64}`)
+      setGeneralResumePdfUrl((prev) => ({
+        ...prev,
+        [language]: `data:application/pdf;base64,${result.data.pdfBase64}`,
+      }))
       toast.success("PDF do currículo geral gerado com sucesso!")
     } catch (error) {
       console.error("[PerfilPage] Error generating general resume PDF:", error)
       toast.error(error instanceof Error ? error.message : "Erro ao gerar PDF")
     } finally {
-      setIsGeneratingGeneralPdf(false)
+      setIsGeneratingGeneralPdf(null)
     }
   }
 
-  async function handleGenerateGeneralPdf() {
-    const markdown = candidateProfile?.curriculo_geral_md?.trim()
+  async function handleGenerateGeneralPdf(language: ResumeLanguage) {
+    const field = getGeneralResumeField(language)
+    const markdown = candidateProfile?.[field]?.trim()
     if (!markdown) {
       toast.error("Nenhum currículo geral salvo para converter")
       return
@@ -478,18 +509,19 @@ export default function PerfilPage() {
     const html = await renderMarkdownResumeToHtml(
       markdown,
       activeResumeTemplate === "modelo2" ? "modelo2" : "modelo1",
-      "pt"
+      language
     )
-    await handleGenerateGeneralPdfFromHtml(html)
+    await handleGenerateGeneralPdfFromHtml(language, html)
   }
 
-  function handleDownloadGeneralPdf() {
-    if (!generalResumePdfUrl) {
+  function handleDownloadGeneralPdf(language: ResumeLanguage) {
+    const pdfUrl = generalResumePdfUrl[language]
+    if (!pdfUrl) {
       toast.error("Gere o PDF do currículo geral antes de baixar")
       return
     }
 
-    const success = downloadPdf(generalResumePdfUrl, "curriculo-geral.pdf")
+    const success = downloadPdf(pdfUrl, `curriculo-geral-${language}.pdf`)
     if (success) {
       toast.success("Download iniciado!")
     } else {
@@ -506,7 +538,7 @@ export default function PerfilPage() {
 
     setIsUploadingGeneralResume(true)
     try {
-      await saveGeneralResumeMarkdown(markdown, "Currículo geral carregado com sucesso!")
+      await saveGeneralResumeMarkdown(markdown, uploadResumeLanguage, "Currículo geral carregado com sucesso!")
       setUploadMarkdownText("")
       setUploadPdfFile(null)
       setIsUploadDialogOpen(false)
@@ -539,7 +571,7 @@ export default function PerfilPage() {
         throw new Error(result.error || "Erro ao converter PDF")
       }
 
-      await saveGeneralResumeMarkdown(result.data.markdown, "Currículo geral carregado a partir do PDF!")
+      await saveGeneralResumeMarkdown(result.data.markdown, uploadResumeLanguage, "Currículo geral carregado a partir do PDF!")
       setUploadMarkdownText("")
       setUploadPdfFile(null)
       setIsUploadDialogOpen(false)
@@ -552,12 +584,15 @@ export default function PerfilPage() {
   }
 
   async function handleRefineGeneralResume(instructions: string, model: string) {
-    setIsRefiningGeneralResume(true)
+    if (!generalRefineResumeLanguage) return
+
+    const language = generalRefineResumeLanguage
+    setIsRefiningGeneralResume(language)
     try {
       const response = await fetch("/api/ai/refine-general-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instructions, model }),
+        body: JSON.stringify({ instructions, model, language }),
       })
 
       const result = await response.json()
@@ -565,18 +600,19 @@ export default function PerfilPage() {
         throw new Error(result.error || "Erro ao refinar currículo geral")
       }
 
+      const field = getGeneralResumeField(language)
       setCandidateProfile((prev) =>
-        prev ? { ...prev, curriculo_geral_md: result.data.curriculo_geral_md ?? "" } : prev
+        prev ? { ...prev, [field]: result.data[field] ?? "" } : prev
       )
-      setGeneralResumePdfUrl(null)
-      setIsGeneralRefineDialogOpen(false)
+      setGeneralResumePdfUrl((prev) => ({ ...prev, [language]: null }))
+      setGeneralRefineResumeLanguage(null)
       toast.success("Currículo geral refinado com sucesso!")
       await loadData()
     } catch (error) {
       console.error("[PerfilPage] Error refining general resume:", error)
       toast.error(error instanceof Error ? error.message : "Erro ao refinar currículo geral")
     } finally {
-      setIsRefiningGeneralResume(false)
+      setIsRefiningGeneralResume(null)
     }
   }
 
@@ -800,33 +836,66 @@ export default function PerfilPage() {
                     </CardContent>
                   </Card>
 
-                  <section id="general-resume-section" className="space-y-3">
+                  <section id="general-resume-section" className="space-y-6">
                     <h2 className="text-2xl font-bold">Currículo Geral</h2>
                     <ResumeContainer
                       language="pt"
-                      title="Currículo Geral"
-                      emptyMessage="Currículo geral ainda não foi carregado"
+                      title="Currículo Geral — PT"
+                      emptyMessage="Currículo geral PT ainda não foi carregado"
                       markdown={candidateProfile.curriculo_geral_md || undefined}
-                      pdfUrl={generalResumePdfUrl}
-                      isGenerating={isGeneratingGeneralResume}
-                      isGeneratingPdf={isGeneratingGeneralPdf}
-                      isRefining={isRefiningGeneralResume}
+                      pdfUrl={generalResumePdfUrl.pt}
+                      isGenerating={isGeneratingGeneralResume === "pt"}
+                      isGeneratingPdf={isGeneratingGeneralPdf === "pt"}
+                      isRefining={isRefiningGeneralResume === "pt"}
                       activeModel={selectedModel || "x-ai/grok-4.1-fast"}
                       activeTemplate={activeResumeTemplate}
-                      vagaEmpresa="Currículo Geral"
-                      renderPreviewHtml={renderGeneralResumePreview}
-                      onRegenerateContent={handleGenerateGeneralResume}
+                      vagaEmpresa="Currículo Geral — PT"
+                      renderPreviewHtml={(template) => renderGeneralResumePreview("pt", template)}
+                      onRegenerateContent={(model) => handleGenerateGeneralResume("pt", model)}
                       onTemplateChange={(template) => {
                         setActiveResumeTemplate(template)
                         localStorage.setItem("resume_template_preference", template)
                       }}
-                      onGeneratePdf={handleGenerateGeneralPdf}
-                      onGeneratePdfWithHtml={handleGenerateGeneralPdfFromHtml}
-                      onDownloadPdf={handleDownloadGeneralPdf}
-                      onRefine={() => setIsGeneralRefineDialogOpen(true)}
-                      onUpload={() => setIsUploadDialogOpen(true)}
-                      onEdit={handleEditGeneralResume}
-                      onDelete={handleDeleteGeneralResume}
+                      onGeneratePdf={() => handleGenerateGeneralPdf("pt")}
+                      onGeneratePdfWithHtml={(html) => handleGenerateGeneralPdfFromHtml("pt", html)}
+                      onDownloadPdf={() => handleDownloadGeneralPdf("pt")}
+                      onRefine={() => setGeneralRefineResumeLanguage("pt")}
+                      onUpload={() => {
+                        setUploadResumeLanguage("pt")
+                        setIsUploadDialogOpen(true)
+                      }}
+                      onEdit={() => handleEditGeneralResume("pt")}
+                      onDelete={() => handleDeleteGeneralResume("pt")}
+                    />
+
+                    <ResumeContainer
+                      language="en"
+                      title="Currículo Geral — EN"
+                      emptyMessage="Currículo geral EN ainda não foi carregado"
+                      markdown={candidateProfile.curriculo_geral_md_en || undefined}
+                      pdfUrl={generalResumePdfUrl.en}
+                      isGenerating={isGeneratingGeneralResume === "en"}
+                      isGeneratingPdf={isGeneratingGeneralPdf === "en"}
+                      isRefining={isRefiningGeneralResume === "en"}
+                      activeModel={selectedModel || "x-ai/grok-4.1-fast"}
+                      activeTemplate={activeResumeTemplate}
+                      vagaEmpresa="Currículo Geral — EN"
+                      renderPreviewHtml={(template) => renderGeneralResumePreview("en", template)}
+                      onRegenerateContent={(model) => handleGenerateGeneralResume("en", model)}
+                      onTemplateChange={(template) => {
+                        setActiveResumeTemplate(template)
+                        localStorage.setItem("resume_template_preference", template)
+                      }}
+                      onGeneratePdf={() => handleGenerateGeneralPdf("en")}
+                      onGeneratePdfWithHtml={(html) => handleGenerateGeneralPdfFromHtml("en", html)}
+                      onDownloadPdf={() => handleDownloadGeneralPdf("en")}
+                      onRefine={() => setGeneralRefineResumeLanguage("en")}
+                      onUpload={() => {
+                        setUploadResumeLanguage("en")
+                        setIsUploadDialogOpen(true)
+                      }}
+                      onEdit={() => handleEditGeneralResume("en")}
+                      onDelete={() => handleDeleteGeneralResume("en")}
                     />
                   </section>
 
@@ -1164,14 +1233,14 @@ export default function PerfilPage() {
           </Card>
 
           <RefineResumeDialog
-            language="pt"
-            open={isGeneralRefineDialogOpen}
+            language={generalRefineResumeLanguage ?? "pt"}
+            open={generalRefineResumeLanguage !== null}
             onOpenChange={(open) => {
               if (!open && !isRefiningGeneralResume) {
-                setIsGeneralRefineDialogOpen(false)
+                setGeneralRefineResumeLanguage(null)
               }
             }}
-            isRefining={isRefiningGeneralResume}
+            isRefining={isRefiningGeneralResume !== null}
             onConfirm={handleRefineGeneralResume}
             activeModel={selectedModel || "x-ai/grok-4.1-fast"}
           />
@@ -1179,7 +1248,7 @@ export default function PerfilPage() {
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
-                <DialogTitle>Upload do Currículo Geral</DialogTitle>
+                <DialogTitle>Upload do Currículo Geral — {getGeneralResumeLanguageLabel(uploadResumeLanguage)}</DialogTitle>
                 <DialogDescription>
                   Carregue um PDF para conversão por IA ou cole um currículo em markdown já pronto.
                 </DialogDescription>
@@ -1247,10 +1316,21 @@ export default function PerfilPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isEditingGeneralResume} onOpenChange={setIsEditingGeneralResume}>
+          <Dialog
+            open={editingGeneralResumeLanguage !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingGeneralResumeLanguage(null)
+                setEditingGeneralResumeContent("")
+              }
+            }}
+          >
             <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-4xl">
               <DialogHeader>
-                <DialogTitle>Editar Currículo Geral</DialogTitle>
+                <DialogTitle>
+                  Editar Currículo Geral
+                  {editingGeneralResumeLanguage ? ` — ${getGeneralResumeLanguageLabel(editingGeneralResumeLanguage)}` : ""}
+                </DialogTitle>
               </DialogHeader>
               <div className="overflow-y-auto">
                 <MarkdownPreview
@@ -1264,7 +1344,7 @@ export default function PerfilPage() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setIsEditingGeneralResume(false)
+                    setEditingGeneralResumeLanguage(null)
                     setEditingGeneralResumeContent("")
                   }}
                 >

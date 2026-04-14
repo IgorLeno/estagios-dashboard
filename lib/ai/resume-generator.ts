@@ -431,9 +431,13 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
   // GOVERNANCE: CORE_SYSTEM_PROMPT is always prepended.
   // config.curriculo_prompt is treated as additive style preferences only.
   const candidateProfile = await getCandidateProfile(userId)
+  const generalResumeMarkdown =
+    language === "en"
+      ? candidateProfile.curriculo_geral_md_en || candidateProfile.curriculo_geral_md
+      : candidateProfile.curriculo_geral_md
   const systemInstruction = appendGeneralResumeContext(
     mergeSystemInstruction(config.curriculo_prompt),
-    candidateProfile.curriculo_geral_md
+    generalResumeMarkdown
   )
   console.log(`[Resume Generator] 🔐 System instruction built (core policy + user style preferences)`)
 

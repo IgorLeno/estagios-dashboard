@@ -24,6 +24,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const profile = await getCandidateProfile(user.id)
     const cv = await getCVTemplateForUser(language, user.id)
     const markdown = htmlToMarkdown(generateResumeHTML(cv, resumeTemplate))
+    const nextPtResume = language === "pt" ? markdown : (profile.curriculo_geral_md ?? "")
+    const nextEnResume = language === "en" ? markdown : (profile.curriculo_geral_md_en ?? "")
 
     await saveCandidateProfile(
       {
@@ -42,7 +44,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         objetivo_en: profile.objetivo_en,
         tagline_pt: profile.tagline_pt,
         tagline_en: profile.tagline_en,
-        curriculo_geral_md: markdown,
+        curriculo_geral_md: nextPtResume,
+        curriculo_geral_md_en: nextEnResume,
         habilidades: profile.habilidades,
         projetos: profile.projetos,
         certificacoes: profile.certificacoes,

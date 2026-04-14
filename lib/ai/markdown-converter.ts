@@ -233,6 +233,9 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             padding: 0;
             margin: 0;
             -webkit-print-color-adjust: exact;
+            text-align: justify;
+            text-justify: inter-word;
+            hyphens: none;
         }
 
         .container {
@@ -388,6 +391,14 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             text-transform: uppercase;
             letter-spacing: 0.5pt;
             color: #000;
+        }
+
+        h1 + p,
+        h1 + p + p {
+            text-align: left;
+            white-space: normal;
+            word-break: keep-all;
+            overflow-wrap: normal;
         }
 
         h2 {
