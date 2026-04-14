@@ -293,6 +293,11 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             line-height: 1.4;
         }
 
+        /* Spacing between project blocks: gap before title that follows a description div */
+        div[style] + p {
+            margin-top: 10pt;
+        }
+
         ul, ol {
             list-style: none;
             margin: 0 0 4pt 0;
@@ -407,6 +412,11 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             font-size: 11pt;
             line-height: 1.25;
             color: #000;
+        }
+
+        /* Spacing between project blocks: gap before title that follows a description div */
+        div[style] + p {
+            margin-top: 10pt;
         }
 
         ul, ol {
