@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PDFParse } from "pdf-parse"
+import { createRequire } from "node:module"
 import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-client"
 import { loadUserAIConfig } from "@/lib/ai/config"
 import { createClient } from "@/lib/supabase/server"
@@ -9,6 +9,8 @@ export const maxDuration = 120
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024
 const MAX_EXTRACTED_TEXT_CHARS = 40000
+const require = createRequire(import.meta.url)
+const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buffer: Buffer) => Promise<{ text: string }>
 
 function stripMarkdownFence(value: string): string {
   return value
@@ -70,16 +72,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ success: false, error: "PDF file is too large" }, { status: 413 })
     }
 
-    const data = new Uint8Array(await file.arrayBuffer())
-    const parser = new PDFParse({ data })
-
-    let extractedText = ""
-    try {
-      const result = await parser.getText()
-      extractedText = result.text.trim()
-    } finally {
-      await parser.destroy()
-    }
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const result = await pdfParse(buffer)
+    const extractedText = result.text.trim()
 
     if (extractedText.length < 100) {
       return NextResponse.json(

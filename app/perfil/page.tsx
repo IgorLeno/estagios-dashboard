@@ -1177,7 +1177,7 @@ export default function PerfilPage() {
           />
 
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Upload do Currículo Geral</DialogTitle>
                 <DialogDescription>
@@ -1185,7 +1185,7 @@ export default function PerfilPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6">
                 <div className="space-y-3 rounded-lg border border-border p-4">
                   <div>
                     <h3 className="font-medium">Arquivo PDF</h3>
@@ -1223,8 +1223,8 @@ export default function PerfilPage() {
                     value={uploadMarkdownText}
                     onChange={(event) => setUploadMarkdownText(event.target.value)}
                     disabled={isUploadingGeneralResume || isReadOnly}
-                    rows={8}
-                    className="font-mono text-sm"
+                    rows={14}
+                    className="min-h-[300px] max-h-[500px] w-full resize-y overflow-y-auto font-mono text-sm"
                     placeholder="# Seu Nome..."
                   />
                   <Button
