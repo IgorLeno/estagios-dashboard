@@ -293,6 +293,11 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             line-height: 1.4;
         }
 
+        /* Collapse gap between project title and its description */
+        p:has(+ div[style]) {
+            margin-bottom: 0;
+        }
+
         /* Spacing between project blocks: gap before title that follows a description div */
         div[style] + p {
             margin-top: 10pt;
@@ -412,6 +417,11 @@ function getResumeTemplateStyles(template: ResumeTemplate): string {
             font-size: 11pt;
             line-height: 1.25;
             color: #000;
+        }
+
+        /* Collapse gap between project title and its description */
+        p:has(+ div[style]) {
+            margin-bottom: 0;
         }
 
         /* Spacing between project blocks: gap before title that follows a description div */
