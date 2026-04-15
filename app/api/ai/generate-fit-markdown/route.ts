@@ -160,6 +160,29 @@ ORDENAÇÃO DENTRO DE CADA CATEGORIA:
 
 NUNCA altere quais itens existem — apenas reordene os existentes.`
 
+// [FIX-v3] F1 — negrito apenas em métricas e resultados concretos
+const BOLD_METRICS_COMPACT = `REGRA DE NEGRITO (OBRIGATÓRIO):
+Use negrito APENAS em números, métricas e resultados concretos (R², MRD, MAD, contagens).
+NUNCA em expressões adaptadas da vaga — isso sinaliza ao recrutador que o texto foi modificado.
+❌ **consolidando relatórios gerenciais** / **elaborando apresentações estratégicas** / **análise de dados de produtividade**
+✅ **R² = 0,997** / **MRD = 1,93%** / **MAD = 40,06 kJ/mol** / **29.000 moléculas**`
+
+// [FIX-v3] F2 — sustentabilidade em entrevista
+const SUSTAINABILITY_COMPACT = `TESTE DE SUSTENTABILIDADE (OBRIGATÓRIO):
+Aplique o teste: o candidato consegue detalhar com exemplo concreto de projeto acadêmico?
+Se não, reformule para o nível que consegue defender.
+Nunca eleve projeto científico ao nível de experiência operacional profissional
+(OEE, planos de ação, apresentações estratégicas corporativas).`
+
+// [FIX-v3] F3 — calibração de vocabulário por família de vaga
+const VOCABULARY_CALIBRATION_COMPACT = `CALIBRAÇÃO DE VOCABULÁRIO POR FAMÍLIA DE VAGA (OBRIGATÓRIO):
+Identifique a natureza da vaga: laboratorial/química, operacional/industrial ou dados/análise.
+Para vagas híbridas: perfil segue vocabulário da natureza PRIMÁRIA, projetos descrevem valor
+transferível compatível com a natureza SECUNDÁRIA.
+NUNCA use vocabulário de gestão/estratégia em vaga laboratorial.
+NUNCA use linguagem científica pesada como destaque em vaga operacional.
+Projetos de pesquisa científica: descreva pelo valor transferível honesto, não pelo vocabulário da vaga.`
+
 // [FIX-v2] Corrige sufixação artificial de keywords em projetos, exigindo integração orgânica dentro da narrativa.
 const ORGANIC_KEYWORD_INTEGRATION_INSTRUCTIONS = `INTEGRAÇÃO ORGÂNICA DE KEYWORDS (OBRIGATÓRIO):
 Integre as palavras-chave da vaga NA narrativa existente, reescrevendo frases
@@ -240,6 +263,16 @@ Antes de retornar o output final, verifique internamente:
     posições?
 [ ] Métricas e resultados concretos dos projetos originais foram
     preservados?
+[ ] Algum negrito foi usado em expressão adaptada da vaga em vez
+    de em métrica ou resultado concreto?
+[ ] Alguma afirmação do perfil não resistiria a "onde exatamente
+    você fez isso?" numa entrevista?
+[ ] Algum projeto descreve valor transferível como se fosse
+    experiência operacional profissional direta?
+[ ] O vocabulário do perfil está calibrado para a natureza da
+    vaga (laboratorial, operacional ou dados)?
+[ ] Se a vaga é híbrida: o perfil segue a natureza primária e
+    os projetos o valor transferível compatível com a secundária?
 
 Se qualquer item estiver marcado como problema, corrija antes de retornar.`
 
@@ -271,9 +304,13 @@ RULES FOR EACH SECTION:
    - Rewrite the profile from the general CV to naturally incorporate the job's keywords and requirements
    - Keep similar length to the original (same approximate number of sentences)
 
+${VOCABULARY_CALIBRATION_COMPACT}
+
 ${PROFESSIONAL_PROFILE_STRUCTURE_INSTRUCTIONS}
 
 ${CRITICAL_GAPS_INSTRUCTIONS}
+
+${SUSTAINABILITY_COMPACT}
 
 2. ## ${competenciesSection}:
    - Reorder existing categories and existing items by relevance to the job
@@ -289,9 +326,13 @@ ${SKILL_PRIORITY_HIERARCHY_INSTRUCTIONS}
    - Do NOT create new projects
    - Preserve bold (**text**) and italic (_text_) markers within descriptions
 
+${BOLD_METRICS_COMPACT}
+
 ${ORGANIC_KEYWORD_INTEGRATION_INSTRUCTIONS}
 
 ${GENUINE_RELEVANCE_FILTER_INSTRUCTIONS}
+
+${SUSTAINABILITY_COMPACT}
 
 ${CROSS_PROJECT_DEDUPLICATION_INSTRUCTIONS}
 

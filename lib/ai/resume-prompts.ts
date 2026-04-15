@@ -72,6 +72,63 @@ TIPO 3 — Experiência prática ausente:
 Regra absoluta: nunca ignore gaps obrigatórios. Endereçá-los proativamente
 demonstra autoconhecimento e aumenta a credibilidade do candidato.`
 
+// [FIX-v3] Vocabulário do perfil deve respeitar a natureza da vaga
+const VOCABULARY_CALIBRATION_INSTRUCTIONS = `CALIBRAÇÃO DE VOCABULÁRIO POR FAMÍLIA DE VAGA (OBRIGATÓRIO):
+
+PASSO 1 — Identifique a natureza da vaga:
+
+NATUREZA LABORATORIAL/QUÍMICA
+  Sinais: bancada, titulação, espectrofotometria, absorção atômica,
+  preparo de reagentes, análises físico-químicas, pH, cromatografia,
+  controle de qualidade químico.
+  Vocabulário ADEQUADO: base química, análise de resultados,
+  organização de rotina analítica, interpretação de dados
+  experimentais, atenção a procedimentos, rastreabilidade.
+  Vocabulário PROIBIDO: relatórios gerenciais, apresentações
+  estratégicas, indicadores de performance produtiva, dashboards,
+  gestão de processos, OEE.
+
+NATUREZA OPERACIONAL/INDUSTRIAL
+  Sinais: OEE, indicadores produtivos, melhoria contínua, chão de
+  fábrica, linha de produção, PDCA, turnos, manutenção, Excelência
+  Operacional.
+  Vocabulário ADEQUADO: acompanhamento de indicadores, consolidação
+  de dados operacionais, apoio a análises de desempenho, automação
+  de relatórios, organização de informações.
+  Vocabulário PROIBIDO como destaque principal: química computacional,
+  modelagem termodinâmica, machine learning científico.
+
+NATUREZA DE DADOS/ANÁLISE/REPORTING
+  Sinais: Excel, Power BI, SQL, relatórios, dashboards, KPIs,
+  consolidação, indicadores de performance, apresentações.
+  Vocabulário ADEQUADO: análise de dados, consolidação de resultados,
+  acompanhamento de métricas, automação de processos analíticos,
+  estruturação de informações.
+
+PASSO 2 — Se a vaga for HÍBRIDA (ex: qualidade + laboratório,
+operações + dashboards, engenharia + reporting):
+  Identifique a natureza PRIMÁRIA (responsabilidade principal da
+  função) e a natureza SECUNDÁRIA (ferramenta ou contexto de apoio).
+  O PERFIL PROFISSIONAL segue o vocabulário da natureza PRIMÁRIA.
+  Os PROJETOS são reframados pelo valor transferível compatível com
+  a natureza SECUNDÁRIA.
+
+  Exemplos de vagas híbridas:
+  Laboratório + dados → perfil: química/lab; projetos: organização
+    de dados, rastreabilidade, análise de resultados
+  Operacional + reporting → perfil: indicadores, desempenho;
+    projetos: consolidação, visualização de informações
+  Engenharia + dados → perfil: processos industriais, análise
+    quantitativa; projetos: automação, estruturação de dados
+
+REGRA GERAL: o perfil deve soar como se o candidato fosse
+naturalmente da área da vaga. Se os projetos são de pesquisa
+científica, descreva-os pelo VALOR TRANSFERÍVEL honesto — análise
+quantitativa, processamento de dados, consolidação de resultados —
+sem transformar o vocabulário no vocabulário específico da vaga.
+Um currículo honesto com valor transferível bem descrito convence
+mais do que vocabulário forçado.`
+
 // [FIX-v2] Corrige perfis genéricos, forçando uma estrutura que responde por que o candidato é relevante para a vaga específica.
 const PROFESSIONAL_PROFILE_STRUCTURE_INSTRUCTIONS = `ESTRUTURA DO PERFIL PROFISSIONAL:
 O perfil deve responder à pergunta implícita do recrutador:
@@ -112,6 +169,28 @@ ORDENAÇÃO DENTRO DE CADA CATEGORIA:
 3º: demais itens
 
 NUNCA altere quais itens existem — apenas reordene os existentes.`
+
+// [FIX-v3] Negrito em keyword adaptada delata o ajuste ao recrutador
+const BOLD_METRICS_ONLY_INSTRUCTIONS = `REGRA DE NEGRITO (OBRIGATÓRIO):
+Use negrito (**texto**) APENAS em métricas, números e resultados
+concretos extraídos fielmente do currículo original.
+
+Exemplos CORRETOS:
+**R² = 0,997** | **MRD = 1,93%** | **MAD = 40,06 kJ/mol** | **29.000 moléculas**
+
+NUNCA use negrito para destacar expressões adaptadas da vaga, mesmo
+que a frase pareça natural. O negrito sinaliza ao recrutador que o
+trecho foi modificado e reduz a credibilidade do currículo.
+
+❌ ERRADO:
+"...em **análise de dados de produtividade** aprovada..."
+"...**consolidando relatórios gerenciais** com medidores..."
+"...**elaborando apresentações estratégicas** no congresso..."
+
+✅ CERTO:
+"...atingindo **R² = 0,997** e erro médio de **2,50 kcal/mol**..."
+"...menor desvio (**MRD = 1,93%**) e menor desvio absoluto
+(**MAD = 40,06 kJ/mol**) via PM7..."`
 
 // [FIX-v2] Corrige sufixação artificial de keywords em projetos, exigindo integração orgânica dentro da narrativa.
 const ORGANIC_KEYWORD_INTEGRATION_INSTRUCTIONS = `INTEGRAÇÃO ORGÂNICA DE KEYWORDS (OBRIGATÓRIO):
@@ -160,6 +239,57 @@ Projeto de ML para 29.000 moléculas orgânicas descrito como
 demonstrando capacidade de estruturar pipelines de dados em larga escala
 com validação automática de qualidade (R² = 0,997)."`
 
+// [FIX-v3] Afirmações não sustentáveis criam vulnerabilidade em entrevista
+const SUSTAINABILITY_TEST_PROFILE_INSTRUCTIONS = `TESTE DE SUSTENTABILIDADE — PERFIL PROFISSIONAL (OBRIGATÓRIO):
+O candidato é estudante de graduação sem experiência profissional
+formal. Antes de incluir uma afirmação no perfil, aplique o teste:
+"Se o recrutador perguntar onde exatamente você fez isso, o candidato
+consegue responder com um exemplo concreto de projeto acadêmico
+ou autoral?"
+
+Se sim → pode incluir.
+Se não → reformule para o nível que o candidato consegue defender.
+
+Reformulações obrigatórias:
+
+❌ → ✅
+"acompanhamento de indicadores operacionais como OEE"
+→ "acompanhamento de métricas de desempenho em projetos computacionais"
+
+"equivalente à formação em Engenharia de Produção"
+→ "com formação em processos industriais, modelagem e análise de dados"
+
+"construção de planos de ação operacionais"
+→ "organização de informações para apoio à decisão"
+
+"experiência em melhoria contínua de processos"
+→ "vivência com análise comparativa de métodos e otimização de resultados"
+
+Regra absoluta: qualquer afirmação que soe como experiência
+profissional consolidada deve ser reformulada para projeto acadêmico
+ou autoral com exemplo concreto.`
+
+// [FIX-v3] F2 aplicado a projetos — não descreva valor transferível como experiência operacional direta
+const SUSTAINABILITY_TEST_PROJECTS_INSTRUCTIONS = `TESTE DE SUSTENTABILIDADE — PROJETOS (OBRIGATÓRIO):
+Ao descrever o valor transferível de um projeto para a vaga, nunca
+eleve o nível de abstração além do que o candidato consegue defender
+com um exemplo concreto.
+
+❌ Exagero não sustentável em projeto:
+"consolidando indicadores de performance produtiva"
+(projeto de ML científico ≠ indicadores de produção industrial)
+
+"elaborando apresentações estratégicas"
+(apresentar em congresso acadêmico ≠ apresentações estratégicas corporativas)
+
+"construção de planos de ação"
+(dashboard pessoal ≠ plano de ação operacional implementado em empresa)
+
+✅ Valor transferível sustentável:
+"consolidando resultados com métricas de desempenho quantificadas"
+"apresentando análise comparativa de métodos com desvios mensurados"
+"estruturando informações para apoio à decisão e rastreamento de processos"`
+
 // [FIX-v2] Corrige repetição de expressões adaptadas entre projetos e perfil, preservando impacto e variedade textual.
 const CROSS_PROJECT_DEDUPLICATION_INSTRUCTIONS = `DEDUPLICAÇÃO CROSS-PROJETO (OBRIGATÓRIO):
 Cada expressão adaptada da vaga deve aparecer em NO MÁXIMO UM projeto.
@@ -193,6 +323,16 @@ Antes de retornar o output final, verifique internamente:
     posições?
 [ ] Métricas e resultados concretos dos projetos originais foram
     preservados?
+[ ] Algum negrito foi usado em expressão adaptada da vaga em vez
+    de em métrica ou resultado concreto?
+[ ] Alguma afirmação do perfil não resistiria a "onde exatamente
+    você fez isso?" numa entrevista?
+[ ] Algum projeto descreve valor transferível como se fosse
+    experiência operacional profissional direta?
+[ ] O vocabulário do perfil está calibrado para a natureza da
+    vaga (laboratorial, operacional ou dados)?
+[ ] Se a vaga é híbrida: o perfil segue a natureza primária e
+    os projetos o valor transferível compatível com a secundária?
 
 Se qualquer item estiver marcado como problema, corrija antes de retornar.`
 
@@ -220,9 +360,13 @@ export const SUMMARY_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - ATS OPTIMIZATION:
    - Key achievements: Quantify 1-2 relevant accomplishments from original summary (if available)
    - Objective: Express interest in company/role using job keywords
 
+${VOCABULARY_CALIBRATION_INSTRUCTIONS}
+
 ${PROFESSIONAL_PROFILE_STRUCTURE_INSTRUCTIONS}
 
 ${CRITICAL_GAPS_INSTRUCTIONS}
+
+${SUSTAINABILITY_TEST_PROFILE_INSTRUCTIONS}
 
 2. EXACT TERMINOLOGY MATCHING (CRITICAL FOR ATS):
    - Use EXACT phrases from "Exact Phrases" list (e.g., if job says "Excel Avançado", use "Excel Avançado" not "Excel")
@@ -423,9 +567,13 @@ export const PROJECTS_PROMPT_INSTRUCTIONS = `INSTRUCTIONS - PROJECT DESCRIPTION 
    - Use transferable wording when useful, but never claim direct domain experience that the project does not prove.
    - Never inject the job's domain into an unrelated project.
 
+${BOLD_METRICS_ONLY_INSTRUCTIONS}
+
 ${ORGANIC_KEYWORD_INTEGRATION_INSTRUCTIONS}
 
 ${GENUINE_RELEVANCE_FILTER_INSTRUCTIONS}
+
+${SUSTAINABILITY_TEST_PROJECTS_INSTRUCTIONS}
 
 ${CROSS_PROJECT_DEDUPLICATION_INSTRUCTIONS}
 

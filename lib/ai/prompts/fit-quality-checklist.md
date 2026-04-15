@@ -38,3 +38,20 @@
 - Projeto de área X descrito como relevante para área Y sem conexão real
 - A mesma expressão aparece em 2+ projetos
 - Currículo não menciona o gap de curso obrigatório
+
+## Sinais de alerta — segunda rodada [FIX-v3]
+
+- Negrito em expressão que não é métrica ou resultado concreto
+- Perfil menciona OEE, planos de ação ou equivalência com outro
+  curso sem experiência real comprovável com exemplo concreto
+- Vocabulário de gestão/estratégia em currículo para vaga
+  laboratorial ou química
+- Vocabulário fortemente científico/computacional como destaque
+  principal em vaga operacional ou de dados
+- Projeto científico descrito como experiência operacional
+  profissional direta (ex: congresso acadêmico = "apresentações
+  estratégicas corporativas")
+- Qualquer afirmação que não resistiria a "onde você fez isso?"
+  numa entrevista técnica
+- Vaga híbrida tratada com vocabulário de uma única natureza
+  sem distinguir primária e secundária

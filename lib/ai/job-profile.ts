@@ -490,6 +490,12 @@ const PROJECT_REFRAMING_FIX_V2_HINTS = [
   "Cada expressão adaptada da vaga deve aparecer em no máximo 1 projeto — mantenha registro mental das expressões já utilizadas ao longo dos projetos",
 ]
 
+// [FIX-v3] Regra de negrito e sustentabilidade em entrevista para todos os projetos
+const PROJECT_REFRAMING_FIX_V3_HINTS = [
+  "Use negrito APENAS em números, métricas e resultados concretos (R², MRD, MAD, contagens) — NUNCA em expressões adaptadas da vaga como **relatórios gerenciais**, **apresentações estratégicas** ou **análise de dados de produtividade**",
+  "Aplique o teste de sustentabilidade: o candidato consegue detalhar com exemplo concreto de projeto acadêmico? Se não, reformule — nunca eleve projeto científico ao nível de experiência operacional profissional (OEE, planos de ação, apresentações estratégicas corporativas)",
+]
+
 function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[] {
   if (family === "laboratory_qc") {
     return [
@@ -499,6 +505,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "Each bullet should highlight: quality control, data validation, traceability, lab organization, standards compliance",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
       ...PROJECT_REFRAMING_FIX_V2_HINTS,
+      ...PROJECT_REFRAMING_FIX_V3_HINTS,
     ]
   }
   if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
@@ -512,6 +519,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "AVOID as primary emphasis: Machine Learning, feature engineering, hyperparameters",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
       ...PROJECT_REFRAMING_FIX_V2_HINTS,
+      ...PROJECT_REFRAMING_FIX_V3_HINTS,
     ]
   }
   if (family === "data_science_ml") {
@@ -521,6 +529,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "Mention libraries (Pandas, NumPy, Scikit-learn) when used",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
       ...PROJECT_REFRAMING_FIX_V2_HINTS,
+      ...PROJECT_REFRAMING_FIX_V3_HINTS,
     ]
   }
   if (family === "qhse_quality") {
@@ -529,6 +538,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For engineering projects: emphasize 'environmental efficiency analysis', 'compliance with technical standards'",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
       ...PROJECT_REFRAMING_FIX_V2_HINTS,
+      ...PROJECT_REFRAMING_FIX_V3_HINTS,
     ]
   }
   if (family === "process_engineering") {
@@ -537,6 +547,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "Mention engineering tools: Aspen Plus, MATLAB, CAD",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
       ...PROJECT_REFRAMING_FIX_V2_HINTS,
+      ...PROJECT_REFRAMING_FIX_V3_HINTS,
     ]
   }
   return [
@@ -552,6 +563,15 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
     ? "Use 'conhecimento em', 'experiência acadêmica com', 'prática com' — NEVER 'expertise'"
     : ""
 
+  // [FIX-v3] F3 — calibração de vocabulário por família de vaga (aplicado a todos os perfis)
+  const vocabularyCalibrationHint = family === "laboratory_qc"
+    ? "VOCABULARY: lab/chemistry nature — FORBIDDEN in profile: relatórios gerenciais, apresentações estratégicas, indicadores de performance produtiva, OEE, gestão de processos"
+    : family === "people_analytics" || family === "bi_reporting"
+    ? "VOCABULARY: data/reporting nature — avoid heavy scientific/computational language as the main emphasis; lead with operational data skills"
+    : family === "qhse_quality" || family === "process_engineering"
+    ? "VOCABULARY: operational/industrial nature — describe scientific projects by their transferable analytical value, not as operational industrial experience"
+    : "VOCABULARY: match profile language to the job's primary nature; describe scientific projects by transferable value, not by the job's specific vocabulary"
+
   if (family === "laboratory_qc") {
     return [
       "Sentence 1: Education + interest in laboratory activities",
@@ -561,6 +581,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
       "MINIMIZE: programming skills, data science tools — only mention if job explicitly requires",
       "MAXIMIZE: practical lab experience from academic courses (Analytical Chemistry, Physical Chemistry)",
       internshipTone,
+      vocabularyCalibrationHint,
     ].filter(Boolean)
   }
   if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
@@ -573,6 +594,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
       "If People Analytics job: include 'e BI' in objective for broader ATS matching",
       "NEVER name the company in the objective — use area/function instead",
       internshipTone,
+      vocabularyCalibrationHint,
     ].filter(Boolean)
   }
   if (family === "data_science_ml") {
@@ -582,6 +604,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
       "Sentence 3: Project experience (pipelines, models, analysis)",
       "Sentence 4: Objective at company",
       internshipTone,
+      vocabularyCalibrationHint,
     ].filter(Boolean)
   }
   if (family === "qhse_quality") {
@@ -591,6 +614,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
       "Sentence 3: Standards and quality control knowledge",
       "Sentence 4: Objective at company",
       internshipTone,
+      vocabularyCalibrationHint,
     ].filter(Boolean)
   }
   if (family === "process_engineering") {
@@ -600,6 +624,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
       "Sentence 3: Project experience/optimization",
       "Sentence 4: Objective at company",
       internshipTone,
+      vocabularyCalibrationHint,
     ].filter(Boolean)
   }
   return [
@@ -607,6 +632,7 @@ function buildSummaryStructureHints(family: RoleFamily, mode: RoleMode, seniorit
     "Avoid over-specialization in one domain",
     "Keep profile generalist and adaptable",
     internshipTone,
+    vocabularyCalibrationHint,
   ].filter(Boolean)
 }
 
