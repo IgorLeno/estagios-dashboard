@@ -141,12 +141,11 @@ async function personalizeSkills(
   cv: CVTemplate,
   model: ReturnType<typeof createAIModel>,
   language: "pt" | "en",
-  jobProfile: JobProfile,
-  approvedSkills?: string[]
+  jobProfile: JobProfile
 ): Promise<{ skills: PersonalizedSections["skills"]; duration: number; tokenUsage: any }> {
   const startTime = Date.now()
 
-  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects, language, jobProfile, approvedSkills)
+  const prompt = buildSkillsPrompt(jobDetails, cv.skills, cv.projects, language, jobProfile)
 
   const result = await model.generateContent(prompt)
   const response = result.response
@@ -155,13 +154,9 @@ async function personalizeSkills(
   const jsonData = extractJsonFromResponse(text)
   const validated = PersonalizedSectionsSchema.pick({ skills: true }).parse(jsonData)
 
-  // CRITICAL VALIDATION: Check for fabricated skills (profile + explicitly approved additions)
+  // CRITICAL VALIDATION: Only skills already in the candidate's CV template are allowed.
   const originalSkills = cv.skills.flatMap((cat) => cat.items)
   const allowedSkills = [...originalSkills]
-
-  if (approvedSkills && approvedSkills.length > 0) {
-    allowedSkills.push(...approvedSkills)
-  }
 
   const returnedSkills = validated.skills.flatMap((cat) => cat.items)
 
@@ -176,19 +171,12 @@ async function personalizeSkills(
   })
 
   if (fabricatedSkills.length > 0) {
-    if (approvedSkills && approvedSkills.length > 0) {
-      console.warn(
-        "[Resume Generator] ⚠️ Skills não reconhecidas, mas approvedSkills presente — permitindo:",
-        fabricatedSkills
-      )
-    } else {
-      console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
-      console.error("[Resume Generator] Allowed skills (Profile):", originalSkills)
-      throw new Error(
-        `LLM fabricated skills not in candidate profile or approved skills: ${fabricatedSkills.join(", ")}. ` +
-          `Only these skills are allowed: ${allowedSkills.join(", ")}`
-      )
-    }
+    console.error("[Resume Generator] ❌ FABRICATED SKILLS DETECTED:", fabricatedSkills)
+    console.error("[Resume Generator] Allowed skills (Profile):", originalSkills)
+    throw new Error(
+      `LLM fabricated skills not in candidate profile: ${fabricatedSkills.join(", ")}. ` +
+        `Only these skills are allowed: ${allowedSkills.join(", ")}`
+    )
   }
 
   const duration = Date.now() - startTime
@@ -421,12 +409,9 @@ export interface GenerateResumeOptions {
   jobDetails: JobDetails
   language: "pt" | "en"
   userId?: string
-  approvedSkills?: string[]
   model?: string
-  selectedProjectTitles?: string[]
   profileText?: string
   tagline?: string
-  selectedCertifications?: string[]
 }
 
 export async function generateTailoredResume(options: GenerateResumeOptions): Promise<{
@@ -441,12 +426,9 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     jobDetails,
     language,
     userId,
-    approvedSkills,
     model,
-    selectedProjectTitles,
     profileText,
     tagline,
-    selectedCertifications,
   } = options
   const startTime = Date.now()
 
@@ -487,70 +469,14 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
     throw new InsufficientProfileError(effectiveSummary.length)
   }
 
-  // STEP 4.5: Filter projects if caller specified a selection
-  const projectsToUse =
-    selectedProjectTitles && selectedProjectTitles.length > 0
-      ? baseCv.projects.filter((p) =>
-          selectedProjectTitles.some(
-            (title) => p.title.trim().toLowerCase() === title.trim().toLowerCase()
-          )
-        )
-      : baseCv.projects
-
-  if (selectedProjectTitles && selectedProjectTitles.length > 0) {
-    const notFound = selectedProjectTitles.filter(
-      (title) =>
-        !baseCv.projects.some(
-          (p) => p.title.trim().toLowerCase() === title.trim().toLowerCase()
-        )
-    )
-    if (notFound.length > 0) {
-      console.warn("[Resume Generator] ⚠️ selectedProjectTitles not found in CV:", notFound)
-    }
-    console.log(
-      `[Resume Generator] 🎯 Project filter: ${projectsToUse.length}/${baseCv.projects.length} projects selected`
-    )
-  }
-
-  const certificationsToUse =
-    selectedCertifications && selectedCertifications.length > 0
-      ? baseCv.certifications.filter((certification) =>
-          selectedCertifications.some((title) => {
-            const selected = title.trim().toLowerCase()
-            const certificationTitle =
-              (typeof certification === "string" ? certification : certification.title).trim().toLowerCase()
-            return certificationTitle === selected
-          })
-        )
-      : baseCv.certifications
-
-  if (selectedCertifications && selectedCertifications.length > 0) {
-    const notFound = selectedCertifications.filter((title) => {
-      const selected = title.trim().toLowerCase()
-      return !baseCv.certifications.some((certification) => {
-        const certificationTitle =
-          (typeof certification === "string" ? certification : certification.title).trim().toLowerCase()
-        return certificationTitle === selected
-      })
-    })
-
-    if (notFound.length > 0) {
-      console.warn("[Resume Generator] ⚠️ selectedCertifications not found in CV:", notFound)
-    }
-
-    console.log(
-      `[Resume Generator] 🎯 Certification filter: ${certificationsToUse.length}/${baseCv.certifications.length} certifications selected`
-    )
-  }
-
+  // STEP 4.5: Always use the full project and certification inventory from the general CV.
+  // Manual complement selection has been removed; the general CV is the complete base.
   const filteredCv = {
     ...baseCv,
     header: {
       ...baseCv.header,
       tagline: tagline?.trim() || baseCv.header.tagline,
     },
-    projects: projectsToUse,
-    certifications: certificationsToUse,
   }
   const filteredCertifications = reorderCertifications(filteredCv.certifications)
 
@@ -579,7 +505,7 @@ export async function generateTailoredResume(options: GenerateResumeOptions): Pr
 
   const [summaryResult, skillsResult, projectsResult] = await Promise.all([
     summaryPromise,
-    personalizeSkills(jobDetails, baseCv, skillsModel, language, jobProfile, approvedSkills),
+    personalizeSkills(jobDetails, baseCv, skillsModel, language, jobProfile),
     personalizeProjects(jobDetails, filteredCv, projectsModel, language, jobProfile),
   ])
 

@@ -28,10 +28,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       profileText,
       tagline,
       useTagline,
-      approvedSkills,
       model,
-      selectedProjectTitles,
-      selectedCertifications,
       resumeTemplate,
     } = validatedInput
 
@@ -96,12 +93,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       jobDetails,
       language,
       userId,
-      approvedSkills,
       model,
-      selectedProjectTitles,
       profileText: effectiveProfileText,
       tagline: effectiveTagline,
-      selectedCertifications,
     })
 
     const preflight = validateCVTemplate(resumeResult.cv)

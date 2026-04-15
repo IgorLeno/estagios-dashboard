@@ -51,10 +51,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       profileText,
       tagline,
       useTagline,
-      approvedSkills,
       model,
-      selectedProjectTitles,
-      selectedCertifications,
       resumeTemplate,
       ignoreWarnings,
     } =
@@ -152,12 +149,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         jobDetails,
         language: effectiveLanguage,
         userId,
-        approvedSkills,
         model,
-        selectedProjectTitles,
         profileText: effectiveProfileText,
         tagline: effectiveTagline,
-        selectedCertifications,
       }),
       AI_TIMEOUT_CONFIG.resumeGenerationTimeoutMs,
       `Resume generation exceeded ${resumeGenerationTimeoutSeconds}s timeout`

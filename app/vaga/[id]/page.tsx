@@ -30,10 +30,8 @@ import { downloadPdf } from "@/lib/url-utils"
 import { toSafeNumber, getStatusBadgeClasses } from "@/lib/utils"
 import { toast } from "sonner"
 import { JobDetailsSchema } from "@/lib/ai/types"
-import type { JobDetails, ComplementSelection } from "@/lib/ai/types"
+import type { JobDetails } from "@/lib/ai/types"
 import { renderMarkdownResumeToHtml } from "@/lib/ai/markdown-converter"
-import { recordModelFailure, recordModelSuccess } from "@/lib/model-attempt-tracker"
-import { useResumeTaglinePreference } from "@/hooks/use-resume-tagline-preference"
 
 function mapVagaToJobDetails(vaga: VagaEstagio): JobDetails {
   return JobDetailsSchema.parse({
@@ -75,12 +73,6 @@ export default function VagaDetailPage() {
   const [activeModel, setActiveModel] = useState<string>("x-ai/grok-4.1-fast")
   const [editingResumeLanguage, setEditingResumeLanguage] = useState<"pt" | "en" | null>(null)
   const [editingResumeContent, setEditingResumeContent] = useState("")
-  const [profileText, setProfileText] = useState("")
-  const [tagline, setTagline] = useState("")
-  const { value: useTagline, setValue: setUseTagline } = useResumeTaglinePreference()
-  const [isGeneratingProfile, setIsGeneratingProfile] = useState(false)
-  const [complements, setComplements] = useState<ComplementSelection | null>(null)
-  const [isSelectingComplements, setIsSelectingComplements] = useState(false)
   const [candidateProfile, setCandidateProfile] = useState<CandidateProfile | null>(null)
   const [preflightWarnings, setPreflightWarnings] = useState<string[] | null>(null)
   const [pendingGenerateLang, setPendingGenerateLang] = useState<"pt" | "en" | null>(null)
@@ -152,8 +144,6 @@ export default function VagaDetailPage() {
 
       if (error) throw error
       setVaga(data)
-      if (data?.profile_text_pt) setProfileText(data.profile_text_pt)
-      setTagline(data?.tagline_pt ?? "")
 
       // Se houver arquivo de análise, carregar conteúdo para preview
       if (data?.observacoes) {
@@ -226,18 +216,8 @@ export default function VagaDetailPage() {
     }
   }
 
-  function handleUseTaglineChange(value: boolean) {
-    setUseTagline(value)
-  }
-
   async function handleGenerateResume(language: "pt" | "en", model?: string, ignoreWarnings = false) {
     if (!vaga) return
-
-    const approvedSkills = complements?.skills.filter((group) => group.selected).flatMap((group) => group.items) ?? []
-    const selectedProjectTitles =
-      complements?.projects.filter((project) => project.selected).map((project) => project.title) ?? []
-    const selectedCertifications =
-      complements?.certifications.filter((certification) => certification.selected).map((certification) => certification.title) ?? []
 
     try {
       setIsGeneratingPDF(language)
@@ -248,15 +228,6 @@ export default function VagaDetailPage() {
         body: JSON.stringify({
           vagaId: vaga.id,
           language,
-          profileText: language === "pt" ? profileText.trim() || undefined : undefined,
-          tagline:
-            language === "pt" && useTagline && tagline.trim()
-              ? tagline.trim()
-              : undefined,
-          useTagline,
-          approvedSkills: approvedSkills.length > 0 ? approvedSkills : undefined,
-          selectedProjectTitles: selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
-          selectedCertifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
           model,
           resumeTemplate: activeTemplate,
           ignoreWarnings: ignoreWarnings || undefined,
@@ -517,103 +488,6 @@ export default function VagaDetailPage() {
   const perfil = toSafeNumber(vaga.perfil)
   const jobAnalysisData = mapVagaToJobDetails(vaga)
 
-  async function handleGenerateProfile() {
-    setIsGeneratingProfile(true)
-
-    try {
-      const response = await fetch("/api/ai/generate-profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobAnalysis: jobAnalysisData,
-          language: "pt",
-          model: activeModel || undefined,
-        }),
-      })
-
-      const result = await response.json()
-      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : activeModel
-
-      if (!response.ok || !result.success) {
-        if (response.status >= 500) {
-          recordModelFailure(activeModel, "generate-profile")
-        }
-        throw new Error(result.error || `Erro ao gerar perfil: ${response.status}`)
-      }
-
-      const generatedProfileText = typeof result?.data?.profileText === "string" ? result.data.profileText : ""
-      const generatedTagline = typeof result?.data?.tagline === "string" ? result.data.tagline : ""
-
-      recordModelSuccess(trackedModel, "generate-profile")
-      setProfileText(generatedProfileText)
-      setTagline(generatedTagline)
-
-      if (vaga?.id) {
-        const updateResponse = await fetch(`/api/vagas/${vaga.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            profile_text_pt: generatedProfileText,
-            tagline_pt: generatedTagline,
-          }),
-        })
-
-        if (!updateResponse.ok) {
-          throw new Error("Erro ao salvar perfil gerado")
-        }
-      }
-
-      setComplements(null)
-      toast.success("Perfil profissional gerado com sucesso!")
-    } catch (error) {
-      console.error("Erro ao gerar perfil:", error)
-      toast.error(error instanceof Error ? error.message : "Erro ao gerar perfil")
-    } finally {
-      setIsGeneratingProfile(false)
-    }
-  }
-
-  async function handleSelectComplements() {
-    if (!profileText.trim()) {
-      toast.error("Perfil profissional necessário primeiro")
-      return
-    }
-
-    setIsSelectingComplements(true)
-
-    try {
-      const response = await fetch("/api/ai/select-complements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileText,
-          jobAnalysis: jobAnalysisData,
-          language: "pt",
-          model: activeModel || undefined,
-        }),
-      })
-
-      const result = await response.json()
-      const trackedModel = typeof result?.metadata?.model === "string" ? result.metadata.model : activeModel
-
-      if (!response.ok || !result.success) {
-        if (response.status >= 500) {
-          recordModelFailure(activeModel, "select-complements")
-        }
-        throw new Error(result.error || `Erro ao selecionar complementos: ${response.status}`)
-      }
-
-      recordModelSuccess(trackedModel, "select-complements")
-      setComplements(result.data)
-      toast.success("Complementos selecionados com sucesso!")
-    } catch (error) {
-      console.error("Erro ao selecionar complementos:", error)
-      toast.error(error instanceof Error ? error.message : "Erro ao selecionar complementos")
-    } finally {
-      setIsSelectingComplements(false)
-    }
-  }
-
   return (
     <div className="min-h-screen flex">
       <Sidebar activeTab="dashboard" onTabChange={() => router.push("/")} />
@@ -792,27 +666,16 @@ export default function VagaDetailPage() {
             </CardHeader>
             <CardContent>
               <FitTab
-                jobDescription={vaga.observacoes || ""}
+                vagaId={vaga.id}
+                language={vaga.idioma_vaga ?? "pt"}
                 jobAnalysisData={jobAnalysisData}
-                language="pt"
-                profileText={profileText}
-                onProfileTextChange={(text) => {
-                  setProfileText(text)
-                  setComplements(null)
-                }}
-                tagline={tagline}
-                onTaglineChange={setTagline}
-                useTagline={useTagline}
-                onUseTaglineChange={handleUseTaglineChange}
-                isGeneratingProfile={isGeneratingProfile}
-                onGenerateProfile={handleGenerateProfile}
-                complements={complements}
-                onComplementsChange={setComplements}
-                isSelectingComplements={isSelectingComplements}
-                onSelectComplements={handleSelectComplements}
-                onContinueToCurriculo={() => {
-                  document.getElementById("resume-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }}
+                currentMarkdown={
+                  (vaga.idioma_vaga ?? "pt") === "pt"
+                    ? vaga.curriculo_text_pt ?? null
+                    : vaga.curriculo_text_en ?? null
+                }
+                onFitGenerated={loadVaga}
+                activeModel={activeModel}
               />
             </CardContent>
           </Card>
@@ -875,7 +738,7 @@ export default function VagaDetailPage() {
           <CoverLetterSection
             vagaData={vaga}
             candidateData={candidateProfile}
-            profileText={profileText}
+            profileText={vaga.profile_text_pt ?? ""}
             curriculos={{
               pt: vaga.curriculo_text_pt,
               en: vaga.curriculo_text_en,

@@ -416,70 +416,14 @@ describe("generateTailoredResume", () => {
     ).rejects.toThrow(InsufficientProfileError)
   })
 
-  it("should filter certifications when selectedCertifications is provided", async () => {
-    mockGenerateContent.mockReset()
-    mockGenerateContent
-      .mockResolvedValueOnce({
-        response: {
-          text: () => `\`\`\`json\n${JSON.stringify(mockSummaryResponse)}\n\`\`\``,
-          usageMetadata: {
-            promptTokenCount: 500,
-            candidatesTokenCount: 150,
-            totalTokenCount: 650,
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        response: {
-          text: () => `\`\`\`json\n${JSON.stringify(mockSkillsResponse)}\n\`\`\``,
-          usageMetadata: {
-            promptTokenCount: 400,
-            candidatesTokenCount: 200,
-            totalTokenCount: 600,
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        response: {
-          text: () => `\`\`\`json\n${JSON.stringify(mockProjectsResponse)}\n\`\`\``,
-          usageMetadata: {
-            promptTokenCount: 600,
-            candidatesTokenCount: 300,
-            totalTokenCount: 900,
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        response: {
-          text: () =>
-            `\`\`\`json\n${JSON.stringify({
-              draft: {
-                summary: mockSummaryResponse.summary,
-                skills: mockSkillsResponse.skills,
-                projects: mockProjectsResponse.projects,
-                certifications: [mockBaseCertifications[0], mockBaseCertifications[2]],
-                language: "pt",
-              },
-              report: {
-                issues: [],
-                corrections: [],
-              },
-            })}\n\`\`\``,
-          usageMetadata: {
-            promptTokenCount: 250,
-            candidatesTokenCount: 120,
-            totalTokenCount: 370,
-          },
-        },
-      })
-
+  it("should include all certifications from the CV without filtering", async () => {
+    // Manual complement selection was removed; the full certification inventory is always used.
     const result = await generateTailoredResume({
       jobDetails: mockJobDetails,
       language: "pt",
-      selectedCertifications: [mockBaseCertifications[0], mockBaseCertifications[2]],
     })
 
-    expect(result.cv.certifications).toEqual(asCertificationObjects([mockBaseCertifications[0], mockBaseCertifications[2]]))
+    expect(result.cv.certifications).toEqual(asCertificationObjects(mockBaseCertifications))
   })
 
   it("should support English language", async () => {
