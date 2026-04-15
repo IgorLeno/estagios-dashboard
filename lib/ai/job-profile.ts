@@ -483,6 +483,13 @@ function buildSkillReorderingHints(family: RoleFamily, mode: RoleMode): string[]
   ]
 }
 
+// [FIX-v2] Corrige reframing artificial de projetos adicionando regras globais contra sufixação, conexão falsa e repetição de keywords.
+const PROJECT_REFRAMING_FIX_V2_HINTS = [
+  "NUNCA adicione keywords da vaga como sufixo de frases — reescreva a frase de dentro para fora integrando o contexto organicamente",
+  "Antes de conectar o projeto à vaga, verifique se a conexão é técnica ou metodológica (genuína) e não apenas terminológica (mesmas palavras, contextos diferentes) — conexões falsas prejudicam a credibilidade",
+  "Cada expressão adaptada da vaga deve aparecer em no máximo 1 projeto — mantenha registro mental das expressões já utilizadas ao longo dos projetos",
+]
+
 function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[] {
   if (family === "laboratory_qc") {
     return [
@@ -491,6 +498,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For chemistry projects: emphasize molecular modeling, physicochemical analysis, process optimization",
       "Each bullet should highlight: quality control, data validation, traceability, lab organization, standards compliance",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+      ...PROJECT_REFRAMING_FIX_V2_HINTS,
     ]
   }
   if (family === "people_analytics" || (family === "bi_reporting" && mode === "operational_support")) {
@@ -503,6 +511,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "PRIORITIZE: structuring databases, standardization, validation, source documentation, technical reporting",
       "AVOID as primary emphasis: Machine Learning, feature engineering, hyperparameters",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+      ...PROJECT_REFRAMING_FIX_V2_HINTS,
     ]
   }
   if (family === "data_science_ml") {
@@ -511,6 +520,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For engineering projects: emphasize 'predictive modeling', 'computational simulation'",
       "Mention libraries (Pandas, NumPy, Scikit-learn) when used",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+      ...PROJECT_REFRAMING_FIX_V2_HINTS,
     ]
   }
   if (family === "qhse_quality") {
@@ -518,6 +528,7 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "For data projects: reframe as 'data quality control system', 'KPI monitoring', 'Power BI dashboards'",
       "For engineering projects: emphasize 'environmental efficiency analysis', 'compliance with technical standards'",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+      ...PROJECT_REFRAMING_FIX_V2_HINTS,
     ]
   }
   if (family === "process_engineering") {
@@ -525,12 +536,14 @@ function buildProjectReframingHints(family: RoleFamily, mode: RoleMode): string[
       "Emphasize simulation, modeling, process optimization",
       "Mention engineering tools: Aspen Plus, MATLAB, CAD",
       "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+      ...PROJECT_REFRAMING_FIX_V2_HINTS,
     ]
   }
   return [
     "Balance technical and practical aspects",
     "Emphasize aspects most relevant to job requirements",
     "RESULTS: Always end the last bullet with a concrete metric or scope descriptor extracted from the project data (count, percentage, volume, dataset size). Never fabricate — only use what is present in the project description.",
+    ...PROJECT_REFRAMING_FIX_V2_HINTS,
   ]
 }
 
