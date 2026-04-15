@@ -11,6 +11,7 @@ import { ChevronRight, RotateCcw } from "lucide-react"
 import { DescricaoTab } from "@/components/tabs/descricao-tab"
 import { DadosVagaTab } from "@/components/tabs/dados-vaga-tab"
 import { CurriculoTab } from "@/components/tabs/curriculo-tab"
+import { FitTabModal } from "@/components/tabs/fit-tab-modal"
 import { toast } from "sonner"
 import { normalizeRatingForSave } from "@/lib/utils"
 import { mapJobDetailsToFormData, type FormData } from "@/lib/utils/ai-mapper"
@@ -91,6 +92,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
   const [resumeFilename, setResumeFilename] = useState<string | null>(null)
   const [resumePdfBase64Pt, setResumePdfBase64Pt] = useState<string | null>(null)
   const [resumePdfBase64En, setResumePdfBase64En] = useState<string | null>(null)
+  const [fitMarkdown, setFitMarkdown] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -395,6 +397,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
     setResumeFilename(null)
     setResumePdfBase64Pt(null)
     setResumePdfBase64En(null)
+    setFitMarkdown(null)
     setActiveTab("descricao")
   }
 
@@ -474,9 +477,14 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
           </TabsContent>
 
           <TabsContent value="fit" className="mt-4">
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
-              Salve a vaga primeiro e acesse a página de detalhes para gerar o fit do currículo.
-            </div>
+            <FitTabModal
+              jobDescription={lastAnalyzedDescription || jobDescription}
+              jobAnalysisData={jobAnalysisData}
+              language="pt"
+              activeModel={selectedResumeModel}
+              onFitGenerated={(markdown) => setFitMarkdown(markdown)}
+              onContinueToCurriculo={() => setActiveTab("curriculo")}
+            />
           </TabsContent>
 
           <TabsContent value="curriculo" className="mt-4">
@@ -519,6 +527,7 @@ export function AddVagaDialog({ open, onOpenChange, onSuccess }: AddVagaDialogPr
               modelHistory={resumeModelHistory}
               onModelChange={setSelectedResumeModel}
               onModelHistoryChange={setResumeModelHistory}
+              fitMarkdown={fitMarkdown}
             />
           </TabsContent>
         </Tabs>

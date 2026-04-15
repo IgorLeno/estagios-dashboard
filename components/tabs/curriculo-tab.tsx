@@ -43,6 +43,8 @@ interface CurriculoTabProps {
   modelHistory: string[]
   onModelChange: (model: string) => void
   onModelHistoryChange: (history: string[]) => void
+  /** Fit markdown from FitTabModal — when set, PT resume assembly skips the LLM */
+  fitMarkdown?: string | null
 }
 
 const MODEL_HISTORY_LIMIT = 20
@@ -75,6 +77,7 @@ export function CurriculoTab({
   modelHistory,
   onModelChange,
   onModelHistoryChange,
+  fitMarkdown,
 }: CurriculoTabProps) {
   console.log("[CurriculoTab] Rendering", { jobAnalysisData, vagaId, isInPage })
 
@@ -194,6 +197,7 @@ export function CurriculoTab({
       vagaId,
       hasJobDescription: !!jobDescription,
       jobDescriptionLength: jobDescription?.length,
+      hasFitMarkdown: !!fitMarkdown,
     })
 
     setIsGenerating(true)
@@ -209,78 +213,118 @@ export function CurriculoTab({
         console.log("[CurriculoTab] Generating PT preview...")
         setHtmlSourcePt("") // clear stale HTML before regenerating
 
-        const payload = {
-          vagaId,
-          jobDescription,
-          language: "pt",
-          profileText: profileText?.trim() || undefined,
-          tagline: useTagline === false ? undefined : tagline?.trim() || undefined,
-          useTagline,
-          approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
-          selectedProjectTitles:
-            selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
-          selectedCertifications:
-            selectedCertifications && selectedCertifications.length > 0 ? selectedCertifications : undefined,
-          model: activeModel || undefined,
-          resumeTemplate: localTemplate,
-        }
-        console.log("[CurriculoTab] PT payload:", payload)
+        // When fitMarkdown is available, use assemble-resume (concatenation, no LLM)
+        if (fitMarkdown) {
+          console.log("[CurriculoTab] Using assemble-resume for PT (fitMarkdown available)")
 
-        const response = await fetch("/api/ai/generate-resume-html", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        })
+          const assemblePayload = {
+            fitMarkdown,
+            language: "pt",
+            jobAnalysisData: jobAnalysisData
+              ? { empresa: jobAnalysisData.empresa, cargo: jobAnalysisData.cargo }
+              : undefined,
+            resumeTemplate: localTemplate,
+          }
 
-        console.log("[CurriculoTab] PT response status:", response.status)
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error("[CurriculoTab] PT response not OK:", errorText)
-          throw new Error(`API returned ${response.status}: ${errorText}`)
-        }
-
-        const result = await response.json()
-        console.log("[CurriculoTab] PT result:", {
-          success: result.success,
-          hasData: !!result.data,
-          hasHtml: !!result.data?.html,
-          htmlLength: result.data?.html?.length,
-          error: result.error,
-        })
-
-        // 🔍 DEBUG: Log FULL response body
-        console.log("[CurriculoTab] 📦 PT Full Response Body:", JSON.stringify(result, null, 2))
-
-        if (result.success && result.data?.html) {
-          // Convert HTML to Markdown for better editing experience
-          const markdown = htmlToMarkdown(result.data.html)
-          generatedPt = markdown // Store in local variable
-
-          // 🔍 DEBUG: Log markdown BEFORE setState
-          console.log("[CurriculoTab] 📝 PT Markdown BEFORE setState:", {
-            length: markdown.length,
-            preview: markdown.substring(0, 150),
+          const assembleResponse = await fetch("/api/ai/assemble-resume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(assemblePayload),
           })
 
-          setMarkdownPreviewPt(markdown)
-          setHtmlSourcePt(result.data.html) // preserve original HTML for PDF generation
+          if (!assembleResponse.ok) {
+            const errorText = await assembleResponse.text()
+            throw new Error(`assemble-resume returned ${assembleResponse.status}: ${errorText}`)
+          }
 
-          // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
-          console.log("[CurriculoTab] ✅ PT setMarkdownPreviewPt called with length:", markdown.length)
+          const assembleResult = await assembleResponse.json()
 
-          // 🔍 DEBUG: Verify state update after a tick
-          setTimeout(() => {
-            console.log("[CurriculoTab] 🔄 PT State after setState (async check):", {
-              markdownPreviewPtLength: markdownPreviewPt.length,
-              generatedPtLength: generatedPt.length,
-              stateMatchesGenerated: markdownPreviewPt === generatedPt,
-            })
-          }, 100)
-
-          console.log("[CurriculoTab] ✅ PT preview generated and converted to Markdown")
+          if (assembleResult.success && assembleResult.data?.markdown) {
+            generatedPt = assembleResult.data.markdown
+            setMarkdownPreviewPt(generatedPt)
+            setHtmlSourcePt(assembleResult.data.html ?? "")
+            if (assembleResult.data.pdfBase64) {
+              setPdfBase64Pt(assembleResult.data.pdfBase64)
+            }
+            console.log("[CurriculoTab] ✅ PT assembled from fitMarkdown")
+          } else {
+            throw new Error(assembleResult.error || "Failed to assemble PT resume")
+          }
         } else {
-          throw new Error(result.error || "Failed to generate PT preview")
+          // Standard LLM-based generation
+          const payload = {
+            vagaId,
+            jobDescription,
+            language: "pt",
+            profileText: profileText?.trim() || undefined,
+            tagline: useTagline === false ? undefined : tagline?.trim() || undefined,
+            useTagline,
+            approvedSkills: approvedSkills && approvedSkills.length > 0 ? approvedSkills : undefined,
+            selectedProjectTitles:
+              selectedProjectTitles && selectedProjectTitles.length > 0 ? selectedProjectTitles : undefined,
+            selectedCertifications:
+              selectedCertifications && selectedCertifications.length > 0 ? selectedCertifications : undefined,
+            model: activeModel || undefined,
+            resumeTemplate: localTemplate,
+          }
+          console.log("[CurriculoTab] PT payload:", payload)
+
+          const response = await fetch("/api/ai/generate-resume-html", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+
+          console.log("[CurriculoTab] PT response status:", response.status)
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error("[CurriculoTab] PT response not OK:", errorText)
+            throw new Error(`API returned ${response.status}: ${errorText}`)
+          }
+
+          const result = await response.json()
+          console.log("[CurriculoTab] PT result:", {
+            success: result.success,
+            hasData: !!result.data,
+            hasHtml: !!result.data?.html,
+            htmlLength: result.data?.html?.length,
+            error: result.error,
+          })
+
+          // 🔍 DEBUG: Log FULL response body
+          console.log("[CurriculoTab] 📦 PT Full Response Body:", JSON.stringify(result, null, 2))
+
+          if (result.success && result.data?.html) {
+            // Convert HTML to Markdown for better editing experience
+            const markdown = htmlToMarkdown(result.data.html)
+            generatedPt = markdown // Store in local variable
+
+            // 🔍 DEBUG: Log markdown BEFORE setState
+            console.log("[CurriculoTab] 📝 PT Markdown BEFORE setState:", {
+              length: markdown.length,
+              preview: markdown.substring(0, 150),
+            })
+
+            setMarkdownPreviewPt(markdown)
+            setHtmlSourcePt(result.data.html) // preserve original HTML for PDF generation
+
+            // 🔍 DEBUG: Log AFTER setState (will be async, but shows intent)
+            console.log("[CurriculoTab] ✅ PT setMarkdownPreviewPt called with length:", markdown.length)
+
+            // 🔍 DEBUG: Verify state update after a tick
+            setTimeout(() => {
+              console.log("[CurriculoTab] 🔄 PT State after setState (async check):", {
+                markdownPreviewPtLength: markdownPreviewPt.length,
+                generatedPtLength: generatedPt.length,
+                stateMatchesGenerated: markdownPreviewPt === generatedPt,
+              })
+            }, 100)
+
+            console.log("[CurriculoTab] ✅ PT preview generated and converted to Markdown")
+          } else {
+            throw new Error(result.error || "Failed to generate PT preview")
+          }
         }
       }
 
@@ -580,6 +624,17 @@ export function CurriculoTab({
           Gere previews editáveis do currículo adaptado para esta vaga em português, inglês ou ambos.
         </p>
       </div>
+
+      {/* Fit indicator (when fitMarkdown is available from modal flow) */}
+      {fitMarkdown && (
+        <Alert className="border-green-500/25 bg-green-500/5">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle>Fit disponível</AlertTitle>
+          <AlertDescription>
+            O currículo PT será montado com base no fit gerado na aba anterior — sem necessidade de IA adicional.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Warning if no job analysis data */}
       {!jobAnalysisData && (

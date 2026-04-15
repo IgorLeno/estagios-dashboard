@@ -109,7 +109,8 @@ describe("AddVagaDialog", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText(/fit: perfil \+ complementos/i)).toBeInTheDocument()
+        // FitTabModal renders this heading in the Fit tab
+        expect(screen.getByText(/fit para currículo/i)).toBeInTheDocument()
       },
       { timeout: 2000 }
     )

@@ -11,7 +11,8 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm exec:*)",
       "Bash(grep -n \"ignoreWarnings\\\\|preflightWarnings\\\\|handleConfirmGenerate\\\\|AlertTriangle\\\\|DialogFooter\" /home/ifernandes/Projetos/estagios-dash/estagios-dashboard/app/vaga/[id]/page.tsx)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(pnpm build *)"
     ]
   }
 }

@@ -418,3 +418,25 @@ export interface ExtractJobSkillsErrorResponse {
   success: false
   error: string
 }
+
+// ─── Fit Tone Options (modal fit generation) ─────────────────────────────────
+
+export interface FitToneOptions {
+  // Group 1: Estilo de Escrita (funde Tom + Linguagem + Densidade em presets coerentes)
+  estilo: "padrao" | "tecnico_formal" | "executivo" | "conversacional" | "personalizado_estilo"
+  estilo_customizado?: string
+
+  // Group 2: Foco de Conteúdo
+  foco: "padrao" | "keywords" | "resultados" | "competencias" | "personalizado_foco"
+  foco_customizado?: string
+
+  // Group 3: Ênfase de Carreira
+  enfase: "padrao" | "academica" | "pratica" | "lideranca" | "personalizado_enfase"
+  enfase_customizado?: string
+}
+
+export const DEFAULT_FIT_TONE_OPTIONS: FitToneOptions = {
+  estilo: "padrao",
+  foco: "padrao",
+  enfase: "padrao",
+}

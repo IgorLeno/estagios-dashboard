@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ZodError } from "zod"
+import { z, ZodError } from "zod"
 import { callGrok, validateGrokConfig, type GrokMessage } from "@/lib/ai/grok-client"
 import { loadUserAIConfig } from "@/lib/ai/config"
 import { RefineResumeRequestSchema } from "@/lib/ai/types"
 import { createClient } from "@/lib/supabase/server"
 import { getCandidateProfile } from "@/lib/supabase/candidate-profile"
+
+// ─── Modal mode schema (no vagaId — direct fitMarkdown) ──────────────────────
+
+const RefineModalSchema = z.object({
+  fitMarkdown: z.string().min(50),
+  language: z.enum(["pt", "en"]),
+  instructions: z.string().min(10),
+  model: z.string().optional(),
+})
 
 type ResumeLanguage = "pt" | "en"
 
@@ -121,8 +130,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw error
     }
 
-    const validatedInput = RefineResumeRequestSchema.parse(body)
-    const { vagaId, language, instructions } = validatedInput
+    // Detect mode: modal (fitMarkdown provided, no vagaId) vs. DB mode
+    const isModalMode = typeof (body as Record<string, unknown>).fitMarkdown === "string" && !(body as Record<string, unknown>).vagaId
 
     const supabase = await createClient()
     const {
@@ -141,6 +150,57 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     await validateGrokConfig(user.id)
+
+    // ── Modal mode: refine fitMarkdown directly (no DB read/write) ────────────
+    if (isModalMode) {
+      const { fitMarkdown, language, instructions, model } = RefineModalSchema.parse(body)
+
+      const profile = await getCandidateProfile(user.id)
+      const generalResume =
+        language === "en"
+          ? profile.curriculo_geral_md_en?.trim() || profile.curriculo_geral_md?.trim()
+          : profile.curriculo_geral_md?.trim()
+
+      const config = await loadUserAIConfig(user.id)
+      const jobContext = "Context: Modal fit refinement — no saved job record available."
+
+      const messages = buildRefinementMessages(
+        fitMarkdown,
+        generalResume ?? fitMarkdown, // fall back to fitMarkdown if no general resume
+        instructions,
+        language,
+        jobContext
+      )
+
+      const response = await callGrok(messages, {
+        model: model ?? config.modelo_gemini,
+        temperature: config.temperatura,
+        max_tokens: 8192,
+        top_p: config.top_p ?? 0.9,
+      }, { userId: user.id })
+
+      const refinedMarkdown = response.content.trim()
+
+      if (!refinedMarkdown || refinedMarkdown.length < Math.ceil(fitMarkdown.length * 0.3)) {
+        return NextResponse.json(
+          { success: false, error: "Refined content was unexpectedly short and was rejected" },
+          { status: 502 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: { markdown: refinedMarkdown },
+        metadata: {
+          duration: Date.now() - startTime,
+          model: model ?? config.modelo_gemini,
+        },
+      })
+    }
+
+    // ── DB mode: existing behavior ────────────────────────────────────────────
+    const validatedInput = RefineResumeRequestSchema.parse(body)
+    const { vagaId, language, instructions } = validatedInput
 
     const { data: vaga, error: vagaError } = await supabase.from("vagas_estagio").select("*").eq("id", vagaId).single()
 
