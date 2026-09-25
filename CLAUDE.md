@@ -37,6 +37,15 @@ pnpm test:e2e:debug             # Playwright debug mode
 
 - `/` — Main dashboard (Client Component). Tab-based: Estágios, Resumo, Configurações (`?tab=` selects a tab).
 - `/vaga/[id]` — Job detail page (read-only)
+- `/login` — Google sign-in (public). `/api/auth/*` — Auth.js handlers (public).
+
+### Auth
+
+Auth.js v5 (`auth.ts`), Google only, JWT sessions, allowlist `ALLOWED_EMAIL` (fails closed). Rules are pure functions in `lib/auth/access.ts`. Three independent gates, keep all of them:
+
+- `proxy.ts` (Next 16 name for middleware) runs the `authorized` callback on every request except build assets and `public/` files: pages redirect to `/login`, `/api/*` gets 401.
+- `app/(dashboard)/layout.tsx` calls `requireAllowedSession()`; every new dashboard page goes inside `app/(dashboard)/`.
+- `getJobSearchData()` refuses the real Sheet without an allowed session. Any future server action or route handler must call `getAllowedSession()` itself — the proxy does not protect Server Functions.
 
 Pages currently render from an empty in-memory source; the job-search data layer (`lib/job-search/*`, plan WP3) replaces it.
 
@@ -65,12 +74,13 @@ CSS variables defined in `app/globals.css` with light/dark themes. Uses Tailwind
 
 ## Environment Variables
 
-See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_B64`, or `GOOGLE_SA_JSON_PATH` outside the repo for local dev). Never commit or print credentials. Reading the real Sheet is refused on Vercel until Google login is in place.
+See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_B64`, or `GOOGLE_SA_JSON_PATH` outside the repo for local dev). Never commit or print credentials. Auth needs `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (plus `AUTH_TRUST_HOST=true` for `next start` outside Vercel). Reading the real Sheet requires an allowed session and is still refused on Vercel (`SHEETS_DISABLED_UNTIL_AUTH`) until the real Google login is verified end to end.
 
 ## Testing Notes
 
 - Unit tests: `__tests__/` directory mirrors source structure. Use `waitFor` for async assertions (not `waitForNextUpdate`).
 - E2E tests: `e2e/` directory, Chromium only, 1 worker against `localhost:3000`.
+- E2E auth: no app-side bypass. The server under test runs with the throwaway `E2E_AUTH_ENV` from `e2e/auth.ts` (Playwright `webServer.env`), and specs mint the session cookie with `signInAs()`. A reused server (e.g. `pnpm build && pnpm start`) must be started with those same variables in its environment, or authenticated specs fail.
 - Async Server Components: prefer E2E tests over Vitest unit tests.
 - Test files: `__tests__/**/*.test.{ts,tsx}` and `lib/**/__tests__/**/*.test.{ts,tsx}` (Vitest include patterns).
 - `next.config.mjs` sets `typescript.ignoreBuildErrors`, so `pnpm build` does not type-check: run `pnpm exec tsc --noEmit` as well.
