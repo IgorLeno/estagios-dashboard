@@ -11,7 +11,7 @@ test.describe("Navegação do Dashboard", () => {
     await expect(page.getByText(/últimos 7 dias/i).first()).toBeVisible()
 
     await page.getByTestId("sidebar-configuracoes").click()
-    await expect(page.getByText(/aparência/i)).toBeVisible()
+    await expect(page.getByText("Aparência", { exact: true })).toBeVisible()
 
     await page.getByTestId("sidebar-vagas").click()
     await expect(page.getByTestId("vagas-card-title")).toBeVisible()
@@ -19,7 +19,7 @@ test.describe("Navegação do Dashboard", () => {
 
   test("deve abrir aba pela query string", async ({ page }) => {
     await page.goto("/?tab=configuracoes")
-    await expect(page.getByText(/aparência/i)).toBeVisible()
+    await expect(page.getByText("Aparência", { exact: true })).toBeVisible()
   })
 
   test("deve mostrar vaga inexistente sem quebrar", async ({ page }) => {
