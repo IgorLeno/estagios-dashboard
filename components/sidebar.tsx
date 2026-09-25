@@ -1,13 +1,8 @@
 "use client"
 
-import { LayoutDashboard, BarChart3, Settings2, LogOut, LogIn, Briefcase, User as UserIcon } from "lucide-react"
+import { LayoutDashboard, BarChart3, Settings2, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { usePathname, useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { toast } from "sonner"
-import { useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
 
 interface SidebarProps {
   activeTab?: string
@@ -17,60 +12,14 @@ interface SidebarProps {
 const menuItems = [
   { id: "vagas", label: "Estágios", icon: LayoutDashboard },
   { id: "resumo", label: "Resumo", icon: BarChart3 },
-  { id: "perfil", label: "Perfil", icon: UserIcon },
   { id: "configuracoes", label: "Configurações", icon: Settings2 },
 ]
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = createClient()
-
-  // Check user auth status
-  useEffect(() => {
-    async function checkUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-      setLoading(false)
-    }
-    checkUser()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-      toast.success("Logout realizado com sucesso")
-      router.push("/admin/login")
-      router.refresh()
-    } catch (error) {
-      toast.error("Erro ao fazer logout")
-      console.error("Logout error:", error)
-    }
-  }
-
-  const handleLogin = () => {
-    router.push("/admin/login")
-  }
 
   const handleItemClick = (itemId: string) => {
-    if (itemId === "perfil") {
-      router.push("/perfil")
-      return
-    }
-
     if (pathname !== "/") {
       const target = itemId === "vagas" ? "/" : `/?tab=${itemId}`
       router.push(target)
@@ -105,7 +54,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <nav className="relative flex-1 flex flex-col px-3 gap-0.5">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = item.id === "perfil" ? pathname === "/perfil" : activeTab === item.id
+          const isActive = activeTab === item.id
           return (
             <button
               key={item.id}
@@ -134,44 +83,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           )
         })}
       </nav>
-
-      <div className="relative px-5 mb-3">
-        <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
-      </div>
-
-      <div className="relative px-3 pb-5">
-        {loading ? (
-          <div className="px-3 py-2 text-xs text-sidebar-foreground/40 animate-pulse">Carregando...</div>
-        ) : user ? (
-          <div className="space-y-1">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-border/30">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{user.email?.[0]?.toUpperCase() ?? "U"}</span>
-              </div>
-              <p className="text-xs text-sidebar-foreground/70 font-medium truncate flex-1">{user.email}</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full justify-start gap-2 text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 h-9"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="text-sm">Sair</span>
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogin}
-            className="w-full justify-start gap-2 text-sidebar-foreground/50 hover:text-sidebar-accent hover:bg-sidebar-accent/10 h-9"
-          >
-            <LogIn className="h-3.5 w-3.5" />
-            <span className="text-sm">Fazer Login</span>
-          </Button>
-        )}
-      </div>
     </aside>
   )
 }

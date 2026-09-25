@@ -1,32 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import type { VagaEstagio } from "@/lib/types"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search } from "lucide-react"
-import { AddVagaDialog } from "./add-vaga-dialog"
-import { EditVagaDialog } from "./edit-vaga-dialog"
+import { Search } from "lucide-react"
 import { VagaTableRow } from "./vaga-table-row"
-import { toast } from "sonner"
 
 interface VagasTableProps {
   vagas: VagaEstagio[]
-  loading: boolean
-  onVagaUpdate: () => void
 }
 
-export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
-  const supabase = createClient()
+export function VagasTable({ vagas }: VagasTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterModalidade, setFilterModalidade] = useState<string>("todas")
   const [filterStatus, setFilterStatus] = useState<string>("todos")
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [editingVaga, setEditingVaga] = useState<VagaEstagio | null>(null)
   const [expandedVagaId, setExpandedVagaId] = useState<string | null>(null)
 
   const filteredVagas = vagas.filter((vaga) => {
@@ -38,156 +29,111 @@ export function VagasTable({ vagas, loading, onVagaUpdate }: VagasTableProps) {
     return matchesSearch && matchesModalidade && matchesStatus
   })
 
-  async function handleDeleteVaga(vaga: VagaEstagio) {
-    if (!confirm(`Tem certeza que deseja excluir a vaga de ${vaga.empresa}?`)) {
-      return
-    }
-
-    try {
-      const { error } = await supabase.from("vagas_estagio").delete().eq("id", vaga.id)
-
-      if (error) throw error
-
-      toast.success("Vaga excluída com sucesso!")
-      onVagaUpdate()
-    } catch (error) {
-      console.error("Erro ao excluir vaga:", error)
-      toast.error("Erro ao excluir vaga. Tente novamente.")
-    }
-  }
-
   return (
-    <>
-      <Card className="glass-card-intense hover-lift">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-foreground" data-testid="vagas-card-title">
-              Estágios
-            </CardTitle>
+    <Card className="glass-card-intense hover-lift">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-foreground" data-testid="vagas-card-title">
+            Estágios
+          </CardTitle>
+        </div>
+
+        <div className="flex flex-col gap-3 mt-4">
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              id="search-vagas"
+              aria-label="Buscar vagas por empresa ou cargo"
+              placeholder="Buscar por empresa ou cargo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Select value={filterModalidade} onValueChange={setFilterModalidade}>
+              <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
+                <SelectValue placeholder="Modalidade" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="Presencial">Presencial</SelectItem>
+                <SelectItem value="Híbrido">Híbrido</SelectItem>
+                <SelectItem value="Remoto">Remoto</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Avançado">Avançado</SelectItem>
+                <SelectItem value="Melou">Melou</SelectItem>
+                <SelectItem value="Contratado">Contratado</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Button
-              onClick={() => setShowAddDialog(true)}
-              data-testid="add-vaga-button"
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold px-5 h-10 rounded-full shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-primary/40 hover:-translate-y-0.5"
+              variant="outline"
+              onClick={() => {
+                setSearchTerm("")
+                setFilterModalidade("todas")
+                setFilterStatus("todos")
+              }}
+              className="bg-transparent border-border text-foreground hover:bg-muted hover:border-primary"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Estágio
+              Limpar Filtros
             </Button>
           </div>
+        </div>
+      </CardHeader>
 
-          <div className="flex flex-col gap-3 mt-4">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <Input
-                id="search-vagas"
-                aria-label="Buscar vagas por empresa ou cargo"
-                placeholder="Buscar por empresa ou cargo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Select value={filterModalidade} onValueChange={setFilterModalidade}>
-                <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
-                  <SelectValue placeholder="Modalidade" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="todas">Todas</SelectItem>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Híbrido">Híbrido</SelectItem>
-                  <SelectItem value="Remoto">Remoto</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="bg-input border-border text-foreground hover:border-primary">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="Pendente">Pendente</SelectItem>
-                  <SelectItem value="Avançado">Avançado</SelectItem>
-                  <SelectItem value="Melou">Melou</SelectItem>
-                  <SelectItem value="Contratado">Contratado</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm("")
-                  setFilterModalidade("todas")
-                  setFilterStatus("todos")
-                }}
-                className="bg-transparent border-border text-foreground hover:bg-muted hover:border-primary"
-              >
-                Limpar Filtros
-              </Button>
-            </div>
+      <CardContent>
+        {filteredVagas.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">Nenhuma vaga encontrada</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="table-fixed w-full">
+              <TableHeader>
+                <TableRow className="border-b border-border">
+                  <TableHead scope="col" className="text-left font-semibold w-[25%]">
+                    Empresa
+                  </TableHead>
+                  <TableHead scope="col" className="text-left font-semibold w-[25%]">
+                    Cargo
+                  </TableHead>
+                  <TableHead scope="col" className="text-left font-semibold w-[20%]">
+                    Local
+                  </TableHead>
+                  <TableHead scope="col" className="text-left font-semibold w-[15%]">
+                    Modalidade
+                  </TableHead>
+                  <TableHead scope="col" className="w-[15%]">
+                    <span className="sr-only">Ações</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredVagas.map((vaga) => (
+                  <VagaTableRow
+                    key={vaga.id}
+                    vaga={vaga}
+                    isExpanded={expandedVagaId === vaga.id}
+                    onToggleExpand={() => setExpandedVagaId(expandedVagaId === vaga.id ? null : vaga.id)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </CardHeader>
-
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground animate-pulse">Carregando...</div>
-          ) : filteredVagas.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Nenhuma vaga encontrada para este dia</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table className="table-fixed w-full">
-                <TableHeader>
-                  <TableRow className="border-b border-border">
-                    <TableHead scope="col" className="text-left font-semibold w-[25%]">
-                      Empresa
-                    </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold w-[25%]">
-                      Cargo
-                    </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold w-[20%]">
-                      Local
-                    </TableHead>
-                    <TableHead scope="col" className="text-left font-semibold w-[15%]">
-                      Modalidade
-                    </TableHead>
-                    <TableHead scope="col" className="w-[15%]">
-                      <span className="sr-only">Ações</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVagas.map((vaga) => (
-                    <VagaTableRow
-                      key={vaga.id}
-                      vaga={vaga}
-                      isExpanded={expandedVagaId === vaga.id}
-                      onToggleExpand={() => setExpandedVagaId(expandedVagaId === vaga.id ? null : vaga.id)}
-                      onEdit={setEditingVaga}
-                      onDelete={handleDeleteVaga}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <AddVagaDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={onVagaUpdate} />
-      {editingVaga && (
-        <EditVagaDialog
-          open={!!editingVaga}
-          vaga={editingVaga}
-          onOpenChange={(open) => !open && setEditingVaga(null)}
-          onSuccess={() => {
-            setEditingVaga(null)
-            onVagaUpdate()
-          }}
-        />
-      )}
-    </>
+        )}
+      </CardContent>
+    </Card>
   )
 }

@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { getVagasByDateRange } from "@/lib/supabase/queries"
-import type { HistoricoResumo } from "@/lib/types"
+import { useState, useEffect, useMemo } from "react"
+import type { HistoricoResumo, VagaEstagio } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, Briefcase } from "lucide-react"
 import { format, parse, subDays } from "date-fns"
@@ -10,10 +9,11 @@ import { ptBR } from "date-fns/locale"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { useTheme } from "next-themes"
 
-export function ResumoPage() {
-  const [totalCandidaturas, setTotalCandidaturas] = useState(0)
-  const [historico, setHistorico] = useState<HistoricoResumo[]>([])
-  const [loading, setLoading] = useState(true)
+interface ResumoPageProps {
+  vagas: VagaEstagio[]
+}
+
+export function ResumoPage({ vagas }: ResumoPageProps) {
   const [themeReady, setThemeReady] = useState(false)
   const { resolvedTheme } = useTheme()
 
@@ -40,64 +40,7 @@ export function ResumoPage() {
     tooltipText: isDark ? "#E5E7EB" : "#1F2937", // Light (dark) / Dark (light)
   }
 
-  useEffect(() => {
-    loadLast7Days()
-  }, [])
-
-  async function loadLast7Days() {
-    setLoading(true)
-    try {
-      // Calculate date range for last 7 days
-      const endDate = new Date()
-      const startDate = subDays(endDate, 6) // 7 days total including today
-
-      const startDateStr = format(startDate, "yyyy-MM-dd")
-      const endDateStr = format(endDate, "yyyy-MM-dd")
-
-      // Load all vagas from last 7 days (filtrando dados de teste automaticamente)
-      const { data: vagas, error } = await getVagasByDateRange(startDateStr, endDateStr)
-
-      if (error) throw error
-
-      const vagasData = vagas || []
-      setTotalCandidaturas(vagasData.length)
-
-      // Create map for all 7 days (initialize with 0)
-      const historicoMap = new Map<string, { meta: number; candidaturas: number }>()
-      for (let i = 0; i < 7; i++) {
-        const date = subDays(endDate, 6 - i)
-        const dateStr = format(date, "yyyy-MM-dd")
-        historicoMap.set(dateStr, { meta: 0, candidaturas: 0 })
-      }
-
-      // Count candidaturas per day
-      for (const vaga of vagasData) {
-        const rawKey = vaga.data_inscricao as string | Date
-        const dateKey = typeof rawKey === "string" ? rawKey.slice(0, 10) : format(rawKey, "yyyy-MM-dd")
-        const current = historicoMap.get(dateKey)
-        if (current) current.candidaturas++
-      }
-
-      const historicoArray: HistoricoResumo[] = Array.from(historicoMap.entries()).map(([data, info]) => ({
-        data,
-        meta: info.meta,
-        candidaturas: info.candidaturas,
-      }))
-      setHistorico(historicoArray)
-    } catch (error) {
-      console.error("Erro ao carregar resumo:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground animate-pulse">Carregando resumo...</p>
-      </div>
-    )
-  }
+  const { totalCandidaturas, historico } = useMemo(() => summarizeLast7Days(vagas, new Date()), [vagas])
 
   return (
     <div className="space-y-6">
@@ -173,4 +116,29 @@ export function ResumoPage() {
       </Card>
     </div>
   )
+}
+
+function summarizeLast7Days(vagas: VagaEstagio[], endDate: Date) {
+  // 7 days including today, every day initialized with 0
+  const historicoMap = new Map<string, number>()
+  for (let i = 0; i < 7; i++) {
+    historicoMap.set(format(subDays(endDate, 6 - i), "yyyy-MM-dd"), 0)
+  }
+
+  let totalCandidaturas = 0
+  for (const vaga of vagas) {
+    const dateKey = vaga.data_inscricao.slice(0, 10)
+    const current = historicoMap.get(dateKey)
+    if (current !== undefined) {
+      historicoMap.set(dateKey, current + 1)
+      totalCandidaturas++
+    }
+  }
+
+  const historico: HistoricoResumo[] = Array.from(historicoMap.entries()).map(([data, candidaturas]) => ({
+    data,
+    meta: 0,
+    candidaturas,
+  }))
+  return { totalCandidaturas, historico }
 }
