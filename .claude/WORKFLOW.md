@@ -421,8 +421,6 @@ Teste dark mode:
 ## 🔗 Arquivos Relacionados
 
 - **CLAUDE.md** - Instruções principais do projeto
-- **SETUP.md** - Configuração do Supabase
-- **lib/markdown-parser.ts** - Parser de markdown (11 testes)
 - **lib/date-utils.ts** - Utilitários de data
 - **components/vagas-table.tsx** - Tabela principal de vagas
 - **vitest.config.ts** - Configuração de testes

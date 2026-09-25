@@ -6,7 +6,6 @@ import {
   isValidTimeFormat,
   daysBetween,
 } from "@/lib/date-utils"
-import type { Configuracao } from "@/lib/types"
 
 describe("date-utils", () => {
   describe("getDataInscricao", () => {
@@ -29,7 +28,7 @@ describe("date-utils", () => {
     })
 
     it("should ignore deprecated config parameter", () => {
-      const config: Configuracao = {
+      const config = {
         id: "1",
         created_at: "",
         updated_at: "",

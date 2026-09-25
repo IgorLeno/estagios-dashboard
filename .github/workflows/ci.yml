@@ -124,10 +124,6 @@ jobs:
       - name: Run E2E tests
         id: e2e
         run: pnpm test:e2e
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_SHOW_TEST_DATA: "false"
         continue-on-error: true
 
       - name: Generate E2E Test Summary
@@ -189,10 +185,6 @@ jobs:
       - name: Build project
         id: build
         run: pnpm build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_SHOW_TEST_DATA: "false"
         continue-on-error: true
 
       - name: Upload Test Reports

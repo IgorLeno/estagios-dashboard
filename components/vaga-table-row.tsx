@@ -6,37 +6,18 @@ import { TableCell, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  ChevronDown,
-  ChevronRight,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  FileText,
-  Trash2,
-  Download,
-  Target,
-  Activity,
-  ExternalLink,
-} from "lucide-react"
+import { ChevronRight, Eye, FileText, Target, Activity } from "lucide-react"
 import { StarRating } from "@/components/ui/star-rating"
-import { MarkdownPreview } from "@/components/ui/markdown-preview"
-import { cn, toSafeNumber, getStatusVariant } from "@/lib/utils"
-import { downloadPdf } from "@/lib/url-utils"
+import { cn, toSafeNumber } from "@/lib/utils"
 
 interface VagaTableRowProps {
   vaga: VagaEstagio
   isExpanded: boolean
   onToggleExpand: () => void
-  onEdit: (vaga: VagaEstagio) => void
-  onDelete: (vaga: VagaEstagio) => void
 }
 
-export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelete }: VagaTableRowProps) {
+export function VagaTableRow({ vaga, isExpanded, onToggleExpand }: VagaTableRowProps) {
   const router = useRouter()
-  void ChevronDown
-  void getStatusVariant(vaga.status)
 
   return (
     <>
@@ -91,29 +72,6 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
               <Eye className="h-4 w-4 mr-1" />
               Ver Detalhes
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  data-testid="vaga-actions-button"
-                  aria-label="Ações da vaga"
-                  title="Ações da vaga"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(vaga)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(vaga)} className="text-red-600">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </TableCell>
       </TableRow>
@@ -133,30 +91,10 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                 </CardHeader>
                 <CardContent className="min-w-0">
                   {vaga.observacoes ? (
-                    <div className="space-y-3 w-full min-w-0">
-                      <div className="w-full overflow-hidden min-w-0">
-                        <MarkdownPreview
-                          content={vaga.observacoes}
-                          editable={false}
-                          className="max-h-[400px] w-full min-w-0"
-                        />
-                      </div>
-                      {/* Se houver link para análise completa */}
-                      {vaga.arquivo_analise_url && (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm mt-3 px-0"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            downloadPdf(vaga.arquivo_analise_url, "analise-vaga.md")
-                          }}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          Ver análise completa
-                        </Button>
-                      )}
-                    </div>
+                    // Plain text on purpose: source text is untrusted and must not be rendered as HTML.
+                    <p className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words text-sm text-foreground">
+                      {vaga.observacoes}
+                    </p>
                   ) : (
                     <p className="text-sm text-muted-foreground italic">Nenhuma análise disponível para esta vaga.</p>
                   )}
@@ -228,29 +166,6 @@ export function VagaTableRow({ vaga, isExpanded, onToggleExpand, onEdit, onDelet
                     )}
                   </CardContent>
                 </Card>
-
-                {/* Card Currículo (só mostra se houver arquivo) */}
-                {vaga.arquivo_cv_url && (
-                  <Card className="glass-card">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Currículo</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all duration-200"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          downloadPdf(vaga.arquivo_cv_url, `curriculo-${vaga.empresa}.pdf`)
-                        }}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             </div>
           </TableCell>

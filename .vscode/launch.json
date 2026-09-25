@@ -22,8 +22,8 @@
       "reloadOnChange": {
         "watch": [
           "${workspaceFolder}/components/**/*.{ts,tsx}",
-          "${workspaceFolder}/lib/ai/*.{ts,tsx}",
-          "${workspaceFolder}/app/api/**/*.{ts,tsx}"
+          "${workspaceFolder}/lib/**/*.{ts,tsx}",
+          "${workspaceFolder}/app/**/*.{ts,tsx}"
         ],
         "ignore": ["${workspaceFolder}/node_modules/**", "${workspaceFolder}/.next/**"],
         "debounce": 500

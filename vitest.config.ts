@@ -11,10 +11,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    include: [
-      "__tests__/**/*.test.{ts,tsx}",
-      "lib/**/__tests__/**/*.test.{ts,tsx}",
-    ],
+    include: ["__tests__/**/*.test.{ts,tsx}", "lib/**/__tests__/**/*.test.{ts,tsx}"],
     exclude: ["e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",
@@ -33,6 +30,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      // Next.js resolves "server-only" at build time; in tests it is a no-op marker.
+      "server-only": path.resolve(__dirname, "node_modules/next/dist/compiled/server-only/empty.js"),
     },
   },
 })

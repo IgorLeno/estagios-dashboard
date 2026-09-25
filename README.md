@@ -1,211 +1,27 @@
-# 📊 Dashboard de Estágios - Engenharia Química
+# Dashboard de Estágios
 
-[![CI Status](https://github.com/igorleno/estagios-dashboard/workflows/CI/badge.svg)](https://github.com/igorleno/estagios-dashboard/actions)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://vercel.com/igorlenos-projects/v0-estagios-dashboard)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat&logo=next.js)](https://nextjs.org/)
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/IgorLeno/estagios-dashboard?utm_source=oss&utm_medium=github&utm_campaign=IgorLeno%2Festagios-dashboard&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+Camada visual e analítica, **somente leitura**, do repositório `job-search`. Os bots do `job-search` fazem o trabalho (análise de vagas, currículo, candidatura) e mantêm a Google Sheet de registro; este dashboard consolida e apresenta esses dados.
 
-Dashboard moderno e intuitivo para **organizar e acompanhar inscrições em vagas de estágio** de Engenharia Química, com funcionalidades avançadas de automação e análise.
+Plano de migração e estado atual: [`docs/plans/2026-09-25-job-search-visual-layer.md`](docs/plans/2026-09-25-job-search-visual-layer.md).
 
-## ✨ Funcionalidades Principais
+## Estado
 
-### 🚀 Automação Inteligente
+- Shell visual read-only (Estágios, Resumo, Configurações e página de vaga), ainda sem fonte de dados.
+- Sem IA, sem geração de PDF e sem banco: Supabase e rotas de IA foram removidos.
+- Próximos passos: camada de dados sobre a Sheet (read-only), login Google, telas de visão geral/vagas/vaga.
 
-- **Upload com Drag-and-Drop** para arquivos Markdown (.md) e currículos (PDF/DOCX)
-- **Parser Automático de Markdown** - extrai dados da análise e preenche campos automaticamente
-- **Template de Análise** - arquivo modelo (`modelo-analise.md`) com instruções detalhadas de preenchimento
-- **Conversão Automática de Escalas** - converte scores antigos (0-100, 0-10) para sistema de estrelas (0-5)
-- **Barra de Progresso** visual durante uploads com feedback em tempo real
+## Stack
 
-### 📈 Acompanhamento e Metas
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix UI (shadcn/ui), Recharts, Vitest, Playwright.
 
-- **Metas Diárias** editáveis com gradiente dinâmico (vermelho → dourado)
-- **Filtros Avançados** por modalidade, status, etapa, empresa e cargo
-- **Histórico Completo** com relatórios por período, status e localização
-- **Animações Suaves** e microinterações para melhor UX
-
-### 🎯 Gestão de Vagas
-
-- **4 Status Principais**: Pendente, Avançado, Melou, Contratado
-- **Sistema de Avaliação por Estrelas** ⭐ (0-5):
-  - **Requisitos Técnicos**: Avaliação de compatibilidade com requisitos da vaga
-  - **Fit de Perfil**: Avaliação de alinhamento cultural e comportamental
-- **Tracking de Etapas** do processo seletivo
-- **Anexos**: Análise em Markdown + Currículo
-
-### 🎨 Interface Moderna
-
-- Design **mobile-first** totalmente responsivo
-- Tema claro com paleta profissional (cinza, azul, violeta)
-- Componentes **Radix UI** para acessibilidade
-- **Toasts animados** (Sonner) para feedback
-
-## 🛠️ Stack Tecnológico
-
-- **Framework**: Next.js 16.0 (App Router)
-- **Linguagem**: TypeScript 5.x (strict mode)
-- **UI/Styling**: Tailwind CSS 4.1, Radix UI, Lucide Icons
-- **Backend**: Supabase (Auth, Database, Storage)
-- **Formulários**: React Hook Form + Zod
-- **Testes**: Vitest + React Testing Library
-- **CI/CD**: GitHub Actions
-- **Deploy**: Vercel
-- **Qualidade**: ESLint + Prettier
-
-## 📦 Instalação
-
-### Pré-requisitos
-
-- Node.js 20.x ou superior
-- pnpm
-
-### Passos
+## Desenvolvimento
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/igorleno/estagios-dashboard.git
-cd estagios-dashboard
-
-# 2. Instale as dependências
 pnpm install
-
-# 3. Configure variáveis de ambiente
-# Copie .env.example para .env.local e preencha com suas credenciais Supabase
-cp .env.example .env.local
-
-# 4. Configure o Supabase
-# Execute o script SQL em supabase-schema.sql no SQL Editor do Supabase
-# Crie os buckets de storage: 'analises' e 'curriculos' (públicos)
-
-# 5. Execute em desenvolvimento
-pnpm dev
-```
-
-Acesse http://localhost:3000
-
-## 🧪 Testes
-
-```bash
-# Executar testes
-pnpm test
-
-# Executar testes com UI
-pnpm test:ui
-
-# Gerar relatório de cobertura
-pnpm test:coverage
-
-# Executar linter
+pnpm dev              # http://localhost:3000
 pnpm lint
-
-# Formatar código
-pnpm format
+pnpm format:check
+pnpm test             # Vitest
+pnpm test:e2e         # Playwright (Chromium)
+pnpm build
 ```
-
-## 📚 Documentação
-
-- **[SETUP.md](SETUP.md)** - Guia completo de configuração do Supabase
-- **[CLAUDE.md](CLAUDE.md)** - Documentação da arquitetura do projeto
-- **[modelo-analise.md](modelo-analise.md)** - Template para análise de vagas
-- **[supabase-schema.sql](supabase-schema.sql)** - Schema SQL completo
-
-## 🗂️ Estrutura do Projeto
-
-```
-estagios-dashboard/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # Dashboard principal
-│   ├── vaga/[id]/         # Detalhe de vaga
-│   └── admin/             # Rotas administrativas
-├── components/            # Componentes React
-│   ├── ui/               # Componentes base (Radix)
-│   ├── *-dialog.tsx      # Modais de CRUD
-│   ├── *-upload.tsx      # Componentes de upload
-│   └── vagas-table.tsx   # Tabela principal
-├── lib/                  # Utilitários e lógica
-│   ├── types.ts          # Tipos TypeScript
-│   ├── markdown-parser.ts # Parser de análises
-│   ├── date-utils.ts     # Lógica de datas
-│   └── supabase/         # Integração Supabase
-├── __tests__/            # Testes unitários
-└── .github/workflows/    # CI/CD
-```
-
-## 🚀 Deploy
-
-### Vercel (Recomendado)
-
-1. Faça push do código para GitHub
-2. Importe o repositório na Vercel
-3. Configure as variáveis de ambiente:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Deploy automático!
-
-## 📖 Como Usar
-
-### Adicionando uma Vaga
-
-1. Clique em **"Adicionar Vaga"**
-2. **Opção 1 - Manual**: Preencha todos os campos
-3. **Opção 2 - Automático**:
-   - Use o arquivo [`modelo-analise.md`](modelo-analise.md) como template
-   - Faça upload do arquivo `.md` preenchido com a análise da vaga
-   - Os campos serão preenchidos automaticamente via parser
-   - Ajuste o que for necessário
-4. Adicione o currículo (opcional)
-5. Salve!
-
-### Formato do Arquivo de Análise
-
-O arquivo deve seguir o formato do [`modelo-analise.md`](modelo-analise.md):
-
-```markdown
-## Dados Gerais
-
-**Empresa**: TechCorp Brasil
-**Cargo**: Desenvolvedor Full Stack Pleno
-**Local**: São Paulo, SP
-**Modalidade**: Híbrido
-**Requisitos**: 85
-**Fit**: 8
-**Etapa**: Inscrição
-**Status**: Pendente
-
-## Observações
-
-Empresa com ótima reputação e benefícios excelentes.
-Processo seletivo: 4 etapas (triagem, teste técnico, 2 entrevistas)
-```
-
-**Notas:**
-
-- **Requisitos**: Use escala 0-100 (convertida automaticamente para 0-5 estrelas)
-- **Fit**: Use escala 0-10 (convertida automaticamente para 0-5 estrelas)
-- **Status**: Aceita apenas `Pendente`, `Avançado`, `Melou`, `Contratado`
-- **Modalidade**: Aceita apenas `Presencial`, `Híbrido`, `Remoto`
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor:
-
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'feat: adicionar feature X'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
-
-## 🙏 Agradecimentos
-
-- Iniciado com [v0.app](https://v0.app)
-- UI baseada em [Radix UI](https://www.radix-ui.com/)
-- Ícones por [Lucide](https://lucide.dev/)
-
----
-
-**Desenvolvido com ❤️ para facilitar a organização de processos seletivos**

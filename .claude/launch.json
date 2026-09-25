@@ -9,16 +9,11 @@
       "autoPort": false
     },
     {
-      "name": "Supabase Local (API)",
-      "runtimeExecutable": "supabase",
+      "name": "Next.js Prod",
+      "runtimeExecutable": "pnpm",
       "runtimeArgs": ["start"],
-      "port": 54321
-    },
-    {
-      "name": "Supabase Studio",
-      "runtimeExecutable": "supabase",
-      "runtimeArgs": ["start"],
-      "port": 54323
+      "port": 3000,
+      "autoPort": false
     }
   ]
 }
