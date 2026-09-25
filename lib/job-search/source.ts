@@ -1,0 +1,41 @@
+import "server-only"
+import { unstable_cache } from "next/cache"
+import { buildJobSearchData } from "@/lib/job-search/build"
+import {
+  JobSearchSourceError,
+  fetchSheetSnapshot,
+  getAccessToken,
+  loadServiceAccount,
+} from "@/lib/job-search/sheets-api"
+import type { JobSearchData, RawSnapshot } from "@/lib/job-search/types"
+import fixture from "@/lib/job-search/fixtures/snapshot.json"
+
+export const JOB_SEARCH_CACHE_TAG = "job-search"
+const REVALIDATE_SECONDS = 300
+
+/**
+ * `sheets` only on explicit opt-in (`JOB_SEARCH_DATA_SOURCE=sheets`); anything else
+ * reads the local fixture, so dev, tests and e2e never touch the real Sheet by default.
+ */
+export function dataSource(env: Record<string, string | undefined> = process.env): JobSearchData["source"] {
+  return env.JOB_SEARCH_DATA_SOURCE === "sheets" ? "sheets" : "fixture"
+}
+
+const readSheets = unstable_cache(
+  async (): Promise<JobSearchData> => {
+    // Until Google login (plan WP4) guards every route, no Vercel deployment may read the real Sheet.
+    if (process.env.VERCEL) throw new JobSearchSourceError("SHEETS_DISABLED_UNTIL_AUTH")
+    const spreadsheetId = process.env.JOB_SEARCH_SHEET_ID
+    if (!spreadsheetId) throw new JobSearchSourceError("SHEET_ID_MISSING")
+    const token = await getAccessToken(loadServiceAccount())
+    const raw = await fetchSheetSnapshot({ spreadsheetId, token })
+    return buildJobSearchData(raw, "sheets", new Date().toISOString())
+  },
+  ["job-search-snapshot"],
+  { revalidate: REVALIDATE_SECONDS, tags: [JOB_SEARCH_CACHE_TAG] }
+)
+
+export async function getJobSearchData(): Promise<JobSearchData> {
+  if (dataSource() === "sheets") return readSheets()
+  return buildJobSearchData(fixture as RawSnapshot, "fixture", new Date().toISOString())
+}
