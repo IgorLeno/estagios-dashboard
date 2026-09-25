@@ -51,7 +51,9 @@ Auth.js v5 (`auth.ts`), Google only, JWT sessions, allowlist `ALLOWED_EMAIL` (fa
 - `app/(dashboard)/layout.tsx` calls `requireAllowedSession()`; every new dashboard page goes inside `app/(dashboard)/`.
 - `getJobSearchData()` refuses the real Sheet without an allowed session. Any future server action or route handler must call `getAllowedSession()` itself — the proxy does not protect Server Functions.
 
-Pages read `getJobSearchData()` directly. "Sincronizar" is `app/actions/job-search.ts` (`getAllowedSession()` + `updateTag`). Data links use `prefetch={false}`: `proxy.ts` re-issues the session cookie on every request, so in-flight prefetches could undo "Sair".
+Pages read `getJobSearchData()` directly. "Sincronizar" is `app/actions/job-search.ts` (`getAllowedSession()` + `updateTag`). Data links use `prefetch={false}` (each prefetch is a full dynamic render).
+
+`proxy.ts` only reads the session: it strips the session `Set-Cookie` that Auth.js re-issues on every JWT `auth()` call (`session.updateAge` does not apply to JWT), otherwise any response sent with the old cookie that lands after "Sair" sets it again. The cookie is written only by sign-in and sign-out, so a session lasts `maxAge` (7 days) from sign-in, with no sliding renewal. Do not go back to `export { auth as proxy }`.
 
 ### Core Libraries (`lib/`)
 
