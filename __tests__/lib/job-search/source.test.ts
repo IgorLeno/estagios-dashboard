@@ -1,9 +1,14 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { getAllowedSession } from "@/lib/auth/session"
 import { dataSource, getJobSearchData } from "@/lib/job-search/source"
+
+// The real module needs the Next request scope; tests control the session directly.
+vi.mock("@/lib/auth/session", () => ({ getAllowedSession: vi.fn(async () => null) }))
 
 afterEach(() => {
   vi.unstubAllEnvs()
+  vi.restoreAllMocks()
 })
 
 describe("dataSource", () => {
@@ -25,5 +30,14 @@ describe("getJobSearchData", () => {
     expect(fetchSpy).not.toHaveBeenCalled()
     // Server Component props must survive JSON serialization unchanged.
     expect(JSON.parse(JSON.stringify(data))).toEqual(data)
+  })
+
+  it("refuses the real Sheet without an allowed session, before any network access", async () => {
+    vi.stubEnv("JOB_SEARCH_DATA_SOURCE", "sheets")
+    vi.stubEnv("JOB_SEARCH_SHEET_ID", "sheet-id")
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+    await expect(getJobSearchData()).rejects.toMatchObject({ code: "UNAUTHENTICATED" })
+    expect(getAllowedSession).toHaveBeenCalled()
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

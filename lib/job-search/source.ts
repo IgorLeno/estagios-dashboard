@@ -1,5 +1,6 @@
 import "server-only"
 import { unstable_cache } from "next/cache"
+import { getAllowedSession } from "@/lib/auth/session"
 import { buildJobSearchData } from "@/lib/job-search/build"
 import {
   JobSearchSourceError,
@@ -23,7 +24,8 @@ export function dataSource(env: Record<string, string | undefined> = process.env
 
 const readSheets = unstable_cache(
   async (): Promise<JobSearchData> => {
-    // Until Google login (plan WP4) guards every route, no Vercel deployment may read the real Sheet.
+    // Reads already require an allowed session (below), but no Vercel deployment may read the
+    // real Sheet until the real Google login has been verified end to end (plan WP4 status).
     if (process.env.VERCEL) throw new JobSearchSourceError("SHEETS_DISABLED_UNTIL_AUTH")
     const spreadsheetId = process.env.JOB_SEARCH_SHEET_ID
     if (!spreadsheetId) throw new JobSearchSourceError("SHEET_ID_MISSING")
@@ -36,6 +38,11 @@ const readSheets = unstable_cache(
 )
 
 export async function getJobSearchData(): Promise<JobSearchData> {
-  if (dataSource() === "sheets") return readSheets()
+  if (dataSource() === "sheets") {
+    // Checked outside the cache on every call: a cached snapshot is never served to a
+    // request without an allowed session, whatever route or action triggered it.
+    if (!(await getAllowedSession())) throw new JobSearchSourceError("UNAUTHENTICATED")
+    return readSheets()
+  }
   return buildJobSearchData(fixture as RawSnapshot, "fixture", new Date().toISOString())
 }
