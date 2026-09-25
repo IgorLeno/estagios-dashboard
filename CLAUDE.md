@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Next.js 16 dashboard for tracking internship applications (Portuguese UI). Built with React 19, TypeScript, Tailwind CSS 4, and Supabase. Deployed on Vercel.
+Next.js 16 dashboard (Portuguese UI) that is becoming the **read-only visual/analytical layer** of the `job-search` repo. Built with React 19, TypeScript and Tailwind CSS 4. Deployed on Vercel. Migration plan and status: `docs/plans/2026-09-25-job-search-visual-layer.md` — read it before changing architecture.
+
+No AI, no PDF generation, no database: the job-search bots do that work and the Google Sheet is the operational source. The dashboard never writes to the Sheet.
 
 ## Commands
 
@@ -33,49 +35,22 @@ pnpm test:e2e:debug             # Playwright debug mode
 
 ### Routing (App Router)
 
-- `/` — Main dashboard (Client Component). Tab-based: Estágios, Resumo, Configurações. State managed locally with useState/useEffect.
-- `/vaga/[id]` — Individual job application detail page
-- `/admin/login`, `/admin/sign-up` — Auth pages (Server Components, redirect if unauthenticated)
-- `/admin/dashboard` — Admin dashboard (Server Component, fetches data server-side, passes to Client Components)
-- `/test-ai` — Manual AI feature testing interface
-- `/perfil` — User profile page
+- `/` — Main dashboard (Client Component). Tab-based: Estágios, Resumo, Configurações (`?tab=` selects a tab).
+- `/vaga/[id]` — Job detail page (read-only)
 
-### API Routes (`app/api/`)
-
-AI-powered features with extended Vercel timeouts (120s for parse-job and generate-resume):
-
-- `ai/parse-job` — Extract structured job data from descriptions (Grok via OpenRouter)
-- `ai/generate-resume`, `ai/generate-resume-html`, `ai/refine-resume` — CV personalization and PDF generation
-- `ai/generate-cover-letter`, `ai/refine-cover-letter` — Cover letter generation
-- `ai/generate-profile`, `ai/extract-profile` — Candidate profile generation
-- `ai/html-to-pdf` — HTML to PDF via Puppeteer/`@sparticuz/chromium` (auto-detects serverless)
-- `ai/render-resume-html` — Resume HTML rendering
-- `vagas/[id]` — CRUD for individual vagas
-- `pdf/generate` — PDF generation endpoint
-- `resumes/[jobId]` — Resume management per job
-- `prompts` — CRUD for AI prompt configuration
-- `cron/cleanup-test-data` — Daily cleanup (Vercel cron, 2 AM)
+Pages currently render from an empty in-memory source; the job-search data layer (`lib/job-search/*`, plan WP3) replaces it.
 
 ### Core Libraries (`lib/`)
 
-- `types.ts` — All TypeScript interfaces. `VagaEstagio` is the central type (status: Pendente | Avançado | Melou | Contratado; modalidade: Presencial | Híbrido | Remoto).
-- `supabase/client.ts` — Client-side Supabase (synchronous, use in `"use client"` components)
-- `supabase/server.ts` — Server-side Supabase (async, uses `cookies()` from `next/headers`)
-- `supabase/middleware.ts` — Session refresh (called from root `middleware.ts`)
-- `supabase/queries.ts` — Shared query functions with test data filtering (`shouldIncludeTestData()`)
-- `supabase/prompts.ts` — CRUD for `prompts_config` table
-- `ai/` — AI module: job parser, resume generator, cover letter, profile, CV templates (PT/EN), rate limiter, Grok client via OpenRouter
-- `ai/config.ts` — `loadUserAIConfig()` loads per-user prompt config from DB, falls back to global defaults
-- `date-utils.ts` — `getDataInscricao()` returns midnight-based YYYY-MM-DD date string
-- `markdown-parser.ts` — Extracts structured vaga data from markdown analysis files
-- `security/openrouter-key-crypto.ts` — Encryption for user OpenRouter API keys
+- `types.ts` — Interim types (`VagaEstagio`), replaced by the job-search model in WP3.
+- `date-utils.ts` — Date helpers (`getDataInscricao()` returns midnight-based YYYY-MM-DD).
+- `utils.ts` — `cn()` and badge/number helpers.
 
 ### Component Patterns
 
 - `components/ui/` — Radix UI primitives (shadcn/ui style). Use `cn()` from `lib/utils.ts` for className merging.
-- Dashboard components receive data + callbacks as props; mutations trigger parent `loadData()` refetch.
-- Forms use React Hook Form + Zod validation throughout.
-- Toasts via Sonner (`<Toaster>` in root layout).
+- Dashboard components receive data as props; there is no editable vaga state.
+- Untrusted text (analysis, postings) is rendered as plain text, never as HTML.
 
 ### Styling
 
@@ -83,26 +58,20 @@ CSS variables defined in `app/globals.css` with light/dark themes. Uses Tailwind
 
 ## Key Domain Concepts
 
-- **Fit Rating**: 0-5 star scale with 0.5 increments. Legacy 0-100 or 0-10 values auto-converted via `normalizeRatingForSave()`.
-- **Test Data Isolation**: `is_test_data` flag on vagas. Production never shows test data. Dev controlled by `NEXT_PUBLIC_SHOW_TEST_DATA` env var.
-- **AI Model**: Uses `x-ai/grok-4.1-fast` via OpenRouter. Config field `modelo_gemini` kept for DB compatibility despite no longer using Gemini.
-- **Bilingual CVs**: Resume generation supports PT and EN. Separate fields for each language (`arquivo_cv_url_pt`, `arquivo_cv_url_en`, `curriculo_text_pt`, `curriculo_text_en`).
+- **Fit Rating**: 0-5 star scale with 0.5 increments (legacy shell only).
+- **Sources of truth**: methodology/enums live in the `job-search` Git repo; job state lives in the registry Sheet; structured job analysis arrives through the Sheet `Dossiers` tab. See the plan for the exact contract.
 
 ## Environment Variables
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-OPENROUTER_API_KEY=...                  # AI features (Grok via OpenRouter)
-NEXT_PUBLIC_SHOW_TEST_DATA=false        # true only in .env.test for E2E
-```
+None required by the current shell. The data layer adds the Sheet id and a read-only service account (never commit credentials).
 
 ## Testing Notes
 
 - Unit tests: `__tests__/` directory mirrors source structure. Use `waitFor` for async assertions (not `waitForNextUpdate`).
-- E2E tests: `e2e/` directory. Playwright config loads `.env.test` (fallback `.env.local`). Runs sequentially (1 worker) against `localhost:3000`.
+- E2E tests: `e2e/` directory, Chromium only, 1 worker against `localhost:3000`.
 - Async Server Components: prefer E2E tests over Vitest unit tests.
 - Test files: `__tests__/**/*.test.{ts,tsx}` and `lib/**/__tests__/**/*.test.{ts,tsx}` (Vitest include patterns).
+- `next.config.mjs` sets `typescript.ignoreBuildErrors`, so `pnpm build` does not type-check: run `pnpm exec tsc --noEmit` as well.
 
 ## CI/CD
 
@@ -110,4 +79,4 @@ GitHub Actions (`.github/workflows/ci.yml`): lint, format check, unit tests, E2E
 
 ## Deployment
 
-Vercel with extended function timeouts in `vercel.json`. Vercel cron runs test data cleanup daily at 2 AM. PDF generation uses `@sparticuz/chromium` in serverless, regular `puppeteer` locally.
+Vercel. No function timeouts or crons are configured.
