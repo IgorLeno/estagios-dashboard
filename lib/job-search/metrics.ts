@@ -72,6 +72,9 @@ export function computeFunnel(views: JobView[]): FunnelStage[] {
 }
 
 export type DistributionKey =
+  | "status_analise"
+  | "status_disponibilidade"
+  | "status_candidatura"
   | "familia_funcao"
   | "setor"
   | "interesse"
@@ -83,7 +86,8 @@ export type DistributionKey =
   | "uf"
   | "modalidade"
 
-function bucketOf(view: JobView, key: DistributionKey): string {
+/** Bucket of one job on an axis; shared by the overview distributions and the list filters. */
+export function bucketOf(view: JobView, key: DistributionKey): string {
   if (key === "zona" || key === "uf" || key === "modalidade") return view[key] || EMPTY_BUCKET
   if (key === "fonte_descoberta" || key === "portal_candidatura") return view.job[key] || EMPTY_BUCKET
   const cell = view.job[key] as EnumCell<string>
