@@ -17,7 +17,7 @@ if (existsSync(".env.test")) {
 export default defineConfig({
   testDir: "./e2e",
 
-  /* Shared Supabase state and Next dev are more stable with serialized files */
+  /* A single Next dev server is more stable with serialized files */
   fullyParallel: false,
 
   /* Fail the build on CI if you accidentally left test.only in the source code */
@@ -65,10 +65,5 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
-    env: {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-      NEXT_PUBLIC_SHOW_TEST_DATA: process.env.NEXT_PUBLIC_SHOW_TEST_DATA || "false",
-    },
   },
 })

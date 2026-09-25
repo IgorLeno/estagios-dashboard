@@ -1,2 +1,0 @@
-Este é um arquivo de texto simples, não um markdown válido.
-Ele será usado para testar validação de tipo de arquivo.
