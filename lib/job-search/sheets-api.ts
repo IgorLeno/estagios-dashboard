@@ -35,8 +35,8 @@ type Env = Record<string, string | undefined>
 type FetchLike = typeof fetch
 
 /**
- * Credentials from `GOOGLE_SA_JSON_B64` (deploy secret) or, for local dev only,
- * `GOOGLE_SA_JSON_PATH` pointing to a file outside the repository.
+ * Credentials from `GOOGLE_SA_JSON_B64` (base64 of the key) or `GOOGLE_SA_JSON_PATH`
+ * pointing to a file outside the repository.
  */
 export function loadServiceAccount(env: Env = process.env, cwd: string = process.cwd()): ServiceAccount {
   let text: string

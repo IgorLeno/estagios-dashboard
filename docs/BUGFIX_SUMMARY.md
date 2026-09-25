@@ -1,5 +1,7 @@
 # Resumo de Correções - Sistema de Geração de Currículo
 
+> **Histórico.** Descreve a arquitetura antiga (IA, PDF, Supabase, deploy no Vercel), removida. O dashboard atual é local-first e somente leitura: veja `README.md` e `docs/plans/2026-09-25-job-search-visual-layer.md`.
+
 **Data:** 2025-01-24
 **Branch:** main
 **Status:** ✅ Todas as correções implementadas

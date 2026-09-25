@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Next.js 16 dashboard (Portuguese UI) that is becoming the **read-only visual/analytical layer** of the `job-search` repo. Built with React 19, TypeScript and Tailwind CSS 4. Deployed on Vercel. Migration plan and status: `docs/plans/2026-09-25-job-search-visual-layer.md` — read it before changing architecture.
+Next.js 16 dashboard (Portuguese UI) that is becoming the **read-only visual/analytical layer** of the `job-search` repo. Built with React 19, TypeScript and Tailwind CSS 4. **Local-first**: it runs on the owner's machine (`pnpm build && pnpm start`); there is no production deploy and no hosting provider (Vercel was dropped). Migration plan and status: `docs/plans/2026-09-25-job-search-visual-layer.md` — read it before changing architecture.
 
-No AI, no PDF generation, no database: the job-search bots do that work and the Google Sheet is the operational source. The dashboard never writes to the Sheet.
+No AI, no PDF generation, no database (Supabase was removed in WP2 and is not used): the job-search bots do that work, the `job-search` Git repo stays the authority for rules, and the Google Sheet is the read-only operational source. The dashboard never writes to the Sheet.
 
 ## Commands
 
@@ -80,7 +80,7 @@ CSS variables defined in `app/globals.css` with light/dark themes. Uses Tailwind
 
 ## Environment Variables
 
-See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_B64`, or `GOOGLE_SA_JSON_PATH` outside the repo for local dev). Never commit or print credentials. Auth needs `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (plus `AUTH_TRUST_HOST=true` for `next start` outside Vercel). Reading the real Sheet requires an allowed session (`UNAUTHENTICATED` otherwise), on any host.
+See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_PATH` outside the repo, or `GOOGLE_SA_JSON_B64`). Never commit or print credentials. Auth needs `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (plus `AUTH_TRUST_HOST=true`, required for local `next start`; the Google OAuth client redirect URI is `http://localhost:3000/api/auth/callback/google`). Reading the real Sheet requires an allowed session (`UNAUTHENTICATED` otherwise), on any host.
 
 ## Testing Notes
 
@@ -97,4 +97,4 @@ GitHub Actions (`.github/workflows/ci.yml`): lint, format check, unit tests, E2E
 
 ## Deployment
 
-Vercel. No function timeouts or crons are configured.
+None. The dashboard is local-first and no production deploy is configured. Do not add hosting-specific code (`@vercel/*`, `process.env.VERCEL`, `vercel.json`) or a database.

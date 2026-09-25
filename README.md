@@ -4,11 +4,22 @@ Camada visual e analítica, **somente leitura**, do repositório `job-search`. O
 
 Plano de migração e estado atual: [`docs/plans/2026-09-25-job-search-visual-layer.md`](docs/plans/2026-09-25-job-search-visual-layer.md).
 
-## Estado
+## Arquitetura
 
-- Shell visual read-only (Estágios, Resumo, Configurações e página de vaga), ainda sem fonte de dados.
-- Sem IA, sem geração de PDF e sem banco: Supabase e rotas de IA foram removidos.
-- Próximos passos: camada de dados sobre a Sheet (read-only), login Google, telas de visão geral/vagas/vaga.
+```
+job-search (Git: regras) / Google Sheet (estado, read-only)
+        ↓
+estagios-dashboard local (next start)
+        ↓
+Auth.js + Google OAuth em localhost
+```
+
+- **Local-first**: roda na máquina do usuário. Sem deploy de produção configurado; não depende de Vercel.
+- Sem banco: não usa Supabase. Sem IA e sem geração de PDF.
+- Fonte operacional: Google Sheet de registro, lida server-side com service account read-only. O dashboard nunca escreve na Sheet. Sem configuração, usa a fixture local.
+- O Git do `job-search` continua autoridade das regras e enums; o dashboard só apresenta.
+- Acesso: login Google (Auth.js) restrito a `ALLOWED_EMAIL`.
+- Telas: visão geral (`/`), lista (`/vagas`), vaga (`/vaga/[job_id]`), configurações (tema).
 
 ## Stack
 
@@ -24,4 +35,12 @@ pnpm format:check
 pnpm test             # Vitest
 pnpm test:e2e         # Playwright (Chromium)
 pnpm build
+pnpm exec tsc --noEmit  # o build não faz type-check
 ```
+
+## Rodar localmente com a Sheet real
+
+1. Copie `.env.example` para `.env.local` e preencha (nunca commite credenciais).
+2. `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` e `GOOGLE_SA_JSON_PATH` apontando para o JSON da service account fora do repositório.
+3. Auth: `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` e `AUTH_TRUST_HOST=true` (obrigatório para `next start`). Redirect URI do client OAuth: `http://localhost:3000/api/auth/callback/google`.
+4. `pnpm build && pnpm start` e abra http://localhost:3000.
