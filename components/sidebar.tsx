@@ -1,6 +1,7 @@
 "use client"
 
-import { LayoutDashboard, BarChart3, Settings2, Briefcase } from "lucide-react"
+import { LayoutDashboard, BarChart3, Settings2, Briefcase, LogOut } from "lucide-react"
+import { signOutAction } from "@/app/actions/auth"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -83,6 +84,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           )
         })}
       </nav>
+
+      <form action={signOutAction} className="relative px-3 pb-6">
+        <button
+          type="submit"
+          data-testid="sidebar-sair"
+          className={cn(
+            "w-full h-10 rounded-lg flex items-center gap-3 px-3 transition-all duration-200",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+            "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-border/40"
+          )}
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm font-medium">Sair</span>
+        </button>
+      </form>
     </aside>
   )
 }
