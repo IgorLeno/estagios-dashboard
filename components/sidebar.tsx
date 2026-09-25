@@ -19,8 +19,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname.startsWith(href)
 }
 
-// No prefetch: an in-flight prefetch passes through `proxy.ts`, which re-issues the session
-// cookie and can undo "Sair" (see the note in components/job-search/overview.tsx).
+// No prefetch, as on the overview links: every dashboard page is a full dynamic render.
 
 /** Fixed sidebar on large screens; a compact top bar with the same links below `lg`. */
 export function Sidebar() {

@@ -52,8 +52,7 @@ export function SectionCard({
 }
 
 // Data links use prefetch={false}: the overview has dozens of them, and every prefetch is a
-// full dynamic render. In-flight prefetches also pass through `proxy.ts`, which re-issues the
-// session cookie, so they could resurrect the session right after "Sair" deleted it.
+// full dynamic render.
 
 const KPI_TILES: { key: keyof Kpis; label: string; hint: string; href: string }[] = [
   { key: "analisadas", label: "Analisadas", hint: "vagas no registro", href: "/vagas" },
