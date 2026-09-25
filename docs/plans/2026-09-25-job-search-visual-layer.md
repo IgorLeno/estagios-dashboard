@@ -2,11 +2,12 @@
 
 ## Contexto
 
-`estagios-dashboard` (Next.js 16 + Supabase, checkout em `~/Projetos/estagios-dash/estagios-dashboard`) foi construído para *executar* a busca: parse de vaga, fit, currículo, carta, PDF, perfil. Hoje ~68% do código de produção (≈21k de 30,6k LOC) é IA/PDF. Esse trabalho agora é feito melhor pelos Grok Bots do `job-search` (Job Scout → CV Strategist → CV Operator → Application Operator), com a Google Sheet como estado operacional e o Git como fonte de metodologia.
+`estagios-dashboard` (Next.js 16 + Supabase, checkout em `~/Projetos/estagios-dash/estagios-dashboard`) foi construído para _executar_ a busca: parse de vaga, fit, currículo, carta, PDF, perfil. Hoje ~68% do código de produção (≈21k de 30,6k LOC) é IA/PDF. Esse trabalho agora é feito melhor pelos Grok Bots do `job-search` (Job Scout → CV Strategist → CV Operator → Application Operator), com a Google Sheet como estado operacional e o Git como fonte de metodologia.
 
 Objetivo: o dashboard vira a **camada visual e analítica, somente leitura**, do `job-search`. Bots fazem o trabalho; dashboard consolida e apresenta.
 
 Decisões do usuário (2026-09-25):
+
 - Dossiers chegam ao dashboard por **nova aba `Dossiers` na mesma Sheet**.
 - **Sem banco**: dashboard lê a Sheet server-side com cache; Supabase sai.
 - Vagas legadas do Supabase: **sem valor; descartadas sem export** (usuário, 2026-09-25). Supabase removido do projeto.
@@ -14,15 +15,16 @@ Decisões do usuário (2026-09-25):
 
 ## Fontes de verdade (sem concorrência)
 
-| Dado | Autoridade | Dashboard |
-|---|---|---|
-| Perfil, metodologia, enums, regras de interesse | Git `job-search` | espelha enums em código; nunca recalcula regra |
-| Estado de vagas (23 colunas), eventos, cobertura | Sheet (aba principal, `Eventos de Candidatura`, `Cobertura de Fontes`, `Encerradas`) | lê |
-| Análise estruturada da vaga | `dossier.json` (runtime do bot) → projeção na aba `Dossiers` | lê, valida, exibe |
-| Estado fino da candidatura, respostas, CV, private store | runtime / private store | **nunca** acessa |
-| Métricas agregadas | derivadas em memória a cada leitura | não persiste |
+| Dado                                                     | Autoridade                                                                           | Dashboard                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| Perfil, metodologia, enums, regras de interesse          | Git `job-search`                                                                     | espelha enums em código; nunca recalcula regra |
+| Estado de vagas (23 colunas), eventos, cobertura         | Sheet (aba principal, `Eventos de Candidatura`, `Cobertura de Fontes`, `Encerradas`) | lê                                             |
+| Análise estruturada da vaga                              | `dossier.json` (runtime do bot) → projeção na aba `Dossiers`                         | lê, valida, exibe                              |
+| Estado fino da candidatura, respostas, CV, private store | runtime / private store                                                              | **nunca** acessa                               |
+| Métricas agregadas                                       | derivadas em memória a cada leitura                                                  | não persiste                                   |
 
 Regras invariantes:
+
 - Nenhum deploy lendo a Sheet real antes de Auth (WP4).
 - Dashboard **nunca escreve** na Sheet (credencial `spreadsheets.readonly`, service account própria, Viewer).
 - Nada de estado de vaga editável no dashboard. Correções vão pelo fluxo dos bots/coordenador.
@@ -34,6 +36,7 @@ Regras invariantes:
 **Mantém (visual):** `components/ui/*` (shadcn), `sidebar`, `theme-provider`, `star-rating` (se útil), `vagas-table` + `vaga-table-row` (filtros/expansão), `resumo-page` (recharts, base da visão geral), layout de Cards 1–2 de `app/vaga/[id]/page.tsx`, `lib/date-utils`, `lib/utils` (`getStatusBadgeClasses` adaptado aos novos enums), `modelo-layout.jpg` como referência de layout.
 
 **Adapta:**
+
 - `lib/types.ts`: `VagaEstagio` substituído pelo novo modelo (abaixo).
 - `lib/supabase/queries.ts` → substituído por `lib/job-search/*` (mesma costura: funções que retornam listas tipadas).
 - `vagas-table`: tira add/edit/delete; filtros pelos novos eixos.
@@ -42,11 +45,12 @@ Regras invariantes:
 - `ui/markdown-preview.tsx`: não escapa HTML (XSS). Posting é renderizado como texto puro; remover o renderer regex.
 
 **Remove:**
+
 - Todas as rotas `app/api/ai/*` (18), `api/pdf/generate`, `api/prompts`, `api/openrouter-key`, `api/resumes/*`, `api/vagas/*` (inclui PATCH sem validação), `api/candidate-profile`, `api/cron/cleanup-test-data`.
 - `lib/ai/*`, `lib/security/*`, `lib/supabase/*`, `lib/model-attempt-tracker`, `lib/resume-tagline-preference`, `lib/utils/ai-mapper`, `lib/markdown-parser` (ingestão manual de .md substituída pelo dossier).
 - Páginas `/perfil` (perfil em Supabase competia com `knowledge/` do job-search), `/test-ai`, `/admin/*` (template v0 `inscricoes`).
-- Componentes de IA/CRUD/órfãos: add/edit-vaga dialogs, tabs de fit/currículo/descrição/parser, resume-*, cover-letter, configuracoes-prompts, system-prompts-viewer, ai-settings/*, meta-card + metas_diarias, dashboard-header de navegação diária, quick-fill-panel, file-upload/markdown-upload, curriculum-card, fit-card, registration-form, dashboard-content.
-- Deps: puppeteer, puppeteer-core, @sparticuz/chromium, pdf-parse, redis, marked, turndown, @types/turndown, @supabase/*.
+- Componentes de IA/CRUD/órfãos: add/edit-vaga dialogs, tabs de fit/currículo/descrição/parser, resume-_, cover-letter, configuracoes-prompts, system-prompts-viewer, ai-settings/_, meta-card + metas_diarias, dashboard-header de navegação diária, quick-fill-panel, file-upload/markdown-upload, curriculum-card, fit-card, registration-form, dashboard-content.
+- Deps: puppeteer, puppeteer-core, @sparticuz/chromium, pdf-parse, redis, marked, turndown, @types/turndown, @supabase/\*.
 - `vercel.json` (functions + cron), `supabase/`, `supabase-schema.sql`, `scripts/*.sql`, scripts Gemini/cleanup, testes de IA (~7,7k LOC) e e2e `ai-parser`/`resume-generator`.
 - Branches locais stale (0 à frente de main) — só após confirmação.
 

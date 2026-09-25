@@ -169,15 +169,21 @@
     border-radius: inherit;
     padding: 1px;
     background: linear-gradient(135deg, rgb(var(--primary)), rgb(var(--accent)));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
   }
 
   .glow-primary {
-    box-shadow: 0 0 20px rgb(var(--primary) / 0.25), 0 0 40px rgb(var(--primary) / 0.1);
+    box-shadow:
+      0 0 20px rgb(var(--primary) / 0.25),
+      0 0 40px rgb(var(--primary) / 0.1);
   }
 
   .hover-lift {
