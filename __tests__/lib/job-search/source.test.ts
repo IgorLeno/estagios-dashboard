@@ -5,6 +5,8 @@ import { dataSource, getJobSearchData } from "@/lib/job-search/source"
 
 // The real module needs the Next request scope; tests control the session directly.
 vi.mock("@/lib/auth/session", () => ({ getAllowedSession: vi.fn(async () => null) }))
+// `unstable_cache` needs Next's incremental cache; these tests cover the gates, not caching.
+vi.mock("next/cache", () => ({ unstable_cache: <T>(fn: T) => fn }))
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -38,6 +40,17 @@ describe("getJobSearchData", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch")
     await expect(getJobSearchData()).rejects.toMatchObject({ code: "UNAUTHENTICATED" })
     expect(getAllowedSession).toHaveBeenCalled()
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it("reads the Sheet on Vercel once the session is allowed", async () => {
+    vi.mocked(getAllowedSession).mockResolvedValueOnce({ user: { email: "owner@example.com" }, expires: "" })
+    vi.stubEnv("JOB_SEARCH_DATA_SOURCE", "sheets")
+    vi.stubEnv("VERCEL", "1")
+    vi.stubEnv("JOB_SEARCH_SHEET_ID", "")
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+    // Passes the session gate and stops at the next check, without network access.
+    await expect(getJobSearchData()).rejects.toMatchObject({ code: "SHEET_ID_MISSING" })
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

@@ -74,7 +74,7 @@ CSS variables defined in `app/globals.css` with light/dark themes. Uses Tailwind
 
 ## Environment Variables
 
-See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_B64`, or `GOOGLE_SA_JSON_PATH` outside the repo for local dev). Never commit or print credentials. Auth needs `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (plus `AUTH_TRUST_HOST=true` for `next start` outside Vercel). Reading the real Sheet requires an allowed session and is still refused on Vercel (`SHEETS_DISABLED_UNTIL_AUTH`) until the real Google login is verified end to end.
+See `.env.example`. `JOB_SEARCH_DATA_SOURCE` defaults to the fixture; the real Sheet needs `JOB_SEARCH_DATA_SOURCE=sheets`, `JOB_SEARCH_SHEET_ID` and a read-only service account (`GOOGLE_SA_JSON_B64`, or `GOOGLE_SA_JSON_PATH` outside the repo for local dev). Never commit or print credentials. Auth needs `ALLOWED_EMAIL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (plus `AUTH_TRUST_HOST=true` for `next start` outside Vercel). Reading the real Sheet requires an allowed session (`UNAUTHENTICATED` otherwise), on any host.
 
 ## Testing Notes
 

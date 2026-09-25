@@ -24,9 +24,7 @@ export function dataSource(env: Record<string, string | undefined> = process.env
 
 const readSheets = unstable_cache(
   async (): Promise<JobSearchData> => {
-    // Reads already require an allowed session (below), but no Vercel deployment may read the
-    // real Sheet until the real Google login has been verified end to end (plan WP4 status).
-    if (process.env.VERCEL) throw new JobSearchSourceError("SHEETS_DISABLED_UNTIL_AUTH")
+    // Only reached through `getJobSearchData()`, after the allowed-session check.
     const spreadsheetId = process.env.JOB_SEARCH_SHEET_ID
     if (!spreadsheetId) throw new JobSearchSourceError("SHEET_ID_MISSING")
     const token = await getAccessToken(loadServiceAccount())
