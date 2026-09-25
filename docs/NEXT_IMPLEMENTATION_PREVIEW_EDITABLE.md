@@ -1,5 +1,7 @@
 # Implementação: Preview Editável de Currículos
 
+> **Histórico.** Descreve a arquitetura antiga (IA, PDF, Supabase, deploy no Vercel), removida. O dashboard atual é local-first e somente leitura: veja `README.md` e `docs/plans/2026-09-25-job-search-visual-layer.md`.
+
 **Data:** 2025-01-27
 **Status:** Pronto para implementação
 **Prioridade:** Média
