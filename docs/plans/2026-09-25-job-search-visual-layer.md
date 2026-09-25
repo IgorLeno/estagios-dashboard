@@ -49,7 +49,7 @@ Regras invariantes:
 - Todas as rotas `app/api/ai/*` (18), `api/pdf/generate`, `api/prompts`, `api/openrouter-key`, `api/resumes/*`, `api/vagas/*` (inclui PATCH sem validação), `api/candidate-profile`, `api/cron/cleanup-test-data`.
 - `lib/ai/*`, `lib/security/*`, `lib/supabase/*`, `lib/model-attempt-tracker`, `lib/resume-tagline-preference`, `lib/utils/ai-mapper`, `lib/markdown-parser` (ingestão manual de .md substituída pelo dossier).
 - Páginas `/perfil` (perfil em Supabase competia com `knowledge/` do job-search), `/test-ai`, `/admin/*` (template v0 `inscricoes`).
-- Componentes de IA/CRUD/órfãos: add/edit-vaga dialogs, tabs de fit/currículo/descrição/parser, resume-_, cover-letter, configuracoes-prompts, system-prompts-viewer, ai-settings/_, meta-card + metas_diarias, dashboard-header de navegação diária, quick-fill-panel, file-upload/markdown-upload, curriculum-card, fit-card, registration-form, dashboard-content.
+- Componentes de IA/CRUD/órfãos: add/edit-vaga dialogs, tabs de fit/currículo/descrição/parser, `resume-*`, cover-letter, configuracoes-prompts, system-prompts-viewer, `ai-settings/*`, meta-card + metas_diarias, dashboard-header de navegação diária, quick-fill-panel, file-upload/markdown-upload, curriculum-card, fit-card, registration-form, dashboard-content.
 - Deps: puppeteer, puppeteer-core, @sparticuz/chromium, pdf-parse, redis, marked, turndown, @types/turndown, @supabase/\*.
 - `vercel.json` (functions + cron), `supabase/`, `supabase-schema.sql`, `scripts/*.sql`, scripts Gemini/cleanup, testes de IA (~7,7k LOC) e e2e `ai-parser`/`resume-generator`.
 - Branches locais stale (0 à frente de main) — só após confirmação.
