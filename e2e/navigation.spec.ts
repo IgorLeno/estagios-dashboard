@@ -1,7 +1,12 @@
 import { test, expect } from "@playwright/test"
+import { E2E_AUTH_ENV, signInAs } from "./auth"
 
 // Smoke coverage for the read-only shell. Data-driven flows arrive with the job-search data layer.
 test.describe("Navegação do Dashboard", () => {
+  test.beforeEach(async ({ context }) => {
+    await signInAs(context, E2E_AUTH_ENV.ALLOWED_EMAIL)
+  })
+
   test("deve navegar entre abas", async ({ page }) => {
     await page.goto("/")
     await expect(page.getByTestId("vagas-card-title")).toBeVisible()
