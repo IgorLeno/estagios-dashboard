@@ -43,6 +43,11 @@
   --header-foreground: 248 250 252;
   --star-fill: 251 191 36;
   --star-empty: 226 232 240;
+  /* Chart series (dataviz reference palette slots 1-2, validated on the card surface). */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
 }
 
 .dark {
@@ -84,6 +89,10 @@
   --header-foreground: 226 232 240;
   --star-fill: 251 191 36;
   --star-empty: 30 37 60;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --chart-grid: #2c3a52;
+  --chart-axis: #94a3b8;
 }
 
 @theme inline {
